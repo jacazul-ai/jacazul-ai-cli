@@ -20,4 +20,5 @@ podman run -it --rm \
   -v "$HOST_SANDBOX_CONFIG_DIR:/home/node/.config:Z" \
   -v "$HOST_SANDBOX_COPILOT_DIR:/home/node/.copilot:Z" \
   -v "$HOST_SANDBOX_NPM_DIR:/home/node/.npm:Z" \
+  -v "$(pwd)/templates/context/copilot-instructions.md:/home/node/.copilot/copilot-instructions.md:Z" \
   copilot "$@"
