@@ -6,9 +6,10 @@ HOST_SANDBOX=$COPILOT_SANDBOXED_HOME/sandbox/copilot
 HOST_SANDBOX_CONFIG_DIR="$HOST_SANDBOX/.config"
 HOST_SANDBOX_COPILOT_DIR="$HOST_SANDBOX/.copilot"
 HOST_SANDBOX_NPM_DIR="$HOST_SANDBOX/.npm"
+HOST_SANDBOX_TASK_DIR="$HOST_SANDBOX/.task"
 
 # Create directories if they don't exist
-mkdir -p "$HOST_SANDBOX_CONFIG_DIR" "$HOST_SANDBOX_COPILOT_DIR" "$HOST_SANDBOX_NPM_DIR"
+mkdir -p "$HOST_SANDBOX_CONFIG_DIR" "$HOST_SANDBOX_COPILOT_DIR" "$HOST_SANDBOX_NPM_DIR" "$HOST_SANDBOX_TASK_DIR"
 
 # Run the container
 # Added --init to handle signals better and ensured all volumes are present
@@ -20,5 +21,9 @@ podman run -it --rm \
   -v "$HOST_SANDBOX_CONFIG_DIR:/home/node/.config:Z" \
   -v "$HOST_SANDBOX_COPILOT_DIR:/home/node/.copilot:Z" \
   -v "$HOST_SANDBOX_NPM_DIR:/home/node/.npm:Z" \
+  -v "$HOST_SANDBOX_TASK_DIR:/home/node/.task:Z" \
   -v "$(pwd)/templates/context/copilot-instructions.md:/home/node/.copilot/copilot-instructions.md:Z" \
+  -v "$(pwd)/templates/context/instructions:/home/node/.github/instructions:Z" \
+  -v "$(pwd)/templates/.taskrc:/home/node/.taskrc:Z" \
+  -v "$(pwd)/templates/skills:/home/node/.copilot/skills:Z" \
   copilot "$@"

@@ -2,6 +2,7 @@ FROM node:24-slim
 
 ENV TERM=xterm-256color
 ENV COLORTERM=truecolor
+ENV COPILOT_CUSTOM_INSTRUCTIONS_DIRS=/home/node/.github/instructions
 
 # Install GitHub Copilot CLI (latest version should work on slim)
 RUN npm install -g @github/copilot
@@ -23,6 +24,8 @@ RUN apt-get update && apt-get install -y \
     fzf \
     htop \
     sudo \
+    taskwarrior \
+    bc \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Go
