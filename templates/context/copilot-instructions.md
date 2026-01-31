@@ -59,20 +59,46 @@ Session context, plans, and all progress are exclusively stored and managed in T
 ## Purpose
 Use Taskwarrior as a context cache for plans, tasks, research findings, and lessons learned. This ensures continuity and progress tracking between sessions.
 
+## Project Identity (PROJECT_ID)
+
+The `PROJECT_ID` environment variable is automatically calculated by the copilot script:
+
+```bash
+PROJECT_ID="${PARENT_DIR}_${CURRENT_DIR}"
+```
+
+Example: Running copilot from `/home/user/ai_cli_sandboxed/` sets `PROJECT_ID=user_ai_cli_sandboxed`
+
+This PROJECT_ID becomes your Taskwarrior project namespace for task organization:
+
+```
+PROJECT_ID:onboarding
+  ├─ Read README.md
+  └─ Initialize project
+
+PROJECT_ID:auth-system
+  ├─ Design schema
+  └─ Implement endpoints
+```
+
+When creating tasks: Use the pattern `PROJECT_ID:plan_id:task_name`
+
+This ensures proper context isolation across sessions and agents.
+
 ## Naming Convention
-Tasks follow the pattern: `project_id:plan_id:task_name`
-- **project_id**: Identifies the broader project or session
+Tasks follow the pattern: `PROJECT_ID:plan_id:task_name`
+- **PROJECT_ID**: Identifies the broader project or session (automatically set)
 - **plan_id**: Identifies the specific plan or feature being worked on
 - **task_name**: Short description of the specific task
 
-Example: `copilot-session:auth-system:implement-login`
+Example: `ai_cli_sandboxed:onboarding:read-readme`
 
 ## Core Workflow
 
 ### 1. Task Creation
 When starting work on a plan or feature:
 ```bash
-task add project:project_id:plan_id "task_name" tags:copilot
+task add PROJECT_ID:plan_id "task_name" tags:copilot
 ```
 - Use custom numerical urgencies (e.g., 7.9, 5.1, 2.7) to precisely weight and sequence tasks
 - Adjust urgencies dynamically based on conversation - if user says "task 1 is more important", increase its urgency value
@@ -96,7 +122,7 @@ Annotations are timestamped and append to the task, building a context history.
 
 ### 4. Session Management
 **Task Listing Protocol:**
-- Show tasks grouped by plan (`project:plan_id`) when listing tasks.
+- Show tasks grouped by plan (`PROJECT_ID:plan_id`) when listing tasks.
 - If a plan is selected, show only tasks for that plan.
 - If no plan is selected, show tasks grouped by plan.
 - When listing all plans, display each plan with its urgencies and task numbers, ordered by urgency.
@@ -116,7 +142,7 @@ When user says "let's work on plan X", filter all subsequent task operations to 
 ### 5. Retrieving Context
 View all tasks for current work:
 ```bash
-task project:project_id:plan_id status:pending
+task PROJECT_ID:plan_id status:pending
 task <id> info  # View full task details including annotations
 ```
 
@@ -130,9 +156,9 @@ task <id> info  # View full task details including annotations
 
 **Starting a new plan:**
 ```bash
-task add project:copilot-session:refactor-auth "Design new auth flow" tags:copilot,research
+task add ai_cli_sandboxed:refactor-auth "Design new auth flow" tags:copilot,research
 task modify 1 priority:15
-task add project:copilot-session:refactor-auth "Implement JWT tokens" tags:copilot,implementation depends:1
+task add ai_cli_sandboxed:refactor-auth "Implement JWT tokens" tags:copilot,implementation depends:1
 task modify 2 priority:10
 ```
 
@@ -144,15 +170,15 @@ task 1 annotate "Security consideration: token expiry should be 15 min for acces
 
 **Checking what's next:**
 ```bash
-task project:copilot-session:refactor-auth status:pending ready
+task ai_cli_sandboxed:refactor-auth status:pending ready
 ```
 
 ## Session Start
-- On session start or when 'onboard' is entered, determine the project id by reading README.md or context/PROJECT.md.
-- The project id should be set to the identified project name, normalized (e.g., spaces replaced with underscores, lowercase).
-- Print: Project: <resolved_project_id> to confirm the project in use.
-- This project id will be used for all Taskwarrior operations.
-- User identification is handled separately after project id is set.
+- On session start or when 'onboard' is entered, determine the PROJECT_ID by reading README.md or context/PROJECT.md.
+- The PROJECT_ID is automatically calculated as PARENT_DIR_CURRENT_DIR from the copilot script.
+- Print: Project: <resolved_PROJECT_ID> to confirm the project in use.
+- This PROJECT_ID will be used for all Taskwarrior operations.
+- User identification is handled separately after PROJECT_ID is set.
 
 ## Integration Rules
 1. **Default to Taskwarrior**: Use tasks instead of creating plan files
@@ -161,4 +187,4 @@ task project:copilot-session:refactor-auth status:pending ready
 4. **Session awareness**: When starting or asked "what are we working on?", list all plans and started tasks
 5. **Plan focus**: When user says "let's work on plan X", focus all task operations on that plan
 6. **User requests context storage**: When user says "add this to the task" or "save this context", use annotations
-7. **Review before work**: Always check `task project:... status:pending` before starting to see current state
+7. **Review before work**: Always check `task PROJECT_ID:... status:pending` before starting to see current state

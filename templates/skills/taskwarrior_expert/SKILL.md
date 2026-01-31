@@ -6,6 +6,33 @@ license: MIT
 
 # Taskwarrior Integration Protocol
 
+## Environment Configuration
+
+### PROJECT_ID Variable
+The `COPILOT_PROJECT_ID` environment variable is automatically set by the copilot script:
+
+```bash
+PROJECT_ID="${PARENT_DIR}_${CURRENT_DIR}"
+```
+
+Example: Running from `/home/user/ai_cli_sandboxed/` → `PROJECT_ID=user_ai_cli_sandboxed`
+
+This PROJECT_ID becomes the Taskwarrior **project** namespace. Within each project, organize work by **plans**:
+
+```
+project:user_ai_cli_sandboxed
+  ├─ onboarding (plan)
+  │   ├─ task 1
+  │   └─ task 2
+  └─ auth-system (plan)
+      ├─ task 1
+      └─ task 2
+```
+
+When creating tasks: `task add project:PROJECT_ID:plan_id "task description"`
+
+This ensures agent context isolation and proper task organization across sessions.
+
 ## 🌟 Philosophy
 
 **"Plan effectively, execute efficiently, and never lose context."**
