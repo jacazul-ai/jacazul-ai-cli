@@ -1,15 +1,60 @@
 #!/bin/bash
 [ -n "$DEBUG" ] && set -x
 
+# Get the absolute path to the script's directory
+SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
+TEMPLATES_TASKRC="$SCRIPT_DIR/../templates/.taskrc"
+
 # Define host directories
 HOST_SANDBOX=$COPILOT_SANDBOXED_HOME/sandbox/copilot
 HOST_SANDBOX_CONFIG_DIR="$HOST_SANDBOX/.config"
 HOST_SANDBOX_COPILOT_DIR="$HOST_SANDBOX/.copilot"
 HOST_SANDBOX_NPM_DIR="$HOST_SANDBOX/.npm"
 HOST_SANDBOX_TASK_DIR="$HOST_SANDBOX/.task"
+HOST_GITCONFIG="$HOST_SANDBOX/.gitconfig"
 
 # Create directories if they don't exist
 mkdir -p "$HOST_SANDBOX_CONFIG_DIR" "$HOST_SANDBOX_COPILOT_DIR" "$HOST_SANDBOX_NPM_DIR" "$HOST_SANDBOX_TASK_DIR"
+
+# Check if git credentials are configured
+if [ ! -f "$HOST_GITCONFIG" ]; then
+    echo "==================================="
+    echo "Git Configuration Setup"
+    echo "==================================="
+    echo ""
+    
+    # Try to get git credentials from host
+    GIT_USER_NAME=$(git config --global user.name 2>/dev/null)
+    GIT_USER_EMAIL=$(git config --global user.email 2>/dev/null)
+    
+    # If not found, prompt user
+    if [ -z "$GIT_USER_NAME" ]; then
+        read -p "Enter your Git user name: " GIT_USER_NAME
+    else
+        echo "✓ Found Git user name: $GIT_USER_NAME"
+    fi
+    
+    if [ -z "$GIT_USER_EMAIL" ]; then
+        read -p "Enter your Git email: " GIT_USER_EMAIL
+    else
+        echo "✓ Found Git email: $GIT_USER_EMAIL"
+    fi
+    
+    # Create gitconfig file
+    cat > "$HOST_GITCONFIG" <<EOF
+[user]
+	name = $GIT_USER_NAME
+	email = $GIT_USER_EMAIL
+[init]
+	defaultBranch = main
+[core]
+	editor = vim
+EOF
+    
+    echo ""
+    echo "✓ Git configuration saved to $HOST_GITCONFIG"
+    echo ""
+fi
 
 # Run the container
 # Added --init to handle signals better and ensured all volumes are present
@@ -22,8 +67,9 @@ podman run -it --rm \
   -v "$HOST_SANDBOX_COPILOT_DIR:/home/node/.copilot:Z" \
   -v "$HOST_SANDBOX_NPM_DIR:/home/node/.npm:Z" \
   -v "$HOST_SANDBOX_TASK_DIR:/home/node/.task:Z" \
-  -v "$(pwd)/templates/context/copilot-instructions.md:/home/node/.copilot/copilot-instructions.md:Z" \
-  -v "$(pwd)/templates/context/instructions:/home/node/.github/instructions:Z" \
-  -v "$(pwd)/templates/.taskrc:/home/node/.taskrc:Z" \
-  -v "$(pwd)/templates/skills:/home/node/.copilot/skills:Z" \
+  -v "$SCRIPT_DIR/../templates/context/copilot-instructions.md:/home/node/.copilot/copilot-instructions.md:Z" \
+  -v "$SCRIPT_DIR/../templates/context/instructions:/home/node/.github/instructions:Z" \
+  -v "$TEMPLATES_TASKRC:/home/node/.taskrc:Z" \
+  -v "$SCRIPT_DIR/../templates/skills:/home/node/.copilot/skills:Z" \
+  -v "$HOST_GITCONFIG:/home/node/.gitconfig:Z" \
   copilot "$@"
