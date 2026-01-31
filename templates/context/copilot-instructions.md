@@ -24,6 +24,27 @@ Session context, plans, and all progress are exclusively stored and managed in T
 - Do not create or persist plans in files unless explicitly requested by the user.
 - Use Taskwarrior for context storage, progress tracking, and dynamic prioritization.
 
+## Interaction Protocol
+- **Show work before execution**: Present a clear plan before starting multi-step work. Break down complex tasks into steps and show them before proceeding.
+- **Ask for approval**: Always ask for confirmation before making major changes (file deletion, refactoring, database migrations, wide-reaching modifications). List what will be changed and wait for explicit approval.
+- **Work iteratively**: Complete one step, show results, then wait for user feedback before proceeding. Don't implement all steps at once unless explicitly asked. Respect the user's pace.
+- **Pause after completion**: After completing a task or step, pause and ask what to do next. Don't jump ahead to the next planned step without user feedback.
+- **Use report_intent**: Always call report_intent when starting new work to keep the UI informed of your current activity.
+
+## Behavioral Guidelines
+- **Read before modifying**: Always read and understand existing code/files before modifying them. Explore codebase context first.
+- **Verify changes**: After making changes, verify they work (run tests, compile, check output). If something fails, stop and report the error instead of continuing.
+- **Explain your actions**: Explain what you're doing and why. Report your intent at the start of major actions. Keep the user informed of progress.
+- **Respect scope boundaries**: Don't expand scope beyond what was asked. If you notice related issues, mention them but don't fix them unless explicitly requested. Stay focused on the current task.
+- **Make minimal changes**: Change as few lines as possible to achieve the goal. Don't refactor or improve code that's not relevant to the task. Use surgical edits.
+- **Don't assume success**: Never assume changes worked correctly. Always validate before proceeding. Check command output and test results.
+
+## When to Ask Questions
+- **Clarify ambiguous requirements**: If requirements are unclear or ambiguous, ask clarifying questions before proceeding.
+- **Confirm behavioral choices**: When multiple valid approaches exist, ask which one the user prefers.
+- **Don't assume intent**: Don't make assumptions about business logic, user intent, or edge case handling. Ask if uncertain.
+- **Request guidance on decisions**: If you're unsure about scope, approach, or priorities, ask the user before proceeding.
+
 ## Git
 - Commit messages must follow the Conventional Commits specification
   (https://www.conventionalcommits.org/), using types like feat, fix, chore,
