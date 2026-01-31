@@ -5,7 +5,7 @@
 set -e
 
 SCRIPT_NAME="tw-flow"
-VERSION="1.0.0"
+VERSION="1.2.0"
 
 # Colors for output
 RED='\033[0;31m'
@@ -44,12 +44,15 @@ ${YELLOW}COMMANDS:${NC}
 
   ${GREEN}Planning:${NC}
     plan <project:plan> <tasks...>    Create a new plan with multiple tasks
-                                       Tasks format: "description|tag|due_offset"
+                                       Tasks format: "mode|description|tag|due_offset"
+                                       Modes: PLAN, INVESTIGATE, GUIDE, EXECUTE, TEST, DEBUG, REVIEW, PR-REVIEW
     
   ${GREEN}Execution:${NC}
     next [project:plan]                Show next task(s) ready to work
     execute <id>                       Start working on a task
     done <id> [note]                   Complete a task with optional note
+    outcome <id> <message>             Record final outcome before closing
+    handoff <id> <message>             Start next task and add handoff note
     pause <id>                         Pause work on a task
     
   ${GREEN}Context:${NC}
@@ -72,11 +75,11 @@ ${YELLOW}COMMANDS:${NC}
 
 ${YELLOW}EXAMPLES:${NC}
 
-  # Create a 3-task plan
+  # Create a 3-task plan with modes
   $SCRIPT_NAME plan copilot:login-feature \\
-    "Design auth flow|research|today" \\
-    "Implement JWT|implementation|tomorrow" \\
-    "Write tests|testing|2days"
+    "PLAN|Design auth flow|research|today" \\
+    "EXECUTE|Implement JWT|implementation|tomorrow" \\
+    "TEST|Write tests|testing|2days"
 
   # See what's next
   $SCRIPT_NAME next copilot:login-feature
@@ -87,7 +90,17 @@ ${YELLOW}EXAMPLES:${NC}
   # Add research note
   $SCRIPT_NAME note 42 research "Found passport.js library"
 
+  # Record outcome
+  $SCRIPT_NAME outcome 42 "Implemented OAuth login flow"
+
   # Complete task
+  $SCRIPT_NAME done 42
+
+  # Handoff to next task
+  $SCRIPT_NAME handoff 43 "Pick up implementation. See Task 42 for design docs."
+
+  # Check status
+  $SCRIPT_NAME status copilot:login-feature
   $SCRIPT_NAME done 42 "Completed design phase"
 
   # Check status
@@ -111,10 +124,27 @@ cmd_plan() {
     local prev_id=""
     
     for task_spec in "$@"; do
-        IFS='|' read -r description tag due_offset <<< "$task_spec"
+        # Parse mode|description|tag|due_offset
+        IFS='|' read -r mode description tag due_offset <<< "$task_spec"
         
+        # If the first field isn't a known mode, assume the old format (description|tag|due)
+        # or that mode was omitted.
+        if [[ ! "$mode" =~ ^(PLAN|INVESTIGATE|GUIDE|EXECUTE|TEST|DEBUG|REVIEW|PR-REVIEW)$ ]]; then
+            # Shift everything right
+            due_offset=$tag
+            tag=$description
+            description=$mode
+            mode=""
+        fi
+
         [[ -z "$description" ]] && error "Task description cannot be empty"
         
+        # Format description with mode
+        local final_desc="$description"
+        if [[ -n "$mode" ]]; then
+            final_desc="[$mode] $description"
+        fi
+
         # Set defaults
         tag=${tag:-implementation}
         due_offset=${due_offset:-today}
@@ -127,7 +157,7 @@ cmd_plan() {
             priority="L"
         fi
         
-        local cmd="task add project:$project_plan \"$description\" due:$due_offset priority:$priority +$tag"
+        local cmd="task add project:$project_plan \"$final_desc\" due:$due_offset priority:$priority +$tag"
         
         # Add dependency if not first task
         [[ -n "$prev_id" ]] && cmd="$cmd depends:$prev_id"
@@ -140,10 +170,10 @@ cmd_plan() {
         
         if [[ -n "$new_id" ]]; then
             task_ids+=("$new_id")
-            success "Created task $new_id: $description [priority: $priority]"
+            success "Created task $new_id: $final_desc [priority: $priority]"
             prev_id="$new_id"
         else
-            error "Failed to create task: $description"
+            error "Failed to create task: $final_desc"
         fi
         
         # Decrease urgency for next task
@@ -232,6 +262,36 @@ cmd_pause() {
     
     task "$task_id" stop
     success "Paused task $task_id"
+}
+
+# Command: outcome - Record final outcome
+cmd_outcome() {
+    local task_id="$1"
+    shift
+    local message="$*"
+    
+    [[ -z "$task_id" ]] && error "Task ID required"
+    [[ -z "$message" ]] && error "Outcome message required"
+    
+    task "$task_id" annotate "OUTCOME: $message"
+    success "Recorded outcome for task $task_id"
+}
+
+# Command: handoff - Start next task and add handoff note
+cmd_handoff() {
+    local task_id="$1"
+    shift
+    local message="$*"
+    
+    [[ -z "$task_id" ]] && error "Task ID required"
+    [[ -z "$message" ]] && error "Handoff message required"
+    
+    # Execute the next task
+    cmd_execute "$task_id"
+    
+    # Add the handoff note
+    task "$task_id" annotate "HANDOFF: $message"
+    success "Handoff to task $task_id with note"
 }
 
 # Command: note - Add structured annotation
@@ -451,6 +511,8 @@ main() {
         next)       cmd_next "$@" ;;
         execute)    cmd_execute "$@" ;;
         done)       cmd_done "$@" ;;
+        outcome)    cmd_outcome "$@" ;;
+        handoff)    cmd_handoff "$@" ;;
         pause)      cmd_pause "$@" ;;
         note)       cmd_note "$@" ;;
         context)    cmd_context "$@" ;;

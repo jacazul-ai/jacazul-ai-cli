@@ -6,6 +6,117 @@ license: MIT
 
 # Taskwarrior Integration Protocol
 
+## 🌟 Philosophy
+
+**"Plan effectively, execute efficiently, and never lose context."**
+
+## 🚦 Interaction Modes
+
+Modes define the **Agent's Behavior** for a given task. Explicitly setting a mode controls the level of autonomy and the type of output.
+
+| Mode | Behavior | Autonomy | Output |
+| :--- | :--- | :--- | :--- |
+| **`[PLAN]`** | Requirements analysis & breakdown. | Low | A structured plan (Task list). |
+| **`[INVESTIGATE]`** | Codebase diving & de-risking. | High (Read-only) | Findings & Context. |
+| **`[GUIDE]`** | Navigator. Instructions & diffs only. | **Zero** (Write) | Step-by-step guide. |
+| **`[EXECUTE]`** | Builder. Implementing changes. | High (Write) | Modified files. |
+| **`[TEST]`** | Verification & QA. | High | Test results. |
+| **`[DEBUG]`** | Root cause analysis. | High (Read-only) | Diagnosis & fix proposal. |
+| **`[REVIEW]`** | Code audit & feedback. | Read-only | Suggestions/Critique. |
+| **`[PR-REVIEW]`** | Prepare/Check PR or diffs. | Read-only | Summary & Readiness check. |
+
+**Usage:** Prefix tasks with the mode to enforce behavior.
+- `[GUIDE] Implement login` -> I tell you how.
+- `[EXECUTE] Implement login` -> I do it.
+
+---
+
+## 📋 The Workflow Loop
+
+### Phase 1: Orient (Ponder)
+Before acting, understand the state of the world.
+```bash
+ponder [project_id]
+```
+This shows your active, ready, and blocked tasks, excluding the `_archive`.
+
+### Phase 2: Plan (Decide)
+Break down a goal into a dependency chain.
+```bash
+tw-flow plan my-project:feature-x \
+  "PLAN|Design API schema|research|today" \
+  "EXECUTE|Implement endpoints|implementation|tomorrow"
+```
+
+### Phase 3: Execute (Act)
+Pick the top task and work.
+```bash
+tw-flow execute <id>
+```
+
+### Phase 4: Context (Record)
+Document your work as you go.
+```bash
+tw-flow note <id> decision "Using library Y."
+```
+
+### Phase 5: Review (Verify)
+**CRITICAL:** Never close a task silently.
+1.  Summarize the work.
+2.  Show the result (code, file, output).
+3.  Ask: "Shall I close this?"
+
+### Phase 6: Outcome (Capture)
+Upon user approval ("looks good", "yes"), you **MUST** record the final result.
+```bash
+tw-flow outcome <id> "Created file X and updated Y."
+```
+This ensures the `task log` contains a permanent record of *what* was achieved.
+
+### Phase 7: Close (Finalize)
+Only after recording the outcome.
+```bash
+tw-flow done <id>
+```
+
+## 🤝 Session Handoff
+
+To ensure continuity between sessions (or agents), use this protocol when wrapping up:
+
+1.  **Close:** Ensure the current task is `done` with a clear outcome.
+2.  **Anchor:** Explicitly `execute` the *next* logical task.
+3.  **Bridge:** Add a specific note to the *newly started* task pointing to the context.
+
+```bash
+tw-flow handoff <next_id> "Pick up here. See Task <prev_id> for investigation details."
+```
+
+---
+
+## 🗄 Archiving Unplanned Tasks
+
+Sometimes, you'll find legacy tasks that don't fit the current plan. These are "unplanned" or "unscoped".
+
+**Protocol:** Move them to the `_archive` project to hide them from the main view.
+
+```bash
+# Example
+task <legacy_id> modify project:<current_project>:_archive
+```
+
+The `ponder` dashboard is configured to automatically ignore any project ending in `_archive`, keeping your view clean and focused.
+
+---
+
+## 🛠 Core Tools
+
+- **`ponder`**: High-level project dashboard.
+- **`tw-flow`**: Simplified task management workflow.
+
+Refer to the script headers for detailed usage.
+
+---
+
 **Always use Taskwarrior for session plans and task breakdowns. Do not create or persist plans in files unless absolutely necessary.**
 
 ## Purpose

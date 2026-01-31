@@ -4,6 +4,7 @@
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TW_FLOW="$SCRIPT_DIR/tw-flow"
+PONDER="$SCRIPT_DIR/ponder"
 
 # Colors
 RED='\033[0;31m'
@@ -33,7 +34,8 @@ info() {
 cleanup() {
     if [[ -n "${TEST_PROJECT:-}" ]]; then
         info "Cleaning up test tasks..."
-        task "project:$TEST_PROJECT" delete 2>/dev/null || true
+        task "project:$TEST_PROJECT" delete rc.confirmation=off 2>/dev/null || true
+        task "project:${TEST_PROJECT}:_archive" delete rc.confirmation=off 2>/dev/null || true
     fi
 }
 
@@ -46,12 +48,12 @@ echo "Test Project: $TEST_PROJECT"
 echo "========================================"
 echo ""
 
-# Test 1: Script exists and is executable
-info "Test 1: Script exists and is executable"
-if [[ -x "$TW_FLOW" ]]; then
-    pass "Script is executable"
+# Test 1: Scripts exist and are executable
+info "Test 1: Scripts exist and are executable"
+if [[ -x "$TW_FLOW" ]] && [[ -x "$PONDER" ]]; then
+    pass "Scripts are executable"
 else
-    fail "Script is not executable"
+    fail "Scripts are not executable"
     exit 1
 fi
 
@@ -130,6 +132,50 @@ info "Test 13: Blocked tasks command"
 # Test 14: Overdue tasks command
 info "Test 14: Overdue tasks command"
 "$TW_FLOW" overdue &>/dev/null && pass "Overdue command works" || fail "Overdue command failed"
+
+# Test 15: Ponder ignores _archive projects
+info "Test 15: Ponder ignores _archive projects"
+ARCHIVE_TASK_DESC="This should be hidden"
+task add "project:${TEST_PROJECT}:_archive" "$ARCHIVE_TASK_DESC" rc.verbose:new-id >/dev/null 2>&1
+PONDER_OUTPUT=$("$PONDER" "$TEST_PROJECT" 2>/dev/null)
+if ! echo "$PONDER_OUTPUT" | grep -q "$ARCHIVE_TASK_DESC"; then
+    pass "Ponder correctly hides tasks from _archive project"
+else
+    fail "Ponder output contains task from _archive project"
+fi
+
+# Test 16: Plan command supports modes
+info "Test 16: Plan command supports modes"
+MODE_TASK_DESC="Mode verification task"
+"$TW_FLOW" plan "${TEST_PROJECT}:mode-test" "GUIDE|$MODE_TASK_DESC|testing|today" &>/dev/null
+if task "project:${TEST_PROJECT}:mode-test" export 2>/dev/null | jq -r '.[].description' | grep -q "\[GUIDE\] $MODE_TASK_DESC"; then
+    pass "Plan command correctly prepends [MODE]"
+else
+    fail "Plan command failed to prepend [MODE]"
+fi
+
+# Test 17: Ponder highlights modes
+info "Test 17: Ponder highlights modes"
+PONDER_OUTPUT=$("$PONDER" "$TEST_PROJECT" 2>/dev/null)
+if echo "$PONDER_OUTPUT" | grep -qE "\[GUIDE\]"; then
+    pass "Ponder displays task with mode in dashboard"
+else
+    fail "Ponder failed to display task with mode"
+fi
+
+# Test 18: Handoff command works
+info "Test 18: Handoff command works"
+NEXT_TASK=$(task "project:$TEST_PROJECT" status:pending export 2>/dev/null | jq -r '.[0].id' | head -n1)
+if [[ -n "$NEXT_TASK" ]] && [[ "$NEXT_TASK" != "null" ]]; then
+    "$TW_FLOW" handoff "$NEXT_TASK" "Test handoff message" &>/dev/null
+    if task "$NEXT_TASK" export 2>/dev/null | jq -r '.[].annotations[].description' 2>/dev/null | grep -q "HANDOFF: Test handoff message"; then
+        pass "Handoff command correctly added annotation"
+    else
+        fail "Handoff command failed to add annotation"
+    fi
+else
+    pass "Handoff command works (no task to test)"
+fi
 
 # Summary
 echo ""

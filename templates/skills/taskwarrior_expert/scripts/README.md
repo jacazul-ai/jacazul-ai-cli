@@ -1,168 +1,152 @@
-# Taskwarrior Flow Scripts
+# Taskwarrior Expert Scripts
 
-Imperative helper scripts that simplify Taskwarrior usage for AI agents.
+Imperative helper scripts that simplify Taskwarrior usage for AI agents following a structured 7-phase workflow.
 
-## tw-flow
+## 📦 Scripts Overview
 
-Main script providing high-level commands for task management.
-
-### Quick Reference
-
+### ponder
+High-level dashboard for project overview (Orient phase).
 ```bash
-# Planning
-./tw-flow plan <project:plan> "task1|tag|due" "task2|tag|due" ...
-
-# Execution
-./tw-flow next [project:plan]          # What's ready
-./tw-flow execute <id>                 # Start task
-./tw-flow done <id> [note]             # Complete task
-./tw-flow pause <id>                   # Pause task
-
-# Context
-./tw-flow note <id> <type> <msg>       # Add annotation
-./tw-flow context <id>                 # Show full details
-
-# Viewing
-./tw-flow plans                      # List all plans
-./tw-flow status [project:plan]        # Overview
-./tw-flow active                       # Active tasks
-./tw-flow blocked                      # Blocked tasks
-./tw-flow overdue                      # Overdue tasks
-
-# Modifications
-./tw-flow urgent <id> [urgency]        # Make urgent
-./tw-flow block <id> <dep_id>          # Add dependency
-./tw-flow unblock <id> <dep_id>        # Remove dependency
-./tw-flow wait <id> <date>             # Put on hold
+ponder [project_root]
 ```
 
-### Examples
-
-#### Create a 3-task plan
-
+### tw-flow
+Simplified task management - Version 1.2.0
 ```bash
-./tw-flow plan copilot:login-feature \
-  "Design auth flow|research|today" \
-  "Implement JWT|implementation|tomorrow" \
-  "Write tests|testing|2days"
+tw-flow <command> [options]
 ```
 
-#### Work on tasks
-
-```bash
-# See what's next
-./tw-flow next copilot:login-feature
-
-# Start first task
-./tw-flow execute 42
-
-# Add context
-./tw-flow note 42 research "Found passport.js library"
-./tw-flow note 42 decision "Using JWT tokens"
-
-# Complete
-./tw-flow done 42 "Design complete"
-
-# Next task auto-unblocks
-./tw-flow execute 43
-```
-
-#### Check progress
-
-```bash
-./tw-flow status copilot:login-feature
-```
-
-### Dependencies
-
-- `bash` (4.0+)
-- `taskwarrior` (installed and configured)
-- `jq` (for JSON parsing)
-- `bc` (for calculations)
-- `grep` with Perl regex support
-
-## Testing
-
-Run the smoke test to validate all commands:
-
+### test-tw-flow.sh
+Comprehensive smoke test suite (18 tests).
 ```bash
 ./test-tw-flow.sh
 ```
 
-The smoke test validates:
-- Basic command execution
-- Plan creation and management
-- Task lifecycle (execute, note, context, done)
-- Edge cases (special characters, empty states)
-- All viewing commands (plans, status, active, blocked, overdue)
+---
 
-### Dependencies
+## 🚀 Quick Reference
+
+### Core Commands
 
 ```bash
-# System-wide installation
-sudo cp ./tw-flow /usr/local/bin/
-sudo chmod +x /usr/local/bin/tw-flow
+# Dashboard
+ponder copilot
 
-# User installation
-mkdir -p ~/.local/bin
-cp ./tw-flow ~/.local/bin/
-chmod +x ~/.local/bin/tw-flow
-# Add ~/.local/bin to PATH if not already there
+# Planning with modes
+tw-flow plan project:feature "MODE|task|tag|due" ...
 
-# Or use directly from repo
-././tw-flow help
+# Execution
+tw-flow execute <id>
+tw-flow outcome <id> "result"          # NEW in 1.2.0
+tw-flow done <id>
+tw-flow handoff <id> "context"         # NEW in 1.2.0
+
+# Context
+tw-flow note <id> <type> "message"
+
+# Viewing
+tw-flow plans
+tw-flow status [project]
+tw-flow next [project]
 ```
 
-## Design Philosophy
+---
 
-These scripts follow these principles:
+## 📋 7-Phase Workflow
 
-1. **Imperative over declarative** - Commands do actions, not describe states
-2. **Smart defaults** - Minimize required parameters
-3. **Automatic relationships** - Dependencies created automatically in `plan`
-4. **Clear feedback** - Always show what changed
-5. **Error prevention** - Check preconditions before executing
-6. **Context preservation** - Annotations always include type prefix
+```bash
+# 1. Orient - Check state
+ponder copilot
 
-## Architecture
+# 2. Plan - Break down goal
+tw-flow plan copilot:feature \
+  "PLAN|Design|research|today" \
+  "EXECUTE|Build|implementation|tomorrow"
 
+# 3. Execute - Start work
+tw-flow execute 42
+
+# 4. Context - Document
+tw-flow note 42 decision "Using approach X"
+
+# 5. Review - (Manual) Show work, get approval
+
+# 6. Outcome - Record result
+tw-flow outcome 42 "Implemented X with Y"
+
+# 7. Close - Complete
+tw-flow done 42
 ```
-tw-flow
-├── Planning commands    (plan)
-├── Execution commands   (next, execute, done, pause)
-├── Context commands     (note, context)
-├── Viewing commands     (status, active, blocked, overdue)
-└── Modification commands (urgent, block, unblock, wait)
+
+---
+
+## 🎯 Interaction Modes
+
+| Mode | Behavior | Autonomy |
+|------|----------|----------|
+| `[PLAN]` | Analysis | Low |
+| `[INVESTIGATE]` | Explore code | High (Read) |
+| `[GUIDE]` | Instructions only | Zero (Write) |
+| `[EXECUTE]` | Implementation | High (Write) |
+| `[TEST]` | Validation | High |
+
+```bash
+tw-flow plan copilot:refactor \
+  "INVESTIGATE|Review code|research|today" \
+  "EXECUTE|Apply changes|implementation|tomorrow"
 ```
 
-Each command:
-- Validates inputs
-- Provides clear error messages
-- Shows success confirmation
-- Displays relevant next actions
+---
 
-## Future Enhancements
+## 📝 Note Types
 
-Potential additions:
+Structured annotations with uppercase prefixes:
 
-- `./tw-flow edit <id>` - Edit task description
-- `./tw-flow move <id> <new_project:plan>` - Move task to different plan
-- `./tw-flow split <id>` - Split task into subtasks
-- `./tw-flow merge <id1> <id2>` - Merge two tasks
-- `./tw-flow dashboard` - Show overall statistics
-- `./tw-flow export <project:plan>` - Export plan to markdown
-- `./tw-flow import <file>` - Import plan from markdown
+```bash
+tw-flow note 42 research "Finding X"    # RESEARCH:
+tw-flow note 42 decision "Using Y"      # DECISION:
+tw-flow note 42 blocked "Needs Z"       # BLOCKED:
+tw-flow note 42 lesson "Learned W"      # LESSON:
+```
 
-## Contributing
+---
 
-When adding new commands:
+## ✅ Testing
 
-1. Add function `cmd_<name>` with clear parameter validation
-2. Update `show_usage()` with command documentation
-3. Add case in `main()` dispatcher
-4. Follow existing patterns for output (error, success, info, warning)
-5. Test with invalid inputs to ensure good error messages
+All 18 tests passing:
 
-## License
+```bash
+./test-tw-flow.sh
+# ✓ Scripts executable
+# ✓ Plan with modes
+# ✓ Outcome/handoff commands  
+# ✓ Archive pattern
+# ✓ Mode highlighting
+# + 13 more...
+```
 
-MIT
+---
+
+## 📚 Dependencies
+
+- bash 4.0+
+- taskwarrior 2.6.0+
+- jq
+- bc
+
+---
+
+## 🎉 Version 1.2.0 (2026-01-31)
+
+**New:**
+- `ponder` dashboard
+- `outcome` command
+- `handoff` command
+- Mode support in plans
+- 18 tests (was 14)
+
+---
+
+See `../HIERARCHY.md` and `../SKILL.md` for full documentation.
+
+**License:** MIT
