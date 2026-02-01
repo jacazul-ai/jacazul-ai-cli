@@ -1,0 +1,8 @@
+# Sample Taskwarrior configuration
+# See https://taskwarrior.org/docs/configuration/
+
+# Default Taskwarrior settings
+confirmation=off
+data.location=/home/node/.task
+
+# You can add more custom settings below

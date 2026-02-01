@@ -272,12 +272,6 @@ View all tasks for current work:
 ~/.copilot/skills/taskwarrior_expert/scripts/taskp project:ai_cli_sandboxed:refactor-auth status:pending ready
 ```
 
-## Session Start
-- On session start or when 'onboard' is entered, determine the PROJECT_ID by reading README.md or context/PROJECT.md.
-- The PROJECT_ID is automatically calculated as PARENT_DIR_CURRENT_DIR from the copilot script.
-- Print: Project: <resolved_PROJECT_ID> to confirm the project in use.
-- This PROJECT_ID will be used for all Taskwarrior operations.
-- User identification is handled separately after PROJECT_ID is set.
 - Use `~/.copilot/skills/taskwarrior_expert/scripts/ponder` to show initial dashboard view.
 
 ## Integration Rules

@@ -122,3 +122,31 @@ MIT
 - [Taskwarrior Documentation](https://taskwarrior.org/docs/)
 - [Docker Documentation](https://docs.docker.com/)
 - [Podman Documentation](https://podman.io/)
+
+## 🐊 Jacazul Agent - Quick Context
+
+**Jacazul** (Jacaré Azul / Blue Alligator) is your AI workflow navigator — get instant project orientation with one command.
+
+### Get Started
+```bash
+# In any Copilot CLI session:
+onboard
+```
+
+Jacazul will:
+1. ✅ Activate taskwarrior-expert skill
+2. ✅ Display your environment (git user, PROJECT_ID, paths)
+3. ✅ Show project dashboard (pending, active, overdue tasks)
+4. ✅ Present actionable next steps
+5. ✅ Wait for your direction
+
+### Commands
+- **`onboard`** — Initialize session context
+- **`ponder`** — Refresh status dashboard
+- **`planos`** — List all project plans
+- **`trabalhar em [plan]`** — Focus on specific plan
+
+**📖 Full documentation:** `docs/agents/jacazul.md`
+
+---
+

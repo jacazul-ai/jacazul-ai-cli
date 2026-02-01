@@ -21,6 +21,10 @@ PARENT_DIR=$(basename "$(dirname "$(pwd)")")
 CURRENT_DIR=$(basename "$(pwd)")
 PROJECT_ID="${PARENT_DIR}_${CURRENT_DIR}"
 
+# Capture complete session context for onboard
+REAL_PATH="$(pwd)"
+SYSTEM_USER="$(whoami)"
+
 # Check if git credentials are configured
 if [ ! -f "$HOST_GITCONFIG" ]; then
     echo "==================================="
@@ -48,17 +52,23 @@ if [ ! -f "$HOST_GITCONFIG" ]; then
     # Create gitconfig file
     cat > "$HOST_GITCONFIG" <<EOF
 [user]
-	name = $GIT_USER_NAME
-	email = $GIT_USER_EMAIL
+name = $GIT_USER_NAME
+email = $GIT_USER_EMAIL
 [init]
-	defaultBranch = main
+defaultBranch = main
 [core]
-	editor = vim
+editor = vim
 EOF
     
     echo ""
     echo "✓ Git configuration saved to $HOST_GITCONFIG"
     echo ""
+fi
+
+# Load git credentials if not already set
+if [ -z "$GIT_USER_NAME" ]; then
+    GIT_USER_NAME=$(grep -A2 '^\[user\]' "$HOST_GITCONFIG" | grep 'name' | cut -d'=' -f2 | xargs 2>/dev/null || echo "not configured")
+    GIT_USER_EMAIL=$(grep -A2 '^\[user\]' "$HOST_GITCONFIG" | grep 'email' | cut -d'=' -f2 | xargs 2>/dev/null || echo "not configured")
 fi
 
 # Run the container
@@ -68,6 +78,12 @@ podman run -it --rm \
   --userns=keep-id \
   -e "COPILOT_CUSTOM_INSTRUCTIONS_DIRS=/home/node/.copilot:/home/node/.github/instructions" \
   -e "PROJECT_ID=$PROJECT_ID" \
+  -e "CONTEXT_REAL_PATH=$REAL_PATH" \
+  -e "CONTEXT_SYSTEM_USER=$SYSTEM_USER" \
+  -e "CONTEXT_GIT_USER=$GIT_USER_NAME" \
+  -e "CONTEXT_GIT_EMAIL=$GIT_USER_EMAIL" \
+  -e "CONTEXT_PARENT_DIR=$PARENT_DIR" \
+  -e "CONTEXT_CURRENT_DIR=$CURRENT_DIR" \
   -v "$(pwd):/project:Z" \
   -w /project \
   -v "$HOST_SANDBOX_CONFIG_DIR:/home/node/.config:Z" \
@@ -78,5 +94,6 @@ podman run -it --rm \
   -v "$SCRIPT_DIR/../templates/context/instructions:/home/node/.github/instructions:Z" \
   -v "$TEMPLATES_TASKRC:/home/node/.taskrc:Z" \
   -v "$SCRIPT_DIR/../templates/skills:/home/node/.copilot/skills:Z" \
+  -v "$SCRIPT_DIR/../templates/agents:/home/node/.copilot/agents:Z" \
   -v "$HOST_GITCONFIG:/home/node/.gitconfig:Z" \
   copilot "$@"
