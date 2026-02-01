@@ -2,6 +2,12 @@
 # Ponder - Taskwarrior Dashboard
 # Provides a high-level overview of focus and progress
 
+# Detect project and set TASKDATA if PROJECT_ID is available
+if [ -n "$PROJECT_ID" ]; then
+    export TASKDATA="$HOME/.task/$PROJECT_ID"
+    mkdir -p "$TASKDATA"
+fi
+
 PROJECT_ROOT="$1"
 if [[ -z "$PROJECT_ROOT" ]]; then
     PROJECT_ROOT="copilot" # Default if no project given

@@ -6,6 +6,7 @@ This project provides a containerized environment for running AI-powered command
 
 - **Containerized CLI environment** - Isolated and reproducible
 - **Supports Docker and Podman** - Use your preferred container runtime
+- **Per-project task databases** - Isolated Taskwarrior databases for each project
 - **Pre-configured workflows** - Taskwarrior integration with structured 7-phase workflow
 - **Skill-based system** - Modular capabilities for different tasks
 - **Session persistence** - Maintain context across sessions
@@ -33,36 +34,48 @@ podman run -it --rm ai-cli-copilot
 
 ### Try Taskwarrior Workflow
 ```bash
-# Check current state
-ponder copilot
+# Check current state (auto-detects project)
+ponder piraz_ai_cli_sandboxed
 
-# Create a plan
-tw-flow plan copilot:my-feature \
-  "PLAN|Design API|research|today" \
-  "EXECUTE|Build API|implementation|tomorrow"
+# Create a plan (uses per-project database)
+tw-flow plan piraz_ai_cli_sandboxed:my-feature \
+  "Design API|research|today" \
+  "Build API|implementation|tomorrow"
 
 # Start working
 tw-flow execute <task_id>
+
+# Use taskp for direct task management
+taskp list                    # Lists tasks in project database
+taskp add "New task"          # Adds to project database
 ```
 
 ## 📚 Documentation
 
 - **[Getting Started](docs/getting-started.md)** - Setup and first steps
 - **[Taskwarrior Expert](docs/taskwarrior-expert.md)** - Complete workflow guide
+- **[Per-Project Databases](docs/per-project-taskwarrior.md)** - Database architecture and usage
 - **[Skills Overview](docs/skills/README.md)** - Available skills
 
 ## 🛠 Available Skills
 
-### Taskwarrior Expert (v1.2.0)
-Structured workflow management with 7 phases and interaction modes.
+### Taskwarrior Expert (v1.3.0)
+Structured workflow management with 7 phases, interaction modes, and per-project database isolation.
 
 **Features:**
-- Dashboard visualization (`ponder`)
-- Task management (`tw-flow`)
+- **Per-project databases** - Isolated task storage for each project
+- **Project-aware wrapper** (`taskp`) - Auto-detects current project
+- Dashboard visualization (`ponder`) - Project-specific views
+- Task management (`tw-flow` v1.3.0) - Enhanced with TASKDATA support
 - Session continuity and handoffs
-- 18 comprehensive tests
+- 18+ comprehensive tests
 
-[→ Complete Guide](docs/taskwarrior-expert.md)
+**New in v1.3.0:**
+- Automatic project detection via `PROJECT_ID`
+- Per-project database isolation (`~/.task/$PROJECT_ID/`)
+- Backward compatible with central database
+
+[→ Complete Guide](docs/taskwarrior-expert.md) | [→ Architecture](docs/per-project-taskwarrior.md)
 
 ## 📁 Project Structure
 

@@ -2,6 +2,36 @@
 
 Complete guide for the taskwarrior-expert skill - a structured workflow system for managing tasks, plans, and session context using Taskwarrior.
 
+## 📍 Script Locations (IMPORTANT)
+
+**When this skill is activated, all scripts are located at:**
+
+```
+~/.copilot/skills/taskwarrior_expert/scripts/
+```
+
+**Available scripts:**
+- `~/.copilot/skills/taskwarrior_expert/scripts/tw-flow` - Main workflow tool
+- `~/.copilot/skills/taskwarrior_expert/scripts/taskp` - Project-aware wrapper
+- `~/.copilot/skills/taskwarrior_expert/scripts/ponder` - Dashboard visualization
+
+**How to use them:**
+
+```bash
+# Option 1: Direct path (always works)
+~/.copilot/skills/taskwarrior_expert/scripts/tw-flow plan copilot:feature "task|tag|due"
+
+# Option 2: If scripts are in PATH
+tw-flow plan copilot:feature "task|tag|due"
+
+# Option 3: Relative to skill directory (if in skill context)
+./scripts/tw-flow plan copilot:feature "task|tag|due"
+```
+
+**For AI Agents:** Always use the full path `~/.copilot/skills/taskwarrior_expert/scripts/` when invoking these tools to ensure they are found regardless of working directory.
+
+---
+
 ## 🎯 Overview
 
 The taskwarrior-expert skill transforms Taskwarrior into a powerful workflow engine with:

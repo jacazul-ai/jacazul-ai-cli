@@ -8,8 +8,12 @@ license: MIT
 
 ## Environment Configuration
 
+### Per-Project Database Architecture (v1.3.0+)
+
+**NEW:** Taskwarrior now uses **isolated databases per project** for better organization, performance, and isolation.
+
 ### PROJECT_ID Variable
-The `COPILOT_PROJECT_ID` environment variable is automatically set by the copilot script:
+The `PROJECT_ID` environment variable is automatically set by the copilot script:
 
 ```bash
 PROJECT_ID="${PARENT_DIR}_${CURRENT_DIR}"
@@ -17,10 +21,36 @@ PROJECT_ID="${PARENT_DIR}_${CURRENT_DIR}"
 
 Example: Running from `/home/user/ai_cli_sandboxed/` → `PROJECT_ID=user_ai_cli_sandboxed`
 
-This PROJECT_ID becomes the Taskwarrior **project** namespace. Within each project, organize work by **plans**:
+### Database Structure
+
+Each project has its own Taskwarrior database:
 
 ```
-project:user_ai_cli_sandboxed
+~/.task/
+  ├── piraz_ai_cli_sandboxed/    # Project-specific database
+  │   ├── pending.data
+  │   ├── completed.data
+  │   └── backlog.data
+  └── other_project/              # Another project
+      └── ...
+```
+
+### Project-Aware Tools
+
+Three main tools automatically detect and use the correct project database:
+
+1. **taskp** - Project-aware wrapper (auto-detects via PROJECT_ID)
+2. **tw-flow** (v1.3.0+) - Workflow management with TASKDATA support
+3. **ponder** - Dashboard with per-project views
+
+All automatically set `TASKDATA=~/.task/$PROJECT_ID` when PROJECT_ID is available.
+
+### Task Organization Pattern
+
+Within each project database, organize work by **plans**:
+
+```
+project:piraz_ai_cli_sandboxed
   ├─ onboarding (plan)
   │   ├─ task 1
   │   └─ task 2
@@ -29,9 +59,17 @@ project:user_ai_cli_sandboxed
       └─ task 2
 ```
 
-When creating tasks: `task add project:PROJECT_ID:plan_id "task description"`
+When creating tasks: `taskp add project:PROJECT_ID:plan_id "task description"`
 
 This ensures agent context isolation and proper task organization across sessions.
+
+**Benefits:**
+- **Isolation**: Each project has its own database
+- **Performance**: Smaller databases = faster queries
+- **Portability**: Easy to backup/archive individual projects
+- **Scalability**: No single-database bottleneck
+
+See `/project/docs/per-project-taskwarrior.md` for complete architecture documentation.
 
 ## 🌟 Philosophy
 
