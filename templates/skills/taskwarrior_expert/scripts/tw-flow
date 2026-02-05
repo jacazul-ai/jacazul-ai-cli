@@ -247,6 +247,43 @@ cmd_next() {
     task "$filter" ready 2>/dev/null || warning "No tasks ready"
 }
 
+# Helper: Get inherited context from parent tasks (dependencies)
+get_parent_context() {
+    local task_id="$1"
+    local json
+    json=$(task "$task_id" export 2>/dev/null | jq '.[0]')
+    
+    # UUIDs of dependencies
+    local deps
+    deps=$(echo "$json" | jq -r '.depends // [] | join(" ")')
+    
+    if [[ -n "$deps" ]]; then
+        local found_context=false
+        for dep_uuid in $deps; do
+            local dep_json
+            dep_json=$(task "$dep_uuid" export 2>/dev/null | jq '.[0]')
+            [[ -z "$dep_json" || "$dep_json" == "null" ]] && continue
+            
+            local dep_desc=$(echo "$dep_json" | jq -r '.description')
+            local uuid=$(echo "$dep_json" | jq -r '.uuid')
+            
+            # Extract relevant annotations
+            local annotations
+            annotations=$(echo "$dep_json" | jq -r '.annotations // [] | .[] | select(.description | test("^(OUTCOME|DECISION|LESSON|HANDOFF):")) | .description')
+            
+            if [[ -n "$annotations" ]]; then
+                if [[ "$found_context" == false ]]; then
+                    echo -e "\n${CYAN}══ INHERITED CONTEXT ══${NC}"
+                    found_context=true
+                fi
+                echo -e "${YELLOW}Task (${uuid:0:8}) [$dep_desc]:${NC}"
+                echo "$annotations" | sed 's/^/  - /'
+            fi
+        done
+        [[ "$found_context" == true ]] && echo ""
+    fi
+}
+
 # Command: execute - Start working on a task
 cmd_execute() {
     local input_id="$1"
@@ -268,6 +305,9 @@ cmd_execute() {
         error "Task $task_id is BLOCKED by dependencies"
     fi
     
+    # Show inherited context from dependencies
+    get_parent_context "$task_id"
+
     task "$task_id" start
     success "Started working on task $(short_id "$task_id")"
     
