@@ -119,9 +119,6 @@ ${YELLOW}COMMANDS:${NC}
     block <id> <depends_on_id>         Add dependency to task
     unblock <id> <depends_on_id>       Remove dependency from task
     wait <id> <date>                   Put task on hold until date
-    discard <id>                       Soft delete - move to trash and mark done
-    tree [project]                     Show visual dependency tree
-    discard <id>                       Soft delete - move to trash and mark done
 
 ${YELLOW}EXAMPLES:${NC}
 
@@ -250,43 +247,6 @@ cmd_next() {
     task "$filter" ready 2>/dev/null || warning "No tasks ready"
 }
 
-# Helper: Get inherited context from parent tasks (dependencies)
-get_parent_context() {
-    local task_id="$1"
-    local json
-    json=$(task "$task_id" export 2>/dev/null | jq '.[0]')
-    
-    # UUIDs of dependencies
-    local deps
-    deps=$(echo "$json" | jq -r '.depends // [] | join(" ")')
-    
-    if [[ -n "$deps" ]]; then
-        local found_context=false
-        for dep_uuid in $deps; do
-            local dep_json
-            dep_json=$(task "$dep_uuid" export 2>/dev/null | jq '.[0]')
-            [[ -z "$dep_json" || "$dep_json" == "null" ]] && continue
-            
-            local dep_desc=$(echo "$dep_json" | jq -r '.description')
-            local uuid=$(echo "$dep_json" | jq -r '.uuid')
-            
-            # Extract relevant annotations
-            local annotations
-            annotations=$(echo "$dep_json" | jq -r '.annotations // [] | .[] | select(.description | test("^(OUTCOME|DECISION|LESSON|HANDOFF):")) | .description')
-            
-            if [[ -n "$annotations" ]]; then
-                if [[ "$found_context" == false ]]; then
-                    echo -e "\n${CYAN}══ INHERITED CONTEXT ══${NC}"
-                    found_context=true
-                fi
-                echo -e "${YELLOW}Task (${uuid:0:8}) [$dep_desc]:${NC}"
-                echo "$annotations" | sed 's/^/  - /'
-            fi
-        done
-        [[ "$found_context" == true ]] && echo ""
-    fi
-}
-
 # Command: execute - Start working on a task
 cmd_execute() {
     local input_id="$1"
@@ -308,9 +268,6 @@ cmd_execute() {
         error "Task $task_id is BLOCKED by dependencies"
     fi
     
-    # Show inherited context from dependencies
-    get_parent_context "$task_id"
-
     task "$task_id" start
     success "Started working on task $(short_id "$task_id")"
     
@@ -606,127 +563,6 @@ cmd_wait() {
     success "Task $task_id waiting until $date"
 }
 
-# Soft delete - move task to trash
-cmd_discard() {
-    local task_id="$1"
-    
-    [[ -z "$task_id" ]] && error "Task ID required"
-    
-    # Get current project to preserve context in trash
-    local current_project
-    current_project=$(task "$task_id" export 2>/dev/null | jq -r '.[0].project // "unscoped"')
-    
-    # Move to trash project (ensure we don't double trash)
-    local trash_project="$current_project"
-    if [[ "$current_project" != *":trash" ]]; then
-        trash_project="$current_project:trash"
-    fi
-    
-    task "$task_id" modify project:"$trash_project" +DISCARDED
-    task "$task_id" done
-    
-    success "Task $(short_id "$task_id") moved to trash ($trash_project) and marked done."
-}
-
-
-cmd_discard() {
-    local task_id="$1"
-    
-    [[ -z "$task_id" ]] && error "Task ID required"
-    
-    # Get current project to preserve context in trash
-    local current_project
-    current_project=$(task "$task_id" export 2>/dev/null | jq -r '.[0].project // "unscoped"')
-    
-    # Move to trash project (ensure we don't double trash)
-    local trash_project="$current_project"
-    if [[ "$current_project" != *":trash" ]]; then
-        trash_project="$current_project:trash"
-    fi
-    
-    task "$task_id" modify project:"$trash_project" +DISCARDED
-    task "$task_id" done
-    
-    success "Task $(short_id "$task_id") moved to trash ($current_project:trash) and marked done."
-}
-
-cmd_tree() {
-    local filter="${1:-status:pending}"
-    if [[ "$filter" != status:* ]] && [[ "$filter" != project:* ]]; then
-        filter="project:$filter"
-    fi
-
-    local project_name
-    project_name=$(echo "$filter" | sed 's/^project://')
-    echo -e "${CYAN}══ Initiative: $project_name ══${NC}"
-
-    # Helper for recursive tree rendering
-    render_tree_node() {
-        local uuid="$1"
-        local indent="$2"
-        local is_last="$3"
-
-        local json
-        json=$(task "$uuid" export 2>/dev/null | jq '.[0]')
-        [[ -z "$json" || "$json" == "null" ]] && return
-
-        local desc=$(echo "$json" | jq -r '.description')
-        local status=$(echo "$json" | jq -r '.status')
-        local start=$(echo "$json" | jq -r '.start // ""')
-
-        local icon="${YELLOW}○${NC}"
-        [[ "$status" == "completed" ]] && icon="${GREEN}✓${NC}"
-        [[ -n "$start" ]] && icon="${BLUE}⚡${NC}"
-        
-        # Check if blocked
-        local is_ready
-        is_ready=$(task "$uuid" +READY export 2>/dev/null | jq -r '.[0].id // ""')
-        if [[ "$status" == "pending" && -z "$is_ready" ]]; then
-            icon="${RED}🔒${NC}"
-        fi
-
-        local marker="├──"
-        [[ "$is_last" == "true" ]] && marker="└──"
-        [[ -z "$indent" ]] && marker=""
-
-        printf "%b%b %b (%s) | %s\n" "$indent" "$marker" "$icon" "${uuid:0:8}" "$desc"
-
-        # Find children (tasks that depend on this one)
-        local children
-        children=$(task "depends.contains:$uuid" status:pending export 2>/dev/null | jq -r '.[] | select(.project | test("_archive$|_trash$") | not) | .uuid' || echo "")
-        
-        local child_indent="$indent    "
-        [[ "$marker" == "├──" ]] && child_indent="$indent│   "
-        [[ -z "$indent" ]] && child_indent=""
-
-        local count
-        count=$(echo "$children" | grep -c . || echo 0)
-        local i=1
-        while read -r child_uuid; do
-            [[ -z "$child_uuid" ]] && continue
-            local last_child="false"
-            [[ "$i" -eq "$count" ]] && last_child="true"
-            render_tree_node "$child_uuid" "$child_indent" "$last_child"
-            i=$((i+1))
-        done <<< "$children"
-    }
-
-    # Find root nodes (tasks in project with no dependencies or whose dependencies are outside this project/completed)
-    local root_uuids
-    root_uuids=$(task "$filter" export 2>/dev/null | jq -r '.[] | select(.project | test("_archive$|_trash$") | not) | select(.depends == null or (.depends | length == 0)) | .uuid')
-
-    if [[ -z "$root_uuids" ]]; then
-        # If no strict roots, just show all tasks in project as a list for now
-        task "$filter" export 2>/dev/null | jq -r '.[] | select(.project | test("_archive$|_trash$") | not) | .uuid' | while read -r uuid; do
-             [[ -n "$uuid" ]] && render_tree_node "$uuid" "" "false"
-        done
-    else
-        while read -r uuid; do
-            [[ -n "$uuid" ]] && render_tree_node "$uuid" "" "false"
-        done <<< "$root_uuids"
-    fi
-}
-
 # Main command dispatcher
 main() {
     [[ $# -eq 0 ]] && { show_usage; exit 0; }
@@ -753,9 +589,6 @@ main() {
         block)      cmd_block "$@" ;;
         unblock)    cmd_unblock "$@" ;;
         wait)       cmd_wait "$@" ;;
-        discard)    cmd_discard "$@" ;;
-        tree)       cmd_tree "$@" ;;
-        discard)    cmd_discard "$@" ;;
         help|-h|--help) show_usage ;;
         *)          error "Unknown command: $command (use '$SCRIPT_NAME help' for usage)" ;;
     esac

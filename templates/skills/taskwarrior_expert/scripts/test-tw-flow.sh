@@ -222,6 +222,40 @@ fi
 
 echo ""
 echo "========================================"
+
+# Test 21: Discard command (soft delete)
+info "Test 21: Discard command moves to trash"
+DISCARD_UUID=$(task add "project:$TEST_PROJECT" "Unique discard test" 2>&1 | grep -oP 'Created task \K[0-9]+\b')
+if [[ -n "$DISCARD_UUID" ]]; then
+    # Get the actual UUID before discard
+    ACTUAL_UUID=$(task "$DISCARD_UUID" export 2>/dev/null | jq -r '.[0].uuid[0:8]')
+    
+    # Temporarily unset PROJECT_ID so tw-flow uses TASKDATA env
+    OLD_PROJECT_ID="$PROJECT_ID"
+    unset PROJECT_ID
+    "$TW_FLOW" discard "$ACTUAL_UUID" &>/dev/null
+    export PROJECT_ID="$OLD_PROJECT_ID"
+    
+    # Check if in trash with DISCARDED tag
+    TRASH_CHECK=$(task "project:$TEST_PROJECT:trash" export 2>/dev/null | jq -r ".[] | select(.tags // [] | map(. == \"DISCARDED\") | any) | .uuid")
+    
+    if [[ -n "$TRASH_CHECK" ]]; then
+        pass "Discard moves to trash"
+    else
+        fail "Discard did not move to trash"
+    fi
+else
+    fail "Could not create task to discard"
+fi
+
+# Test 22: Tree command shows dependencies
+info "Test 22: Tree command displays dependency tree"
+TREE_OUTPUT=$("$TW_FLOW" tree "$TEST_PROJECT" 2>/dev/null)
+if echo "$TREE_OUTPUT" | grep -q "══ Initiative:"; then
+    pass "Tree command works"
+else
+    fail "Tree command failed"
+fi
 echo "Test Summary"
 echo "========================================"
 echo -e "Passed: ${GREEN}$TESTS_PASSED${NC}"
