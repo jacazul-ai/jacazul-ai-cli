@@ -132,6 +132,26 @@ tw-flow execute <id>
 **What happens:**
 - Task marked as active (+ACTIVE)
 - Start time recorded
+
+**Context Propagation (v1.3.0+):**
+When executing a task, tw-flow automatically displays inherited context from parent tasks (dependencies):
+
+```
+ INHERITED CONTEXT ══
+Task (ae749be5) [Design auth flow]:
+  - OUTCOME: OAuth implementation complete with Google/GitHub providers
+  - DECISION: Using JWT with 15min access, 7 day refresh tokens
+  - LESSON: Always test token refresh edge cases
+```
+
+Shows annotations with prefixes:
+- `OUTCOME:` - What was achieved
+- `DECISION:` - Architectural choices
+- `LESSON:` - Important learnings
+- `HANDOFF:` - Session transfer notes
+
+This ensures you have full context before starting work on dependent tasks.
+
 - Task details displayed
 
 **Check what's ready:**
@@ -271,6 +291,8 @@ tw-flow initiative copilot:bug-fix \
 
 ### ponder - Dashboard
 
+Version 1.4.0
+
 **Usage:**
 ```bash
 ponder [project_root]
@@ -281,6 +303,28 @@ ponder [project_root]
 - **Current Focus:** Shows active task with mode highlighting
 - **Up Next:** Top 3 ready tasks (no blockers)
 - **Blocked/Waiting:** Top 3 blocked tasks with dependencies
+
+
+**Modes:**
+- **Default (Tactical):** Columnar table with Initiative Landscape
+- **Classic:** Compact view with `--classic` flag
+
+**Tactical Mode Features (v1.4.0):**
+```bash
+ponder [project_root]
+```
+Shows:
+- **Initiative Landscape:** Breakdown by initiative (active/ready/total)
+- **Tactical Readout:** Columnar table with status, UUID, mode, initiative, description, urgency
+- Status icons: ⚡ (active), !! (overdue), ○ (normal), 🔒 (blocked)
+- Mode extraction: Displays `[PLAN]`, `[EXECUTE]`, etc. from task descriptions
+
+**Classic Mode:**
+```bash
+ponder --classic [project_root]
+```
+Compact view with focus on current task and next 3 ready tasks.
+
 
 **Automatically excludes:**
 - Projects ending in `_archive`
@@ -304,7 +348,7 @@ ponder [project_root]
 
 ### tw-flow - Workflow Commands
 
-Version 1.2.0
+Version 1.4.0
 
 #### Planning Commands
 
@@ -407,6 +451,31 @@ tw-flow unblock <id> <depends_on_id>
 ```bash
 tw-flow wait <id> <date>
 ```
+
+**discard** - Soft delete task (NEW in 1.4.0)
+```bash
+tw-flow discard <id>
+```
+Moves task to `project:trash` subproject with `+DISCARDED` tag. Preserves history while removing from active view. The `ponder` dashboard automatically hides trash projects.
+
+**tree** - Visualize dependencies (NEW in 1.4.0)
+```bash
+tw-flow tree [project:feature]
+```
+Shows ASCII hierarchy of tasks with dependencies:
+- ✓ = Completed
+- ⚡ = Active
+- 🔒 = Blocked
+- ○ = Pending
+
+Example output:
+```
+ Initiative: copilot:auth ══
+ ○ (ae749be5) | Design auth flow
+   ├── ⚡ (4facb768) | Implement JWT middleware
+   └── 🔒 (0e7ab763) | Add endpoints
+```
+
 
 ---
 
