@@ -194,6 +194,32 @@ else
     fail "Could not find second task for handoff"
 fi
 
+
+# Test 20: Context propagation from dependencies
+info "Test 20: Context propagation displays parent context"
+PARENT_TASK=$(task "project:$TEST_PROJECT" export 2>/dev/null | jq -r '.[0].uuid // empty')
+if [[ -n "$PARENT_TASK" ]] && [[ "$PARENT_TASK" != "null" ]]; then
+    # Add OUTCOME to parent
+    "$TW_FLOW" outcome "$PARENT_TASK" "Parent task completed successfully" &>/dev/null
+    
+    # Create child task with dependency
+    CHILD_UUID=$(task add "project:$TEST_PROJECT" "Child task with dependency" depends:"$PARENT_TASK" 2>&1 | grep -oP 'Created task \K[0-9a-fA-F-]+' || task "project:$TEST_PROJECT" export 2>/dev/null | jq -r '.[] | select(.description | contains("Child task")) | .uuid // empty')
+    
+    if [[ -n "$CHILD_UUID" ]] && [[ "$CHILD_UUID" != "null" ]]; then
+        # Execute child - should show inherited context
+        EXECUTE_OUTPUT=$("$TW_FLOW" execute "$CHILD_UUID" 2>&1)
+        if echo "$EXECUTE_OUTPUT" | grep -q "INHERITED CONTEXT"; then
+            pass "Context propagation works"
+        else
+            fail "Context propagation not displayed"
+        fi
+    else
+        fail "Could not create child task"
+    fi
+else
+    fail "Could not find parent task"
+fi
+
 echo ""
 echo "========================================"
 echo "Test Summary"
