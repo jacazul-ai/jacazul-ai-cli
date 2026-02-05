@@ -71,6 +71,23 @@ This ensures agent context isolation and proper task organization across session
 
 See `/project/docs/per-project-taskwarrior.md` for complete architecture documentation.
 
+## 🔑 UUID Display Protocol
+
+**CRITICAL: Always use short UUIDs (8 chars) when referring to tasks to users.**
+
+- **NEVER** show numeric task IDs to users
+- **ALWAYS** display short UUIDs (first 8 characters)
+- Both `ponder` and `tw-flow status` already show UUIDs correctly
+- When using `taskp` output, extract UUID with: `taskp <ID> | grep UUID | awk '{print substr($2,1,8)}'`
+
+**Display format:** `fa145ef2 - Task description [urgency]`
+
+**Why UUIDs?**
+- IDs are session-specific and change across database rebuilds
+- UUIDs are permanent and globally unique
+- Better for documentation, handoffs, and long-term tracking
+
+
 ## 🌟 Philosophy
 
 **"Plan effectively, execute efficiently, and never lose context."**
@@ -483,14 +500,14 @@ When listing tasks for user, **ALWAYS show in this format:**
 
 ```
 Plan: copilot:feature-name
-1. (ID: 42) Design API schema [9.0] 🟢 ACTIVE
-2. (ID: 43) Implement endpoints [7.0] 🔒 BLOCKED (depends: 42)
-3. (ID: 44) Write tests [5.0] 🔒 BLOCKED (depends: 43)
+1. fa145ef2 - Design API schema [9.0] 🟢 ACTIVE
+2. b3c7d891 - Implement endpoints [7.0] 🔒 BLOCKED (depends: 42)
+3. c9e2f4a3 - Write tests [5.0] 🔒 BLOCKED (depends: 43)
 ```
 
 Format explanation:
 - Task number (1, 2, 3...) - Sequential order
-- Task ID in parentheses (42, 43, 44) - Needed for commands
+- Short UUID (8 chars) - Unique task identifier for commands
 - Description - What to do
 - [Urgency] - Priority score in brackets
 - Status indicators:
