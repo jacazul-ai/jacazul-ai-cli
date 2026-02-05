@@ -204,7 +204,7 @@ cmd_initiative() {
             priority="L"
         fi
         
-        local cmd="task add project:$initiative \"$final_desc\" due:$due_offset priority:$priority +$tag"
+        local cmd="task add $initiative \"$final_desc\" due:$due_offset priority:$priority +$tag"
         
         # Add dependency if not first task
         [[ -n "$prev_id" ]] && cmd="$cmd depends:$prev_id"
@@ -237,8 +237,8 @@ cmd_initiative() {
 cmd_next() {
     local filter="${1:-status:pending}"
     
-    if [[ "$filter" != status:* ]] && [[ "$filter" != project:* ]]; then
-        filter="project:$filter status:pending"
+    if [[ "$filter" != status:* ]] && [[ "$filter" != * ]]; then
+        filter="$filter status:pending"
     fi
     
     info "Next tasks ready to work:"
@@ -400,8 +400,8 @@ cmd_context() {
 cmd_status() {
     local filter="${1:-status:pending}"
     
-    if [[ "$filter" != status:* ]] && [[ "$filter" != project:* ]]; then
-        filter="project:$filter"
+    if [[ "$filter" != status:* ]] && [[ "$filter" != * ]]; then
+        filter="$filter"
     fi
  
     # Custom initiative status output
@@ -470,11 +470,11 @@ cmd_initiatives() {
     while IFS= read -r initiative; do
         [[ -z "$initiative" ]] && continue
         local pending
-        pending=$(task "project:$initiative" status:pending 2>/dev/null | grep -c "^[0-9]" || echo "0")
+        pending=$(task "$initiative" status:pending 2>/dev/null | grep -c "^[0-9]" || echo "0")
         local active
-        active=$(task "project:$initiative" +ACTIVE 2>/dev/null | grep -c "^[0-9]" || echo "0")
+        active=$(task "$initiative" +ACTIVE 2>/dev/null | grep -c "^[0-9]" || echo "0")
         local blocked
-        blocked=$(task "project:$initiative" +BLOCKED 2>/dev/null | grep -c "^[0-9]" || echo "0")
+        blocked=$(task "$initiative" +BLOCKED 2>/dev/null | grep -c "^[0-9]" || echo "0")
         
         echo -e "${CYAN}● $plan${NC}"
         echo -e "  Pending: $pending | Active: $active | Blocked: $blocked"

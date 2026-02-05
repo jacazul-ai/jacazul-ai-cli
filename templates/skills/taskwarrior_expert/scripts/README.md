@@ -33,7 +33,7 @@ Comprehensive smoke test suite (18 tests).
 ponder copilot
 
 # Planning with modes
-tw-flow plan project:feature "MODE|task|tag|due" ...
+tw-flow plan feature "MODE|task|tag|due" ...
 
 # Execution
 tw-flow execute <id>

@@ -2,7 +2,7 @@
 
 ## 1. Project Naming
 Use hierarchical naming to segregate context and allow for broad or narrow filtering.
-- **Pattern**: `project:subproject:feature` (using colons for Taskwarrior compatibility)
+- **Pattern**: `subfeature` (using colons for Taskwarrior compatibility)
 - **Example**: `copilot:taskwarrior-review:implement-ponder`
 
 ## 2. Task Descriptions
@@ -82,7 +82,7 @@ tw-flow plan copilot:auth \
 Move completed or irrelevant tasks to `_archive` sub-projects to keep views clean:
 
 ```bash
-task 42 modify project:copilot:old-feature:_archive
+task 42 modify copilot:old-feature:_archive
 ```
 
 The `ponder` dashboard automatically excludes projects ending with `_archive`.

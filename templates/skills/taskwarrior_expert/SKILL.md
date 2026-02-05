@@ -50,7 +50,7 @@ All automatically set `TASKDATA=~/.task/$PROJECT_ID` when PROJECT_ID is availabl
 Within each project database, organize work by **plans**:
 
 ```
-project:piraz_ai_cli_sandboxed
+piraz_ai_cli_sandboxed
   ├─ onboarding (plan)
   │   ├─ task 1
   │   └─ task 2
@@ -59,7 +59,7 @@ project:piraz_ai_cli_sandboxed
       └─ task 2
 ```
 
-When creating tasks: `taskp add project:PROJECT_ID:plan_id "task description"`
+When creating tasks: `taskp add PROJECT_ID:plan_id "task description"`
 
 This ensures agent context isolation and proper task organization across sessions.
 
@@ -108,7 +108,7 @@ This shows your active, ready, and blocked tasks, excluding the `_archive`.
 ### Phase 2: Plan (Decide)
 Break down a goal into a dependency chain.
 ```bash
-tw-flow plan my-project:feature-x \
+tw-flow plan my-feature-x \
   "PLAN|Design API schema|research|today" \
   "EXECUTE|Implement endpoints|implementation|tomorrow"
 ```
@@ -166,7 +166,7 @@ Sometimes, you'll find legacy tasks that don't fit the current plan. These are "
 
 ```bash
 # Example
-task <legacy_id> modify project:<current_project>:_archive
+task <legacy_id> modify <current_project>:_archive
 ```
 
 The `ponder` dashboard is configured to automatically ignore any project ending in `_archive`, keeping your view clean and focused.
@@ -203,25 +203,25 @@ Example: `copilot-session:auth-system:implement-login`
 
 ```bash
 # Step 1: Add first task (highest urgency + earliest due date)
-task add project:copilot:PLAN_NAME "First task to do" due:today urgency:9.0 +research
+task add copilot:PLAN_NAME "First task to do" due:today urgency:9.0 +research
 
 # Step 2: Add second task (depends on first, due tomorrow)
-task add project:copilot:PLAN_NAME "Second task to do" due:tomorrow depends:FIRST_TASK_ID urgency:7.0 +implementation
+task add copilot:PLAN_NAME "Second task to do" due:tomorrow depends:FIRST_TASK_ID urgency:7.0 +implementation
 
 # Step 3: Add third task (depends on second, due in 2 days)
-task add project:copilot:PLAN_NAME "Third task to do" due:2days depends:SECOND_TASK_ID urgency:5.0 +testing
+task add copilot:PLAN_NAME "Third task to do" due:2days depends:SECOND_TASK_ID urgency:5.0 +testing
 ```
 
 **Real Example:**
 ```bash
 # Creating a login feature plan
-task add project:copilot:login-feature "Design authentication flow" due:today urgency:9.0 +research
+task add copilot:login-feature "Design authentication flow" due:today urgency:9.0 +research
 # Returns: Created task 42
 
-task add project:copilot:login-feature "Implement JWT tokens" due:tomorrow depends:42 urgency:7.0 +implementation
+task add copilot:login-feature "Implement JWT tokens" due:tomorrow depends:42 urgency:7.0 +implementation
 # Returns: Created task 43
 
-task add project:copilot:login-feature "Write integration tests" due:2days depends:43 urgency:5.0 +testing
+task add copilot:login-feature "Write integration tests" due:2days depends:43 urgency:5.0 +testing
 # Returns: Created task 44
 ```
 
@@ -232,7 +232,7 @@ task add project:copilot:login-feature "Write integration tests" due:2days depen
 task status:pending ready
 
 # Show tasks for specific plan
-task project:copilot:login-feature status:pending
+task copilot:login-feature status:pending
 
 # Show what you're currently working on
 task +ACTIVE
@@ -286,11 +286,11 @@ task +BLOCKED
 When starting work on a plan or feature, **ALWAYS use this formula:**
 
 ```bash
-task add project:PROJECT:PLAN "Description" due:DATE urgency:NUMBER +tag depends:ID
+task add PROJECT:PLAN "Description" due:DATE urgency:NUMBER +tag depends:ID
 ```
 
 **Each part explained:**
-- `project:PROJECT:PLAN` - Groups tasks together (e.g., copilot:auth-feature)
+- `PROJECT:PLAN` - Groups tasks together (e.g., copilot:auth-feature)
 - `"Description"` - What to do (start with verb: Design, Implement, Test, etc.)
 - `due:DATE` - Deadline (today, tomorrow, friday, eow, 3days, etc.)
 - `urgency:NUMBER` - Manual priority (9.0 = highest, 1.0 = lowest)
@@ -316,16 +316,16 @@ task add project:PROJECT:PLAN "Description" due:DATE urgency:NUMBER +tag depends
 **Example with ALL elements:**
 ```bash
 # Plan: Build API endpoint
-task add project:copilot:api-endpoint "Design API schema" due:today urgency:9.0 +research
+task add copilot:api-endpoint "Design API schema" due:today urgency:9.0 +research
 # Created task 10
 
-task add project:copilot:api-endpoint "Implement POST endpoint" due:tomorrow urgency:7.0 +implementation depends:10
+task add copilot:api-endpoint "Implement POST endpoint" due:tomorrow urgency:7.0 +implementation depends:10
 # Created task 11 (BLOCKED until 10 is done)
 
-task add project:copilot:api-endpoint "Add validation middleware" due:2days urgency:5.0 +implementation depends:11
+task add copilot:api-endpoint "Add validation middleware" due:2days urgency:5.0 +implementation depends:11
 # Created task 12 (BLOCKED until 11 is done)
 
-task add project:copilot:api-endpoint "Write unit tests" due:3days urgency:3.0 +testing depends:12
+task add copilot:api-endpoint "Write unit tests" due:3days urgency:3.0 +testing depends:12
 # Created task 13 (BLOCKED until 12 is done)
 ```
 
@@ -454,13 +454,13 @@ task 42 modify wait:friday
 
 ```bash
 # Show all pending tasks for a plan (most common)
-task project:copilot:PLAN_NAME status:pending
+task copilot:PLAN_NAME status:pending
 
 # Show tasks ready to work (no blockers, highest urgency first)
 task status:pending ready
 
 # Show tasks ready for specific plan
-task project:copilot:PLAN_NAME status:pending ready
+task copilot:PLAN_NAME status:pending ready
 
 # Show what you're actively working on
 task +ACTIVE
@@ -509,11 +509,11 @@ When user says "let's work on plan X", filter all subsequent task operations to 
 
 ```bash
 # User: "Let's work on the auth feature"
-# You should use: task project:copilot:auth-feature status:pending
+# You should use: task copilot:auth-feature status:pending
 
 # All subsequent commands focus on that plan
-task project:copilot:auth-feature +ACTIVE
-task project:copilot:auth-feature +BLOCKED
+task copilot:auth-feature +ACTIVE
+task copilot:auth-feature +BLOCKED
 ```
 
 ### 5. Retrieving Context - DETAILED
@@ -522,7 +522,7 @@ task project:copilot:auth-feature +BLOCKED
 
 ```bash
 # See all pending tasks in a plan
-task project:copilot:PLAN_NAME status:pending
+task copilot:PLAN_NAME status:pending
 
 # Get FULL details of a specific task (annotations, dependencies, dates, etc.)
 task 42 info
@@ -621,9 +621,9 @@ If you need to break a task into smaller pieces:
 task 42 "Implement API endpoints"
 
 # Break it down
-task add project:copilot:api "Implement POST /users" depends:41 urgency:6.5 +implementation
-task add project:copilot:api "Implement GET /users/:id" depends:41 urgency:6.3 +implementation
-task add project:copilot:api "Implement PUT /users/:id" depends:41 urgency:6.1 +implementation
+task add copilot:api "Implement POST /users" depends:41 urgency:6.5 +implementation
+task add copilot:api "Implement GET /users/:id" depends:41 urgency:6.3 +implementation
+task add copilot:api "Implement PUT /users/:id" depends:41 urgency:6.1 +implementation
 
 # These all depend on task 41 (design) and must be done before task 43 (tests)
 task 43 modify depends:42,45,46,47
@@ -637,13 +637,13 @@ task 43 modify depends:42,45,46,47
 
 ```bash
 # Step 1: Create the plan with 3 tasks
-task add project:copilot:login "Design authentication flow" due:today urgency:9.0 +research
+task add copilot:login "Design authentication flow" due:today urgency:9.0 +research
 # Created task 10
 
-task add project:copilot:login "Implement JWT authentication" due:tomorrow urgency:7.0 +implementation depends:10
+task add copilot:login "Implement JWT authentication" due:tomorrow urgency:7.0 +implementation depends:10
 # Created task 11 (BLOCKED by task 10)
 
-task add project:copilot:login "Write integration tests" due:2days urgency:5.0 +testing depends:11
+task add copilot:login "Write integration tests" due:2days urgency:5.0 +testing depends:11
 # Created task 12 (BLOCKED by task 11)
 
 # Step 2: Work on first task
@@ -674,21 +674,21 @@ task 12 done
 
 ```bash
 # Design must be done first
-task add project:copilot:dashboard "Design dashboard layout" due:today urgency:9.0 +research
+task add copilot:dashboard "Design dashboard layout" due:today urgency:9.0 +research
 # Created task 20
 
 # These 3 can be done in parallel (all depend only on design)
-task add project:copilot:dashboard "Implement user stats widget" due:tomorrow urgency:7.0 +implementation depends:20
+task add copilot:dashboard "Implement user stats widget" due:tomorrow urgency:7.0 +implementation depends:20
 # Created task 21
 
-task add project:copilot:dashboard "Implement activity feed widget" due:tomorrow urgency:7.0 +implementation depends:20
+task add copilot:dashboard "Implement activity feed widget" due:tomorrow urgency:7.0 +implementation depends:20
 # Created task 22
 
-task add project:copilot:dashboard "Implement notifications widget" due:tomorrow urgency:7.0 +implementation depends:20
+task add copilot:dashboard "Implement notifications widget" due:tomorrow urgency:7.0 +implementation depends:20
 # Created task 23
 
 # Integration depends on all 3 widgets
-task add project:copilot:dashboard "Integrate all widgets" due:3days urgency:5.0 +implementation depends:21,22,23
+task add copilot:dashboard "Integrate all widgets" due:3days urgency:5.0 +implementation depends:21,22,23
 # Created task 24 (BLOCKED by 21, 22, AND 23)
 
 # When task 20 is done, tasks 21, 22, 23 all become ready simultaneously!
@@ -706,7 +706,7 @@ task 20 done
 # Current plan tasks exist with urgency 9.0, 7.0, 5.0...
 
 # Add urgent bug fix (higher urgency than everything else!)
-task add project:copilot:hotfix "Fix login crash on Safari" due:today urgency:15.0 +bug +urgent priority:H
+task add copilot:hotfix "Fix login crash on Safari" due:today urgency:15.0 +bug +urgent priority:H
 # Created task 30
 
 # This task now appears FIRST in ready list because urgency 15.0 > 9.0
@@ -728,7 +728,7 @@ task 30 done
 
 ```bash
 # Add task but it can't start yet
-task add project:copilot:deploy "Deploy to production" wait:friday urgency:8.0 +deployment
+task add copilot:deploy "Deploy to production" wait:friday urgency:8.0 +deployment
 # Created task 40
 
 # Task 40 has status:waiting (won't show in pending list)
@@ -773,7 +773,7 @@ task due.after:sow due.before:eow status:pending
 task entry.after:sow
 
 # Tasks by project (JSON export)
-task status:pending export | jq 'group_by(.project) | .[] | {project: .[0].project, count: length}'
+task status:pending export | jq 'group_by(.project) | .[] | { .[0].project, count: length}'
 ```
 
 ### Progress Dashboard
@@ -792,19 +792,19 @@ echo "Blocked: $(task +BLOCKED count)"
 Check health of a specific plan:
 ```bash
 # All tasks in plan
-task project:copilot:plan-x status:pending
+task copilot:plan-x status:pending
 
 # Blocked tasks in plan
-task project:copilot:plan-x +BLOCKED
+task copilot:plan-x +BLOCKED
 
 # Tasks without dependencies
-task project:copilot:plan-x depends: status:pending
+task copilot:plan-x depends: status:pending
 
 # Tasks ready to work on (no blockers)
-task project:copilot:plan-x status:pending ready
+task copilot:plan-x status:pending ready
 
 # Average urgency of plan tasks
-task project:copilot:plan-x export | jq '[.[] | .urgency] | add/length'
+task copilot:plan-x export | jq '[.[] | .urgency] | add/length'
 ```
 
 ## Best Practices
@@ -818,10 +818,10 @@ task project:copilot:plan-x export | jq '[.[] | .urgency] | add/length'
 ### Project Hierarchy
 Use hierarchical project names for organization:
 ```bash
-project:copilot:auth:login
-project:copilot:auth:signup
-project:copilot:api:endpoints
-project:copilot:api:middleware
+copilot:auth:login
+copilot:auth:signup
+copilot:api:endpoints
+copilot:api:middleware
 ```
 
 ### Tag Strategy
@@ -929,7 +929,7 @@ A helper script `tw-flow` is located in the skill's scripts directory.
 #### 1. Create a Plan
 
 ```bash
-./scripts/tw-flow plan <project:plan> <task1> <task2> <task3>...
+./scripts/tw-flow plan <plan> <task1> <task2> <task3>...
 
 # Task format: "description|tag|due_offset"
 # - description: What to do
@@ -954,7 +954,7 @@ A helper script `tw-flow` is located in the skill's scripts directory.
 #### 2. See What's Next
 
 ```bash
-./scripts/tw-flow next [project:plan]
+./scripts/tw-flow next [plan]
 
 # Examples:
 ./scripts/tw-flow next                           # All ready tasks
@@ -1000,7 +1000,7 @@ A helper script `tw-flow` is located in the skill's scripts directory.
 #### 6. Check Status
 
 ```bash
-./scripts/tw-flow status [project:plan]
+./scripts/tw-flow status [plan]
 
 # Examples:
 ./scripts/tw-flow status                         # All tasks
@@ -1111,13 +1111,13 @@ A helper script `tw-flow` is located in the skill's scripts directory.
 
 ```bash
 # First task (highest priority)
-task add project:copilot:PLAN_NAME "Description" due:today urgency:9.0 +TAG
+task add copilot:PLAN_NAME "Description" due:today urgency:9.0 +TAG
 
 # Second task (depends on first)
-task add project:copilot:PLAN_NAME "Description" due:tomorrow urgency:7.0 +TAG depends:FIRST_ID
+task add copilot:PLAN_NAME "Description" due:tomorrow urgency:7.0 +TAG depends:FIRST_ID
 
 # Third task (depends on second)
-task add project:copilot:PLAN_NAME "Description" due:2days urgency:5.0 +TAG depends:SECOND_ID
+task add copilot:PLAN_NAME "Description" due:2days urgency:5.0 +TAG depends:SECOND_ID
 ```
 
 ### Common Commands - MEMORIZE THESE
@@ -1139,7 +1139,7 @@ task ID done
 task ID info
 
 # See plan tasks
-task project:copilot:PLAN_NAME status:pending
+task copilot:PLAN_NAME status:pending
 
 # See what's overdue
 task due.before:today status:pending
@@ -1200,9 +1200,9 @@ LINK:       = URL reference
 
 ```bash
 # 1. Create plan
-task add project:copilot:feature-x "Design" due:today urgency:9.0 +research
-task add project:copilot:feature-x "Build" due:tomorrow urgency:7.0 +implementation depends:1
-task add project:copilot:feature-x "Test" due:2days urgency:5.0 +testing depends:2
+task add copilot:feature-x "Design" due:today urgency:9.0 +research
+task add copilot:feature-x "Build" due:tomorrow urgency:7.0 +implementation depends:1
+task add copilot:feature-x "Test" due:2days urgency:5.0 +testing depends:2
 
 # 2. Work on it
 task 1 start
@@ -1250,10 +1250,10 @@ task +ACTIVE
 For repetitive maintenance or review tasks:
 ```bash
 # Weekly code review
-task add "Weekly code review" project:copilot:maintenance due:friday recur:weekly
+task add "Weekly code review" copilot:maintenance due:friday recur:weekly
 
 # Monthly cleanup
-task add "Archive old tasks" project:copilot:maintenance due:eom recur:monthly
+task add "Archive old tasks" copilot:maintenance due:eom recur:monthly
 ```
 
 ### Urgency Coefficients
@@ -1274,11 +1274,11 @@ Export tasks for dashboards, reports, or integration:
 task status:pending export
 
 # Export specific plan
-task project:copilot:feature-x export
+task copilot:feature-x export
 
 # Use with jq for analysis
 task export | jq '.[] | select(.priority=="H")'
-task export | jq 'group_by(.project) | .[] | {project: .[0].project, count: length}'
+task export | jq 'group_by(.project) | .[] | { .[0].project, count: length}'
 ```
 
 ### Time Tracking
@@ -1314,13 +1314,13 @@ task due.after:today due.before:3days
 Modify multiple tasks at once:
 ```bash
 # Add tag to all tasks in a plan
-task project:copilot:plan-x modify +urgent
+task copilot:plan-x modify +urgent
 
 # Complete all tasks in a category
 task +research status:pending done
 
 # Change priority for filtered tasks
-task project:copilot:plan-x priority: modify priority:H
+task copilot:plan-x priority: modify priority:H
 ```
 
 ### Context Annotations with Metadata
@@ -1349,7 +1349,7 @@ task <id> annotate "AC: Must handle 1000+ concurrent users"
 4. **Session awareness**: When starting or asked "what are we working on?", list all plans and started tasks
 5. **Plan focus**: When user says "let's work on plan X", focus all task operations on that plan
 6. **User requests context storage**: When user says "add this to the task" or "save this context", use annotations
-7. **Review before work**: Always check `task project:... status:pending` before starting to see current state
+7. **Review before work**: Always check `task ... status:pending` before starting to see current state
 8. **Use structured annotations**: Prefix annotations with type (RESEARCH, DECISION, BLOCKED, LESSON, AC) for better context retrieval
 9. **Time tracking**: Use `start`/`stop` commands when actively working on tasks to track effort
 10. **Leverage filters**: Use date filters, status filters, and tag combinations to create powerful views

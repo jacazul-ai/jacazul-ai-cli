@@ -34,8 +34,8 @@ info() {
 cleanup() {
     if [[ -n "${TEST_PROJECT:-}" ]]; then
         info "Cleaning up test tasks..."
-        task "project:$TEST_PROJECT" delete rc.confirmation=off 2>/dev/null || true
-        task "project:${TEST_PROJECT}:_archive" delete rc.confirmation=off 2>/dev/null || true
+        task "$TEST_PROJECT" delete rc.confirmation=off 2>/dev/null || true
+        task "${TEST_PROJECT}:_archive" delete rc.confirmation=off 2>/dev/null || true
     fi
 }
 
@@ -82,7 +82,7 @@ info "Test 6: Show next tasks"
 
 # Test 7: Get first task ID
 info "Test 7: Get first task ID and execute"
-FIRST_TASK=$(task "project:$TEST_PROJECT" status:pending export | jq -r '.[0].id')
+FIRST_TASK=$(task "$TEST_PROJECT" status:pending export | jq -r '.[0].id')
 if [[ -n "$FIRST_TASK" ]] && [[ "$FIRST_TASK" != "null" ]]; then
     "$TW_FLOW" execute "$FIRST_TASK" &>/dev/null && pass "Execute command works (task $FIRST_TASK)" || fail "Execute command failed"
 else
@@ -109,7 +109,7 @@ fi
 
 # Test 11: Outcome validation - task without outcome should fail
 info "Test 11: Outcome validation - reject task without outcome"
-OUTCOME_TEST=$(task add "project:$TEST_PROJECT" "Task without outcome" 2>/dev/null | grep -oP 'Created task \K\d+' || echo "")
+OUTCOME_TEST=$(task add "$TEST_PROJECT" "Task without outcome" 2>/dev/null | grep -oP 'Created task \K\d+' || echo "")
 if [[ -n "$OUTCOME_TEST" ]]; then
     if "$TW_FLOW" done "$OUTCOME_TEST" &>/dev/null; then
         fail "Done command should reject task without OUTCOME"
@@ -123,7 +123,7 @@ fi
 
 # Test 12: Outcome validation - task with outcome should succeed
 info "Test 12: Outcome validation - accept task with outcome"
-OUTCOME_TEST2=$(task add "project:$TEST_PROJECT" "Task with outcome" 2>/dev/null | grep -oP 'Created task \K\d+' || echo "")
+OUTCOME_TEST2=$(task add "$TEST_PROJECT" "Task with outcome" 2>/dev/null | grep -oP 'Created task \K\d+' || echo "")
 if [[ -n "$OUTCOME_TEST2" ]]; then
     task "$OUTCOME_TEST2" annotate "OUTCOME: Test outcome added" &>/dev/null
     if "$TW_FLOW" done "$OUTCOME_TEST2" &>/dev/null; then
@@ -137,7 +137,7 @@ fi
 
 # Test 11: Test with spaces in project name (edge case)
 info "Test 11: Test edge case - task with special characters"
-EDGE_TASK=$(task add "project:$TEST_PROJECT" "Task with 'quotes' and \"double quotes\"" 2>/dev/null | grep -oP 'Created task \K\d+' || echo "")
+EDGE_TASK=$(task add "$TEST_PROJECT" "Task with 'quotes' and \"double quotes\"" 2>/dev/null | grep -oP 'Created task \K\d+' || echo "")
 if [[ -n "$EDGE_TASK" ]]; then
     if task "$EDGE_TASK" &>/dev/null; then
         pass "Handles special characters in task description"
@@ -164,7 +164,7 @@ info "Test 14: Overdue tasks command"
 # Test 15: Ponder ignores _archive projects
 info "Test 15: Ponder ignores _archive projects"
 ARCHIVE_TASK_DESC="This should be hidden"
-task add "project:${TEST_PROJECT}:_archive" "$ARCHIVE_TASK_DESC" rc.verbose:new-id >/dev/null 2>&1
+task add "${TEST_PROJECT}:_archive" "$ARCHIVE_TASK_DESC" rc.verbose:new-id >/dev/null 2>&1
 PONDER_OUTPUT=$("$PONDER" "$TEST_PROJECT" 2>/dev/null)
 if ! echo "$PONDER_OUTPUT" | grep -q "$ARCHIVE_TASK_DESC"; then
     pass "Ponder correctly hides tasks from _archive project"
@@ -176,7 +176,7 @@ fi
 info "Test 16: Initiative command supports modes"
 MODE_TASK_DESC="Mode verification task"
 "$TW_FLOW" initiative "${TEST_PROJECT}:mode-test" "GUIDE|$MODE_TASK_DESC|testing|today" &>/dev/null
-if task "project:${TEST_PROJECT}:mode-test" export 2>/dev/null | jq -r '.[].description' | grep -q "\[GUIDE\] $MODE_TASK_DESC"; then
+if task "${TEST_PROJECT}:mode-test" export 2>/dev/null | jq -r '.[].description' | grep -q "\[GUIDE\] $MODE_TASK_DESC"; then
     pass "Initiative command correctly prepends [MODE]"
 else
     fail "Initiative command failed to prepend [MODE]"
@@ -193,7 +193,7 @@ fi
 
 # Test 18: Handoff command works
 info "Test 18: Handoff command works"
-NEXT_TASK=$(task "project:$TEST_PROJECT" status:pending export 2>/dev/null | jq -r '.[0].id' | head -n1)
+NEXT_TASK=$(task "$TEST_PROJECT" status:pending export 2>/dev/null | jq -r '.[0].id' | head -n1)
 if [[ -n "$NEXT_TASK" ]] && [[ "$NEXT_TASK" != "null" ]]; then
     "$TW_FLOW" handoff "$NEXT_TASK" "Test handoff message" &>/dev/null
     if task "$NEXT_TASK" export 2>/dev/null | jq -r '.[].annotations[].description' 2>/dev/null | grep -q "HANDOFF: Test handoff message"; then

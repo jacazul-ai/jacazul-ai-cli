@@ -68,7 +68,7 @@ Jacazul executes **3 parallel tool calls** when you say `onboard`:
 2. **Environment Display** — Shows git config, paths, PROJECT_ID
 3. **Ponder Dashboard** — Runs status check for current project
 
-All tasks are automatically filtered by `project:$PROJECT_ID`.
+All tasks are automatically filtered by `$PROJECT_ID`.
 
 ## Language Support
 
