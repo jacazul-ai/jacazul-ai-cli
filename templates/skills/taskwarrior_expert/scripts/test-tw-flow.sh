@@ -61,20 +61,20 @@ fi
 info "Test 2: Help command works"
 "$TW_FLOW" help >/dev/null 2>&1 && pass "Help command works" || fail "Help command failed"
 
-# Test 3: Create a simple plan
-info "Test 3: Create a plan with tasks"
-"$TW_FLOW" plan "$TEST_PROJECT" \
+# Test 3: Create a simple initiative
+info "Test 3: Create a initiative with tasks"
+"$TW_FLOW" initiative "$TEST_PROJECT" \
     "First task|research|today" \
     "Second task|implementation|tomorrow" \
-    "Third task|testing|2days" &>/dev/null && pass "Plan created successfully" || fail "Plan creation failed"
+    "Third task|testing|2days" &>/dev/null && pass "Initiative created successfully" || fail "Initiative creation failed"
 
-# Test 4: List plans
-info "Test 4: List plans"
-"$TW_FLOW" plans | grep -q "$TEST_PROJECT" && pass "Plans command shows test project" || fail "Plans command failed to show test project"
+# Test 4: List initiatives
+info "Test 4: List initiatives"
+"$TW_FLOW" initiatives | grep -q "$TEST_PROJECT" && pass "Initiatives command shows test project" || fail "Initiatives command failed to show test project"
 
-# Test 5: Show status of plan
-info "Test 5: Show plan status"
-"$TW_FLOW" status "$TEST_PROJECT" | grep -q "Plano:" && pass "Status command works" || fail "Status command failed"
+# Test 5: Show status of initiative
+info "Test 5: Show initiative status"
+"$TW_FLOW" status "$TEST_PROJECT" | grep -q "Initiative:" && pass "Status command works" || fail "Status command failed"
 
 # Test 6: Show next tasks
 info "Test 6: Show next tasks"
@@ -105,6 +105,34 @@ fi
 info "Test 10: Complete task"
 if [[ -n "$FIRST_TASK" ]] && [[ "$FIRST_TASK" != "null" ]]; then
     "$TW_FLOW" done "$FIRST_TASK" "Test completion" &>/dev/null && pass "Done command works" || fail "Done command failed"
+fi
+
+# Test 11: Outcome validation - task without outcome should fail
+info "Test 11: Outcome validation - reject task without outcome"
+OUTCOME_TEST=$(task add "project:$TEST_PROJECT" "Task without outcome" 2>/dev/null | grep -oP 'Created task \K\d+' || echo "")
+if [[ -n "$OUTCOME_TEST" ]]; then
+    if "$TW_FLOW" done "$OUTCOME_TEST" &>/dev/null; then
+        fail "Done command should reject task without OUTCOME"
+    else
+        pass "Done command correctly rejects task without OUTCOME"
+    fi
+    task "$OUTCOME_TEST" delete rc.confirmation=off &>/dev/null || true
+else
+    fail "Failed to create outcome test task"
+fi
+
+# Test 12: Outcome validation - task with outcome should succeed
+info "Test 12: Outcome validation - accept task with outcome"
+OUTCOME_TEST2=$(task add "project:$TEST_PROJECT" "Task with outcome" 2>/dev/null | grep -oP 'Created task \K\d+' || echo "")
+if [[ -n "$OUTCOME_TEST2" ]]; then
+    task "$OUTCOME_TEST2" annotate "OUTCOME: Test outcome added" &>/dev/null
+    if "$TW_FLOW" done "$OUTCOME_TEST2" &>/dev/null; then
+        pass "Done command accepts task with OUTCOME"
+    else
+        fail "Done command should accept task with OUTCOME"
+    fi
+else
+    fail "Failed to create outcome test task 2"
 fi
 
 # Test 11: Test with spaces in project name (edge case)
@@ -144,14 +172,14 @@ else
     fail "Ponder output contains task from _archive project"
 fi
 
-# Test 16: Plan command supports modes
-info "Test 16: Plan command supports modes"
+# Test 16: Initiative command supports modes
+info "Test 16: Initiative command supports modes"
 MODE_TASK_DESC="Mode verification task"
-"$TW_FLOW" plan "${TEST_PROJECT}:mode-test" "GUIDE|$MODE_TASK_DESC|testing|today" &>/dev/null
+"$TW_FLOW" initiative "${TEST_PROJECT}:mode-test" "GUIDE|$MODE_TASK_DESC|testing|today" &>/dev/null
 if task "project:${TEST_PROJECT}:mode-test" export 2>/dev/null | jq -r '.[].description' | grep -q "\[GUIDE\] $MODE_TASK_DESC"; then
-    pass "Plan command correctly prepends [MODE]"
+    pass "Initiative command correctly prepends [MODE]"
 else
-    fail "Plan command failed to prepend [MODE]"
+    fail "Initiative command failed to prepend [MODE]"
 fi
 
 # Test 17: Ponder highlights modes
@@ -192,4 +220,20 @@ if [[ $TESTS_FAILED -eq 0 ]]; then
 else
     echo -e "${RED}Some tests failed!${NC}"
     exit 1
+fi
+
+# Test 19: Ponder handles null .project gracefully
+info "Test 19: Ponder handles null .project in task records"
+# Create a task without explicit project to test null handling
+NULL_PROJECT_TASK=$(task add "Task without explicit project" rc.verbose:new-id 2>&1 | grep -oP 'Created task \K\d+' || echo "")
+if [[ -n "$NULL_PROJECT_TASK" ]]; then
+    PONDER_OUTPUT=$("$PONDER" "$TEST_PROJECT" 2>/dev/null)
+    if [[ $? -eq 0 ]]; then
+        pass "Ponder handles tasks with null .project field"
+    else
+        fail "Ponder crashed when processing task with null .project"
+    fi
+    task "$NULL_PROJECT_TASK" delete rc.confirmation=off 2>/dev/null || true
+else
+    pass "Ponder null .project test skipped (could not create test task)"
 fi

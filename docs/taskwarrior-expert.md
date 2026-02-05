@@ -1,6 +1,6 @@
 # Taskwarrior Expert Skill
 
-Complete guide for the taskwarrior-expert skill - a structured workflow system for managing tasks, plans, and session context using Taskwarrior.
+Complete guide for the taskwarrior-expert skill - a structured workflow system for managing tasks, initiatives, and session context using Taskwarrior.
 
 ## 📍 Script Locations (IMPORTANT)
 
@@ -19,13 +19,13 @@ Complete guide for the taskwarrior-expert skill - a structured workflow system f
 
 ```bash
 # Option 1: Direct path (always works)
-~/.copilot/skills/taskwarrior_expert/scripts/tw-flow plan copilot:feature "task|tag|due"
+~/.copilot/skills/taskwarrior_expert/scripts/tw-flow initiative copilot:feature "task|tag|due"
 
 # Option 2: If scripts are in PATH
-tw-flow plan copilot:feature "task|tag|due"
+tw-flow initiative copilot:feature "task|tag|due"
 
 # Option 3: Relative to skill directory (if in skill context)
-./scripts/tw-flow plan copilot:feature "task|tag|due"
+./scripts/tw-flow initiative copilot:feature "task|tag|due"
 ```
 
 **For AI Agents:** Always use the full path `~/.copilot/skills/taskwarrior_expert/scripts/` when invoking these tools to ensure they are found regardless of working directory.
@@ -49,10 +49,10 @@ ponder copilot
 ```
 Shows pulse summary, active task, upcoming work, and blockers.
 
-### 2. Create a Plan
+### 2. Create a Initiative
 ```bash
-tw-flow plan copilot:my-feature \
-  "PLAN|Design API schema|research|today" \
+tw-flow initiative copilot:my-feature \
+  "DESIGN|Design API schema|research|today" \
   "EXECUTE|Implement endpoints|implementation|tomorrow" \
   "TEST|Write tests|testing|2days"
 ```
@@ -95,20 +95,20 @@ ponder [project_root]
 
 ---
 
-### Phase 2: Plan (Decide)
+### Phase 2: Initiative (Decide)
 **Purpose:** Break down goals into actionable dependency chains.
 
 ```bash
-tw-flow plan <project:feature> <tasks...>
+tw-flow initiative <project:feature> <tasks...>
 ```
 
 **Task format:** `"MODE|description|tag|due_offset"`
 
 **Example:**
 ```bash
-tw-flow plan copilot:auth \
+tw-flow initiative copilot:auth \
   "INVESTIGATE|Review existing auth code|research|today" \
-  "PLAN|Design new auth flow|research|today" \
+  "DESIGN|Design new auth flow|research|today" \
   "EXECUTE|Implement JWT tokens|implementation|tomorrow" \
   "TEST|Write integration tests|testing|2days" \
   "REVIEW|Code review checklist|review|3days"
@@ -233,7 +233,7 @@ Modes define agent behavior and autonomy level. Prefix task descriptions with `[
 
 | Mode | Behavior | Autonomy | Output | Use When |
 |------|----------|----------|--------|----------|
-| **[PLAN]** | Requirements analysis & breakdown | Low | Structured plan | Need to understand requirements |
+| **[PLAN]** | Requirements analysis & breakdown | Low | Structured initiative | Need to understand requirements |
 | **[INVESTIGATE]** | Codebase diving & de-risking | High (Read-only) | Findings & context | Need to explore unfamiliar code |
 | **[GUIDE]** | Navigator - instructions only | **Zero** (Write) | Step-by-step guide | Want manual control |
 | **[EXECUTE]** | Builder - implementing changes | High (Write) | Modified files | Ready for implementation |
@@ -245,14 +245,14 @@ Modes define agent behavior and autonomy level. Prefix task descriptions with `[
 **Examples:**
 ```bash
 # Investigation before implementation
-tw-flow plan copilot:refactor \
+tw-flow initiative copilot:refactor \
   "INVESTIGATE|Review current architecture|research|today" \
-  "PLAN|Design refactoring approach|research|today" \
-  "GUIDE|Create step-by-step plan|documentation|tomorrow" \
+  "DESIGN|Design refactoring approach|research|today" \
+  "GUIDE|Create step-by-step initiative|documentation|tomorrow" \
   "EXECUTE|Apply refactoring|implementation|2days"
 
 # Debug then fix
-tw-flow plan copilot:bug-fix \
+tw-flow initiative copilot:bug-fix \
   "DEBUG|Diagnose auth failure|research|today" \
   "EXECUTE|Fix identified issue|implementation|today" \
   "TEST|Verify fix with tests|testing|tomorrow"
@@ -296,7 +296,7 @@ ponder [project_root]
 
 **When to use:**
 - Start of work session
-- Before creating new plans
+- Before creating new initiatives
 - After completing major tasks
 - When context switching between projects
 
@@ -308,18 +308,18 @@ Version 1.2.0
 
 #### Planning Commands
 
-**plan** - Create plan with tasks
+**initiative** - Create initiative with tasks
 ```bash
-tw-flow plan <project:feature> "task1" "task2" ...
+tw-flow initiative <project:feature> "task1" "task2" ...
 ```
 Format: `"MODE|description|tag|due_offset"`
 
-**plans** - List all active plans
+**initiatives** - List all active initiatives
 ```bash
-tw-flow plans
+tw-flow initiatives
 ```
 
-**status** - Show plan overview
+**status** - Show initiative overview
 ```bash
 tw-flow status [project:feature]
 ```
@@ -432,7 +432,7 @@ Examples:
 - `Add unit tests for auth module`
 
 ### Dependencies
-Let `plan` command create dependencies automatically by task order, or add manually:
+Let `initiative` command create dependencies automatically by task order, or add manually:
 ```bash
 tw-flow block 43 42  # Task 43 depends on 42
 ```
@@ -445,7 +445,7 @@ tw-flow block 43 42  # Task 43 depends on 42
 ### Archive Pattern
 Hide completed or irrelevant work:
 ```bash
-task 42 modify project:copilot:old-feature:_archive
+task 42 modify copilot:old-feature:_archive
 ```
 
 The `ponder` dashboard automatically excludes `_archive` projects.
@@ -479,17 +479,17 @@ tw-flow context 43  # See handoff note
 # 1. Orient - Check state
 ponder copilot
 
-# 2. Plan - Break down goal
-tw-flow plan copilot:auth \
+# 2. Initiative - Break down goal
+tw-flow initiative copilot:auth \
   "INVESTIGATE|Review current codebase|research|today" \
-  "PLAN|Design auth architecture|research|today" \
+  "DESIGN|Design auth architecture|research|today" \
   "EXECUTE|Implement JWT middleware|implementation|tomorrow" \
   "EXECUTE|Add login/logout endpoints|implementation|tomorrow" \
   "EXECUTE|Implement token refresh|implementation|2days" \
   "TEST|Write integration tests|testing|3days" \
   "REVIEW|Security review checklist|review|4days"
 
-# Plan created: tasks 50-56
+# Initiative created: tasks 50-56
 
 # 3. Execute - Start first task
 tw-flow execute 50
@@ -550,7 +550,7 @@ tw-flow status copilot:feature
 - Verify task not in `_archive`
 - Ensure task status is pending
 
-### Wrong task order in plan
+### Wrong task order in initiative
 Dependencies created in sequence. To reorder:
 ```bash
 tw-flow unblock <id> <old_dep>

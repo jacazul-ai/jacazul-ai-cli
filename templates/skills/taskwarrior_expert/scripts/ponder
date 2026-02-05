@@ -45,10 +45,10 @@ print_task_line() {
 JQ_EXCLUDE_ARCHIVE_FILTER='select(.project | test("_archive$") | not)'
 
 # 1. Pulse Summary
-PENDING=$(task status:pending export 2>/dev/null | jq -r ".[]? | select(.project? | startswith(\"$PROJECT_ROOT\"))" | jq "$JQ_EXCLUDE_ARCHIVE_FILTER" | jq -r '.uuid' | wc -l)
-COMPLETED_TODAY=$(task status:completed end:today export 2>/dev/null | jq -r ".[]? | select(.project? | startswith(\"$PROJECT_ROOT\"))" | jq "$JQ_EXCLUDE_ARCHIVE_FILTER" | jq -r '.uuid' | wc -l)
-OVERDUE=$(task status:pending +OVERDUE export 2>/dev/null | jq -r ".[]? | select(.project? | startswith(\"$PROJECT_ROOT\"))" | jq "$JQ_EXCLUDE_ARCHIVE_FILTER" | jq -r '.uuid' | wc -l)
-ACTIVE_COUNT=$(task +ACTIVE export 2>/dev/null | jq -r '.[]? | select(.project? | startswith("'$PROJECT_ROOT'")) | .uuid' | wc -l)
+PENDING=$(task export status:pending 2>/dev/null | jq -r ".[]? | select((.project // empty) | startswith(\"$PROJECT_ROOT\"))" | jq "$JQ_EXCLUDE_ARCHIVE_FILTER" | jq -r '.uuid' | wc -l)
+COMPLETED_TODAY=$(task export status:completed end:today 2>/dev/null | jq -r ".[]? | select((.project // empty) | startswith(\"$PROJECT_ROOT\"))" | jq "$JQ_EXCLUDE_ARCHIVE_FILTER" | jq -r '.uuid' | wc -l)
+OVERDUE=$(task all status:pending +OVERDUE export 2>/dev/null | jq -r ".[]? | select((.project // empty) | startswith(\"$PROJECT_ROOT\"))" | jq "$JQ_EXCLUDE_ARCHIVE_FILTER" | jq -r '.uuid' | wc -l)
+ACTIVE_COUNT=$(task +ACTIVE export 2>/dev/null | jq -r '.[]? | select((.project // empty) | startswith("'$PROJECT_ROOT'")) | .uuid' | wc -l)
 
 echo -e "${CYAN}══ PONDER: $PROJECT_ROOT ══${NC}"
 echo -e "Pending: ${CYAN}$PENDING${NC} | Completed Today: ${GREEN}$COMPLETED_TODAY${NC} | Overdue: ${RED}$OVERDUE${NC} | Active: ${BLUE}$ACTIVE_COUNT${NC}"
@@ -56,7 +56,7 @@ echo ""
 
 # 2. Top Task (Current Focus)
 echo -e "${YELLOW}[CURRENT FOCUS]${NC}"
-ACTIVE_UUID=$(task +ACTIVE export 2>/dev/null | jq -r '.[]? | select(.project? | startswith("'$PROJECT_ROOT'")) | .uuid' | head -n1)
+ACTIVE_UUID=$(task +ACTIVE export 2>/dev/null | jq -r '.[]? | select((.project // empty) | startswith("'$PROJECT_ROOT'")) | .uuid' | head -n1)
 if [[ -n "$ACTIVE_UUID" ]]; then
     print_task_line "$ACTIVE_UUID"
 else
@@ -66,7 +66,7 @@ echo ""
 
 # 3. Up Next (Ready tasks)
 echo -e "${GREEN}[UP NEXT]${NC}"
-READY_UUIDS=$(task status:pending export 2>/dev/null | jq -r '.[]? | select((.project? | startswith("'$PROJECT_ROOT'")) and (.depends == null or (.depends | length == 0)))' | jq "$JQ_EXCLUDE_ARCHIVE_FILTER" | jq -r '.uuid' | head -n3)
+READY_UUIDS=$(task export status:pending 2>/dev/null | jq -r '.[]? | select(((.project // empty) | startswith("'$PROJECT_ROOT'")) and (.depends == null or (.depends | length == 0)))' | jq "$JQ_EXCLUDE_ARCHIVE_FILTER" | jq -r '.uuid' | head -n3)
 if [[ -n "$READY_UUIDS" ]]; then
     while read -r uuid; do
         [[ -n "$uuid" ]] && print_task_line "$uuid"
@@ -78,7 +78,7 @@ echo ""
 
 # 4. Blocked
 echo -e "${RED}[BLOCKED / WAITING]${NC}"
-BLOCKED_UUIDS=$(task status:pending export 2>/dev/null | jq -r '.[]? | select((.project? | startswith("'$PROJECT_ROOT'")) and (.depends != null and (.depends | length > 0)))' | jq "$JQ_EXCLUDE_ARCHIVE_FILTER" | jq -r '.uuid' | head -n3)
+BLOCKED_UUIDS=$(task export status:pending 2>/dev/null | jq -r '.[]? | select(((.project // empty) | startswith("'$PROJECT_ROOT'")) and (.depends != null and (.depends | length > 0)))' | jq "$JQ_EXCLUDE_ARCHIVE_FILTER" | jq -r '.uuid' | head -n3)
 if [[ -n "$BLOCKED_UUIDS" ]]; then
     while read -r uuid; do
         [[ -n "$uuid" ]] && print_task_line "$uuid"

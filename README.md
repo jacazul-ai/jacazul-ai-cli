@@ -37,8 +37,8 @@ podman run -it --rm ai-cli-copilot
 # Check current state (auto-detects project)
 ponder piraz_ai_cli_sandboxed
 
-# Create a plan (uses per-project database)
-tw-flow plan piraz_ai_cli_sandboxed:my-feature \
+# Create an initiative (uses per-project database)
+tw-flow initiative my-feature \
   "Design API|research|today" \
   "Build API|implementation|tomorrow"
 
@@ -143,8 +143,8 @@ Jacazul will:
 ### Commands
 - **`onboard`** — Initialize session context
 - **`ponder`** — Refresh status dashboard
-- **`planos`** — List all project plans
-- **`trabalhar em [plan]`** — Focus on specific plan
+- **`iniciativas`** — List all initiatives
+- **`trabalhar em [initiative]`** — Focus on specific initiative
 
 **📖 Full documentation:** `docs/agents/jacazul.md`
 

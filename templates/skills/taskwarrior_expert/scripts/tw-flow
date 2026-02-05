@@ -44,6 +44,39 @@ warning() {
     echo -e "${YELLOW}⚠${NC} $1"
 }
 
+# Helper: Shorten UUID for display (8 chars)
+short_id() {
+    local id="$1"
+    if [[ "$id" =~ ^[0-9a-fA-F-]{8,}$ ]]; then
+        echo "${id:0:8}"
+    else
+        echo "$id"
+    fi
+}
+
+# Helper: Resolve ID or UUID to full UUID
+resolve_uuid() {
+    local input="$1"
+    
+    # If already a UUID (contains dashes or 32+ hex chars), return as-is
+    if [[ "$input" =~ ^[0-9a-fA-F-]{32,}$ ]] || [[ "$input" =~ - ]]; then
+        echo "$input"
+        return 0
+    fi
+    
+    # Try to get UUID from numeric ID
+    local uuid
+    uuid=$(task "$input" export 2>/dev/null | jq -r '.[0].uuid // empty')
+    
+    if [[ -n "$uuid" ]]; then
+        echo "$uuid"
+        return 0
+    fi
+    
+    # Return input as-is (let taskwarrior handle error)
+    echo "$input"
+}
+
 show_usage() {
     cat <<EOF
 ${CYAN}Taskwarrior Flow${NC} - Simplified task management commands
@@ -53,13 +86,13 @@ ${YELLOW}USAGE:${NC}
 
 ${YELLOW}COMMANDS:${NC}
 
-  ${GREEN}Planning:${NC}
-    plan <project:plan> <tasks...>    Create a new plan with multiple tasks
+  ${GREEN}Initiatives:${NC}
+    initiative|ini <initiative> <tasks...>    Create a new initiative with multiple tasks
                                        Tasks format: "mode|description|tag|due_offset"
-                                       Modes: PLAN, INVESTIGATE, GUIDE, EXECUTE, TEST, DEBUG, REVIEW, PR-REVIEW
+                                       Modes: DESIGN, INVESTIGATE, GUIDE, EXECUTE, TEST, DEBUG, REVIEW, PR-REVIEW
     
   ${GREEN}Execution:${NC}
-    next [project:plan]                Show next task(s) ready to work
+    next [initiative]                Show next task(s) ready to work
     execute <id>                       Start working on a task
     done <id> [note]                   Complete a task with optional note
     outcome <id> <message>             Record final outcome before closing
@@ -72,8 +105,8 @@ ${YELLOW}COMMANDS:${NC}
     context <id>                       Show full task context (annotations, deps, etc.)
     
   ${GREEN}Viewing:${NC}
-    plans                              List all plans with pending tasks
-    status [project:plan]              Show plan status overview
+    initiatives|inis                              List all initiatives with pending tasks
+    status [initiative]              Show initiative status overview
     active                             Show currently active tasks
     blocked                            Show blocked tasks
     overdue                            Show overdue tasks
@@ -86,14 +119,14 @@ ${YELLOW}COMMANDS:${NC}
 
 ${YELLOW}EXAMPLES:${NC}
 
-  # Create a 3-task plan with modes
-  $SCRIPT_NAME plan copilot:login-feature \\
-    "PLAN|Design auth flow|research|today" \\
+  # Create a 3-task initiative with modes
+  $SCRIPT_NAME initiative login-feature \\
+    "DESIGN|Design auth flow|research|today" \\
     "EXECUTE|Implement JWT|implementation|tomorrow" \\
     "TEST|Write tests|testing|2days"
 
   # See what's next
-  $SCRIPT_NAME next copilot:login-feature
+  $SCRIPT_NAME next login-feature
 
   # Start working
   $SCRIPT_NAME execute 42
@@ -111,24 +144,24 @@ ${YELLOW}EXAMPLES:${NC}
   $SCRIPT_NAME handoff 43 "Pick up implementation. See Task 42 for design docs."
 
   # Check status
-  $SCRIPT_NAME status copilot:login-feature
+  $SCRIPT_NAME status login-feature
   $SCRIPT_NAME done 42 "Completed design phase"
 
   # Check status
-  $SCRIPT_NAME status copilot:login-feature
+  $SCRIPT_NAME status login-feature
 
 EOF
 }
 
-# Command: plan - Create a new plan with tasks
-cmd_plan() {
-    local project_plan="$1"
+# Command: initiative - Create a new initiative with tasks
+cmd_initiative() {
+    local initiative="$1"
     shift
     
-    [[ -z "$project_plan" ]] && error "Project:plan name required"
+    [[ -z "$initiative" ]] && error "Initiative name required"
     [[ $# -eq 0 ]] && error "At least one task required"
     
-    info "Creating plan: $project_plan"
+    info "Creating initiative: $initiative"
     
     local urgency=9.0
     local task_ids=()
@@ -168,7 +201,7 @@ cmd_plan() {
             priority="L"
         fi
         
-        local cmd="task add project:$project_plan \"$final_desc\" due:$due_offset priority:$priority +$tag"
+        local cmd="task add project:$initiative \"$final_desc\" due:$due_offset priority:$priority +$tag"
         
         # Add dependency if not first task
         [[ -n "$prev_id" ]] && cmd="$cmd depends:$prev_id"
@@ -192,7 +225,7 @@ cmd_plan() {
     done
     
     echo ""
-    success "Plan created with ${#task_ids[@]} tasks"
+    success "Initiative created with ${#task_ids[@]} tasks"
     info "Task IDs: ${task_ids[*]}"
     info "First task ready to work: ${task_ids[0]}"
 }
@@ -213,7 +246,9 @@ cmd_next() {
 
 # Command: execute - Start working on a task
 cmd_execute() {
-    local task_id="$1"
+    local input_id="$1"
+    local task_id
+    task_id=$(resolve_uuid "$input_id")
     
     [[ -z "$task_id" ]] && error "Task ID required"
     
@@ -231,11 +266,22 @@ cmd_execute() {
     fi
     
     task "$task_id" start
-    success "Started working on task $task_id"
+    success "Started working on task $(short_id "$task_id")"
     
     # Show task info
     echo ""
     task "$task_id"
+}
+
+# Validate that task has OUTCOME annotation
+validate_outcome() {
+    local task_id="$1"
+    
+    if task "$task_id" info 2>/dev/null | grep -qi "OUTCOME:"; then
+        return 0
+    else
+        error "Task $task_id cannot be completed without OUTCOME\n   Add outcome first: tw-flow outcome $task_id \"description\" or taskp $task_id annotate \"OUTCOME: description\""
+    fi
 }
 
 # Command: done - Complete a task
@@ -244,6 +290,9 @@ cmd_done() {
     local note="$2"
     
     [[ -z "$task_id" ]] && error "Task ID required"
+    
+    # Validate outcome before completing
+    validate_outcome "$task_id" || exit 1
     
     # Add completion note if provided
     if [[ -n "$note" ]]; then
@@ -344,7 +393,7 @@ cmd_context() {
     task "$task_id" info
 }
 
-# Command: status - Show plan status overview
+# Command: status - Show initiative status overview
 cmd_status() {
     local filter="${1:-status:pending}"
     
@@ -352,9 +401,9 @@ cmd_status() {
         filter="project:$filter"
     fi
  
-    # Custom plan status output
-    local plan_name
-    plan_name=$(echo "$filter" | cut -d":" -f2)
+    # Custom initiative status output
+    local initiative_name
+    initiative_name=$(echo "$filter" | cut -d":" -f2)
     local tasks_list
     tasks_list=$(task "$filter" status:pending export | jq -r ".[] | {id: .id, active: (.status==\"pending\" and .start!=null), desc: .description} | @base64")
     local total
@@ -363,7 +412,7 @@ cmd_status() {
     active_id=$(echo "$tasks_list" | base64 -d | jq -r 'select(.active==true) | .id' | head -n1)
     local next_id
     next_id=$(echo "$tasks_list" | base64 -d | jq -r 'select(.active!=true) | .id' | head -n1)
-    echo -e "${CYAN}Plano: $plan_name${NC}"
+    echo -e "${CYAN}Initiative: $initiative_name${NC}"
     n=1
     echo "$tasks_list" | while read -r task; do
         t=$(echo "$task" | base64 -d)
@@ -400,32 +449,32 @@ cmd_status() {
     fi
 }
 
-# Command: plans - List all plans with pending tasks
-cmd_plans() {
-    info "Plans with pending tasks:"
+# Command: initiatives - List all initiatives with pending tasks
+cmd_initiatives() {
+    info "Initiatives with pending tasks:"
     echo ""
     
-    local plans
-    plans=$(task status:pending export | jq -r '.[].project' | sort | uniq)
+    local initiatives
+    initiatives=$(task status:pending export | jq -r '.[].project' | sort | uniq)
     
-    if [[ -z "$plans" ]]; then
-        success "No active plans!"
+    if [[ -z "$initiatives" ]]; then
+        success "No active initiatives!"
         return
     fi
     
-    while IFS= read -r plan; do
-        [[ -z "$plan" ]] && continue
+    while IFS= read -r initiative; do
+        [[ -z "$initiative" ]] && continue
         local pending
-        pending=$(task "project:$plan" status:pending 2>/dev/null | grep -c "^[0-9]" || echo "0")
+        pending=$(task "project:$initiative" status:pending 2>/dev/null | grep -c "^[0-9]" || echo "0")
         local active
-        active=$(task "project:$plan" +ACTIVE 2>/dev/null | grep -c "^[0-9]" || echo "0")
+        active=$(task "project:$initiative" +ACTIVE 2>/dev/null | grep -c "^[0-9]" || echo "0")
         local blocked
-        blocked=$(task "project:$plan" +BLOCKED 2>/dev/null | grep -c "^[0-9]" || echo "0")
+        blocked=$(task "project:$initiative" +BLOCKED 2>/dev/null | grep -c "^[0-9]" || echo "0")
         
         echo -e "${CYAN}● $plan${NC}"
         echo -e "  Pending: $pending | Active: $active | Blocked: $blocked"
         echo ""
-    done <<< "$plans"
+    done <<< "$initiatives"
 }
 
 # Command: active - Show currently active tasks
@@ -517,8 +566,8 @@ main() {
     shift
     
     case "$command" in
-        plan)       cmd_plan "$@" ;;
-        plans)      cmd_plans "$@" ;;
+        initiative|ini)       cmd_initiative "$@" ;;
+        initiatives|inis)      cmd_initiatives "$@" ;;
         next)       cmd_next "$@" ;;
         execute)    cmd_execute "$@" ;;
         done)       cmd_done "$@" ;;
