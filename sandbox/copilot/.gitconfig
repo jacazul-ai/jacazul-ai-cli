@@ -1,0 +1,7 @@
+[user]
+	name = Flavio Garcia
+	email = piraz@candango.org
+[init]
+	defaultBranch = main
+[core]
+	editor = vim

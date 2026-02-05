@@ -54,31 +54,6 @@ short_id() {
     fi
 }
 
-# Helper: Resolve UUID (expand short UUID or validate full UUID)
-resolve_uuid() {
-    local input="$1"
-    
-    # If it's already a full UUID (36 chars with dashes), return it
-    if [[ "$input" =~ ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$ ]]; then
-        echo "$input"
-        return 0
-    fi
-    
-    # If it's a short UUID (8 chars), find the matching task
-    if [[ "$input" =~ ^[0-9a-fA-F]{8}$ ]]; then
-        local full_uuid
-        full_uuid=$(task export 2>/dev/null | jq -r ".[] | select(.uuid | startswith(\"$input\")) | .uuid" | head -1)
-        if [[ -n "$full_uuid" ]]; then
-            echo "$full_uuid"
-            return 0
-        fi
-    fi
-    
-    # Otherwise, assume it's a valid identifier and return as-is
-    echo "$input"
-}
-
-
 
 show_usage() {
     cat <<EOF
@@ -408,29 +383,27 @@ cmd_status() {
     local initiative_name
     initiative_name=$(echo "$filter" | cut -d":" -f2)
     local tasks_list
-    tasks_list=$(task "$filter" status:pending export | jq -r '.[] | {uuid: .uuid, id: .id, active: (.status=="pending" and .start!=null), desc: .description} | @base64')
+    tasks_list=$(task "$filter" status:pending export | jq -r ".[] | {id: .id, active: (.status==\"pending\" and .start!=null), desc: .description} | @base64")
     local total
     total=$(echo "$tasks_list" | wc -l)
-    local active_uuid
-    active_uuid=$(echo "$tasks_list" | base64 -d | jq -r 'select(.active==true) | .uuid' | head -n1)
-    local next_uuid
-    next_uuid=$(echo "$tasks_list" | base64 -d | jq -r 'select(.active!=true) | .uuid' | head -n1)
+    local active_id
+    active_id=$(echo "$tasks_list" | base64 -d | jq -r 'select(.active==true) | .id' | head -n1)
+    local next_id
+    next_id=$(echo "$tasks_list" | base64 -d | jq -r 'select(.active!=true) | .id' | head -n1)
     echo -e "${CYAN}Initiative: $initiative_name${NC}"
     n=1
     echo "$tasks_list" | while read -r task; do
         t=$(echo "$task" | base64 -d)
-        uuid=$(echo "$t" | jq -r '.uuid')
-        
-        short_uuid=$(short_id "$uuid")
+        id=$(echo "$t" | jq -r '.id')
         desc=$(echo "$t" | jq -r '.desc')
-        if [[ "$uuid" == "$active_uuid" ]]; then
-            echo -e "- ✓ [$short_uuid - ATIVA] $desc"
+        if [[ "$id" == "$active_id" ]]; then
+            echo -e "- ✓ [Tarefa $id - ATIVA] $desc"
         else
-            echo -e "- [$short_uuid] $desc"
+            echo -e "- [Tarefa $id] $desc"
         fi
         n=$((n+1))
     done
-    echo -e "\nTotal: $total tarefas. Tarefa ativa: $(short_id "$active_uuid"). Próxima: $(short_id "$next_uuid").\n"
+    echo -e "\nTotal: $total tarefas. Tarefa ativa: $active_id. Próxima: $next_id.\n"
     
     # Count tasks by status
     local pending blocked active completed

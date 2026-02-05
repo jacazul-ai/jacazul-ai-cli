@@ -1,0 +1,38 @@
+FROM node:24-slim
+RUN npm install -g @google/gemini-cli@0.23.0
+WORKDIR /project
+# ENV GEMINI_SANDBOX=podman
+# ENV GEMINI_SANDBOX_TYPE=podman
+ENV TERM=xterm-256color
+ENV COLORTERM=truecolor
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    git \
+    make \
+    curl \
+    unzip \
+    ca-certificates \
+    wget \
+    jq \
+    ripgrep \
+    procps \
+    fzf \
+    htop \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Go 1.25.5
+ENV GO_VERSION=1.25.5
+RUN wget https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz \
+    && tar -C /usr/local -xzf go${GO_VERSION}.linux-amd64.tar.gz \
+    && rm go${GO_VERSION}.linux-amd64.tar.gz
+
+ENV PATH=$PATH:/usr/local/go/bin:/root/go/bin
+
+# Install Protoc (Protocol Buffers)
+ENV PROTOC_VERSION=25.1
+RUN curl -OL https://github.com/protocolbuffers/protobuf/releases/download/v${PROTOC_VERSION}/protoc-${PROTOC_VERSION}-linux-x86_64.zip \
+    && unzip protoc-${PROTOC_VERSION}-linux-x86_64.zip -d /usr/local \
+    && rm protoc-${PROTOC_VERSION}-linux-x86_64.zip
+
+ENTRYPOINT ["gemini"]

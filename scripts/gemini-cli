@@ -1,0 +1,20 @@
+#!/bin/bash
+## RUN THAT FIRST
+## podman build -t gemini-cli -f Dockerfile.gemini-cli .
+
+# Define host directories
+HOST_SANDBOX=$COPILOT_SANDBOXED_HOME/sandbox/gemini-cli
+HOST_GEMINI_DIR="$HOST_SANDBOX/.gemini"
+
+if [ ! -d "$HOST_GEMINI_DIR" ]; then
+  echo "Creating sandboxed gemini data directory: $HOST_GEMINI_DIR"
+  mkdir -p "$HOST_GEMINI_DIR"
+fi
+
+# Run the container with sandboxed configuration and persistence
+podman run -it --rm \
+  --userns=keep-id \
+  -v "$(pwd):/project" \
+  -w /project \
+  -v "$HOST_GEMINI_DIR:/root/.gemini" \
+  gemini-cli "$@"

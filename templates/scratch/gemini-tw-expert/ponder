@@ -1,0 +1,113 @@
+#!/bin/bash
+# Ponder 2.0: The Tactical Alligator
+# High-Viz columnar dashboard for mission awareness
+
+PROJECT_ROOT="${PROJECT_ID:-vi_vi-gemini-sandboxed}"
+FILTER="$1"
+
+# Colors (ANSI 256-color support where possible)
+CYAN='\033[0;36m'
+GREEN='\033[0;32m'
+NEON_GREEN='\033[1;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+RED='\033[0;31m'
+BLOODY_RED='\033[1;31m'
+GREY='\033[0;90m'
+NC='\033[0m'
+
+# Fetch all relevant tasks in one JSON export
+ALL_TASKS_JSON=$(task status:pending export rc.verbose=no)
+
+# Helper: Format task line
+format_task_line() {
+    local row="$1"
+    
+    local uuid=$(echo "$row" | jq -r '.uuid')
+    local project=$(echo "$row" | jq -r '.project // "[none]"')
+    local desc=$(echo "$row" | jq -r '.description')
+    local urgency=$(echo "$row" | jq -r '.urgency // 0')
+    local start=$(echo "$row" | jq -r '.start // ""')
+    local scheduled=$(echo "$row" | jq -r '.scheduled // ""')
+    local due=$(echo "$row" | jq -r '.due // ""')
+    
+    # 1. Status Icon
+    local status_icon="○"
+    local color="$NC"
+    
+    if [[ -n "$start" ]]; then
+        status_icon="⚡"
+        color="$NEON_GREEN"
+    elif [[ -n "$due" ]] && [[ "$due" < "$(date +%Y-%m-%dT%H:%M:%S)" ]]; then
+        status_icon="!!"
+        color="$BLOODY_RED"
+    fi
+    
+    # 2. Extract Mode
+    local mode="--------"
+    if [[ "$desc" =~ ^\[([A-Z-]+)\] ]]; then
+        mode="${BASH_REMATCH[1]}"
+        desc="${desc#*[${mode}] }"
+    fi
+    
+    # 3. Format Strings
+    local uuid_short="${uuid:0:8}"
+    local urgency_fmt=$(printf "%.1f" "$urgency")
+    
+    # Initiative stripping
+    local initiative="$project"
+    [[ "$initiative" == "$PROJECT_ROOT" ]] && initiative="."
+    
+    printf "  %b %-2s${NC} | %-8s | %-10s | %-20s | %-60s | [%s]\n" "$color" "$status_icon" "$uuid_short" "$mode" "$initiative" "${desc:0:60}" "$urgency_fmt"
+}
+
+echo -e "${CYAN}══ TACTICAL VIEW (Silo: $PROJECT_${NC}"ROOT) ═
+
+# 1. Pulse Summary
+PENDING_COUNT=$(echo "$ALL_TASKS_JSON" | jq '. | length')
+ACTIVE_COUNT=$(echo "$ALL_TASKS_JSON" | jq '[.[] | select(.start != null)] | length')
+OVERDUE_COUNT=$(echo "$ALL_TASKS_JSON" | jq "[.[] | select(.due != null and .due < \"$(date +%Y-%m-%dT%H:%M:%S)\")] | length")
+
+echo -e "Pulse: Pending ($PENDING_COUNT) | ${NEON_GREEN}Active ($ACTIVE_COUNT)${NC} | ${BLOODY_RED}Overdue ($OVERDUE_COUNT)${NC}"
+echo ""
+
+# 2. Initiative Landscape
+echo -e "${YELLOW}[INITIATIVE LANDSCAPE]${NC}"
+echo "$ALL_TASKS_JSON" | jq -r '.[].project // "unscoped"' | sort | uniq | while read -r initiative; do
+    [[ "$initiative" == *"_archive"* || "$initiative" == *"_trash"* ]] && continue
+    
+    i_tasks=$(echo "$ALL_TASKS_JSON" | jq "[.[] | select(.project == \"$initiative\")]")
+    i_active=$(echo "$i_tasks" | jq '[.[] | select(.start != null)] | length')
+    # Use task directly to check for READY tasks in that initiative
+    i_ready=$(task project:"$initiative" +READY count 2>/dev/null)
+    i_total=$(echo "$i_tasks" | jq '. | length')
+    
+    i_icon="○"
+    [[ "$i_active" -gt 0 ]] && i_icon="${NEON_GREEN}⚡${NC}"
+    
+    # Display name
+    display_name="$initiative"
+    [[ "$display_name" == "$PROJECT_ROOT" ]] && display_name="[root]"
+    
+    printf "  %b %-30s | Active: %-2s | Ready: %-2s | Total: %-2s\n" "$i_icon" "$display_name" "$i_active" "$i_ready" "$i_total"
+done
+echo ""
+
+# 3. Task Readout (Current Focus)
+echo -e "${YELLOW}[TACTICAL READOUT]${NC}"
+printf "  %s | %-8s | %-10s | %-20s | %-60s | %s\n" "ST" "UUID" "MODE" "INITIATIVE" "DESCRIPTION" "URG"
+printf "  %s\n" "-----------------------------------------------------------------------------------------------------------------------"
+
+# Filter by user project if provided, otherwise show top tasks
+TASK_FILTER="true"
+if [[ -n "$FILTER" ]]; then
+    TASK_FILTER="(.project != null and (.project | type == \"string\") and (.project | contains(\"$FILTER\")))"
+fi
+
+# Show Active first, then by Urgency
+# We add a numeric status prefix for sorting (Active=2, Normal=1)
+echo "$ALL_TASKS_JSON" | jq -c ".[] | select($TASK_FILTER) | select(.project | test(\"_archive$|_trash$\") | not) | . + {sort_status: (if .start then 2 else 1 end)}" | jq -s 'sort_by(.sort_status, .urgency) | reverse | .[]' -c | head -n 15 | while read -r row; do
+    format_task_line "$row"
+done
+
+echo ""

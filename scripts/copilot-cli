@@ -1,0 +1,22 @@
+#!/bin/bash
+## RUN THAT FIRST
+## podman build -t copilot-cli -f Dockerfile.copilot-cli .
+
+# Define host directories
+HOST_SANDBOX=$COPILOT_SANDBOXED_HOME/sandbox/copilot-cli
+HOST_COPILOT_DIR="$HOST_SANDBOX/.copilot"
+
+if [ ! -d "$HOST_COPILOT_DIR" ]; then
+  echo "Creating sandboxed copilot-cli data directory: $HOST_COPILOT_DIR"
+  mkdir -p "$HOST_COPILOT_DIR"
+fi
+
+# Run the container with sandboxed configuration and persistence
+podman run -it --rm \
+  --userns=keep-id \
+  -e CI=true \
+  -e CODESPACES=true \
+  -v "$(pwd):/project" \
+  -w /project \
+  -v "$HOST_COPILOT_DIR:/root/.copilot" \
+  copilot-cli "$@"

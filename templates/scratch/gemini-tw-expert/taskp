@@ -1,0 +1,25 @@
+#!/bin/bash
+# taskp: Project-Aware Taskwarrior Wrapper
+# Silos Taskwarrior data by $PROJECT_ID to ensure isolation.
+
+# Default to 'global' if PROJECT_ID is not set
+FULL_PROJECT_ID="${PROJECT_ID:-global}"
+
+# Extract root project (everything before the first colon)
+SILO_ID="${FULL_PROJECT_ID%%:*}"
+
+# Data path structure
+SILO_BASE_DIR="/root/.task/silos"
+SILO_DATA_DIR="$SILO_BASE_DIR/$SILO_ID"
+
+# Ensure directory exists
+if [[ ! -d "$SILO_DATA_DIR" ]]; then
+    mkdir -p "$SILO_DATA_DIR"
+fi
+
+# Run task with redirected data
+# We explicitly point to /root/.taskrc and override data.location
+export TASKRC="/root/.taskrc"
+
+# Execute the real task command
+exec task rc.data.location="$SILO_DATA_DIR" "$@"

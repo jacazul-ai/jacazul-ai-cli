@@ -1,0 +1,677 @@
+#!/bin/bash
+# Taskwarrior Flow - Imperative commands for task management
+# Makes Taskwarrior easier to use for AI agents
+
+set -e
+
+SCRIPT_NAME="tw-flow"
+VERSION="1.3.0"
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+CYAN='\033[0;36m'
+NC='\033[0m' # No Color
+
+# Helper functions
+error() {
+    echo -e "${RED}ERROR:${NC} $1" >&2
+    exit 1
+}
+
+success() {
+    echo -e "${GREEN}✓${NC} $1"
+}
+
+info() {
+    echo -e "${CYAN}ℹ${NC} $1"
+}
+
+warning() {
+    echo -e "${YELLOW}⚠${NC} $1"
+}
+
+# Helper: Shorten UUID for display
+short_id() {
+    local id="$1"
+    if [[ "$id" =~ ^[0-9a-fA-F-]{8,}$ ]]; then
+        echo "${id:0:8}"
+    else
+        echo "$id"
+    fi
+}
+
+# Helper: Get context from parent tasks (dependencies)
+get_parent_context() {
+    local task_id="$1"
+    local json
+    json=$(task "$task_id" export 2>/dev/null | jq '.[0]')
+    
+    # UUIDs of dependencies
+    local deps
+    deps=$(echo "$json" | jq -r '.depends // [] | join(" ")')
+    
+    if [[ -n "$deps" ]]; then
+        local found_context=false
+        for dep_uuid in $deps; do
+            local dep_json
+            dep_json=$(task "$dep_uuid" export 2>/dev/null | jq '.[0]')
+            [[ -z "$dep_json" || "$dep_json" == "null" ]] && continue
+            
+            local dep_desc=$(echo "$dep_json" | jq -r '.description')
+            local uuid=$(echo "$dep_json" | jq -r '.uuid')
+            
+            # Extract relevant annotations
+            local annotations
+            annotations=$(echo "$dep_json" | jq -r '.annotations // [] | .[] | select(.description | test("^(OUTCOME|DECISION|LESSON|HANDOFF):")) | .description')
+            
+            if [[ -n "$annotations" ]]; then
+                if [[ "$found_context" == false ]]; then
+                    echo -e "\n${CYAN}══ INHERITED CONTEXT ══${NC}"
+                    found_context=true
+                fi
+                echo -e "${YELLOW}Task (${uuid:0:8}) [$dep_desc]:${NC}"
+                echo "$annotations" | sed 's/^/  - /'
+            fi
+        done
+        [[ "$found_context" == true ]] && echo ""
+    fi
+}
+
+show_usage() {
+    cat <<EOF
+${CYAN}Taskwarrior Flow${NC} - Simplified task management commands
+
+${YELLOW}USAGE:${NC}
+    $SCRIPT_NAME <command> [options]
+
+${BLUE}CORE PROTOCOL: Inherited Context Propagation${NC}
+  This system automatically carries intelligence across tasks.
+  - ${YELLOW}Outcome:${NC} Use 'outcome' to record vital results/decisions.
+  - ${YELLOW}Inheritance:${NC} 'execute' automatically fetches and displays OUTCOMEs
+    from all parent dependencies as a "Context Briefing".
+  - ${YELLOW}Handoff:${NC} 'handoff' links tasks and passes the previous outcome.
+
+${YELLOW}COMMANDS:${NC}
+
+  ${GREEN}Initiatives:${NC}
+    initiative <name> <tasks...>       Create a new initiative (sub-project) with tasks
+                                       Tasks format: "mode|description|tag|due_offset"
+    initiatives                        List all active initiatives within silo
+    
+  ${GREEN}Execution:${NC}
+    execute <id>                       Start working & show ${CYAN}Inherited Context${NC}
+    done <id> [note]                   Complete a task
+    outcome <id> <message>             Record result for ${CYAN}Context Propagation${NC}
+    handoff <id> <message>             Bridge to next task with context
+    pause <id>                         Pause work on a task
+    
+  ${GREEN}Context:${NC}
+    note <id> <type> <message>         Add structured annotation (r, d, l, a, n)
+    context <id>                       Show full task history and inherited context
+    
+  ${GREEN}Viewing:${NC}
+    status [initiative]                Show initiative progress overview
+    tree [initiative]                  Visual dependency tree of the initiative
+    next [initiative]                  Show next ready tasks (+READY)
+    
+  ${GREEN}Safety & Mods:${NC}
+    discard <id>                       ${RED}Soft Delete:${NC} Move task to :trash
+    urgent <id>                        Mark as high priority
+    block <id> <dep_id>                Add dependency
+    wait <id> <date>                   Wait until date
+EOF
+}
+
+# Command: initiative - Create a new initiative with tasks
+cmd_initiative() {
+    local initiative_name="$1"
+    shift
+    
+    [[ -z "$initiative_name" ]] && error "Initiative name required"
+    [[ $# -eq 0 ]] && error "At least one task required"
+    
+    info "Creating initiative: $initiative_name"
+    
+    local urgency=9.0
+    local task_ids=()
+    local prev_id=""
+    
+    for task_spec in "$@"; do
+        # Parse mode|description|tag|due_offset
+        IFS='|' read -r mode description tag due_offset <<< "$task_spec"
+        
+        # If the first field isn't a known mode, assume the old format (description|tag|due)
+        # or that mode was omitted.
+        if [[ ! "$mode" =~ ^(DESIGN|PLAN|INVESTIGATE|GUIDE|EXECUTE|TEST|DEBUG|REVIEW|PR-REVIEW)$ ]]; then
+            # Shift everything right
+            due_offset=$tag
+            tag=$description
+            description=$mode
+            mode=""
+        fi
+
+        [[ -z "$description" ]] && error "Task description cannot be empty"
+        
+        # Format description with mode
+        local final_desc="$description"
+        if [[ -n "$mode" ]]; then
+            final_desc="[$mode] $description"
+        fi
+
+        # Set defaults
+        tag=${tag:-implementation}
+        due_offset=${due_offset:-today}
+        
+        # Build task command with priority based on position
+        local priority="M"
+        if (( $(echo "$urgency >= 9.0" | bc -l) )); then
+            priority="H"
+        elif (( $(echo "$urgency <= 3.0" | bc -l) )); then
+            priority="L"
+        fi
+        
+        # Execute and capture UUID
+        local output
+        if [[ -n "$prev_id" ]]; then
+            output=$(task add project:"$initiative_name" "$final_desc" due:"$due_offset" priority:"$priority" +"$tag" depends:"$prev_id" rc.verbose:new-uuid 2>&1)
+        else
+            output=$(task add project:"$initiative_name" "$final_desc" due:"$due_offset" priority:"$priority" +"$tag" rc.verbose:new-uuid 2>&1)
+        fi
+        
+        local new_uuid
+        new_uuid=$(echo "$output" | grep -oP 'Created task \K[0-9a-fA-F-]+' || echo "")
+        
+        if [[ -n "$new_uuid" ]]; then
+           task_ids+=("$new_uuid")
+            success "Created task ${new_uuid:0:8}: $final_desc [priority: $priority]"
+            prev_id="$new_uuid"
+        else
+            error "Failed to create task: $final_desc. Output: $output"
+        fi
+        
+        # Decrease urgency for next task
+        urgency=$(echo "$urgency - 2.0" | bc)
+    done
+    
+    echo ""
+    success "Initiative created with ${#task_ids[@]} tasks"
+    info "Task IDs (UUIDs): ${task_ids[*]}"
+    info "First task ready to work: ${task_ids[0]:0:8}"
+}
+
+# Command: next - Show next task(s) ready to work
+cmd_next() {
+    local filter="${1:-status:pending}"
+    
+    if [[ "$filter" != status:* ]] && [[ "$filter" != project:* ]]; then
+        filter="project:$filter status:pending"
+    fi
+    
+    info "Next tasks ready to work:"
+    echo ""
+    
+    task "$filter" ready 2>/dev/null || warning "No tasks ready"
+}
+
+# Command: execute - Start working on a task
+cmd_execute() {
+    local task_id="$1"
+    
+    [[ -z "$task_id" ]] && error "Task ID required"
+    
+    # Check if task is blocked
+    local status
+    status=$(task "$task_id" export 2>/dev/null | jq -r '.[0].status // "notfound"')
+    
+    [[ "$status" == "notfound" ]] && error "Task $task_id not found"
+    
+    local tags
+    tags=$(task "$task_id" export 2>/dev/null | jq -r '.[0].tags // [] | join(" ")')
+    
+    if [[ "$tags" == *"BLOCKED"* ]]; then
+        error "Task $task_id is BLOCKED by dependencies"
+    fi
+    
+    # Fetch and display context from parents
+    get_parent_context "$task_id"
+
+    task "$task_id" start
+    success "Started working on task $(short_id "$task_id")"
+    
+    # Show task info
+    echo ""
+    task "$task_id"
+}
+
+# Command: done - Complete a task
+cmd_done() {
+    local task_id="$1"
+    local note="$2"
+    
+    [[ -z "$task_id" ]] && error "Task ID required"
+    
+    # Add completion note if provided
+    if [[ -n "$note" ]]; then
+        task "$task_id" annotate "DONE: $note"
+    fi
+    
+    task "$task_id" done
+    success "Task $(short_id "$task_id") completed!"
+    
+    # Check if any tasks were unblocked
+    echo ""
+    info "Checking for newly unblocked tasks..."
+    local unblocked
+    unblocked=$(task status:pending ready 2>/dev/null | grep -c "^[0-9]" || echo "0")
+    unblocked=$(echo "$unblocked" | tr -d '[:space:]')
+    
+    if [ "$unblocked" -gt 0 ]; then
+        success "$unblocked task(s) now ready to work"
+        task status:pending ready limit:3
+    fi
+}
+
+# Command: outcome - Record final outcome
+cmd_outcome() {
+    local task_id="$1"
+    shift
+    local message="$*"
+    
+    [[ -z "$task_id" ]] && error "Task ID required"
+    [[ -z "$message" ]] && error "Outcome message required"
+    
+    task "$task_id" annotate "OUTCOME: $message"
+    success "Recorded outcome for task $(short_id "$task_id")"
+}
+
+# Command: handoff - Start next task and add handoff note
+cmd_handoff() {
+    local task_id="$1"
+    shift
+    local message="$*"
+    
+    [[ -z "$task_id" ]] && error "Task ID required"
+    [[ -z "$message" ]] && error "Handoff message required"
+    
+    # Try to find an active dependency to grab its outcome
+    local dep_uuids
+    dep_uuids=$(task "$task_id" export 2>/dev/null | jq -r '.[0].depends // [] | join(" ")')
+    
+    local active_uuid=""
+    for uuid in $dep_uuids; do
+        local is_active
+        is_active=$(task "$uuid" export 2>/dev/null | jq -r '.[0].start // ""')
+        if [[ -n "$is_active" ]]; then
+            active_uuid=$(task "$uuid" export 2>/dev/null | jq -r '.[0].uuid')
+            break
+        fi
+    done
+
+    if [[ -n "$active_uuid" ]]; then
+        local outcome
+        outcome=$(task "$active_uuid" export 2>/dev/null | jq -r '.[0].annotations // [] | .[] | select(.description | startswith("OUTCOME:")) | .description' | tail -n1)
+        if [[ -n "$outcome" ]]; then
+            # Clean up the prefix for the handoff note
+            local clean_outcome=$(echo "$outcome" | sed 's/^OUTCOME: //')
+            message="$message (Inherited Outcome: $clean_outcome)"
+        fi
+        
+        # Pause the current task
+        task "$active_uuid" stop >/dev/null
+    fi
+
+    # Execute the next task
+    cmd_execute "$task_id"
+    
+    # Add the handoff note
+    task "$task_id" annotate "HANDOFF: $message"
+    success "Handoff to task $(short_id "$task_id") with note"
+}
+
+# Command: discard - Soft delete (move to trash)
+cmd_discard() {
+    local task_id="$1"
+    
+    [[ -z "$task_id" ]] && error "Task ID required"
+    
+    # Get current project to preserve context in trash
+    local current_project
+    current_project=$(task "$task_id" export 2>/dev/null | jq -r '.[0].project // "unscoped"')
+    
+    # Move to trash project (ensure we don't double trash)
+    local trash_project="$current_project"
+    if [[ "$current_project" != *":trash" ]]; then
+        trash_project="$current_project:trash"
+    fi
+    
+    task "$task_id" modify project:"$trash_project" +DISCARDED
+    task "$task_id" done
+    
+    success "Task $(short_id "$task_id") moved to trash ($current_project:trash) and marked done."
+}
+
+# Command: pause - Pause work on a task
+cmd_pause() {
+    local task_id="$1"
+    
+    [[ -z "$task_id" ]] && error "Task ID required"
+    
+    task "$task_id" stop
+    success "Paused task $(short_id "$task_id")"
+}
+
+# Command: note - Add structured annotation
+cmd_note() {
+    local task_id="$1"
+    local type="$2"
+    shift 2
+    local message="$*"
+    
+    [[ -z "$task_id" ]] && error "Task ID required"
+    [[ -z "$type" ]] && error "Note type required (research, decision, blocked, lesson, ac, note, link)"
+    [[ -z "$message" ]] && error "Note message required"
+    
+    # Convert type to uppercase prefix
+    local prefix
+    case "$type" in
+        research|r)   prefix="RESEARCH" ;;
+        decision|d)   prefix="DECISION" ;;
+        blocked|b)    prefix="BLOCKED" ;;
+        lesson|l)     prefix="LESSON" ;;
+        ac|a)         prefix="AC" ;;
+        note|n)       prefix="NOTE" ;;
+        link)         prefix="LINK" ;;
+        *)            error "Invalid note type: $type" ;;
+    esac
+    
+    task "$task_id" annotate "$prefix: $message"
+    success "Added $prefix note to task $(short_id "$task_id")"
+}
+
+# Command: context - Show full task context
+cmd_context() {
+    local task_id="$1"
+    
+    [[ -z "$task_id" ]] && error "Task ID required"
+    
+    info "Full context for task $task_id:"
+    echo ""
+    task "$task_id" info
+}
+
+# Command: status - Show project or plan status overview
+cmd_status() {
+    local filter="${1:-status:pending}"
+    
+    if [[ "$filter" != status:* ]] && [[ "$filter" != project:* ]]; then
+        filter="project:$filter"
+    fi
+ 
+    local full_name
+    full_name=$(echo "$filter" | sed 's/^project://' | sed 's/ status:pending//')
+    
+    # We now treat the name as-is (bare initiative name)
+    if [[ "$full_name" == "status:pending" ]]; then
+        echo -e "${CYAN}══ Project: $PROJECT_ID ══${NC}"
+    else
+        echo -e "${CYAN}══ Plan: $full_name ══${NC}"
+    fi
+    
+    # Process tasks to show status icons
+    task "$filter" status:pending export | jq -r '.[] | select(.project | test("_archive$|_trash$") | not) | @base64' | while read -r task_b64; do
+        local t
+        t=$(echo "$task_b64" | base64 -d)
+        local desc=$(echo "$t" | jq -r '.description')
+        local start=$(echo "$t" | jq -r '.start // ""')
+        local depends=$(echo "$t" | jq -r '.depends // [] | length')
+        local uuid=$(echo "$t" | jq -r '.uuid')
+        
+        local icon="${YELLOW}○${NC}" # Pending
+        [[ -n "$start" ]] && icon="${BLUE}⚡${NC}" # Active
+        
+        # Check if actually blocked (ready vs pending)
+        local is_ready
+        is_ready=$(task "$uuid" +READY export 2>/dev/null | jq -r '.[0].id // ""')
+        [[ -z "$is_ready" && "$depends" -gt 0 ]] && icon="${RED}🔒${NC}" # Blocked
+        
+        printf "  %b (%s) | %s\n" "$icon" "${uuid:0:8}" "$desc"
+    done
+    
+    echo ""
+    # Pulse Summary
+    local pending blocked active completed
+    pending=$(task "$filter" status:pending count 2>/dev/null)
+    blocked=$(task "$filter" -READY status:pending count 2>/dev/null)
+    active=$(task "$filter" +ACTIVE count 2>/dev/null)
+    completed=$(task "$filter" status:completed count 2>/dev/null)
+    
+    echo -e "${GREEN}✓ Completed:${NC} $completed  ${BLUE}⚡ Active:${NC} $active  ${RED}🔒 Blocked:${NC} $blocked  ${YELLOW}○ Pending:${NC} $pending"
+}
+
+# Command: tree - Visual dependency tree
+cmd_tree() {
+    local filter="${1:-status:pending}"
+    if [[ "$filter" != status:* ]] && [[ "$filter" != project:* ]]; then
+        filter="project:$filter"
+    fi
+
+    local project_name
+    project_name=$(echo "$filter" | sed 's/^project://')
+    echo -e "${CYAN}══ Initiative: $project_name ══${NC}"
+
+    # Helper for recursive tree rendering
+    render_tree_node() {
+        local uuid="$1"
+        local indent="$2"
+        local is_last="$3"
+
+        local json
+        json=$(task "$uuid" export 2>/dev/null | jq '.[0]')
+        [[ -z "$json" || "$json" == "null" ]] && return
+
+        local desc=$(echo "$json" | jq -r '.description')
+        local status=$(echo "$json" | jq -r '.status')
+        local start=$(echo "$json" | jq -r '.start // ""')
+
+        local icon="${YELLOW}○${NC}"
+        [[ "$status" == "completed" ]] && icon="${GREEN}✓${NC}"
+        [[ -n "$start" ]] && icon="${BLUE}⚡${NC}"
+        
+        # Check if blocked
+        local is_ready
+        is_ready=$(task "$uuid" +READY export 2>/dev/null | jq -r '.[0].id // ""')
+        if [[ "$status" == "pending" && -z "$is_ready" ]]; then
+            icon="${RED}🔒${NC}"
+        fi
+
+        local marker="├──"
+        [[ "$is_last" == "true" ]] && marker="└──"
+        [[ -z "$indent" ]] && marker=""
+
+        printf "%b%b %b (%s) | %s\n" "$indent" "$marker" "$icon" "${uuid:0:8}" "$desc"
+
+        # Find children (tasks that depend on this one)
+        local children
+        children=$(task "depends.contains:$uuid" status:pending export 2>/dev/null | jq -r '.[] | select(.project | test("_archive$|_trash$") | not) | .uuid' || echo "")
+        
+        local child_indent="$indent    "
+        [[ "$marker" == "├──" ]] && child_indent="$indent│   "
+        [[ -z "$indent" ]] && child_indent=""
+
+        local count
+        count=$(echo "$children" | grep -c . || echo 0)
+        local i=1
+        while read -r child_uuid; do
+            [[ -z "$child_uuid" ]] && continue
+            local last_child="false"
+            [[ "$i" -eq "$count" ]] && last_child="true"
+            render_tree_node "$child_uuid" "$child_indent" "$last_child"
+            i=$((i+1))
+        done <<< "$children"
+    }
+
+    # Find root nodes (tasks in project with no dependencies or whose dependencies are outside this project/completed)
+    local root_uuids
+    root_uuids=$(task "$filter" export 2>/dev/null | jq -r '.[] | select(.project | test("_archive$|_trash$") | not) | select(.depends == null or (.depends | length == 0)) | .uuid')
+
+    if [[ -z "$root_uuids" ]]; then
+        # If no strict roots, just show all tasks in project as a list for now
+        task "$filter" export 2>/dev/null | jq -r '.[] | select(.project | test("_archive$|_trash$") | not) | .uuid' | while read -r uuid; do
+             [[ -n "$uuid" ]] && render_tree_node "$uuid" "" "false"
+        done
+    else
+        while read -r uuid; do
+            [[ -n "$uuid" ]] && render_tree_node "$uuid" "" "false"
+        done <<< "$root_uuids"
+    fi
+}
+
+# Command: initiatives - List all initiatives (sub-projects) within the current silo
+cmd_initiatives() {
+    echo -e "${CYAN}══ ACTIVE INITIATIVES in $PROJECT_ID ══${NC}"
+    echo ""
+    
+    local subprojects
+    subprojects=$(task status:pending export | jq -r '.[].project // "unscoped"' | sort | uniq | grep -vE "_archive$|_trash$")
+    
+    if [[ -z "$subprojects" ]]; then
+        success "No active initiatives!"
+        return
+    fi
+    
+    printf "  %-40s | %-8s | %-8s | %-8s\n" "Initiative" "Active" "Ready" "Total"
+    printf "  %s\n" "----------------------------------------------------------------------------"
+
+    while IFS= read -r full_p; do
+        [[ -z "$full_p" ]] && continue
+        
+        # We now treat the name as-is (bare initiative name)
+        local display_name="$full_p"
+        [[ "$display_name" == "unscoped" ]] && display_name="[none]"
+
+        local total=$(task "project:$full_p" status:pending count 2>/dev/null)
+        local active=$(task "project:$full_p" +ACTIVE count 2>/dev/null)
+        local ready=$(task "project:$full_p" +READY status:pending count 2>/dev/null)
+        
+        printf "  %-40s | %-8s | %-8s | %-8s\n" "$display_name" "$active" "$ready" "$total"
+    done <<< "$subprojects"
+    echo ""
+}
+
+# Command: active - Show currently active tasks
+cmd_active() {
+    info "Currently active tasks:"
+    echo ""
+    task +ACTIVE 2>/dev/null || warning "No active tasks"
+}
+
+# Command: blocked - Show blocked tasks
+cmd_blocked() {
+    info "Blocked tasks:"
+    echo ""
+    task +BLOCKED 2>/dev/null || warning "No blocked tasks"
+}
+
+# Command: overdue - Show overdue tasks
+cmd_overdue() {
+    info "Overdue tasks:"
+    echo ""
+    task due.before:today status:pending 2>/dev/null || success "No overdue tasks"
+}
+
+# Command: urgent - Make task urgent
+cmd_urgent() {
+    local task_id="$1"
+    
+    [[ -z "$task_id" ]] && error "Task ID required"
+    
+    task "$task_id" modify priority:H
+    success "Task $(short_id "$task_id") marked as urgent (priority: H)"
+}
+
+# Command: block - Add dependency
+cmd_block() {
+    local task_id="$1"
+    local depends_on="$2"
+    
+    [[ -z "$task_id" ]] && error "Task ID required"
+    [[ -z "$depends_on" ]] && error "Dependency task ID required"
+    
+    task "$task_id" modify "depends:$depends_on"
+    success "Task $(short_id "$task_id") now depends on task $(short_id "$depends_on")"
+}
+
+# Command: unblock - Remove dependency
+cmd_unblock() {
+    local task_id="$1"
+    local depends_on="$2"
+    
+    [[ -z "$task_id" ]] && error "Task ID required"
+    [[ -z "$depends_on" ]] && error "Dependency task ID required"
+    
+    # Get current dependencies
+    local current_deps
+    current_deps=$(task "$task_id" export | jq -r '.[0].depends // [] | join(",")')
+    
+    # Remove the specific dependency
+    local new_deps
+    new_deps=$(echo "$current_deps" | tr ',' '\n' | grep -v "^$depends_on$" | tr '\n' ',' | sed 's/,$//')
+    
+    if [[ -n "$new_deps" ]]; then
+        task "$task_id" modify "depends:$new_deps"
+    else
+        task "$task_id" modify depends:
+    fi
+    
+    success "Removed dependency on task $(short_id "$depends_on") from task $(short_id "$task_id")"
+}
+
+# Command: wait - Put task on hold
+cmd_wait() {
+    local task_id="$1"
+    local date="$2"
+    
+    [[ -z "$task_id" ]] && error "Task ID required"
+    [[ -z "$date" ]] && error "Wait date required (e.g., friday, 2026-02-01)"
+    
+    task "$task_id" modify "wait:$date"
+    success "Task $(short_id "$task_id") waiting until $date"
+}
+
+# Main command dispatcher
+main() {
+    [[ $# -eq 0 ]] && { show_usage; exit 0; }
+    
+    local command="$1"
+    shift
+    
+    case "$command" in
+        initiative)         cmd_initiative "$@" ;; 
+        initiatives)        cmd_initiatives "$@" ;; 
+        tree)               cmd_tree "$@" ;; 
+        next)               cmd_next "$@" ;; 
+        execute)            cmd_execute "$@" ;; 
+        done)               cmd_done "$@" ;; 
+        outcome)            cmd_outcome "$@" ;; 
+        handoff)            cmd_handoff "$@" ;; 
+        pause)              cmd_pause "$@" ;; 
+        note)               cmd_note "$@" ;; 
+        context)            cmd_context "$@" ;; 
+        status)             cmd_status "$@" ;; 
+        active)             cmd_active "$@" ;; 
+        blocked)            cmd_blocked "$@" ;; 
+        overdue)            cmd_overdue "$@" ;; 
+        urgent)             cmd_urgent "$@" ;; 
+        discard)            cmd_discard "$@" ;; 
+        block)              cmd_block "$@" ;; 
+        unblock)            cmd_unblock "$@" ;; 
+        wait)               cmd_wait "$@" ;; 
+        help|-h|--help)     show_usage ;; 
+        *)                  error "Unknown command: $command (use '$SCRIPT_NAME help' for usage)" ;; 
+    esac
+}
+
+main "$@"
