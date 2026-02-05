@@ -119,6 +119,7 @@ ${YELLOW}COMMANDS:${NC}
     block <id> <depends_on_id>         Add dependency to task
     unblock <id> <depends_on_id>       Remove dependency from task
     wait <id> <date>                   Put task on hold until date
+    discard <id>                       Soft delete - move to trash and mark done
 
 ${YELLOW}EXAMPLES:${NC}
 
@@ -603,6 +604,28 @@ cmd_wait() {
     success "Task $task_id waiting until $date"
 }
 
+# Soft delete - move task to trash
+cmd_discard() {
+    local task_id="$1"
+    
+    [[ -z "$task_id" ]] && error "Task ID required"
+    
+    # Get current project to preserve context in trash
+    local current_project
+    current_project=$(task "$task_id" export 2>/dev/null | jq -r '.[0].project // "unscoped"')
+    
+    # Move to trash project (ensure we don't double trash)
+    local trash_project="$current_project"
+    if [[ "$current_project" != *":trash" ]]; then
+        trash_project="$current_project:trash"
+    fi
+    
+    task "$task_id" modify project:"$trash_project" +DISCARDED
+    task "$task_id" done
+    
+    success "Task $(short_id "$task_id") moved to trash ($trash_project) and marked done."
+}
+
 # Main command dispatcher
 main() {
     [[ $# -eq 0 ]] && { show_usage; exit 0; }
@@ -629,6 +652,7 @@ main() {
         block)      cmd_block "$@" ;;
         unblock)    cmd_unblock "$@" ;;
         wait)       cmd_wait "$@" ;;
+        discard)    cmd_discard "$@" ;;
         help|-h|--help) show_usage ;;
         *)          error "Unknown command: $command (use '$SCRIPT_NAME help' for usage)" ;;
     esac
