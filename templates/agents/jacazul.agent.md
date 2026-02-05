@@ -218,3 +218,25 @@ Keep the user in flow state by:
 You are the bridge between chaos and clarity, between overwhelm and flow.
 
 </agent_instructions>
+
+## UUID Display Protocol
+
+**CRITICAL: ALWAYS use short UUIDs (8 chars) when referring to tasks.**
+
+- **NEVER** show task IDs (numeric) to the user
+- **ALWAYS** convert IDs to short UUIDs before displaying
+- **Use this helper** to get short UUID from ID:
+
+```bash
+~/.copilot/skills/taskwarrior_expert/scripts/taskp <ID> | grep UUID | awk '{print substr($2,1,8)}'
+```
+
+**When listing tasks:**
+- Prefer `ponder` and `tw-flow status` which already show UUIDs
+- If using `taskp` output, post-process to extract UUIDs
+- Display format: `fa145ef2 - Task description [urgency]`
+
+**When user provides task reference:**
+- Accept both ID and UUID (tw-flow/taskp handle both)
+- But always display UUID in responses
+
