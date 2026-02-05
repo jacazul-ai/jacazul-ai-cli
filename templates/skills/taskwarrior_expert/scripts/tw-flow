@@ -151,7 +151,7 @@ cmd_initiative() {
         
         # If the first field isn't a known mode, assume the old format (description|tag|due)
         # or that mode was omitted.
-        if [[ ! "$mode" =~ ^(PLAN|INVESTIGATE|GUIDE|EXECUTE|TEST|DEBUG|REVIEW|PR-REVIEW)$ ]]; then
+        if [[ ! "$mode" =~ ^(DESIGN|PLAN|INVESTIGATE|GUIDE|EXECUTE|TEST|DEBUG|REVIEW|PR-REVIEW)$ ]]; then
             # Shift everything right
             due_offset=$tag
             tag=$description

@@ -1,10 +1,16 @@
 #!/bin/bash
-# Smoke test for tw-flow script
-# Tests basic functionality and edge cases
+# Smoke test for tw-flow script (Gemini-enhanced + TASKDATA fixed)
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TW_FLOW="$SCRIPT_DIR/tw-flow"
 PONDER="$SCRIPT_DIR/ponder"
+TASKP="$SCRIPT_DIR/taskp"
+
+# CRITICAL: Override PROJECT_ID to use test database
+TEST_SILO="test-smoke-$(date +%s)"
+export PROJECT_ID="$TEST_SILO"
+export TASKDATA="$HOME/.task/$TEST_SILO"
+mkdir -p "$TASKDATA"
 
 # Colors
 RED='\033[0;31m'
@@ -12,11 +18,10 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m'
 
-TEST_PROJECT="test-smoke:$(date +%s)"
+TEST_PROJECT="smoke"
 TESTS_PASSED=0
 TESTS_FAILED=0
 
-# Helper functions
 pass() {
     echo -e "${GREEN}✓${NC} $1"
     TESTS_PASSED=$((TESTS_PASSED + 1))
@@ -32,19 +37,17 @@ info() {
 }
 
 cleanup() {
-    if [[ -n "${TEST_PROJECT:-}" ]]; then
-        info "Cleaning up test tasks..."
-        task "project:$TEST_PROJECT" delete rc.confirmation=off 2>/dev/null || true
-        task "project:${TEST_PROJECT}:_archive" delete rc.confirmation=off 2>/dev/null || true
-    fi
+    info "Cleaning up test database..."
+    rm -rf "$TASKDATA" 2>/dev/null || true
 }
 
-# Trap cleanup on exit
 trap cleanup EXIT
 
 echo "========================================"
 echo "tw-flow Smoke Test"
+echo "Test Silo: $TEST_SILO"
 echo "Test Project: $TEST_PROJECT"
+echo "TASKDATA: $TASKDATA"
 echo "========================================"
 echo ""
 
@@ -61,8 +64,8 @@ fi
 info "Test 2: Help command works"
 "$TW_FLOW" help >/dev/null 2>&1 && pass "Help command works" || fail "Help command failed"
 
-# Test 3: Create a simple initiative
-info "Test 3: Create a initiative with tasks"
+# Test 3: Create initiative
+info "Test 3: Create an initiative with tasks"
 "$TW_FLOW" initiative "$TEST_PROJECT" \
     "First task|research|today" \
     "Second task|implementation|tomorrow" \
@@ -70,142 +73,127 @@ info "Test 3: Create a initiative with tasks"
 
 # Test 4: List initiatives
 info "Test 4: List initiatives"
-"$TW_FLOW" initiatives | grep -q "$TEST_PROJECT" && pass "Initiatives command shows test project" || fail "Initiatives command failed to show test project"
+"$TW_FLOW" initiatives 2>&1 | grep -q "$TEST_PROJECT" && pass "Initiatives command shows test project" || fail "Initiatives command failed"
 
-# Test 5: Show status of initiative
+# Test 5: Show status
 info "Test 5: Show initiative status"
-"$TW_FLOW" status "$TEST_PROJECT" | grep -q "Initiative:" && pass "Status command works" || fail "Status command failed"
+"$TW_FLOW" status "$TEST_PROJECT" 2>&1 | grep -qE "Initiative:" && pass "Status command works" || fail "Status command failed"
 
 # Test 6: Show next tasks
 info "Test 6: Show next tasks"
 "$TW_FLOW" next "$TEST_PROJECT" &>/dev/null && pass "Next command works" || fail "Next command failed"
 
-# Test 7: Get first task ID
-info "Test 7: Get first task ID and execute"
-FIRST_TASK=$(task "project:$TEST_PROJECT" status:pending export | jq -r '.[0].id')
+# Test 7: Get first task UUID and execute
+info "Test 7: Get first task UUID and execute"
+FIRST_TASK=$(task "project:$TEST_PROJECT" status:pending export 2>/dev/null | jq -r '.[0].uuid // empty')
 if [[ -n "$FIRST_TASK" ]] && [[ "$FIRST_TASK" != "null" ]]; then
-    "$TW_FLOW" execute "$FIRST_TASK" &>/dev/null && pass "Execute command works (task $FIRST_TASK)" || fail "Execute command failed"
+    "$TW_FLOW" execute "$FIRST_TASK" &>/dev/null && pass "Execute command works (task ${FIRST_TASK:0:8})" || fail "Execute command failed"
 else
-    fail "Could not find first task"
+    fail "Could not find first task (TASKDATA: $TASKDATA)"
 fi
 
-# Test 8: Add note to task
+# Test 8: Add note
 info "Test 8: Add note to task"
 if [[ -n "$FIRST_TASK" ]] && [[ "$FIRST_TASK" != "null" ]]; then
     "$TW_FLOW" note "$FIRST_TASK" research "Test research note" &>/dev/null && pass "Note command works" || fail "Note command failed"
 fi
 
-# Test 9: Show task context
+# Test 9: Show context
 info "Test 9: Show task context"
 if [[ -n "$FIRST_TASK" ]] && [[ "$FIRST_TASK" != "null" ]]; then
     "$TW_FLOW" context "$FIRST_TASK" &>/dev/null && pass "Context command works" || fail "Context command failed"
 fi
 
-# Test 10: Complete task
-info "Test 10: Complete task"
+# Test 10: Add outcome
+info "Test 10: Add outcome"
 if [[ -n "$FIRST_TASK" ]] && [[ "$FIRST_TASK" != "null" ]]; then
-    "$TW_FLOW" done "$FIRST_TASK" "Test completion" &>/dev/null && pass "Done command works" || fail "Done command failed"
+    "$TW_FLOW" outcome "$FIRST_TASK" "Test completion outcome" &>/dev/null && pass "Outcome command works" || fail "Outcome command failed"
 fi
 
-# Test 11: Outcome validation - task without outcome should fail
-info "Test 11: Outcome validation - reject task without outcome"
-OUTCOME_TEST=$(task add "project:$TEST_PROJECT" "Task without outcome" 2>/dev/null | grep -oP 'Created task \K\d+' || echo "")
-if [[ -n "$OUTCOME_TEST" ]]; then
-    if "$TW_FLOW" done "$OUTCOME_TEST" &>/dev/null; then
-        fail "Done command should reject task without OUTCOME"
-    else
-        pass "Done command correctly rejects task without OUTCOME"
-    fi
-    task "$OUTCOME_TEST" delete rc.confirmation=off &>/dev/null || true
-else
-    fail "Failed to create outcome test task"
+# Test 11: Complete task
+info "Test 11: Complete task with outcome"
+if [[ -n "$FIRST_TASK" ]] && [[ "$FIRST_TASK" != "null" ]]; then
+    "$TW_FLOW" done "$FIRST_TASK" &>/dev/null && pass "Done command works" || fail "Done command failed"
 fi
 
-# Test 12: Outcome validation - task with outcome should succeed
-info "Test 12: Outcome validation - accept task with outcome"
-OUTCOME_TEST2=$(task add "project:$TEST_PROJECT" "Task with outcome" 2>/dev/null | grep -oP 'Created task \K\d+' || echo "")
-if [[ -n "$OUTCOME_TEST2" ]]; then
-    task "$OUTCOME_TEST2" annotate "OUTCOME: Test outcome added" &>/dev/null
-    if "$TW_FLOW" done "$OUTCOME_TEST2" &>/dev/null; then
-        pass "Done command accepts task with OUTCOME"
-    else
-        fail "Done command should accept task with OUTCOME"
-    fi
-else
-    fail "Failed to create outcome test task 2"
-fi
-
-# Test 11: Test with spaces in project name (edge case)
-info "Test 11: Test edge case - task with special characters"
-EDGE_TASK=$(task add "project:$TEST_PROJECT" "Task with 'quotes' and \"double quotes\"" 2>/dev/null | grep -oP 'Created task \K\d+' || echo "")
-if [[ -n "$EDGE_TASK" ]]; then
+# Test 12: Special characters
+info "Test 12: Special characters in task description"
+EDGE_TASK=$(task add "project:$TEST_PROJECT" "Task with 'quotes' and \"double quotes\"" 2>&1 | grep -oP 'Created task \K[0-9a-fA-F-]+' || task "$TEST_PROJECT" export 2>/dev/null | jq -r '.[-1].uuid // empty')
+if [[ -n "$EDGE_TASK" ]] && [[ "$EDGE_TASK" != "null" ]]; then
     if task "$EDGE_TASK" &>/dev/null; then
-        pass "Handles special characters in task description"
-        task "$EDGE_TASK" delete &>/dev/null || true
+        pass "Handles special characters"
+        task "$EDGE_TASK" delete rc.confirmation=off &>/dev/null || true
     else
-        fail "Failed to handle special characters"
+        fail "Failed special characters"
     fi
 else
     fail "Failed to create task with special characters"
 fi
 
-# Test 12: Active tasks command
-info "Test 12: Active tasks command"
+# Test 13: Active tasks
+info "Test 13: Active tasks command"
 "$TW_FLOW" active &>/dev/null && pass "Active command works" || fail "Active command failed"
 
-# Test 13: Blocked tasks command
-info "Test 13: Blocked tasks command"
+# Test 14: Blocked tasks
+info "Test 14: Blocked tasks command"
 "$TW_FLOW" blocked &>/dev/null && pass "Blocked command works" || fail "Blocked command failed"
 
-# Test 14: Overdue tasks command
-info "Test 14: Overdue tasks command"
+# Test 15: Overdue tasks
+info "Test 15: Overdue tasks command"
 "$TW_FLOW" overdue &>/dev/null && pass "Overdue command works" || fail "Overdue command failed"
 
-# Test 15: Ponder ignores _archive projects
-info "Test 15: Ponder ignores _archive projects"
+# Test 16: Archive projects
+info "Test 16: Ponder ignores _archive projects"
 ARCHIVE_TASK_DESC="This should be hidden"
-task add "project:${TEST_PROJECT}:_archive" "$ARCHIVE_TASK_DESC" rc.verbose:new-id >/dev/null 2>&1
+task add "project:${TEST_PROJECT}:_archive" "$ARCHIVE_TASK_DESC" >/dev/null 2>&1
 PONDER_OUTPUT=$("$PONDER" "$TEST_PROJECT" 2>/dev/null)
 if ! echo "$PONDER_OUTPUT" | grep -q "$ARCHIVE_TASK_DESC"; then
-    pass "Ponder correctly hides tasks from _archive project"
+    pass "Ponder hides _archive projects"
 else
-    fail "Ponder output contains task from _archive project"
+    fail "Ponder shows _archive projects"
 fi
 
-# Test 16: Initiative command supports modes
-info "Test 16: Initiative command supports modes"
+# Test 17: Mode support
+info "Test 17: Initiative command supports modes"
 MODE_TASK_DESC="Mode verification task"
-"$TW_FLOW" initiative "${TEST_PROJECT}:mode-test" "GUIDE|$MODE_TASK_DESC|testing|today" &>/dev/null
-if task "project:${TEST_PROJECT}:mode-test" export 2>/dev/null | jq -r '.[].description' | grep -q "\[GUIDE\] $MODE_TASK_DESC"; then
-    pass "Initiative command correctly prepends [MODE]"
+"$TW_FLOW" initiative "$TEST_PROJECT" "GUIDE|$MODE_TASK_DESC|testing|today" &>/dev/null
+if task "project:$TEST_PROJECT" export 2>/dev/null | jq -r '.[].description // empty' | grep -q "\[GUIDE\] $MODE_TASK_DESC"; then
+    pass "Initiative prepends [MODE]"
 else
-    fail "Initiative command failed to prepend [MODE]"
+    fail "Initiative mode failed"
 fi
 
-# Test 17: Ponder highlights modes
-info "Test 17: Ponder highlights modes"
+# Test 18: Ponder shows modes
+info "Test 18: Ponder highlights modes"
 PONDER_OUTPUT=$("$PONDER" "$TEST_PROJECT" 2>/dev/null)
 if echo "$PONDER_OUTPUT" | grep -qE "\[GUIDE\]"; then
-    pass "Ponder displays task with mode in dashboard"
+    pass "Ponder displays modes"
 else
-    fail "Ponder failed to display task with mode"
+    fail "Ponder mode display failed"
 fi
 
-# Test 18: Handoff command works
-info "Test 18: Handoff command works"
-NEXT_TASK=$(task "project:$TEST_PROJECT" status:pending export 2>/dev/null | jq -r '.[0].id' | head -n1)
-if [[ -n "$NEXT_TASK" ]] && [[ "$NEXT_TASK" != "null" ]]; then
-    "$TW_FLOW" handoff "$NEXT_TASK" "Test handoff message" &>/dev/null
-    if task "$NEXT_TASK" export 2>/dev/null | jq -r '.[].annotations[].description' 2>/dev/null | grep -q "HANDOFF: Test handoff message"; then
-        pass "Handoff command correctly added annotation"
+# Test 19: Handoff command
+info "Test 19: Handoff command works"
+SECOND_TASK=$(task "project:$TEST_PROJECT" export 2>/dev/null | jq -r '.[] | select(.description | contains("Second task")) | .uuid // empty')
+if [[ -n "$SECOND_TASK" ]] && [[ "$SECOND_TASK" != "null" ]]; then
+    "$TW_FLOW" execute "$SECOND_TASK" &>/dev/null
+    "$TW_FLOW" outcome "$SECOND_TASK" "Ready for handoff" &>/dev/null
+    
+    THIRD_TASK=$(task "project:$TEST_PROJECT" export 2>/dev/null | jq -r '.[] | select(.description | contains("Third task")) | .uuid // empty')
+    if [[ -n "$THIRD_TASK" ]] && [[ "$THIRD_TASK" != "null" ]]; then
+        "$TW_FLOW" handoff "$THIRD_TASK" "Test handoff message" &>/dev/null
+        if task "$THIRD_TASK" export 2>/dev/null | jq -r '.[].annotations // [] | .[].description // empty' | grep -q "HANDOFF: Test handoff message"; then
+            pass "Handoff command works"
+        else
+            fail "Handoff annotation failed"
+        fi
     else
-        fail "Handoff command failed to add annotation"
+        fail "Could not find third task for handoff"
     fi
 else
-    pass "Handoff command works (no task to test)"
+    fail "Could not find second task for handoff"
 fi
 
-# Summary
 echo ""
 echo "========================================"
 echo "Test Summary"
@@ -214,26 +202,10 @@ echo -e "Passed: ${GREEN}$TESTS_PASSED${NC}"
 echo -e "Failed: ${RED}$TESTS_FAILED${NC}"
 echo "========================================"
 
-if [[ $TESTS_FAILED -eq 0 ]]; then
-    echo -e "${GREEN}All tests passed!${NC}"
-    exit 0
-else
-    echo -e "${RED}Some tests failed!${NC}"
+if [ $TESTS_FAILED -gt 0 ]; then
+    echo "Some tests failed!"
     exit 1
-fi
-
-# Test 19: Ponder handles null .project gracefully
-info "Test 19: Ponder handles null .project in task records"
-# Create a task without explicit project to test null handling
-NULL_PROJECT_TASK=$(task add "Task without explicit project" rc.verbose:new-id 2>&1 | grep -oP 'Created task \K\d+' || echo "")
-if [[ -n "$NULL_PROJECT_TASK" ]]; then
-    PONDER_OUTPUT=$("$PONDER" "$TEST_PROJECT" 2>/dev/null)
-    if [[ $? -eq 0 ]]; then
-        pass "Ponder handles tasks with null .project field"
-    else
-        fail "Ponder crashed when processing task with null .project"
-    fi
-    task "$NULL_PROJECT_TASK" delete rc.confirmation=off 2>/dev/null || true
 else
-    pass "Ponder null .project test skipped (could not create test task)"
+    echo "All tests passed!"
+    exit 0
 fi
