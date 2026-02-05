@@ -54,28 +54,6 @@ short_id() {
     fi
 }
 
-# Helper: Resolve ID or UUID to full UUID
-resolve_uuid() {
-    local input="$1"
-    
-    # If already a UUID (contains dashes or 32+ hex chars), return as-is
-    if [[ "$input" =~ ^[0-9a-fA-F-]{32,}$ ]] || [[ "$input" =~ - ]]; then
-        echo "$input"
-        return 0
-    fi
-    
-    # Try to get UUID from numeric ID
-    local uuid
-    uuid=$(task "$input" export 2>/dev/null | jq -r '.[0].uuid // empty')
-    
-    if [[ -n "$uuid" ]]; then
-        echo "$uuid"
-        return 0
-    fi
-    
-    # Return input as-is (let taskwarrior handle error)
-    echo "$input"
-}
 
 show_usage() {
     cat <<EOF
@@ -321,7 +299,7 @@ cmd_pause() {
     [[ -z "$task_id" ]] && error "Task ID required"
     
     task "$task_id" stop
-    success "Paused task $task_id"
+    success "Paused task $(short_id "$task_id")"
 }
 
 # Command: outcome - Record final outcome
@@ -334,7 +312,7 @@ cmd_outcome() {
     [[ -z "$message" ]] && error "Outcome message required"
     
     task "$task_id" annotate "OUTCOME: $message"
-    success "Recorded outcome for task $task_id"
+    success "Recorded outcome for task $(short_id "$task_id")"
 }
 
 # Command: handoff - Start next task and add handoff note

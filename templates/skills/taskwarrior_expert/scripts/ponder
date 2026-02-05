@@ -21,12 +21,24 @@ BLUE='\033[0;34m'
 RED='\033[0;31m'
 NC='\033[0m'
 
+# UUID helper
+short_id() {
+    local uuid="$1"
+    if [[ "$uuid" =~ ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$ ]]; then
+        echo "${uuid:0:8}"
+    elif [[ "$uuid" =~ ^[0-9a-f]{8,}$ ]]; then
+        echo "${uuid:0:8}"
+    else
+        echo "$uuid"
+    fi
+}
+
 # Helper to print tasks in one line
 print_task_line() {
     local uuid=$1
     # Use export to safely get fields
     local json=$(task "$uuid" export 2>/dev/null | jq '.[0]')
-    local id=$(echo "$json" | jq -r '.id // "?"')
+    local short_uuid=$(short_id "$uuid")
     local desc=$(echo "$json" | jq -r '.description // "?"')
     local urgency=$(echo "$json" | jq -r '.urgency // 0')
     local urgency_fmt=$(printf "%.1f" "$urgency")
@@ -38,7 +50,7 @@ print_task_line() {
         desc="${YELLOW}[$mode]${NC} $rest"
     fi
     
-    printf "  %-3s | %-70s [%s]\n" "$id" "$(echo -e "$desc")" "$urgency_fmt"
+    printf "  %-8s | %-70s [%s]\n" "$short_uuid" "$(echo -e "$desc")" "$urgency_fmt"
 }
 
 # JQ filter to exclude _archive projects
