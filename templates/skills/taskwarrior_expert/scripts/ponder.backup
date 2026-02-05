@@ -1,0 +1,101 @@
+#!/bin/bash
+# Ponder - Taskwarrior Dashboard
+# Provides a high-level overview of focus and progress
+
+# Detect project and set TASKDATA if PROJECT_ID is available
+if [ -n "$PROJECT_ID" ]; then
+    export TASKDATA="$HOME/.task/$PROJECT_ID"
+    mkdir -p "$TASKDATA"
+fi
+
+PROJECT_ROOT="$1"
+if [[ -z "$PROJECT_ROOT" ]]; then
+    PROJECT_ROOT="copilot" # Default if no project given
+fi
+
+# Colors
+CYAN='\033[0;36m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+RED='\033[0;31m'
+NC='\033[0m'
+
+# UUID helper
+short_id() {
+    local uuid="$1"
+    if [[ "$uuid" =~ ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$ ]]; then
+        echo "${uuid:0:8}"
+    elif [[ "$uuid" =~ ^[0-9a-f]{8,}$ ]]; then
+        echo "${uuid:0:8}"
+    else
+        echo "$uuid"
+    fi
+}
+
+# Helper to print tasks in one line
+print_task_line() {
+    local uuid=$1
+    # Use export to safely get fields
+    local json=$(task "$uuid" export 2>/dev/null | jq '.[0]')
+    local short_uuid=$(short_id "$uuid")
+    local desc=$(echo "$json" | jq -r '.description // "?"')
+    local urgency=$(echo "$json" | jq -r '.urgency // 0')
+    local urgency_fmt=$(printf "%.1f" "$urgency")
+    
+    # Highlight mode prefixes if present
+    if [[ "$desc" =~ ^\[([A-Z-]+)\] ]]; then
+        local mode="${BASH_REMATCH[1]}"
+        local rest="${desc#\[$mode\] }"
+        desc="${YELLOW}[$mode]${NC} $rest"
+    fi
+    
+    printf "  %-8s | %-70s [%s]\n" "$short_uuid" "$(echo -e "$desc")" "$urgency_fmt"
+}
+
+# JQ filter to exclude _archive projects
+JQ_EXCLUDE_ARCHIVE_FILTER='select(.project | test("_archive$") | not)'
+
+# 1. Pulse Summary
+PENDING=$(task export status:pending 2>/dev/null | jq -r ".[]? | select((.project // empty) | startswith(\"$PROJECT_ROOT\"))" | jq "$JQ_EXCLUDE_ARCHIVE_FILTER" | jq -r '.uuid' | wc -l)
+COMPLETED_TODAY=$(task export status:completed end:today 2>/dev/null | jq -r ".[]? | select((.project // empty) | startswith(\"$PROJECT_ROOT\"))" | jq "$JQ_EXCLUDE_ARCHIVE_FILTER" | jq -r '.uuid' | wc -l)
+OVERDUE=$(task all status:pending +OVERDUE export 2>/dev/null | jq -r ".[]? | select((.project // empty) | startswith(\"$PROJECT_ROOT\"))" | jq "$JQ_EXCLUDE_ARCHIVE_FILTER" | jq -r '.uuid' | wc -l)
+ACTIVE_COUNT=$(task +ACTIVE export 2>/dev/null | jq -r '.[]? | select((.project // empty) | startswith("'$PROJECT_ROOT'")) | .uuid' | wc -l)
+
+echo -e "${CYAN}══ PONDER: $PROJECT_ROOT ══${NC}"
+echo -e "Pending: ${CYAN}$PENDING${NC} | Completed Today: ${GREEN}$COMPLETED_TODAY${NC} | Overdue: ${RED}$OVERDUE${NC} | Active: ${BLUE}$ACTIVE_COUNT${NC}"
+echo ""
+
+# 2. Top Task (Current Focus)
+echo -e "${YELLOW}[CURRENT FOCUS]${NC}"
+ACTIVE_UUID=$(task +ACTIVE export 2>/dev/null | jq -r '.[]? | select((.project // empty) | startswith("'$PROJECT_ROOT'")) | .uuid' | head -n1)
+if [[ -n "$ACTIVE_UUID" ]]; then
+    print_task_line "$ACTIVE_UUID"
+else
+    echo "  No active tasks."
+fi
+echo ""
+
+# 3. Up Next (Ready tasks)
+echo -e "${GREEN}[UP NEXT]${NC}"
+READY_UUIDS=$(task export status:pending 2>/dev/null | jq -r '.[]? | select(((.project // empty) | startswith("'$PROJECT_ROOT'")) and (.depends == null or (.depends | length == 0)))' | jq "$JQ_EXCLUDE_ARCHIVE_FILTER" | jq -r '.uuid' | head -n3)
+if [[ -n "$READY_UUIDS" ]]; then
+    while read -r uuid; do
+        [[ -n "$uuid" ]] && print_task_line "$uuid"
+    done <<< "$READY_UUIDS"
+else
+    echo "  No ready tasks."
+fi
+echo ""
+
+# 4. Blocked
+echo -e "${RED}[BLOCKED / WAITING]${NC}"
+BLOCKED_UUIDS=$(task export status:pending 2>/dev/null | jq -r '.[]? | select(((.project // empty) | startswith("'$PROJECT_ROOT'")) and (.depends != null and (.depends | length > 0)))' | jq "$JQ_EXCLUDE_ARCHIVE_FILTER" | jq -r '.uuid' | head -n3)
+if [[ -n "$BLOCKED_UUIDS" ]]; then
+    while read -r uuid; do
+        [[ -n "$uuid" ]] && print_task_line "$uuid"
+    done <<< "$BLOCKED_UUIDS"
+else
+    echo "  No blocked tasks."
+fi
+echo ""
