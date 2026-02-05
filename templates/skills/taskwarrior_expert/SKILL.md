@@ -8,7 +8,7 @@ license: MIT
 
 ## Environment Configuration
 
-### Per-Project Database Architecture (v1.3.0+)
+### Per-Project Database Architecture (v1.4.0)
 
 **NEW:** Taskwarrior now uses **isolated databases per project** for better organization, performance, and isolation.
 
@@ -40,7 +40,7 @@ Each project has its own Taskwarrior database:
 Three main tools automatically detect and use the correct project database:
 
 1. **taskp** - Project-aware wrapper (auto-detects via PROJECT_ID)
-2. **tw-flow** (v1.3.0+) - Workflow management with TASKDATA support
+2. **tw-flow** (v1.4.0) - Workflow management with TASKDATA support
 3. **ponder** - Dashboard with per-project views
 
 All automatically set `TASKDATA=~/.task/$PROJECT_ID` when PROJECT_ID is available.
