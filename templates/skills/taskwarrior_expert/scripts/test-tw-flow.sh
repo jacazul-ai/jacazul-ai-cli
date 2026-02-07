@@ -85,7 +85,7 @@ info "Test 6: Show next tasks"
 
 # Test 7: Get first task UUID and execute
 info "Test 7: Get first task UUID and execute"
-FIRST_TASK=$(task "$TEST_PROJECT" status:pending export 2>/dev/null | jq -r '.[0].uuid // empty')
+FIRST_TASK=$("$TASKP" project:"$TEST_PROJECT" status:pending export 2>/dev/null | jq -r '.[0].uuid // empty')
 if [[ -n "$FIRST_TASK" ]] && [[ "$FIRST_TASK" != "null" ]]; then
     "$TW_FLOW" execute "$FIRST_TASK" &>/dev/null && pass "Execute command works (task ${FIRST_TASK:0:8})" || fail "Execute command failed"
 else
@@ -118,7 +118,7 @@ fi
 
 # Test 12: Special characters
 info "Test 12: Special characters in task description"
-EDGE_TASK=$(task add "$TEST_PROJECT" "Task with 'quotes' and \"double quotes\"" 2>&1 | grep -oP 'Created task \K[0-9a-fA-F-]+' || task "$TEST_PROJECT" export 2>/dev/null | jq -r '.[-1].uuid // empty')
+EDGE_TASK=$("$TASKP" add project:"$TEST_PROJECT" "Task with 'quotes' and \"double quotes\"" 2>&1 | grep -oP 'Created task \K[0-9a-fA-F-]+' || "$TASKP" project:"$TEST_PROJECT" export 2>/dev/null | jq -r '.[-1].uuid // empty')
 if [[ -n "$EDGE_TASK" ]] && [[ "$EDGE_TASK" != "null" ]]; then
     if task "$EDGE_TASK" &>/dev/null; then
         pass "Handles special characters"
@@ -145,7 +145,7 @@ info "Test 15: Overdue tasks command"
 # Test 16: Archive projects
 info "Test 16: Ponder ignores _archive projects"
 ARCHIVE_TASK_DESC="This should be hidden"
-task add "${TEST_PROJECT}:_archive" "$ARCHIVE_TASK_DESC" >/dev/null 2>&1
+"$TASKP" add project:"${TEST_PROJECT}:_archive" "$ARCHIVE_TASK_DESC" >/dev/null 2>&1
 PONDER_OUTPUT=$("$PONDER" "$TEST_PROJECT" 2>/dev/null)
 if ! echo "$PONDER_OUTPUT" | grep -q "$ARCHIVE_TASK_DESC"; then
     pass "Ponder hides _archive projects"
@@ -157,7 +157,7 @@ fi
 info "Test 17: Initiative command supports modes"
 MODE_TASK_DESC="Mode verification task"
 "$TW_FLOW" initiative "$TEST_PROJECT" "GUIDE|$MODE_TASK_DESC|testing|today" &>/dev/null
-if task "$TEST_PROJECT" export 2>/dev/null | jq -r '.[].description // empty' | grep -q "\[GUIDE\] $MODE_TASK_DESC"; then
+if "$TASKP" $TEST_PROJECT export 2>/dev/null | jq -r '.[].description // empty' | grep -q "\[GUIDE\] $MODE_TASK_DESC"; then
     pass "Initiative prepends [MODE]"
 else
     fail "Initiative mode failed"
@@ -174,12 +174,12 @@ fi
 
 # Test 19: Handoff command
 info "Test 19: Handoff command works"
-SECOND_TASK=$(task "$TEST_PROJECT" export 2>/dev/null | jq -r '.[] | select(.description | contains("Second task")) | .uuid // empty')
+SECOND_TASK=$("$TASKP" project:"$TEST_PROJECT" export 2>/dev/null | jq -r '.[] | select(.description | contains("Second task")) | .uuid // empty')
 if [[ -n "$SECOND_TASK" ]] && [[ "$SECOND_TASK" != "null" ]]; then
     "$TW_FLOW" execute "$SECOND_TASK" &>/dev/null
     "$TW_FLOW" outcome "$SECOND_TASK" "Ready for handoff" &>/dev/null
     
-    THIRD_TASK=$(task "$TEST_PROJECT" export 2>/dev/null | jq -r '.[] | select(.description | contains("Third task")) | .uuid // empty')
+    THIRD_TASK=$("$TASKP" project:"$TEST_PROJECT" export 2>/dev/null | jq -r '.[] | select(.description | contains("Third task")) | .uuid // empty')
     if [[ -n "$THIRD_TASK" ]] && [[ "$THIRD_TASK" != "null" ]]; then
         "$TW_FLOW" handoff "$THIRD_TASK" "Test handoff message" &>/dev/null
         if task "$THIRD_TASK" export 2>/dev/null | jq -r '.[].annotations // [] | .[].description // empty' | grep -q "HANDOFF: Test handoff message"; then
@@ -197,13 +197,13 @@ fi
 
 # Test 20: Context propagation from dependencies
 info "Test 20: Context propagation displays parent context"
-PARENT_TASK=$(task "$TEST_PROJECT" export 2>/dev/null | jq -r '.[0].uuid // empty')
+PARENT_TASK=$("$TASKP" project:"$TEST_PROJECT" export 2>/dev/null | jq -r '.[0].uuid // empty')
 if [[ -n "$PARENT_TASK" ]] && [[ "$PARENT_TASK" != "null" ]]; then
     # Add OUTCOME to parent
     "$TW_FLOW" outcome "$PARENT_TASK" "Parent task completed successfully" &>/dev/null
     
     # Create child task with dependency
-    CHILD_UUID=$(task add "$TEST_PROJECT" "Child task with dependency" depends:"$PARENT_TASK" 2>&1 | grep -oP 'Created task \K[0-9a-fA-F-]+' || task "$TEST_PROJECT" export 2>/dev/null | jq -r '.[] | select(.description | contains("Child task")) | .uuid // empty')
+    CHILD_UUID=$("$TASKP" add project:"$TEST_PROJECT" "Child task with dependency" depends:"$PARENT_TASK" 2>&1 | grep -oP 'Created task \K[0-9a-fA-F-]+' || "$TASKP" project:"$TEST_PROJECT" export 2>/dev/null | jq -r '.[] | select(.description | contains("Child task")) | .uuid // empty')
     
     if [[ -n "$CHILD_UUID" ]] && [[ "$CHILD_UUID" != "null" ]]; then
         # Execute child - should show inherited context
@@ -225,10 +225,10 @@ echo "========================================"
 
 # Test 21: Discard command (soft delete)
 info "Test 21: Discard command moves to trash"
-DISCARD_UUID=$(task add "$TEST_PROJECT" "Unique discard test" 2>&1 | grep -oP 'Created task \K[0-9]+\b')
+DISCARD_UUID=$("$TASKP" add project:"$TEST_PROJECT" "Unique discard test" 2>&1 | grep -oP 'Created task \K[0-9]+\b')
 if [[ -n "$DISCARD_UUID" ]]; then
     # Get the actual UUID before discard
-    ACTUAL_UUID=$(task "$DISCARD_UUID" export 2>/dev/null | jq -r '.[0].uuid[0:8]')
+    ACTUAL_UUID=$("$TASKP" "$DISCARD_UUID" export 2>/dev/null | jq -r '.[0].uuid[0:8]')
     
     # Temporarily unset PROJECT_ID so tw-flow uses TASKDATA env
     OLD_PROJECT_ID="$PROJECT_ID"
@@ -237,7 +237,7 @@ if [[ -n "$DISCARD_UUID" ]]; then
     export PROJECT_ID="$OLD_PROJECT_ID"
     
     # Check if in trash with DISCARDED tag
-    TRASH_CHECK=$(task "$TEST_PROJECT:trash" export 2>/dev/null | jq -r ".[] | select(.tags // [] | map(. == \"DISCARDED\") | any) | .uuid")
+    TRASH_CHECK=$("$TASKP" project:"$TEST_PROJECT:trash" export 2>/dev/null | jq -r ".[] | select(.tags // [] | map(. == \"DISCARDED\") | any) | .uuid")
     
     if [[ -n "$TRASH_CHECK" ]]; then
         pass "Discard moves to trash"
@@ -260,7 +260,7 @@ fi
 # Test 23: PROJECT_ID prefix is NOT in project field
 info "Test 23: Tasks do not have PROJECT_ID prefix in project field"
 # Get all tasks and check their project field
-PREFIXED_TASKS=$(task export 2>/dev/null | jq -r '.[] | select(.project != null) | select(.project | startswith("test-smoke-")) | .project')
+PREFIXED_TASKS=$("$TASKP" export 2>/dev/null | jq -r '.[] | select(.project != null) | select(.project | startswith("test-smoke-")) | .project')
 
 if [[ -z "$PREFIXED_TASKS" ]]; then
     pass "No tasks have PROJECT_ID prefix in project field"
@@ -274,7 +274,7 @@ info "Test 23: Tasks do not have PROJECT_ID prefix in project field"
 "$TW_FLOW" plan prefix-test "Test prefix|research|today" &>/dev/null
 
 # Get all tasks and check their project field
-PREFIXED_TASKS=$(task export 2>/dev/null | jq -r '.[] | select(.project != null) | select(.project | startswith("test-smoke-")) | .project')
+PREFIXED_TASKS=$("$TASKP" export 2>/dev/null | jq -r '.[] | select(.project != null) | select(.project | startswith("test-smoke-")) | .project')
 
 if [[ -z "$PREFIXED_TASKS" ]]; then
     pass "No tasks have PROJECT_ID prefix in project field"

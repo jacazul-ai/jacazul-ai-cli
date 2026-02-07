@@ -207,7 +207,7 @@ cmd_initiative() {
             priority="L"
         fi
         
-        local cmd="task add $initiative \"$final_desc\" due:$due_offset priority:$priority +$tag"
+        local cmd="task add project:$initiative \"$final_desc\" due:$due_offset priority:$priority +$tag"
         
         # Add dependency if not first task
         [[ -n "$prev_id" ]] && cmd="$cmd depends:$prev_id"
@@ -619,36 +619,16 @@ cmd_discard() {
     # Move to trash project (ensure we don't double trash)
     local trash_project="$current_project"
     if [[ "$current_project" != *":trash" ]]; then
-        trash_project="$current_trash"
+        trash_project="$current_project:trash"
     fi
     
-    task "$task_id" modify "$trash_project" +DISCARDED
+    task "$task_id" modify project:"$trash_project" +DISCARDED
     task "$task_id" done
     
-    success "Task $(short_id "$task_id") moved to trash ($trash_project) and marked done."
+    success "Task $(short_id "$task_id") moved to trash and marked done."
 }
 
 
-cmd_discard() {
-    local task_id="$1"
-    
-    [[ -z "$task_id" ]] && error "Task ID required"
-    
-    # Get current project to preserve context in trash
-    local current_project
-    current_project=$(task "$task_id" export 2>/dev/null | jq -r '.[0].project // "unscoped"')
-    
-    # Move to trash project (ensure we don't double trash)
-    local trash_project="$current_project"
-    if [[ "$current_project" != *":trash" ]]; then
-        trash_project="$current_trash"
-    fi
-    
-    task "$task_id" modify "$trash_project" +DISCARDED
-    task "$task_id" done
-    
-    success "Task $(short_id "$task_id") moved to trash ($current_trash) and marked done."
-}
 
 cmd_tree() {
     local filter="${1:-status:pending}"
@@ -755,7 +735,6 @@ main() {
         wait)       cmd_wait "$@" ;;
         discard)    cmd_discard "$@" ;;
         tree)       cmd_tree "$@" ;;
-        discard)    cmd_discard "$@" ;;
         help|-h|--help) show_usage ;;
         *)          error "Unknown command: $command (use '$SCRIPT_NAME help' for usage)" ;;
     esac
