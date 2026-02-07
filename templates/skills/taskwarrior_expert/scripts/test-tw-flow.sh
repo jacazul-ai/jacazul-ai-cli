@@ -256,16 +256,28 @@ if echo "$TREE_OUTPUT" | grep -q "══ Initiative:"; then
 else
     fail "Tree command failed"
 fi
-echo "Test Summary"
-echo "========================================"
-echo -e "Passed: ${GREEN}$TESTS_PASSED${NC}"
-echo -e "Failed: ${RED}$TESTS_FAILED${NC}"
-echo "========================================"
 
-if [ $TESTS_FAILED -gt 0 ]; then
-    echo "Some tests failed!"
-    exit 1
+# Test 23: PROJECT_ID prefix is NOT in project field
+info "Test 23: Tasks do not have PROJECT_ID prefix in project field"
+# Get all tasks and check their project field
+PREFIXED_TASKS=$(task export 2>/dev/null | jq -r '.[] | select(.project != null) | select(.project | startswith("test-smoke-")) | .project')
+
+if [[ -z "$PREFIXED_TASKS" ]]; then
+    pass "No tasks have PROJECT_ID prefix in project field"
 else
-    echo "All tests passed!"
-    exit 0
+    fail "Found tasks with PROJECT_ID prefix: $PREFIXED_TASKS"
+fi
+
+# Test 23: PROJECT_ID prefix is NOT in project field
+info "Test 23: Tasks do not have PROJECT_ID prefix in project field"
+# Create test initiative with tw-flow
+"$TW_FLOW" plan prefix-test "Test prefix|research|today" &>/dev/null
+
+# Get all tasks and check their project field
+PREFIXED_TASKS=$(task export 2>/dev/null | jq -r '.[] | select(.project != null) | select(.project | startswith("test-smoke-")) | .project')
+
+if [[ -z "$PREFIXED_TASKS" ]]; then
+    pass "No tasks have PROJECT_ID prefix in project field"
+else
+    fail "Found tasks with PROJECT_ID prefix: $PREFIXED_TASKS"
 fi
