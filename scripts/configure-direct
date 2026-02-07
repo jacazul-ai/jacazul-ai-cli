@@ -1,0 +1,96 @@
+#!/bin/bash
+# Configure Direct (Native) Execution Environment
+
+# Determine the absolute project root directory
+PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+echo "Configuring direct (native) execution environment..."
+echo "Project root: $PROJECT_ROOT"
+echo ""
+
+# -----------------------------------------------------------------------------
+# 1. Create ~/bin directory if it doesn't exist
+# -----------------------------------------------------------------------------
+if [ ! -d "$HOME/bin" ]; then
+    echo "Creating ~/bin directory..."
+    mkdir -p "$HOME/bin"
+fi
+
+# -----------------------------------------------------------------------------
+# 2. Create wrapper script in ~/bin
+# -----------------------------------------------------------------------------
+TARGET_SCRIPT="$HOME/bin/copilot-direct"
+echo "Creating wrapper script at $TARGET_SCRIPT..."
+
+cat <<WRAPPER > "$TARGET_SCRIPT"
+#!/bin/bash
+export PROJECT_ROOT="$PROJECT_ROOT"
+
+# Execute the direct copilot script
+"\$PROJECT_ROOT/scripts/copilot-direct" "\$@"
+WRAPPER
+
+chmod +x "$TARGET_SCRIPT"
+echo "✅ Wrapper script created: $TARGET_SCRIPT"
+
+# -----------------------------------------------------------------------------
+# 3. Symlink skills to native home
+# -----------------------------------------------------------------------------
+SKILL_SOURCE="$PROJECT_ROOT/templates/skills"
+SKILL_TARGET="$HOME/.copilot/skills"
+
+if [ ! -d "$HOME/.copilot" ]; then
+    echo "Creating ~/.copilot directory..."
+    mkdir -p "$HOME/.copilot"
+fi
+
+if [ -L "$SKILL_TARGET" ]; then
+    echo "⚠️  Skill symlink already exists: $SKILL_TARGET"
+elif [ -d "$SKILL_TARGET" ]; then
+    echo "⚠️  Skills directory already exists (not a symlink): $SKILL_TARGET"
+    echo "    Skipping skill setup. Remove it first if you want to use project skills."
+else
+    echo "Creating skill symlink: $SKILL_TARGET -> $SKILL_SOURCE"
+    ln -s "$SKILL_SOURCE" "$SKILL_TARGET"
+    echo "✅ Skills symlinked"
+fi
+
+# -----------------------------------------------------------------------------
+# 4. Symlink templates to custom instructions
+# -----------------------------------------------------------------------------
+TEMPLATES_SOURCE="$PROJECT_ROOT/templates"
+TEMPLATES_TARGET="$HOME/.copilot/templates"
+
+if [ -L "$TEMPLATES_TARGET" ]; then
+    echo "⚠  Templates symlink already exists: $TEMPLATES_TARGET"
+elif [ -d "$TEMPLATES_TARGET" ]; then
+    echo "⚠️  Templates directory already exists (not a symlink): $TEMPLATES_TARGET"
+    echo "    Skipping templates setup."
+else
+    echo "Creating templates symlink: $TEMPLATES_TARGET -> $TEMPLATES_SOURCE"
+    ln -s "$TEMPLATES_SOURCE" "$TEMPLATES_TARGET"
+    echo "✅ Templates symlinked"
+fi
+
+# -----------------------------------------------------------------------------
+# 5. Configure Taskwarrior database location
+# -----------------------------------------------------------------------------
+echo ""
+echo "📝 Taskwarrior database will use per-project structure:"
+echo "   ~/.task/\$PROJECT_ID/"
+echo ""
+echo "   Example: ~/.task/piraz_ai_cli_sandboxed/"
+echo ""
+echo "   This is automatically handled by taskp, tw-flow, and ponder scripts."
+
+echo ""
+echo "============================================"
+echo "✅ Direct environment configured!"
+echo "============================================"
+echo ""
+echo "You can now run:"
+echo "  copilot-direct"
+echo ""
+echo "Or add ~/bin to your PATH permanently:"
+echo "  echo 'export PATH=\"\$HOME/bin:\$PATH\"' >> ~/.bashrc"
+echo "  source ~/.bashrc"

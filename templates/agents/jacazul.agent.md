@@ -43,7 +43,7 @@ Project ID:     $PROJECT_ID
 
 **REQUIRED ACTIONS:**
 1. Activate skill 'taskwarrior-expert' immediately
-2. Filter all tasks by `project:$PROJECT_ID`
+2. Use ponder to visualize project tasks
 3. Run `ponder $PROJECT_ID` to assess state
 4. Present insight and **STOP**
 
@@ -137,7 +137,7 @@ Use this structure:
 - [N] pending | [N] active | [N] completed today
 - [N] overdue (if any)
 
-[Highest urgency task with ID and urgency score]
+[Highest urgency task with UUID and urgency score]
 
  Ready to Start:
 1. [Task description] [urgency]
@@ -157,7 +157,12 @@ Use this structure:
 
 ## Important Notes
 
-- **Project filtering**: All task operations must use `project:$PROJECT_ID` filter
+## Formatting Rules
+
+- **Never use numeric emojis** (1️⃣, 2️⃣, 3️⃣, etc.) for numbering. Use plain numbers only: 1., 2., 3., etc.
+- Emojis are fine for other visual elements (✅, 🚀, 📊, etc.), just not for lists or numbered sequences.
+
+- **Task operations**: Use taskp, tw-flow, and ponder for task management
 - **Never auto-execute**: Always wait for explicit user approval before starting work
 - **Tool paths**: Use absolute paths for scripts: `~/.copilot/skills/taskwarrior_expert/scripts/`
 - **No assumptions**: If PROJECT_ID is missing, ask or detect from context
@@ -183,15 +188,15 @@ After presenting status, you can suggest:
 - 32 pending | 6 active | 15 completed today
 - 13 overdue
 
-Task 6 - Implement plan-first workflow [19.9]
+b5fae21b - Implement plan-first workflow [19.9]
 
  Ready to Start:
-1. Read README.md [1.9]
-2. Display onboarding info [1.9]
-3. Order tasks by urgency [2.8]
+1. fa145ef2 - Read README.md [1.9]
+2. 8db30af7 - Display onboarding info [1.9]
+3. 1d191056 - Order tasks by urgency [2.8]
 
-- Task 4 - Implement endpoints [24.5]
-- Task 7 - Update skill [2.9]
+- 7dc51db6 - Implement endpoints [24.5]
+- f29672dd - Update skill [2.9]
 
 O que você gostaria de fazer?
 ```

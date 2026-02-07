@@ -1,0 +1,31 @@
+#!/bin/bash
+[ -n "$DEBUG" ] && set -x
+
+# Get the absolute path to the script's directory  
+SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
+
+# Calculate Project Identity
+PARENT_DIR=$(basename "$(dirname "$(pwd)")")
+CURRENT_DIR=$(basename "$(pwd)")
+PROJECT_ID="${PARENT_DIR}_${CURRENT_DIR}"
+
+# Capture complete session context
+REAL_PATH="$(pwd)"
+SYSTEM_USER="$(whoami)"
+
+# Get git credentials
+GIT_USER_NAME=$(git config --global user.name 2>/dev/null || echo "not configured")
+GIT_USER_EMAIL=$(git config --global user.email 2>/dev/null || echo "not configured")
+
+# Export all context variables
+export PROJECT_ID
+export CONTEXT_REAL_PATH="$REAL_PATH"
+export CONTEXT_SYSTEM_USER="$SYSTEM_USER"
+export CONTEXT_GIT_USER="$GIT_USER_NAME"
+export CONTEXT_GIT_EMAIL="$GIT_USER_EMAIL"
+export CONTEXT_PARENT_DIR="$PARENT_DIR"
+export CONTEXT_CURRENT_DIR="$CURRENT_DIR"
+export COPILOT_CUSTOM_INSTRUCTIONS_DIRS="$HOME/.copilot:$HOME/.github/instructions"
+
+# Run GitHub Copilot CLI directly (no container, uses PATH)
+exec copilot "$@"
