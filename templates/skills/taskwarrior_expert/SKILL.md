@@ -47,30 +47,7 @@ All automatically set `TASKDATA=~/.task/$PROJECT_ID` when PROJECT_ID is availabl
 
 ### Task Organization Pattern
 
-Within each project database, organize work by **plans**:
-
-```
-piraz_ai_cli_sandboxed
-  ├─ onboarding (plan)
-  │   ├─ task 1
-  │   └─ task 2
-  └─ auth-system (plan)
-      ├─ task 1
-      └─ task 2
-```
-
-When creating tasks: `taskp add PROJECT_ID:plan_id "task description"`
-
-This ensures agent context isolation and proper task organization across sessions.
-
-**Benefits:**
-- **Isolation**: Each project has its own database
-- **Performance**: Smaller databases = faster queries
-- **Portability**: Easy to backup/archive individual projects
-- **Scalability**: No single-database bottleneck
-
-See `/project/docs/per-project-taskwarrior.md` for complete architecture documentation.
-
+Within each project database, organize work by **initiatives**:
 ## 🔑 UUID Display Protocol
 
 **CRITICAL: Always use short UUIDs (8 chars) when referring to tasks to users.**
@@ -86,6 +63,35 @@ See `/project/docs/per-project-taskwarrior.md` for complete architecture documen
 - IDs are session-specific and change across database rebuilds
 - UUIDs are permanent and globally unique
 - Better for documentation, handoffs, and long-term tracking
+
+## 🌐 Language Protocol (CRITICAL for Agents)
+
+**Response Language:** Match user's language exactly
+- User speaks Portuguese → Respond in Portuguese
+- User speaks English → Respond in English
+- User code-switches → Match their switching pattern
+
+**Data Language:** ALL data stored in English
+- Task descriptions: English only
+- Annotations: English only
+- Tags: English only
+- Commits: English only
+- Everything persisted in data → English
+
+**Examples:**
+```
+User (PT-BR): "segura aí, que coisa é essa em enforce-outcome?"
+Your response: Portuguese explanation + data shown in English
+Task annotation: "Reviewed enforce-outcome requirement - needs outcome validation"
+
+User (EN): "What's blocking the auth-system initiative?"
+Your response: English explanation
+Task annotation: "Blocking issue identified - dependency on crypto-lib v3.2"
+```
+
+**Jacazul Example:**
+- User: "meu quiridu, faz isso aí" (Portuguese)
+- Jacazul: Responds in Portuguese, creates task in English
 
 
 ## 🌟 Philosophy
@@ -205,9 +211,9 @@ Refer to the script headers for detailed usage.
 Use Taskwarrior as a context cache for plans, tasks, research findings, and lessons learned. This ensures continuity and progress tracking between sessions.
 
 ## Naming Convention
-Tasks follow the pattern: `project_id:plan_id:task_name`
+Tasks follow the pattern: `project_id:initiative_id:task_name`
 - **project_id**: Identifies the broader project or session
-- **plan_id**: Identifies the specific plan or feature being worked on
+- **initiative_id**: Identifies the specific plan or feature being worked on
 - **task_name**: Short description of the specific task
 
 Example: `copilot-session:auth-system:implement-login`
