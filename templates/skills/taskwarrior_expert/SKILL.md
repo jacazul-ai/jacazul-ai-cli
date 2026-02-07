@@ -48,6 +48,37 @@ All automatically set `TASKDATA=~/.task/$PROJECT_ID` when PROJECT_ID is availabl
 ### Task Organization Pattern
 
 Within each project database, organize work by **initiatives**:
+
+### Understanding PROJECT_ID and Quoted Parameters
+
+When you see examples with `PROJECT_ID:plan_id`, understand:
+
+1. **`$PROJECT_ID` is a shell variable** - auto-set by copilot, not a literal string
+2. **Quotes are REQUIRED** - to prevent shell word-splitting on the colon
+3. **Format: `"$PROJECT_ID:initiative_id"`** - always with double quotes
+
+#### Examples
+
+If `PROJECT_ID=piraz_ai_cli_sandboxed`:
+
+```bash
+# Creating a task - USE QUOTES
+taskp add "$PROJECT_ID:login-feature" "Implement user auth" due:today urgency:9.0
+
+# Viewing tasks - USE QUOTES  
+taskp "$PROJECT_ID:login-feature" status:pending
+
+# Using tw-flow - USE QUOTES
+tw-flow plan "$PROJECT_ID:api-endpoint" "Design|research|today" "Implement|code|tomorrow"
+
+# Actual expanded commands look like:
+taskp add "piraz_ai_cli_sandboxed:login-feature" "Implement user auth" due:today urgency:9.0
+taskp "piraz_ai_cli_sandboxed:login-feature" status:pending
+tw-flow plan "piraz_ai_cli_sandboxed:api-endpoint" "Design|research|today" "Implement|code|tomorrow"
+```
+
+**🔑 Key Rule:** Always wrap `$PROJECT_ID` or full project namespace in **double quotes** when used in taskwarrior commands.
+
 ## 🔑 UUID Display Protocol
 
 **CRITICAL: Always use short UUIDs (8 chars) when referring to tasks to users.**
