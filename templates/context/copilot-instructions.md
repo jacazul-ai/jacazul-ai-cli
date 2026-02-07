@@ -187,27 +187,6 @@ When you see `$PROJECT_ID` in command examples, it's an **environment variable**
 - **Example values**: `piraz_ai_cli_sandboxed`, `candango_sqlok`, `user_project_name`
 - **Always needs quotes** in commands to prevent shell word-splitting
 
-### Common Mistakes and Fixes
-
-**WRONG** - Missing quotes, shell expands incorrectly:
-```bash
-taskp add PROJECT_ID:plan_id "task_name"     # Literal text, not expanded
-taskp add $PROJECT_ID:plan_id "task_name"    # Shell splits on colon → ERROR
-```
-
-**CORRECT** - Variable in quotes:
-```bash
-taskp add "$PROJECT_ID:plan_id" "task_name"
-# If PROJECT_ID=piraz_ai_cli_sandboxed, expands to:
-# taskp add "piraz_ai_cli_sandboxed:plan_id" "task_name"
-```
-
-**ALSO CORRECT** - Use actual value:
-```bash
-taskp add "piraz_ai_cli_sandboxed:plan_id" "task_name"
-```
-
-**Rule:** Always use double quotes around `$PROJECT_ID` in commands to preserve the full string.
 
 ## Core Workflow
 
@@ -216,10 +195,10 @@ When starting work on a plan or feature, use **project-aware tools**:
 
 ```bash
 # Using taskp (recommended - auto-detects project)
-~/.copilot/skills/taskwarrior_expert/scripts/taskp add "$PROJECT_ID:plan_id" "task_name" tags:copilot
+~/.copilot/skills/taskwarrior_expert/scripts/taskp add "plan_id" "task_name" tags:copilot
 
 # Using tw-flow (recommended for planning)
-~/.copilot/skills/taskwarrior_expert/scripts/tw-flow plan "$PROJECT_ID:feature" \
+~/.copilot/skills/taskwarrior_expert/scripts/tw-flow plan "feature" \
   "Design API|research|today" \
   "Implement|implementation|tomorrow"
 ```
@@ -268,7 +247,7 @@ When user says "let's work on plan X", filter all subsequent task operations to 
 ### 5. Retrieving Context
 View all tasks for current work:
 ```bash
-~/.copilot/skills/taskwarrior_expert/scripts/taskp "$PROJECT_ID:plan_id" status:pending
+~/.copilot/skills/taskwarrior_expert/scripts/taskp "plan_id" status:pending
 ~/.copilot/skills/taskwarrior_expert/scripts/taskp <id> info  # View full task details including annotations
 ```
 

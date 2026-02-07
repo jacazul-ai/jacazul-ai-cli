@@ -47,38 +47,38 @@ All automatically set `TASKDATA=~/.task/$PROJECT_ID` when PROJECT_ID is availabl
 
 ### Task Organization Pattern
 
-Within each project database, organize work by **initiatives**:
+Within each project database, organize work by **initiatives** using simple task descriptions:
 
-### Understanding PROJECT_ID and Quoted Parameters
-
-When you see examples with `PROJECT_ID:plan_id`, understand:
-
-1. **`$PROJECT_ID` is a shell variable** - auto-set by copilot, not a literal string
-2. **Quotes are REQUIRED** - to prevent shell word-splitting on the colon
-3. **Format: `"$PROJECT_ID:initiative_id"`** - always with double quotes
-
-#### Examples
-
-If `PROJECT_ID=piraz_ai_cli_sandboxed`:
+**Key Concept:** Tasks are isolated by **separate databases** (`TASKDATA`). Each project has its own database, so no prefixes or special attributes needed.
 
 ```bash
-# Creating a task - USE QUOTES
-taskp add "$PROJECT_ID:login-feature" "Implement user auth" due:today urgency:9.0
+# ✅ CORRECT - Simple descriptions, database handles isolation
+taskp add "Implement user auth" urgency:9.0
+taskp add "Design API endpoint" urgency:8.5
+taskp add "Write tests for auth flow" urgency:7.2
 
-# Viewing tasks - USE QUOTES  
-taskp "$PROJECT_ID:login-feature" status:pending
+# ✅ View all tasks (automatically filtered by PROJECT_ID via TASKDATA)
+taskp list
+taskp status:pending
 
-# Using tw-flow - USE QUOTES
-tw-flow plan "$PROJECT_ID:api-endpoint" "Design|research|today" "Implement|code|tomorrow"
-
-# Actual expanded commands look like:
-taskp add "piraz_ai_cli_sandboxed:login-feature" "Implement user auth" due:today urgency:9.0
-taskp "piraz_ai_cli_sandboxed:login-feature" status:pending
-tw-flow plan "piraz_ai_cli_sandboxed:api-endpoint" "Design|research|today" "Implement|code|tomorrow"
+# ✅ Using tw-flow for multi-task planning
+tw-flow plan "login-feature" \
+  "Design auth flow|research|today" \
+  "Implement JWT tokens|code|tomorrow"
 ```
 
-**🔑 Key Rule:** Always wrap `$PROJECT_ID` or full project namespace in **double quotes** when used in taskwarrior commands.
+**Why this works:**
+- `taskp` automatically uses `TASKDATA=~/.task/$PROJECT_ID`
+- Each project has its own isolated database
+- Tasks from different projects NEVER mix
+- Use simple, clear descriptions - the database keeps everything separate
 
+**What NOT to do:**
+- ❌ Don't use `project:` attribute (unnecessary, causes confusion)
+- ❌ Don't prefix with `$PROJECT_ID:` (database isolation handles this)
+- ❌ Don't overthink it - just add tasks with clear descriptions
+
+**Migration Note:** If you see old examples with `$PROJECT_ID:initiative` or `project:` patterns, ignore them - that was before per-project databases (pre-v1.4.0).
 ## 🔑 UUID Display Protocol
 
 **CRITICAL: Always use short UUIDs (8 chars) when referring to tasks to users.**
