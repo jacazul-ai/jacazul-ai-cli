@@ -131,7 +131,7 @@ fi
 #############################################
 
 # Fetch all relevant tasks - SAFE filter with type check
-ALL_TASKS_JSON=$(task status:pending export rc.verbose=no 2>/dev/null | jq "[.[] | select(.project != null and (.project | type) == \"string\" and (.project | startswith(\"$PROJECT_ROOT\")))]")
+ALL_TASKS_JSON=$(task status:pending export rc.verbose=no 2>/dev/null | jq "[.[] | select(.project != null and (.project | type) == \"string\")]")
 
 # Helper: Format task line
 format_task_line() {
@@ -168,7 +168,7 @@ format_task_line() {
     local urgency_fmt=$(printf "%.1f" "$urgency")
     
     # Initiative stripping (remove PROJECT_ROOT prefix)
-    local initiative="${project#$PROJECT_ROOT:}"
+    local initiative="${project}"
     [[ "$initiative" == "$PROJECT_ROOT" ]] && initiative="[root]"
     
     printf "  %b%-2s${NC} | %-8s | %-10s | %-25s | %-50s | [%s]\n" "$color" "$status_icon" "$uuid_short" "$mode" "$initiative" "${desc:0:50}" "$urgency_fmt"
