@@ -16,6 +16,13 @@ HOST_GITCONFIG="$HOST_SANDBOX/.gitconfig"
 # Create directories if they don't exist
 mkdir -p "$HOST_SANDBOX_CONFIG_DIR" "$HOST_SANDBOX_COPILOT_DIR" "$HOST_SANDBOX_NPM_DIR" "$HOST_SANDBOX_TASK_DIR"
 
+# Setup Python venv in sandbox if it does not exist
+HOST_VENV_DIR="$HOST_SANDBOX/venv"
+if [ ! -d "$HOST_VENV_DIR" ]; then
+    echo "🐍 Creating Python virtual environment at $HOST_VENV_DIR..."
+    mkdir -p "$HOST_VENV_DIR"
+fi
+
 # Calculate Project Identity (following gemini pattern)
 PARENT_DIR=$(basename "$(dirname "$(pwd)")")
 CURRENT_DIR=$(basename "$(pwd)")
@@ -50,7 +57,7 @@ if [ ! -f "$HOST_GITCONFIG" ]; then
     fi
     
     # Create gitconfig file
-    cat > "$HOST_GITCONFIG" <<EOF
+    cat > "$HOST_GITCONFIG" <<GITEOF
 [user]
 name = $GIT_USER_NAME
 email = $GIT_USER_EMAIL
@@ -58,7 +65,7 @@ email = $GIT_USER_EMAIL
 defaultBranch = main
 [core]
 editor = vim
-EOF
+GITEOF
     
     echo ""
     echo "✓ Git configuration saved to $HOST_GITCONFIG"
@@ -70,13 +77,28 @@ if [ -z "$GIT_USER_NAME" ]; then
     GIT_USER_NAME=$(grep -A2 '^\[user\]' "$HOST_GITCONFIG" | grep 'name' | cut -d'=' -f2 | xargs 2>/dev/null || echo "not configured")
     GIT_USER_EMAIL=$(grep -A2 '^\[user\]' "$HOST_GITCONFIG" | grep 'email' | cut -d'=' -f2 | xargs 2>/dev/null || echo "not configured")
 fi
+# Default to Jacazul agent if no --agent specified
+AGENT_ARGS=()
+HAS_AGENT=false
 
-# Run the container
-# Added --init to handle signals better and ensured all volumes are present
+for arg in "$@"; do
+    if [[ "$arg" == --agent=* ]] || [[ "$arg" == --agent ]]; then
+        HAS_AGENT=true
+        break
+    fi
+done
+
+if [ "$HAS_AGENT" = false ]; then
+    AGENT_ARGS=(--agent=jacazul)
+fi
+
+
+# Run the container as jacazul user
+# All volumes now mount to /home/jacazul
 podman run -it --rm \
   ${DEBUG:+--log-level debug} \
   --userns=keep-id \
-  -e "COPILOT_CUSTOM_INSTRUCTIONS_DIRS=/home/node/.copilot:/home/node/.github/instructions" \
+  -e "COPILOT_CUSTOM_INSTRUCTIONS_DIRS=/home/jacazul/.copilot:/home/jacazul/.github/instructions" \
   -e "PROJECT_ID=$PROJECT_ID" \
   -e "CONTEXT_REAL_PATH=$REAL_PATH" \
   -e "CONTEXT_SYSTEM_USER=$SYSTEM_USER" \
@@ -84,16 +106,17 @@ podman run -it --rm \
   -e "CONTEXT_GIT_EMAIL=$GIT_USER_EMAIL" \
   -e "CONTEXT_PARENT_DIR=$PARENT_DIR" \
   -e "CONTEXT_CURRENT_DIR=$CURRENT_DIR" \
-  -v "$(pwd):/project:Z" \
+  -v "$(pwd):/project:z" \
   -w /project \
-  -v "$HOST_SANDBOX_CONFIG_DIR:/home/node/.config:Z" \
-  -v "$HOST_SANDBOX_COPILOT_DIR:/home/node/.copilot:Z" \
-  -v "$HOST_SANDBOX_NPM_DIR:/home/node/.npm:Z" \
-  -v "$HOST_SANDBOX_TASK_DIR:/home/node/.task:Z" \
-  -v "$SCRIPT_DIR/../templates/context/copilot-instructions.md:/home/node/.copilot/copilot-instructions.md:Z" \
-  -v "$SCRIPT_DIR/../templates/context/instructions:/home/node/.github/instructions:Z" \
-  -v "$TEMPLATES_TASKRC:/home/node/.taskrc:Z" \
-  -v "$SCRIPT_DIR/../templates/skills:/home/node/.copilot/skills:Z" \
-  -v "$SCRIPT_DIR/../templates/agents:/home/node/.copilot/agents:Z" \
-  -v "$HOST_GITCONFIG:/home/node/.gitconfig:Z" \
-  copilot "$@"
+  -v "$HOST_SANDBOX_CONFIG_DIR:/home/jacazul/.config:z" \
+  -v "$HOST_SANDBOX_COPILOT_DIR:/home/jacazul/.copilot:z" \
+  -v "$HOST_SANDBOX_NPM_DIR:/home/jacazul/.npm:z" \
+  -v "$HOST_SANDBOX_TASK_DIR:/home/jacazul/.task:z" \
+  -v "$SCRIPT_DIR/../templates/context/copilot-instructions.md:/home/jacazul/.copilot/copilot-instructions.md:z" \
+  -v "$SCRIPT_DIR/../templates/context/instructions:/home/jacazul/.github/instructions:z" \
+  -v "$TEMPLATES_TASKRC:/home/jacazul/.taskrc:z" \
+  -v "$SCRIPT_DIR/../templates/skills:/home/jacazul/.copilot/skills:z" \
+  -v "$SCRIPT_DIR/../templates/agents:/home/jacazul/.copilot/agents:z" \
+  -v "$HOST_GITCONFIG:/home/jacazul/.gitconfig:z" \
+  -v "$HOST_VENV_DIR:/project/sandbox/venv:z" \
+  ai-sandbox "${AGENT_ARGS[@]}" "$@"

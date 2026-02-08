@@ -185,6 +185,7 @@ COMPLETED_TODAY=$(task export status:completed end:today 2>/dev/null | jq "[.[] 
 echo -e "Pulse: Pending (${CYAN}$PENDING_COUNT${NC}) | Active (${NEON_GREEN}$ACTIVE_COUNT${NC}) | Overdue (${BLOODY_RED}$OVERDUE_COUNT${NC}) | Done Today (${GREEN}$COMPLETED_TODAY${NC})"
 echo ""
 
+
 # 2. Initiative Landscape
 echo -e "${YELLOW}[INITIATIVE LANDSCAPE]${NC}"
 echo "$ALL_TASKS_JSON" | jq -r '.[].project // "unscoped"' | sort | uniq | while read -r initiative; do
@@ -206,6 +207,7 @@ echo "$ALL_TASKS_JSON" | jq -r '.[].project // "unscoped"' | sort | uniq | while
 done
 echo ""
 
+
 # 3. Task Readout (Current Focus)
 echo -e "${YELLOW}[TACTICAL READOUT]${NC}"
 printf "  %s | %-8s | %-10s | %-25s | %-50s | %s\n" "ST" "UUID" "MODE" "INITIATIVE" "DESCRIPTION" "URG"
@@ -217,3 +219,4 @@ echo "$ALL_TASKS_JSON" | jq -c '.[] | select(.project | test("_archive$|_trash$"
 done
 
 echo ""
+
