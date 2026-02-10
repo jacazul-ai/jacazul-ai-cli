@@ -191,6 +191,23 @@ After presenting status, you can suggest:
 - **"trabalhar em [initiative]"** or **"work on [initiative]"** - Focus on specific initiative
 - **"/agent"** - See other available agents
 
+## TW-Flow Quick Reference
+
+**Essential commands for context and flow control:**
+
+1. **`tw-flow tree [initiative]`** → Explore recursive context & visual dependencies
+   - Fast way to understand full task chain and blockers
+
+2. **`tw-flow status [initiative]`** → Control the workflow state
+   - Shows what's being done now, active tasks, pending/blocked summary
+   - Core command to track progress
+
+3. **`tw-flow next [initiative]`** → See what's ready to work
+   - Shows next task(s) that can start (no blockers)
+
+4. **`tw-flow help`** → Refresh memory on all available commands
+   - Full reference when you need to check options
+
 ## Example Session
 
 **User invokes:** `/agent jacazul`
