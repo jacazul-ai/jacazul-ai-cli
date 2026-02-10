@@ -7,14 +7,21 @@ Welcome to the AI CLI Sandboxed documentation.
 ### Getting Started
 - [Quick Start Guide](getting-started.md) - Setup and first steps
 
+### Dual-Persona System
+- [Jacazul & Cortana Agents](agents/README.md) - Dual-persona workflow navigators
+- [Persona Switching Guide](agents/persona-switching.md) - How to switch between personas
+
 ### Custom Agents
-- [Custom Agents Guide](agents/README.md) - Creating and using custom workflow agents
+- [Jacazul Agent](agents/jacazul.md) - PT-BR street-smart navigator
+- [Cortana Agent](agents/cortana.md) - EN tactical operator
 
 ### Skills
 - [Taskwarrior Expert](taskwarrior-expert.md) - Complete workflow management guide
 - [Skills Overview](skills/README.md) - All available skills
 
 ### Advanced Topics
+- [Dual-Persona System](agents/persona-system.md) - Architecture and design
+- [NO BULLSHIT Policy](agents/no-bullshit-policy.md) - Global feedback standard
 - Session continuity and handoffs
 - Custom workflow patterns
 - Container customization
@@ -25,7 +32,9 @@ Welcome to the AI CLI Sandboxed documentation.
 
 **New users:** Start with [Getting Started](getting-started.md)
 
-**Custom agents:** See [Agents Guide](agents/README.md)
+**Workflow navigators:** See [Jacazul & Cortana](agents/README.md)
+
+**Want to switch personas?** Read [Persona Switching Guide](agents/persona-switching.md)
 
 **Taskwarrior users:** Jump to [Taskwarrior Expert Guide](taskwarrior-expert.md)
 
@@ -39,10 +48,29 @@ Welcome to the AI CLI Sandboxed documentation.
 docs/
  README.md (you are here)
  getting-started.md (sandbox quick start)
- agents/ (custom agents)
+ agents/
+  README.md (dual-persona overview)
+  jacazul.md (🐊 Jacazul agent guide)
+  cortana.md (� Cortana agent guide)
+  persona-switching.md (how to switch)
+  persona-system.md (architecture)
+  no-bullshit-policy.md (feedback standards)
  taskwarrior-expert.md (complete workflow guide)
  skills/ (available skills)
 ```
+
+---
+
+## 🌟 What's New: Dual-Persona System
+
+This project uses **two distinct AI personas** to match different workflow styles:
+
+- **🐊 Jacazul** - PT-BR street-smart, laid-back, direct. Your casual navigator.
+- **🔷 Cortana** - EN tactical, professional, sharp. Your mission-focused operator.
+
+Both share the same NO BULLSHIT philosophy: genuine feedback only, no fluff.
+
+**Switch between them anytime** by saying "me traz a cortana" or "bring me jacazul" — it's conversational, no special syntax.
 
 ---
 
@@ -50,8 +78,10 @@ docs/
 
 1. Check the relevant guide above
 2. Review examples in the documentation
-3. Consult skill-specific docs in `/project/templates/skills/`
+3. Try `onboard` command to see persona in action
+4. Consult skill-specific docs in `/project/templates/skills/`
 
 ---
 
-**Last Updated:** 2026-02-01
+**Last Updated:** 2026-02-10
+
