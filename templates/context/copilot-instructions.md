@@ -156,38 +156,107 @@ All automatically use `TASKDATA=~/.task/$PROJECT_ID` when `PROJECT_ID` is set.
 
 ### Task Organization Pattern
 
-Tasks follow the pattern: `PROJECT_ID:plan_id:task_name`
+Each project has its own isolated Taskwarrior database:
 
 ```
-piraz_ai_cli_sandboxed:onboarding
+~/.task/
+  ├── piraz_ai_cli_sandboxed/     # Database for piraz_ai_cli_sandboxed project
+  │   ├── pending.data
+  │   ├── completed.data
+  │   └── ...
+  └── outro_projeto/              # Database for outro_projeto
+      ├── pending.data
+      ├── completed.data
+      └── ...
+```
+
+**Within each database**, tasks have the project structure:
+
+```
+project: onboarding
   ├─ Read README.md
   └─ Initialize project
 
-piraz_ai_cli_sandboxed:auth-system
+project: auth-system
   ├─ Design schema
   └─ Implement endpoints
 ```
 
-This ensures proper context isolation across sessions and agents.
+The `PROJECT_ID` determines **which database** to use, not the task naming.
 
 ## Naming Convention
-Tasks follow the pattern: `PROJECT_ID:plan_id:task_name`
-- **PROJECT_ID**: Identifies the broader project or session (automatically set)
-- **plan_id**: Identifies the specific plan or feature being worked on
-- **task_name**: Short description of the specific task
 
-Example: `ai_cli_sandboxed:onboarding:read-readme`
+Within a project's database, tasks follow: `project: initiative_id`
 
+- **project**: Taskwarrior field identifying the initiative
+- **initiative_id**: Initiative name (e.g., `onboarding`, `auth-system`)
+- **description**: Task description
+
+Example: A task with `project: onboarding` in `~/.task/piraz_ai_cli_sandboxed/`
+
+## How Scripts Handle Project Separation
+
+When you call scripts with `PROJECT_ID`, they:
+
+1. **Detect** `$PROJECT_ID` from environment (e.g., `piraz_ai_cli_sandboxed`)
+2. **Set** `TASKDATA=~/.task/$PROJECT_ID` to route to the correct database
+3. **Execute** all Taskwarrior commands against that isolated database
+4. **Isolate** tasks - only tasks in that database are visible
+
+**You only reference the initiative name:**
+
+```bash
+# Scripts automatically route to the correct database
+~/.copilot/skills/taskwarrior_expert/scripts/tw-flow status onboarding
+~/.copilot/skills/taskwarrior_expert/scripts/taskp project:onboarding list
+
+ TASKDATA setup → database routing
+```
+
+## 🔍 Understanding Database Isolation
+
+When you see `$PROJECT_ID` in command examples:
+
+- **Automatically set** by copilot: `PROJECT_ID="${PARENT_DIR}_${CURRENT_DIR}"`
+- **Example value**: `piraz_ai_cli_sandboxed`
+- **Controls which database**: Scripts set `TASKDATA=$HOME/.task/$PROJECT_ID`
+- **Isolates tasks**: Only tasks in that database are visible to commands
+
+**Pass initiative names directly** - the tools handle database selection automatically via PROJECT_ID.
+4. **Prepend** PROJECT_ID to initiative references internally
+
+**You only need to reference the initiative name:**
+
+```bash
+# Call with just the initiative name
+~/.copilot/skills/taskwarrior_expert/scripts/tw-flow status onboarding
+~/.copilot/skills/taskwarrior_expert/scripts/taskp project:onboarding list
+
+# Scripts handle: PROJECT_ID detection + TASKDATA setup + full path construction
+```
 
 ## 🔍 Understanding PROJECT_ID in Commands
 
-When you see `$PROJECT_ID` in command examples, it's an **environment variable** that needs to be expanded:
+When you see `$PROJECT_ID` in command examples, it's an **environment variable** that's automatically managed:
 
 - **Automatically set** by copilot: `PROJECT_ID="${PARENT_DIR}_${CURRENT_DIR}"`
+- **Example value**: `piraz_ai_cli_sandboxed` (you typically never type this)
+- **Tools handle it automatically**: Scripts detect and use it without your input
+
+**Pass initiative names directly to commands** - the tools prepend the PROJECT_ID automatically.
+- **Automatically set** by copilot: `PROJECT_ID="${PARENT_DIR}_${CURRENT_DIR}"`
 - **Example values**: `piraz_ai_cli_sandboxed`, `candango_sqlok`, `user_project_name`
-- **Always needs quotes** in commands to prevent shell word-splitting
+- **Tools handle it automatically**: You don't need to manually prepend PROJECT_ID in your commands
 
+**When calling commands, you reference initiatives directly:**
 
+```bash
+~/.copilot/skills/taskwarrior_expert/scripts/ponder "$PROJECT_ID"
+~/.copilot/skills/taskwarrior_expert/scripts/tw-flow status onboarding
+~/.copilot/skills/taskwarrior_expert/scripts/taskp project:onboarding list
+```
+
+The `$PROJECT_ID` is used internally by the tools and scripts automatically.
 ## Core Workflow
 
 ### 1. Task Creation
