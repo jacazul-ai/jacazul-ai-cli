@@ -434,6 +434,9 @@ cmd_context() {
     
     [[ -z "$task_id" ]] && error "Task ID required"
     
+    # Resolve UUID if short UUID provided
+    task_id=$(resolve_uuid "$task_id")
+ 
     info "Full context for task $task_id:"
     echo ""
     task "$task_id" info
