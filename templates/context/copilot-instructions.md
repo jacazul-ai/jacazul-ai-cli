@@ -129,7 +129,7 @@ Each project has its own isolated Taskwarrior database:
 - If no plan is selected, show tasks grouped by plan.
 - When listing all plans, display each plan with its urgencies and task numbers, ordered by urgency.
 - When creating tasks for a plan, assign higher urgency values to earlier steps (e.g., step 1 gets a higher value than step 2) to maintain correct ordering.
-- When displaying tasks for a plan, show task numbers on the left, task IDs in parentheses, and urgency values on the right (e.g., `1. (ID: 42) Task description [7.9]`).
+- When displaying tasks for a plan, show task numbers on the left, UUIDs in parentheses, and urgency values on the right (e.g., `1. (UUID: fa145ef2) Task description [7.9]`).
 - When a task is completed, update urgencies for remaining tasks in the plan to keep the correct sequence (the next step should always have the highest urgency among remaining tasks).
 - When adding a new task to the start, middle, or end of a plan, renumber and re-urgencize all tasks to maintain correct order and urgency sequence.
 - When removing a task from the start, middle, or end, renumber and re-urgencize remaining tasks to maintain order.
