@@ -56,63 +56,14 @@ Session context, plans, and all progress are exclusively stored and managed in T
 
 **Always use Taskwarrior for session plans and task breakdowns. Do not create or persist plans in files unless absolutely necessary.**
 
-## 🚨 CRITICAL: Taskwarrior Expert Script Locations
 
-When the `taskwarrior-expert` skill is activated, **ALWAYS use absolute paths** for all scripts:
+## 🚨 Taskwarrior Scripts
 
-### Script Locations
+All taskwarrior-expert scripts are located at: `~/.copilot/skills/taskwarrior_expert/scripts/`
 
-All taskwarrior-expert scripts are located at:
-```
-~/.copilot/skills/taskwarrior_expert/scripts/
-```
+Main tools: **tw-flow** (workflow), **taskp** (project-aware wrapper), **ponder** (dashboard)
 
-### Available Scripts
-
-1. **tw-flow** - Main workflow management tool
-   - Full path: `~/.copilot/skills/taskwarrior_expert/scripts/tw-flow`
-   - Purpose: Plan creation, task execution, context management, session handoffs
-   
-2. **taskp** - Project-aware Taskwarrior wrapper
-   - Full path: `~/.copilot/skills/taskwarrior_expert/scripts/taskp`
-   - Purpose: Auto-detects PROJECT_ID and sets correct TASKDATA
-   
-3. **ponder** - Dashboard visualization
-   - Full path: `~/.copilot/skills/taskwarrior_expert/scripts/ponder`
-   - Purpose: Quick status overview and pulse check
-
-### Usage Rules for AI Agents
-
-**✅ ALWAYS DO THIS:**
-```bash
-~/.copilot/skills/taskwarrior_expert/scripts/tw-flow plan copilot:feature "task|tag|due"
-~/.copilot/skills/taskwarrior_expert/scripts/ponder copilot
-~/.copilot/skills/taskwarrior_expert/scripts/taskp list
-```
-
-**❌ NEVER DO THIS:**
-```bash
-tw-flow plan copilot:feature "task|tag|due"      # Wrong - not in PATH
-./scripts/tw-flow plan                            # Wrong - relative path
-/project/scripts/tw-flow plan                     # Wrong - wrong location
-```
-
-**IMPORTANT:** Do NOT assume these scripts are in PATH or current directory. ALWAYS use the full absolute path starting with `~/.copilot/skills/taskwarrior_expert/scripts/`
-
-### Quick Reference
-
-| Tool | Full Command Path |
-|------|-------------------|
-| Create plan | `~/.copilot/skills/taskwarrior_expert/scripts/tw-flow plan` |
-| Execute task | `~/.copilot/skills/taskwarrior_expert/scripts/tw-flow execute` |
-| Add note | `~/.copilot/skills/taskwarrior_expert/scripts/tw-flow note` |
-| Record outcome | `~/.copilot/skills/taskwarrior_expert/scripts/tw-flow outcome` |
-| Complete task | `~/.copilot/skills/taskwarrior_expert/scripts/tw-flow done` |
-| Handoff | `~/.copilot/skills/taskwarrior_expert/scripts/tw-flow handoff` |
-| Check status | `~/.copilot/skills/taskwarrior_expert/scripts/tw-flow status` |
-| Dashboard | `~/.copilot/skills/taskwarrior_expert/scripts/ponder` |
-| Project tasks | `~/.copilot/skills/taskwarrior_expert/scripts/taskp` |
-
+**ALWAYS use full absolute paths** when invoking scripts. For complete documentation, see the taskwarrior-expert skill.
 ## Purpose
 Use Taskwarrior as a context cache for plans, tasks, research findings, and lessons learned. This ensures continuity and progress tracking between sessions.
 
