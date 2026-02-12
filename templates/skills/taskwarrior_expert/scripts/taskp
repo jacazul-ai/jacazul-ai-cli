@@ -1,18 +1,23 @@
 #!/bin/bash
 # taskp - Task Project-Aware
-# Automatically uses per-project Taskwarrior databases based on PROJECT_ID
+# Automatically uses per-project Taskwarrior databases based on PROJECT_ID or TASKDATA
 
 set -e
 
-# Default to 'global' if PROJECT_ID is not set
-FULL_PROJECT_ID="${PROJECT_ID:-global}"
-
-# Extract root project (everything before the first colon)
-CURRENT_PROJECT_ID="${FULL_PROJECT_ID%%:*}"
-
-# Data path structure
-TASKS_BASE_DIR="$HOME/.task"
-CURRENT_DATA_DIR="$TASKS_BASE_DIR/$CURRENT_PROJECT_ID"
+# If TASKDATA is already set (e.g., in test harness), respect it
+if [[ -n "$TASKDATA" ]]; then
+    CURRENT_DATA_DIR="$TASKDATA"
+else
+    # Default to 'global' if PROJECT_ID is not set
+    FULL_PROJECT_ID="${PROJECT_ID:-global}"
+    
+    # Extract root project (everything before the first colon)
+    CURRENT_PROJECT_ID="${FULL_PROJECT_ID%%:*}"
+    
+    # Data path structure
+    TASKS_BASE_DIR="$HOME/.task"
+    CURRENT_DATA_DIR="$TASKS_BASE_DIR/$CURRENT_PROJECT_ID"
+fi
 
 # Ensure directory exists
 if [[ ! -d "$CURRENT_DATA_DIR" ]]; then
