@@ -1,0 +1,9 @@
+# Python dependencies for AI CLI Sandbox
+# Edit this file to add/update packages
+# Container will auto-install on next start
+
+# Fast JSON library (145x faster than standard json)
+orjson
+
+# Test dependency to verify update mechanism
+firenado

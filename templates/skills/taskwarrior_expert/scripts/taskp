@@ -4,38 +4,24 @@
 
 set -e
 
-# Detect project (priority order)
-detect_project() {
-    # 1. Use PROJECT_ID if set (copilot environment)
-    if [ -n "$PROJECT_ID" ]; then
-        echo "$PROJECT_ID"
-        return
-    fi
-    
-    # 2. Try git repository (parent_current format)
-    if git rev-parse --git-dir > /dev/null 2>&1; then
-        local git_root
-        git_root=$(git rev-parse --show-toplevel)
-        local parent
-        parent=$(basename "$(dirname "$git_root")")
-        local current
-        current=$(basename "$git_root")
-        echo "${parent}_${current}"
-        return
-    fi
-    
-    # 3. Fallback to current directory name
-    basename "$PWD"
-}
+# Default to 'global' if PROJECT_ID is not set
+FULL_PROJECT_ID="${PROJECT_ID:-global}"
 
-# Detect and set project
-PROJECT=$(detect_project)
+# Extract root project (everything before the first colon)
+CURRENT_PROJECT_ID="${FULL_PROJECT_ID%%:*}"
 
-# Set TASKDATA to project-specific directory
-export TASKDATA="$HOME/.task/$PROJECT"
+# Data path structure
+TASKS_BASE_DIR="$HOME/.task"
+CURRENT_DATA_DIR="$TASKS_BASE_DIR/$CURRENT_PROJECT_ID"
 
-# Create directory if it doesn't exist
-mkdir -p "$TASKDATA"
+# Ensure directory exists
+if [[ ! -d "$CURRENT_DATA_DIR" ]]; then
+    mkdir -p "$CURRENT_DATA_DIR"
+fi
 
-# Execute task with all arguments
-exec task "$@"
+# Run task with redirected data
+# We explicitly point to /root/.taskrc and override data.location
+export TASKRC="$HOME/.taskrc"
+
+# Execute the real task command
+exec task rc.data.location="$CURRENT_DATA_DIR" "$@"

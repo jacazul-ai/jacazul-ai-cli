@@ -19,7 +19,7 @@ mkdir -p "$HOST_SANDBOX_CONFIG_DIR" "$HOST_SANDBOX_COPILOT_DIR" "$HOST_SANDBOX_N
 # Setup Python venv in sandbox if it does not exist
 HOST_VENV_DIR="$HOST_SANDBOX/venv"
 if [ ! -d "$HOST_VENV_DIR" ]; then
-    echo "🐍 Creating Python virtual environment at $HOST_VENV_DIR..."
+    echo "📁 Creating venv directory: $HOST_VENV_DIR"
     mkdir -p "$HOST_VENV_DIR"
 fi
 

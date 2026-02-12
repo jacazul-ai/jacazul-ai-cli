@@ -157,7 +157,7 @@ fi
 info "Test 17: Initiative command supports modes"
 MODE_TASK_DESC="Mode verification task"
 "$TW_FLOW" initiative "$TEST_PROJECT" "GUIDE|$MODE_TASK_DESC|testing|today" &>/dev/null
-if "$TASKP" $TEST_PROJECT export 2>/dev/null | jq -r '.[].description // empty' | grep -q "\[GUIDE\] $MODE_TASK_DESC"; then
+if "$TASKP" project:$TEST_PROJECT export 2>/dev/null | jq -r '.[].description // empty' | grep -q "\[GUIDE\] $MODE_TASK_DESC"; then
     pass "Initiative prepends [MODE]"
 else
     fail "Initiative mode failed"
@@ -237,7 +237,7 @@ if [[ -n "$DISCARD_UUID" ]]; then
     export PROJECT_ID="$OLD_PROJECT_ID"
     
     # Check if in trash with DISCARDED tag
-    TRASH_CHECK=$("$TASKP" project:"$TEST_PROJECT:trash" export 2>/dev/null | jq -r ".[] | select(.tags // [] | map(. == \"DISCARDED\") | any) | .uuid")
+TRASH_CHECK=$("$TASKP" project:"$TEST_PROJECT:_archive" export 2>/dev/null | jq -r '.[] | select(.tags // [] | map(. == "DISCARDED") | any) | .uuid[0:8]')
     
     if [[ -n "$TRASH_CHECK" ]]; then
         pass "Discard moves to trash"

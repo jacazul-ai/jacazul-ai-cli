@@ -3,6 +3,6 @@
 
 # Default Taskwarrior settings
 confirmation=off
-data.location=/home/node/.task
+data.location=/home/jacazul/.task
 
 # You can add more custom settings below

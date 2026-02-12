@@ -30,7 +30,10 @@ RUN npm install -g @github/copilot
 # Install Go
 COPY --from=golang:latest /usr/local/go /usr/local/go
 
-ENV PATH=$PATH:/usr/local/go/bin:/root/go/bin
+# Copy uv (fast Python package manager)
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+
+ENV PATH=$PATH:/usr/local/go/bin:/home/jacazul/go/bin
 
 # Create jacazul user
 RUN useradd -m -s /bin/bash jacazul && \
@@ -38,7 +41,11 @@ RUN useradd -m -s /bin/bash jacazul && \
     echo "jacazul ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/jacazul && \
     chmod 0440 /etc/sudoers.d/jacazul
 
+# Copy entrypoint script
+COPY scripts/docker-entrypoint.sh /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh
+
 USER jacazul
 WORKDIR /project
 
-ENTRYPOINT ["copilot"]
+ENTRYPOINT ["/docker-entrypoint.sh"]
