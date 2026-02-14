@@ -187,7 +187,7 @@ View all tasks for current work:
 3. **Default to Taskwarrior**: Use tasks instead of creating plan files
 4. **Context is additive**: Always use annotations to add context, never replace
 5. **Dynamic prioritization**: Adjust task priorities (numerical values) based on user feedback during conversation
-6. **Session awareness**: When starting or asked "what are we working on?", list all plans and started tasks using `ponder`
+6. **Status command behavior**: When user asks for status or "what are we doing", use `tw-flow status [initiative]` for focused view (not ponder). Use ponder only for onboard (full project view)
 7. **Plan focus**: When user says "let's work on plan X", focus all task operations on that plan
 8. **User requests context storage**: When user says "add this to the task" or "save this context", use annotations
 9. **Review before work**: Always check `~/.copilot/skills/taskwarrior_expert/scripts/ponder PROJECT_ID` before starting to see current state
