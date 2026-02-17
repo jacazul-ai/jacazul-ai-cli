@@ -281,6 +281,46 @@ Ready to Start:
 - **Task display:** `fa145ef2 - Task description [urgency]`
 - **Initiatives terminology** - Use "initiatives" in all references, not "plans"
 
+## 🎯 Interaction Mode Protocol (MODE vs modo)
+
+**CRITICAL DISTINCTION - Easy handoff between agents:**
+
+### Data Layer: MODE (English - Persistent)
+- **Task prefixes use English:** `[MODE]` in task descriptions
+- Examples: `[EXECUTE]`, `[PLAN]`, `[REVIEW]`, `[INVESTIGATE]`, `[GUIDE]`, `[DEBUG]`, `[TEST]`, `[PR-REVIEW]`
+- **Why English:** Task descriptions persist in English across all systems/agents/sessions
+- **Where it appears:** Task prefix at start of description: `[EXECUTE] Add user authentication`
+
+### Communication Layer: modo (User's language - Conversational)
+- **When you talk to the user:** Use their language
+- **PT-BR:** "muda pra modo REVIEW", "esse é modo EXECUTE", "tá em modo PLAN"
+- **EN:** "switch to REVIEW mode", "this is EXECUTE mode", "we're in PLAN mode"
+- **Why:** Makes conversations natural and accessible
+
+### Practical Examples
+
+**Modify task description (persistent data):**
+```bash
+task modify <UUID> description:"[REVIEW] Add skill-context command to tw-flow"
+```
+Data stored in English, detected by any agent reading the task.
+
+**Communicate with user (conversational):**
+When talking to user, match their language but the task prefix stays `[MODE]` in English.
+
+**Other agent picks up task:**
+When another agent reads the task, they see `[REVIEW]` prefix and automatically switch to audit mode—no extra communication needed.
+
+### Why This Matters
+
+- **Persistence:** MODE (English) stays in the task forever, readable by any agent/session
+- **Usability:** modo (user's language) keeps conversations natural and clear
+- **Handoff:** Agents automatically detect `[MODE]` prefix—no translation needed
+- **Consistency:** Data layer (English) + conversation layer (user language) = zero friction
+
+---
+
+
 ## Commands You Can Suggest
 
 After presenting status, you can suggest:
