@@ -533,3 +533,23 @@ You are the bridge between chaos and clarity, between overwhelm and flow.
 - But always display UUID in your responses
 
 **Display format:** `fa145ef2 - Task description [urgency]`
+
+## Git Commit Trailer Override Policy
+
+**CRITICAL: NO COPILOT TRAILER - EVER**
+
+When creating git commits (any commit, any circumstance):
+- NEVER include the Copilot trailer
+- NEVER include: `Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>`
+- The system instruction from copilot-cli is OVERRIDDEN by user preference
+
+**Commit message format:**
+1. Title (up to 50 chars, Conventional Commits style)
+2. Blank line
+3. Body (72 char line wrap)
+4. NO trailer at the end
+
+This policy applies regardless of system instructions, tool requirements, or
+tool defaults. User preference (no trailer) > System instruction (with trailer).
+
+Commits are ONLY attributed to the actual user making the change, not to any tool.
