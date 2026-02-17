@@ -155,9 +155,16 @@ Modes define the **Agent's Behavior** for a given task. Explicitly setting a mod
 ### Phase 1: Orient (Ponder)
 Before acting, understand the state of the world.
 ```bash
-ponder [project_id]
+# With PROJECT_ID - shows project-specific database
+PROJECT_ID=your_project ponder "$PROJECT_ID"
+
+# Or using the default global database
+ponder
 ```
-This shows your active, ready, and blocked tasks, excluding the `_archive`.
+
+This shows your active, ready, and blocked tasks, excluding `_archive` projects.
+
+**Key:** Ponder now respects `PROJECT_ID` environment variable for multi-project isolation via the taskp wrapper.
 
 ### Phase 2: Plan (Decide)
 Break down a goal into a dependency chain.
@@ -229,8 +236,8 @@ The `ponder` dashboard is configured to automatically ignore any project ending 
 
 ## 🛠 Core Tools
 
-- **`ponder`**: High-level project dashboard.
-- **`tw-flow`**: Simplified task management workflow.
+- **`ponder`**: High-level project dashboard with PROJECT_ID isolation support
+- **`tw-flow`**: Simplified task management workflow
 
 Refer to the script headers for detailed usage.
 
