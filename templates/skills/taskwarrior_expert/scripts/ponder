@@ -9,6 +9,12 @@ if [ -n "$PROJECT_ID" ]; then
     mkdir -p "$TASKDATA"
 fi
 
+# Use taskp wrapper for PROJECT_ID isolation
+TASK_CMD="$HOME/.copilot/skills/taskwarrior_expert/scripts/taskp"
+if [[ ! -x "$TASK_CMD" ]]; then
+    TASK_CMD="task"
+fi
+
 # Parse arguments
 CLASSIC_MODE=false
 PROJECT_ROOT=""
@@ -61,7 +67,7 @@ if [[ "$CLASSIC_MODE" == "true" ]]; then
     print_task_line() {
         local uuid=$1
         # Use export to safely get fields
-        local json=$(task "$uuid" export 2>/dev/null | jq '.[0]')
+        local json=$($TASK_CMD "$uuid" export 2>/dev/null | jq '.[0]')
         local short_uuid=$(short_id "$uuid")
         local desc=$(echo "$json" | jq -r '.description // "?"')
         local urgency=$(echo "$json" | jq -r '.urgency // 0')
@@ -81,10 +87,10 @@ if [[ "$CLASSIC_MODE" == "true" ]]; then
     JQ_EXCLUDE_ARCHIVE_FILTER='select(.project | test("_archive$") | not)'
     
     # 1. Pulse Summary
-    PENDING=$(task export status:pending 2>/dev/null | jq -r ".[]? | select((.project // empty) | startswith(\"$PROJECT_ROOT\"))" | jq "$JQ_EXCLUDE_ARCHIVE_FILTER" | jq -r '.uuid' | wc -l)
-    COMPLETED_TODAY=$(task export status:completed end:today 2>/dev/null | jq -r ".[]? | select((.project // empty) | startswith(\"$PROJECT_ROOT\"))" | jq "$JQ_EXCLUDE_ARCHIVE_FILTER" | jq -r '.uuid' | wc -l)
-    OVERDUE=$(task all status:pending +OVERDUE export 2>/dev/null | jq -r ".[]? | select((.project // empty) | startswith(\"$PROJECT_ROOT\"))" | jq "$JQ_EXCLUDE_ARCHIVE_FILTER" | jq -r '.uuid' | wc -l)
-    ACTIVE_COUNT=$(task +ACTIVE export 2>/dev/null | jq -r '.[]? | select((.project // empty) | startswith("'$PROJECT_ROOT'")) | .uuid' | wc -l)
+    PENDING=$($TASK_CMD export status:pending 2>/dev/null | jq -r ".[]? | select((.project // empty) | startswith(\"$PROJECT_ROOT\"))" | jq "$JQ_EXCLUDE_ARCHIVE_FILTER" | jq -r '.uuid' | wc -l)
+    COMPLETED_TODAY=$($TASK_CMD export status:completed end:today 2>/dev/null | jq -r ".[]? | select((.project // empty) | startswith(\"$PROJECT_ROOT\"))" | jq "$JQ_EXCLUDE_ARCHIVE_FILTER" | jq -r '.uuid' | wc -l)
+    OVERDUE=$($TASK_CMD all status:pending +OVERDUE export 2>/dev/null | jq -r ".[]? | select((.project // empty) | startswith(\"$PROJECT_ROOT\"))" | jq "$JQ_EXCLUDE_ARCHIVE_FILTER" | jq -r '.uuid' | wc -l)
+    ACTIVE_COUNT=$($TASK_CMD +ACTIVE export 2>/dev/null | jq -r '.[]? | select((.project // empty) | startswith("'$PROJECT_ROOT'")) | .uuid' | wc -l)
     
     echo -e "${CYAN}══ PONDER: $PROJECT_ROOT ══${NC}"
     echo -e "Pending: ${CYAN}$PENDING${NC} | Completed Today: ${GREEN}$COMPLETED_TODAY${NC} | Overdue: ${RED}$OVERDUE${NC} | Active: ${BLUE}$ACTIVE_COUNT${NC}"
@@ -92,7 +98,7 @@ if [[ "$CLASSIC_MODE" == "true" ]]; then
     
     # 2. Top Task (Current Focus)
     echo -e "${YELLOW}[CURRENT FOCUS]${NC}"
-    ACTIVE_UUID=$(task +ACTIVE export 2>/dev/null | jq -r '.[]? | select((.project // empty) | startswith("'$PROJECT_ROOT'")) | .uuid' | head -n1)
+    ACTIVE_UUID=$($TASK_CMD +ACTIVE export 2>/dev/null | jq -r '.[]? | select((.project // empty) | startswith("'$PROJECT_ROOT'")) | .uuid' | head -n1)
     if [[ -n "$ACTIVE_UUID" ]]; then
         print_task_line "$ACTIVE_UUID"
     else
@@ -102,7 +108,7 @@ if [[ "$CLASSIC_MODE" == "true" ]]; then
     
     # 3. Up Next (Ready tasks)
     echo -e "${GREEN}[UP NEXT]${NC}"
-    READY_UUIDS=$(task export status:pending 2>/dev/null | jq -r '.[]? | select(((.project // empty) | startswith("'$PROJECT_ROOT'")) and (.depends == null or (.depends | length == 0)))' | jq "$JQ_EXCLUDE_ARCHIVE_FILTER" | jq -r '.uuid' | head -n3)
+    READY_UUIDS=$($TASK_CMD export status:pending 2>/dev/null | jq -r '.[]? | select(((.project // empty) | startswith("'$PROJECT_ROOT'")) and (.depends == null or (.depends | length == 0)))' | jq "$JQ_EXCLUDE_ARCHIVE_FILTER" | jq -r '.uuid' | head -n3)
     if [[ -n "$READY_UUIDS" ]]; then
         while read -r uuid; do
             [[ -n "$uuid" ]] && print_task_line "$uuid"
@@ -114,7 +120,7 @@ if [[ "$CLASSIC_MODE" == "true" ]]; then
     
     # 4. Blocked
     echo -e "${RED}[BLOCKED / WAITING]${NC}"
-    BLOCKED_UUIDS=$(task export status:pending 2>/dev/null | jq -r '.[]? | select(((.project // empty) | startswith("'$PROJECT_ROOT'")) and (.depends != null and (.depends | length > 0)))' | jq "$JQ_EXCLUDE_ARCHIVE_FILTER" | jq -r '.uuid' | head -n3)
+    BLOCKED_UUIDS=$($TASK_CMD export status:pending 2>/dev/null | jq -r '.[]? | select(((.project // empty) | startswith("'$PROJECT_ROOT'")) and (.depends != null and (.depends | length > 0)))' | jq "$JQ_EXCLUDE_ARCHIVE_FILTER" | jq -r '.uuid' | head -n3)
     if [[ -n "$BLOCKED_UUIDS" ]]; then
         while read -r uuid; do
             [[ -n "$uuid" ]] && print_task_line "$uuid"
@@ -131,7 +137,7 @@ fi
 #############################################
 
 # Fetch all relevant tasks - SAFE filter with type check
-ALL_TASKS_JSON=$(task status:pending export rc.verbose=no 2>/dev/null | jq "[.[] | select(.project != null and (.project | type) == \"string\")]")
+ALL_TASKS_JSON=$($TASK_CMD status:pending export rc.verbose=no 2>/dev/null | jq "[.[] | select(.project != null and (.project | type) == \"string\")]")
 
 # Helper: Format task line
 format_task_line() {
@@ -180,7 +186,7 @@ echo -e "${CYAN}══ TACTICAL VIEW: $PROJECT_ROOT ══${NC}"
 PENDING_COUNT=$(echo "$ALL_TASKS_JSON" | jq '. | length')
 ACTIVE_COUNT=$(echo "$ALL_TASKS_JSON" | jq '[.[] | select(.start != null)] | length')
 OVERDUE_COUNT=$(echo "$ALL_TASKS_JSON" | jq "[.[] | select(.due != null and .due < \"$(date +%Y-%m-%dT%H:%M:%S)\")] | length")
-COMPLETED_TODAY=$(task export status:completed end:today 2>/dev/null | jq "[.[] | select(.project != null and (.project | type) == \"string\" and (.project | startswith(\"$PROJECT_ROOT\")))] | length")
+COMPLETED_TODAY=$($TASK_CMD export status:completed end:today 2>/dev/null | jq "[.[] | select(.project != null and (.project | type) == \"string\" and (.project | startswith(\"$PROJECT_ROOT\")))] | length")
 
 echo -e "Pulse: Pending (${CYAN}$PENDING_COUNT${NC}) | Active (${NEON_GREEN}$ACTIVE_COUNT${NC}) | Overdue (${BLOODY_RED}$OVERDUE_COUNT${NC}) | Done Today (${GREEN}$COMPLETED_TODAY${NC})"
 echo ""
