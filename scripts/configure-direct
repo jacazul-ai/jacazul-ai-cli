@@ -85,22 +85,21 @@ fi
 # -----------------------------------------------------------------------------
 # 5. OS-Specific Setup
 # -----------------------------------------------------------------------------
-echo "AAA"
 if [ "$OS_TYPE" = "fedora" ]; then
     echo ""
     printf "\033[1;34m=========================================\033[0m\n"
     printf "\033[1;32m Running Fedora-specific setup\033[0m\n"
     printf "\033[1;34m=========================================\033[0m\n\n"
-    bash "$PROJECT_ROOT/scripts/setup-fedora.sh"
+    bash "$PROJECT_ROOT/scripts/direct/setup-fedora.sh"
 elif [ "$OS_TYPE" = "debian" ]; then
     echo ""
     printf "\033[1;34m=========================================\033[0m\n"
     printf "\033[1;32m Running Debian-specific setup\033[0m\n"
     printf "\033[1;34m=========================================\033[0m\n\n"
-    if [ -f "$PROJECT_ROOT/scripts/setup-debian.sh" ]; then
-        bash "$PROJECT_ROOT/scripts/setup-debian.sh"
+    if [ -f "$PROJECT_ROOT/scripts/direct/setup-debian.sh" ]; then
+        bash "$PROJECT_ROOT/scripts/direct/setup-debian.sh"
     else
-        echo "⚠️  setup-debian.sh not found yet"
+        echo "⚠️  direct/setup-debian.sh not found yet"
     fi
 fi
 

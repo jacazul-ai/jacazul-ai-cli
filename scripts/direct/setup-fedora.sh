@@ -25,7 +25,7 @@ COMMANDS=(
     "wget:wget"
     "jq:jq"
     "rg:ripgrep"
-    "ps:procps"
+    "ps:procps-ng"
     "fzf:fzf"
     "htop:htop"
     "sudo:sudo"
@@ -35,29 +35,27 @@ COMMANDS=(
     "npm:nodejs-npm"
 )
 
-MISSING_PACKAGES=()
+echo "Checking for missing commands on Fedora..."
+MISSING=()
 
-echo "Checking for missing commands..."
-for cmd_pair in "${COMMANDS[@]}"; do
-    IFS=':' read -r cmd pkg <<< "$cmd_pair"
-    if ! command -v "$cmd" &> /dev/null; then
-        echo "  ✗ $cmd (package: $pkg) - MISSING"
-        MISSING_PACKAGES+=("$pkg")
+for cmd_pkg in "${COMMANDS[@]}"; do
+    CMD="${cmd_pkg%:*}"
+    PKG="${cmd_pkg#*:}"
+    if ! command -v "$CMD" &>/dev/null; then
+        MISSING+=("$PKG")
     else
-        echo "  ✓ $cmd - OK"
+        echo "✓ $CMD"
     fi
 done
 
-if [ ${#MISSING_PACKAGES[@]} -eq 0 ]; then
-    echo "All commands available. No installation needed."
+if [ ${#MISSING[@]} -eq 0 ]; then
+    echo "All dependencies are already installed."
     exit 0
 fi
 
-DNF_CMD="dnf install -y"
-for pkg in "${MISSING_PACKAGES[@]}"; do
-    DNF_CMD="$DNF_CMD $pkg"
-done
-
 echo ""
-echo "DNF command to be executed:"
-echo "$DNF_CMD"
+echo "Missing packages: ${MISSING[*]}"
+echo ""
+echo "To install missing packages, run:"
+echo "  sudo dnf install -y ${MISSING[*]}"
+exit 1
