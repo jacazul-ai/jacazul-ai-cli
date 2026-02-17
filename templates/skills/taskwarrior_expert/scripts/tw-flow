@@ -199,7 +199,7 @@ cmd_initiative() {
             priority="L"
         fi
         
-        local cmd="task add project:$initiative \"$final_desc\" due:$due_offset priority:$priority +$tag"
+        local cmd="taskp add project:$initiative \"$final_desc\" due:$due_offset priority:$priority +$tag"
         
         # Add dependency if not first task
         [[ -n "$prev_id" ]] && cmd="$cmd depends:$prev_id"
@@ -246,7 +246,7 @@ cmd_next() {
 get_parent_context() {
     local task_id="$1"
     local json
-    json=$(task "$task_id" export 2>/dev/null | jq '.[0]')
+    json=$(taskp "$task_id" export 2>/dev/null | jq '.[0]')
     
     # UUIDs of dependencies
     local deps
@@ -256,7 +256,7 @@ get_parent_context() {
         local found_context=false
         for dep_uuid in $deps; do
             local dep_json
-            dep_json=$(task "$dep_uuid" export 2>/dev/null | jq '.[0]')
+            dep_json=$(taskp "$dep_uuid" export 2>/dev/null | jq '.[0]')
             [[ -z "$dep_json" || "$dep_json" == "null" ]] && continue
             
             local dep_desc=$(echo "$dep_json" | jq -r '.description')
@@ -289,12 +289,12 @@ cmd_execute() {
     
     # Check if task is blocked
     local status
-    status=$(task "$task_id" export 2>/dev/null | jq -r '.[0].status // "notfound"')
+    status=$(taskp "$task_id" export 2>/dev/null | jq -r '.[0].status // "notfound"')
     
     [[ "$status" == "notfound" ]] && error "Task $task_id not found"
     
     local tags
-    tags=$(task "$task_id" export 2>/dev/null | jq -r '.[0].tags // [] | join(" ")')
+    tags=$(taskp "$task_id" export 2>/dev/null | jq -r '.[0].tags // [] | join(" ")')
     
     if [[ "$tags" == *"BLOCKED"* ]]; then
         error "Task $task_id is BLOCKED by dependencies"
@@ -315,7 +315,7 @@ cmd_execute() {
 validate_outcome() {
     local task_id="$1"
     
-    if task "$task_id" info 2>/dev/null | grep -qi "OUTCOME:"; then
+    if taskp "$task_id" info 2>/dev/null | grep -qi "OUTCOME:"; then
         return 0
     else
         error "Task $task_id cannot be completed without OUTCOME\n   Add outcome first: tw-flow outcome $task_id \"description\" or ~/.copilot/skills/taskwarrior_expert/scripts/taskp $task_id annotate \"OUTCOME: description\""
@@ -344,7 +344,7 @@ cmd_done() {
     echo ""
     info "Checking for newly unblocked tasks..."
     local unblocked
-    unblocked=$(task status:pending ready 2>/dev/null | grep -c "^[0-9]" || echo "0")
+    unblocked=$(taskp status:pending ready 2>/dev/null | grep -c "^[0-9]" || echo "0")
     
     if [[ "$unblocked" -gt 0 ]]; then
         success "$unblocked task(s) now ready to work"
@@ -499,7 +499,7 @@ cmd_initiatives() {
     echo ""
     
     local initiatives
-    initiatives=$(task status:pending export | jq -r '.[].project' | sort | uniq)
+    initiatives=$(taskp status:pending export | jq -r '.[].project' | sort | uniq)
     
     if [[ -z "$initiatives" ]]; then
         success "No active initiatives!"
@@ -509,11 +509,11 @@ cmd_initiatives() {
     while IFS= read -r initiative; do
         [[ -z "$initiative" ]] && continue
         local pending
-        pending=$(task "$initiative" status:pending 2>/dev/null | grep -c "^[0-9]" || echo "0")
+        pending=$(taskp "$initiative" status:pending 2>/dev/null | grep -c "^[0-9]" || echo "0")
         local active
-        active=$(task "$initiative" +ACTIVE 2>/dev/null | grep -c "^[0-9]" || echo "0")
+        active=$(taskp "$initiative" +ACTIVE 2>/dev/null | grep -c "^[0-9]" || echo "0")
         local blocked
-        blocked=$(task "$initiative" +BLOCKED 2>/dev/null | grep -c "^[0-9]" || echo "0")
+        blocked=$(taskp "$initiative" +BLOCKED 2>/dev/null | grep -c "^[0-9]" || echo "0")
         
         echo -e "● $plan"
         echo -e "  Pending: $pending | Active: $active | Blocked: $blocked"
@@ -575,7 +575,7 @@ cmd_unblock() {
     
     # Get current dependencies
     local current_deps
-    current_deps=$(task "$task_id" export | jq -r '.[0].depends // [] | join(",")')
+    current_deps=$(taskp "$task_id" export | jq -r '.[0].depends // [] | join(",")')
     
     # Remove the specific dependency
     local new_deps
@@ -640,7 +640,7 @@ cmd_tree() {
         local is_last="$3"
 
         local json
-        json=$(task "$uuid" export 2>/dev/null | jq '.[0]')
+        json=$(taskp "$uuid" export 2>/dev/null | jq '.[0]')
         [[ -z "$json" || "$json" == "null" ]] && return
 
         local desc=$(echo "$json" | jq -r '.description')
@@ -653,7 +653,7 @@ cmd_tree() {
         
         # Check if blocked
         local is_ready
-        is_ready=$(task "$uuid" +READY export 2>/dev/null | jq -r '.[0].id // ""')
+        is_ready=$(taskp "$uuid" +READY export 2>/dev/null | jq -r '.[0].id // ""')
         if [[ "$status" == "pending" && -z "$is_ready" ]]; then
             icon="🔒"
         fi
@@ -666,7 +666,7 @@ cmd_tree() {
 
         # Find children (tasks that depend on this one)
         local children
-        children=$(task "depends.contains:$uuid" status:pending export 2>/dev/null | jq -r '.[] | select(.project | test("_archive$|_trash$") | not) | .uuid' || echo "")
+        children=$(taskp "depends.contains:$uuid" status:pending export 2>/dev/null | jq -r '.[] | select(.project | test("_archive$|_trash$") | not) | .uuid' || echo "")
         
         local child_indent="$indent    "
         [[ "$marker" == "├──" ]] && child_indent="$indent│   "
