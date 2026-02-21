@@ -1,0 +1,23 @@
+#!/bin/bash
+# 🐊 Jaka Taskwarrior Bootstrap
+# Sets TASKDATA based on JAKA_MODE and PROJECT_ID
+
+if [ -n "$PROJECT_ID" ]; then
+    if [ "$JAKA_MODE" = "UNHINGED" ]; then
+        export JAKA_HOME="$HOME/.candango/jaka_ai"
+        export TASKRC="$JAKA_HOME/.taskrc"
+        export TASKDATA="$JAKA_HOME/.task/$PROJECT_ID"
+        
+        # Ensure the .taskrc is in place
+        if [ ! -f "$TASKRC" ]; then
+            echo "🐊 Initializing Unhinged Taskwarrior config..."
+            mkdir -p "$JAKA_HOME"
+            cp templates/taskwarrior/unhinged/.taskrc "$TASKRC"
+        fi
+    else
+        export TASKDATA="$HOME/.task/$PROJECT_ID"
+    fi
+    mkdir -p "$TASKDATA"
+    echo "🐊 Task Data: $TASKDATA"
+    [ -n "$TASKRC" ] && echo "🐊 Task RC: $TASKRC"
+fi

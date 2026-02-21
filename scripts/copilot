@@ -28,6 +28,23 @@ PARENT_DIR=$(basename "$(dirname "$(pwd)")")
 CURRENT_DIR=$(basename "$(pwd)")
 PROJECT_ID="${PARENT_DIR}_${CURRENT_DIR}"
 
+# -----------------------------------------------------------------------------
+# 0. Initialize Jaka Bootstrap Environment
+# -----------------------------------------------------------------------------
+BOOTSTRAP_ENV="$SCRIPT_DIR/bootstrap/environment"
+if [ -f "$BOOTSTRAP_ENV" ]; then
+    source "$BOOTSTRAP_ENV"
+fi
+
+# Set JAKA_MODE to CAGED for this script
+export JAKA_MODE="CAGED"
+
+# Initialize Taskwarrior Bootstrap
+BOOTSTRAP_TW="$SCRIPT_DIR/bootstrap/taskwarrior"
+if [ -f "$BOOTSTRAP_TW" ]; then
+    source "$BOOTSTRAP_TW"
+fi
+
 # Capture complete session context for onboard
 REAL_PATH="$(pwd)"
 SYSTEM_USER="$(whoami)"
@@ -98,6 +115,7 @@ fi
 podman run -it --rm \
   ${DEBUG:+--log-level debug} \
   --userns=keep-id \
+  -e "JAKA_MODE=$JAKA_MODE" \
   -e "COPILOT_CUSTOM_INSTRUCTIONS_DIRS=/home/jacazul/.copilot:/home/jacazul/.github/instructions" \
   -e "PROJECT_ID=$PROJECT_ID" \
   -e "CONTEXT_REAL_PATH=$REAL_PATH" \
@@ -111,7 +129,7 @@ podman run -it --rm \
   -v "$HOST_SANDBOX_CONFIG_DIR:/home/jacazul/.config:z" \
   -v "$HOST_SANDBOX_COPILOT_DIR:/home/jacazul/.copilot:z" \
   -v "$HOST_SANDBOX_NPM_DIR:/home/jacazul/.npm:z" \
-  -v "$HOST_SANDBOX_TASK_DIR:/home/jacazul/.task:z" \
+  -v "$TASKDATA:/home/jacazul/.task:z" \
   -v "$SCRIPT_DIR/../templates/context/copilot-instructions.md:/home/jacazul/.copilot/copilot-instructions.md:z" \
   -v "$SCRIPT_DIR/../templates/context/instructions:/home/jacazul/.github/instructions:z" \
   -v "$TEMPLATES_TASKRC:/home/jacazul/.taskrc:z" \

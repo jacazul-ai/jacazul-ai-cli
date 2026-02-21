@@ -7,10 +7,26 @@ set -e
 SCRIPT_NAME="tw-flow"
 VERSION="1.3.0"
 
+# Set absolute paths for internal tools
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+TASKP_BIN="$SCRIPT_DIR/taskp"
+PONDER_BIN="$SCRIPT_DIR/ponder"
+
 # Detect project and set TASKDATA if PROJECT_ID is available
 detect_and_set_taskdata() {
-    if [ -n "$PROJECT_ID" ]; then
-        export TASKDATA="$HOME/.task/$PROJECT_ID"
+    if [ -z "$TASKRC" ] && [ "$JAKA_MODE" = "UNHINGED" ]; then
+        export TASKRC="$HOME/.candango/jaka_ai/.taskrc"
+    fi
+
+    if [ -z "$TASKDATA" ] && [ -n "$PROJECT_ID" ]; then
+        if [ "$JAKA_MODE" = "UNHINGED" ]; then
+            export TASKDATA="$HOME/.candango/jaka_ai/.task/$PROJECT_ID"
+        else
+            export TASKDATA="$HOME/.task/$PROJECT_ID"
+        fi
+    fi
+    
+    if [ -n "$TASKDATA" ]; then
         mkdir -p "$TASKDATA"
     fi
 }
@@ -59,7 +75,7 @@ resolve_uuid() {
     # If it's a short UUID (8 chars), find the matching task
     if [[ "$input" =~ ^[0-9a-fA-F]{8}$ ]]; then
         local full_uuid
-        full_uuid=$(~/.copilot/skills/taskwarrior_expert/scripts/taskp export 2>/dev/null | jq -r ".[] | select(.uuid | startswith(\"$input\")) | .uuid" | head -1)
+        full_uuid=$("$TASKP_BIN" export 2>/dev/null | jq -r ".[] | select(.uuid | startswith(\"$input\")) | .uuid" | head -1)
         if [[ -n "$full_uuid" ]]; then
             echo "$full_uuid"
             return 0
@@ -199,14 +215,13 @@ cmd_initiative() {
             priority="L"
         fi
         
-        local cmd="taskp add project:$initiative \"$final_desc\" due:$due_offset priority:$priority +$tag"
-        
-        # Add dependency if not first task
-        [[ -n "$prev_id" ]] && cmd="$cmd depends:$prev_id"
+        # Build task command arguments
+        local args=(add project:"$initiative" "$final_desc" due:"$due_offset" priority:"$priority" "+$tag")
+        [[ -n "$prev_id" ]] && args+=(depends:"$prev_id")
         
         # Execute and capture ID
         local output
-        output=$(eval "$cmd" 2>&1)
+        output=$("$TASKP_BIN" "${args[@]}" 2>&1)
         local new_id
         new_id=$(echo "$output" | grep -oP 'Created task \K\d+' || echo "")
         
@@ -215,6 +230,7 @@ cmd_initiative() {
             success "Created task $new_id: $final_desc [priority: $priority]"
             prev_id="$new_id"
         else
+            echo "DEBUG: Command output: $output" >&2
             error "Failed to create task: $final_desc"
         fi
         
@@ -239,14 +255,14 @@ cmd_next() {
     info "Next tasks ready to work:"
     echo ""
     
-    ~/.copilot/skills/taskwarrior_expert/scripts/taskp "project:$filter" ready 2>/dev/null || warning "No tasks ready"
+    "$TASKP_BIN" "project:$filter" ready 2>/dev/null || warning "No tasks ready"
 }
 
 # Helper: Get inherited context from parent tasks (dependencies)
 get_parent_context() {
     local task_id="$1"
     local json
-    json=$(taskp "$task_id" export 2>/dev/null | jq '.[0]')
+    json=$("$TASKP_BIN" "$task_id" export 2>/dev/null | jq '.[0]')
     
     # UUIDs of dependencies
     local deps
@@ -256,7 +272,7 @@ get_parent_context() {
         local found_context=false
         for dep_uuid in $deps; do
             local dep_json
-            dep_json=$(taskp "$dep_uuid" export 2>/dev/null | jq '.[0]')
+            dep_json=$("$TASKP_BIN" "$dep_uuid" export 2>/dev/null | jq '.[0]')
             [[ -z "$dep_json" || "$dep_json" == "null" ]] && continue
             
             local dep_desc=$(echo "$dep_json" | jq -r '.description')
@@ -289,12 +305,12 @@ cmd_execute() {
     
     # Check if task is blocked
     local status
-    status=$(taskp "$task_id" export 2>/dev/null | jq -r '.[0].status // "notfound"')
+    status=$("$TASKP_BIN" "$task_id" export 2>/dev/null | jq -r '.[0].status // "notfound"')
     
     [[ "$status" == "notfound" ]] && error "Task $task_id not found"
     
     local tags
-    tags=$(taskp "$task_id" export 2>/dev/null | jq -r '.[0].tags // [] | join(" ")')
+    tags=$("$TASKP_BIN" "$task_id" export 2>/dev/null | jq -r '.[0].tags // [] | join(" ")')
     
     if [[ "$tags" == *"BLOCKED"* ]]; then
         error "Task $task_id is BLOCKED by dependencies"
@@ -303,22 +319,22 @@ cmd_execute() {
     # Show inherited context from dependencies
     get_parent_context "$task_id"
 
-    ~/.copilot/skills/taskwarrior_expert/scripts/taskp "$task_id" start
+    "$TASKP_BIN" "$task_id" start
     success "Started working on task $(short_id "$task_id")"
     
     # Show task info
     echo ""
-    ~/.copilot/skills/taskwarrior_expert/scripts/taskp "$task_id"
+    "$TASKP_BIN" "$task_id"
 }
 
 # Validate that task has OUTCOME annotation
 validate_outcome() {
     local task_id="$1"
     
-    if taskp "$task_id" info 2>/dev/null | grep -qi "OUTCOME:"; then
+    if "$TASKP_BIN" "$task_id" info 2>/dev/null | grep -qi "OUTCOME:"; then
         return 0
     else
-        error "Task $task_id cannot be completed without OUTCOME\n   Add outcome first: tw-flow outcome $task_id \"description\" or ~/.copilot/skills/taskwarrior_expert/scripts/taskp $task_id annotate \"OUTCOME: description\""
+        error "Task $task_id cannot be completed without OUTCOME\n   Add outcome first: tw-flow outcome $task_id \"description\" or "$TASKP_BIN" $task_id annotate \"OUTCOME: description\""
     fi
 }
 
@@ -334,21 +350,21 @@ cmd_done() {
     
     # Add completion note if provided
     if [[ -n "$note" ]]; then
-    ~/.copilot/skills/taskwarrior_expert/scripts/taskp "$task_id" annotate "DONE: $note"
+    "$TASKP_BIN" "$task_id" annotate "DONE: $note"
     fi
     
-    ~/.copilot/skills/taskwarrior_expert/scripts/taskp "$task_id" done
+    "$TASKP_BIN" "$task_id" done
     success "Task $task_id completed!"
     
     # Check if any tasks were unblocked
     echo ""
     info "Checking for newly unblocked tasks..."
     local unblocked
-    unblocked=$(taskp status:pending ready 2>/dev/null | grep -c "^[0-9]" || echo "0")
+    unblocked=$("$TASKP_BIN" status:pending ready 2>/dev/null | grep -c "^[0-9]" || echo "0")
     
     if [[ "$unblocked" -gt 0 ]]; then
         success "$unblocked task(s) now ready to work"
-    ~/.copilot/skills/taskwarrior_expert/scripts/taskp status:pending ready limit:3
+    "$TASKP_BIN" status:pending ready limit:3
     fi
 }
 
@@ -358,7 +374,7 @@ cmd_pause() {
     
     [[ -z "$task_id" ]] && error "Task ID required"
     
-    ~/.copilot/skills/taskwarrior_expert/scripts/taskp "$task_id" stop
+    "$TASKP_BIN" "$task_id" stop
     success "Paused task $(short_id "$task_id")"
 }
 
@@ -371,7 +387,7 @@ cmd_outcome() {
     [[ -z "$task_id" ]] && error "Task ID required"
     [[ -z "$message" ]] && error "Outcome message required"
     
-    ~/.copilot/skills/taskwarrior_expert/scripts/taskp "$task_id" annotate "OUTCOME: $message"
+    "$TASKP_BIN" "$task_id" annotate "OUTCOME: $message"
     success "Recorded outcome for task $(short_id "$task_id")"
 }
 
@@ -388,7 +404,7 @@ cmd_handoff() {
     cmd_execute "$task_id"
     
     # Add the handoff note
-    ~/.copilot/skills/taskwarrior_expert/scripts/taskp "$task_id" annotate "HANDOFF: $message"
+    "$TASKP_BIN" "$task_id" annotate "HANDOFF: $message"
     success "Handoff to task $task_id with note"
 }
 
@@ -416,7 +432,7 @@ cmd_note() {
         *)            error "Invalid note type: $type" ;;
     esac
     
-    ~/.copilot/skills/taskwarrior_expert/scripts/taskp "$task_id" annotate "$prefix: $message"
+    "$TASKP_BIN" "$task_id" annotate "$prefix: $message"
     success "Added $prefix note to task $task_id"
 }
 
@@ -431,66 +447,92 @@ cmd_context() {
  
     info "Full context for task $task_id:"
     echo ""
-    ~/.copilot/skills/taskwarrior_expert/scripts/taskp "$task_id" info
+    "$TASKP_BIN" "$task_id" info
 }
 
 # Command: status - Show initiative status overview
 cmd_status() {
-    local filter="${1:-status:pending}"
+    local filter="$1"
+    local initiative_name
     
-    if [[ "project:$filter" != status:* ]] && [[ "project:$filter" != * ]]; then
-        filter="project:$filter"
+    if [[ -z "$filter" ]]; then
+        # Try to detect active initiative from current active task
+        initiative_name=$("$TASKP_BIN" +ACTIVE export | jq -r '.[0].project // ""')
+        if [[ -z "$initiative_name" ]]; then
+            # Fallback to all pending tasks if no active task
+            filter="status:pending"
+            initiative_name="ALL ACTIVE"
+        else
+            filter="project:$initiative_name"
+        fi
+    else
+        if [[ "$filter" =~ ^project: ]]; then
+            initiative_name="${filter#project:}"
+        elif [[ "$filter" == "status:pending" ]]; then
+            initiative_name="ALL ACTIVE"
+        else
+            initiative_name="$filter"
+            filter="project:$filter"
+        fi
     fi
  
-    # Custom initiative status output
-    local initiative_name
-    initiative_name=$(echo "project:$filter" | cut -d":" -f2)
-    local tasks_list
-    tasks_list=$(~/.copilot/skills/taskwarrior_expert/scripts/taskp "project:$filter" status:pending export | jq -r '.[] | {uuid: .uuid, id: .id, active: (.status=="pending" and .start!=null), desc: .description} | @base64')
-    local total
-    total=$(echo "$tasks_list" | wc -l)
-    local active_uuid
-    active_uuid=$(echo "$tasks_list" | base64 -d | jq -r 'select(.active==true) | .uuid' | head -n1)
-    local next_uuid
-    next_uuid=$(echo "$tasks_list" | base64 -d | jq -r 'select(.active!=true) | .uuid' | head -n1)
-    echo -e "Initiative: $initiative_name"
-    n=1
-    echo "$tasks_list" | while read -r task; do
-        t=$(echo "$task" | base64 -d)
-        uuid=$(echo "$t" | jq -r '.uuid')
-        
-        short_uuid=$(short_id "$uuid")
-        desc=$(echo "$t" | jq -r '.desc')
-        if [[ "$uuid" == "$active_uuid" ]]; then
-            echo -e "- ✓ [$short_uuid - ATIVA] $desc"
-        else
-            echo -e "- [$short_uuid] $desc"
-        fi
-        n=$((n+1))
-    done
-    echo -e "\nTotal: $total tarefas. Tarefa ativa: $(short_id "$active_uuid"). Próxima: $(short_id "$next_uuid").\n"
+    # Custom initiative status overview
+    local tasks_json
+    tasks_json=$("$TASKP_BIN" "$filter" export)
     
-    # Count tasks by status
-    local pending blocked active completed
-    pending=$(~/.copilot/skills/taskwarrior_expert/scripts/taskp "project:$filter" status:pending 2>/dev/null | grep -c "^[0-9]" || echo "0")
-    blocked=$(~/.copilot/skills/taskwarrior_expert/scripts/taskp "project:$filter" +BLOCKED 2>/dev/null | grep -c "^[0-9]" || echo "0")
-    active=$(~/.copilot/skills/taskwarrior_expert/scripts/taskp "project:$filter" +ACTIVE 2>/dev/null | grep -c "^[0-9]" || echo "0")
-    completed=$(~/.copilot/skills/taskwarrior_expert/scripts/taskp "project:$filter" status:completed 2>/dev/null | grep -c "^[0-9]" || echo "0")
+    local tasks_list
+    tasks_list=$(echo "$tasks_json" | jq -r '.[] | select(.status=="pending") | {uuid: .uuid, id: .id, active: (.start!=null), desc: .description} | @base64')
+    
+    local total_pending
+    total_pending=$(echo "$tasks_json" | jq -r '[.[] | select(.status=="pending")] | length')
+    
+    local active_uuid
+    active_uuid=$(echo "$tasks_json" | jq -r '.[] | select(.status=="pending" and .start!=null) | .uuid' | head -n1)
+    
+    local next_uuid
+    next_uuid=$(echo "$tasks_json" | jq -r '.[] | select(.status=="pending" and .start==null) | .uuid' | head -n1)
+    
+    echo -e "══ Initiative: $initiative_name ══"
+    
+    if [[ "$total_pending" -gt 0 ]]; then
+        echo -e "\nPENDING:"
+        echo "$tasks_list" | while read -r task; do
+            t=$(echo "$task" | base64 -d)
+            uuid=$(echo "$t" | jq -r '.uuid')
+            short_uuid=$(short_id "$uuid")
+            desc=$(echo "$t" | jq -r '.desc')
+            if [[ "$uuid" == "$active_uuid" ]]; then
+                echo -e "- ✓ [$short_uuid - ATIVA] $desc"
+            else
+                echo -e "- [$short_uuid] $desc"
+            fi
+        done
+    else
+        success "No pending tasks found for this filter."
+    fi
+
+    # Display completed tasks if any
+    local completed_list
+    completed_list=$(echo "$tasks_json" | jq -r '.[] | select(.status=="completed") | "✓ [\(.uuid | .[0:8])] \(.description)"' || echo "")
+    if [[ -n "$completed_list" ]]; then
+        echo -e "\nCOMPLETED:"
+        echo "$completed_list" | sed 's/^/  /'
+    fi
+    
+    echo -e "\nTotal: $total_pending tasks. Active: $(short_id "$active_uuid"). Next: $(short_id "$next_uuid").\n"
+    
+    # Count tasks by status using the JSON we already have
+    local pending active blocked completed
+    pending=$(echo "$tasks_json" | jq -r '[.[] | select(.status=="pending")] | length')
+    active=$(echo "$tasks_json" | jq -r '[.[] | select(.status=="pending" and .start!=null)] | length')
+    blocked=$(echo "$tasks_json" | jq -r '[.[] | select(.status=="pending" and .tags!=null and (.tags | contains(["BLOCKED"])))] | length')
+    completed=$(echo "$tasks_json" | jq -r '[.[] | select(.status=="completed")] | length')
     
     echo -e "Completed: $completed"
     echo -e "Active: $active"
     echo -e "Blocked: $blocked"
-    echo -e "Pending: $pending"
+    echo -e "Pending: $((pending - active))"
     echo ""
-    
-    # Show task list
-    pending=$(echo "$pending" | tr -d " 
-"); if [[ "$pending" -gt 0 ]]; then
-        info "Pending tasks:"
-    ~/.copilot/skills/taskwarrior_expert/scripts/taskp "project:$filter" status:pending export 2>/dev/null | jq -r '.[] | "\(.uuid | .[0:8]) - \(.description) [\(.urgency)]"'
-    else
-        success "No pending tasks!"
-    fi
 }
 
 # Command: initiatives - List all initiatives with pending tasks
@@ -498,48 +540,50 @@ cmd_initiatives() {
     info "Initiatives with pending tasks:"
     echo ""
     
-    local initiatives
-    initiatives=$(taskp status:pending export | jq -r '.[].project' | sort | uniq)
+    local initiatives_json
+    initiatives_json=$("$TASKP_BIN" status:pending export)
     
-    if [[ -z "$initiatives" ]]; then
+    local initiative_names
+    initiative_names=$(echo "$initiatives_json" | jq -r '.[].project' | sort | uniq | grep -v "^$" || echo "")
+    
+    if [[ -z "$initiative_names" ]]; then
         success "No active initiatives!"
         return
     fi
     
     while IFS= read -r initiative; do
         [[ -z "$initiative" ]] && continue
-        local pending
-        pending=$(taskp "$initiative" status:pending 2>/dev/null | grep -c "^[0-9]" || echo "0")
-        local active
-        active=$(taskp "$initiative" +ACTIVE 2>/dev/null | grep -c "^[0-9]" || echo "0")
-        local blocked
-        blocked=$(taskp "$initiative" +BLOCKED 2>/dev/null | grep -c "^[0-9]" || echo "0")
         
-        echo -e "● $plan"
-        echo -e "  Pending: $pending | Active: $active | Blocked: $blocked"
+        local pending active blocked
+        pending=$(echo "$initiatives_json" | jq -r "[.[] | select(.project==\"$initiative\")] | length")
+        active=$(echo "$initiatives_json" | jq -r "[.[] | select(.project==\"$initiative\" and .start!=null)] | length")
+        blocked=$(echo "$initiatives_json" | jq -r "[.[] | select(.project==\"$initiative\" and .tags!=null and (.tags | contains([\"BLOCKED\"])))] | length")
+        
+        echo -e "● $initiative"
+        echo -e "  Pending: $((pending - active)) | Active: $active | Blocked: $blocked"
         echo ""
-    done <<< "$initiatives"
+    done <<< "$initiative_names"
 }
 
 # Command: active - Show currently active tasks
 cmd_active() {
     info "Currently active tasks:"
     echo ""
-    ~/.copilot/skills/taskwarrior_expert/scripts/taskp +ACTIVE 2>/dev/null || warning "No active tasks"
+    "$TASKP_BIN" +ACTIVE 2>/dev/null || warning "No active tasks"
 }
 
 # Command: blocked - Show blocked tasks
 cmd_blocked() {
     info "Blocked tasks:"
     echo ""
-    ~/.copilot/skills/taskwarrior_expert/scripts/taskp +BLOCKED 2>/dev/null || success "No blocked tasks"
+    "$TASKP_BIN" +BLOCKED 2>/dev/null || success "No blocked tasks"
 }
 
 # Command: overdue - Show overdue tasks
 cmd_overdue() {
     info "Overdue tasks:"
     echo ""
-    ~/.copilot/skills/taskwarrior_expert/scripts/taskp due.before:today status:pending 2>/dev/null || success "No overdue tasks"
+    "$TASKP_BIN" due.before:today status:pending 2>/dev/null || success "No overdue tasks"
 }
 
 # Command: urgent - Make task urgent
@@ -549,7 +593,7 @@ cmd_urgent() {
     
     [[ -z "$task_id" ]] && error "Task ID required"
     
-    ~/.copilot/skills/taskwarrior_expert/scripts/taskp "$task_id" modify "urgency:$urgency" priority:H
+    "$TASKP_BIN" "$task_id" modify "urgency:$urgency" priority:H
     success "Task $task_id marked as urgent (urgency: $urgency)"
 }
 
@@ -561,7 +605,7 @@ cmd_block() {
     [[ -z "$task_id" ]] && error "Task ID required"
     [[ -z "$depends_on" ]] && error "Dependency task ID required"
     
-    ~/.copilot/skills/taskwarrior_expert/scripts/taskp "$task_id" modify "depends:$depends_on"
+    "$TASKP_BIN" "$task_id" modify "depends:$depends_on"
     success "Task $task_id now depends on task $depends_on"
 }
 
@@ -575,16 +619,16 @@ cmd_unblock() {
     
     # Get current dependencies
     local current_deps
-    current_deps=$(taskp "$task_id" export | jq -r '.[0].depends // [] | join(",")')
+    current_deps=$("$TASKP_BIN" "$task_id" export | jq -r '.[0].depends // [] | join(",")')
     
     # Remove the specific dependency
     local new_deps
     new_deps=$(echo "$current_deps" | tr ',' '\n' | grep -v "^$depends_on$" | tr '\n' ',' | sed 's/,$//')
     
     if [[ -n "$new_deps" ]]; then
-    ~/.copilot/skills/taskwarrior_expert/scripts/taskp "$task_id" modify "depends:$new_deps"
+    "$TASKP_BIN" "$task_id" modify "depends:$new_deps"
     else
-    ~/.copilot/skills/taskwarrior_expert/scripts/taskp "$task_id" modify depends:
+    "$TASKP_BIN" "$task_id" modify depends:
     fi
     
     success "Removed dependency on task $depends_on from task $task_id"
@@ -598,7 +642,7 @@ cmd_wait() {
     [[ -z "$task_id" ]] && error "Task ID required"
     [[ -z "$date" ]] && error "Wait date required (e.g., friday, 2026-02-01)"
     
-    ~/.copilot/skills/taskwarrior_expert/scripts/taskp "$task_id" modify "wait:$date"
+    "$TASKP_BIN" "$task_id" modify "wait:$date"
     success "Task $task_id waiting until $date"
 }
 
@@ -610,13 +654,13 @@ cmd_discard() {
     
     # Get current project to preserve context in trash
     local current_project
-    current_project=$(~/.copilot/skills/taskwarrior_expert/scripts/taskp "$task_id" export 2>/dev/null | jq -r '.[0].project // "unscoped"')
+    current_project=$("$TASKP_BIN" "$task_id" export 2>/dev/null | jq -r '.[0].project // "unscoped"')
     
     # Move to _archive project (soft delete)
     local archive_project="${current_project%:_archive}:_archive"
     
-    ~/.copilot/skills/taskwarrior_expert/scripts/taskp "$task_id" modify project:"$archive_project" +DISCARDED
-    ~/.copilot/skills/taskwarrior_expert/scripts/taskp "$task_id" done
+    "$TASKP_BIN" "$task_id" modify project:"$archive_project" +DISCARDED
+    "$TASKP_BIN" "$task_id" done
     
     success "Task $(short_id "$task_id") moved to archive and marked done."
 }
@@ -640,7 +684,7 @@ cmd_tree() {
         local is_last="$3"
 
         local json
-        json=$(taskp "$uuid" export 2>/dev/null | jq '.[0]')
+        json=$("$TASKP_BIN" "$uuid" export 2>/dev/null | jq '.[0]')
         [[ -z "$json" || "$json" == "null" ]] && return
 
         local desc=$(echo "$json" | jq -r '.description')
@@ -653,7 +697,7 @@ cmd_tree() {
         
         # Check if blocked
         local is_ready
-        is_ready=$(taskp "$uuid" +READY export 2>/dev/null | jq -r '.[0].id // ""')
+        is_ready=$("$TASKP_BIN" "$uuid" +READY export 2>/dev/null | jq -r '.[0].id // ""')
         if [[ "$status" == "pending" && -z "$is_ready" ]]; then
             icon="🔒"
         fi
@@ -666,7 +710,7 @@ cmd_tree() {
 
         # Find children (tasks that depend on this one)
         local children
-        children=$(taskp "depends.contains:$uuid" status:pending export 2>/dev/null | jq -r '.[] | select(.project | test("_archive$|_trash$") | not) | .uuid' || echo "")
+        children=$("$TASKP_BIN" "depends.contains:$uuid" status:pending export 2>/dev/null | jq -r '.[] | select(.project | test("_archive$|_trash$") | not) | .uuid' || echo "")
         
         local child_indent="$indent    "
         [[ "$marker" == "├──" ]] && child_indent="$indent│   "
@@ -686,11 +730,11 @@ cmd_tree() {
 
     # Find root nodes (tasks in project with no dependencies or whose dependencies are outside this project/completed)
     local root_uuids
-    root_uuids=$(~/.copilot/skills/taskwarrior_expert/scripts/taskp "project:$filter" export 2>/dev/null | jq -r '.[] | select(.project | test("_archive$|_trash$") | not) | select(.depends == null or (.depends | length == 0)) | .uuid')
+    root_uuids=$("$TASKP_BIN" "project:$filter" export 2>/dev/null | jq -r '.[] | select(.project | test("_archive$|_trash$") | not) | select(.depends == null or (.depends | length == 0)) | .uuid')
 
     if [[ -z "$root_uuids" ]]; then
         # If no strict roots, just show all tasks in project as a list for now
-    ~/.copilot/skills/taskwarrior_expert/scripts/taskp "project:$filter" export 2>/dev/null | jq -r '.[] | select(.project | test("_archive$|_trash$") | not) | .uuid' | while read -r uuid; do
+    "$TASKP_BIN" "project:$filter" export 2>/dev/null | jq -r '.[] | select(.project | test("_archive$|_trash$") | not) | .uuid' | while read -r uuid; do
              [[ -n "$uuid" ]] && render_tree_node "$uuid" "" "false"
         done
     else

@@ -4,6 +4,28 @@
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 # -----------------------------------------------------------------------------
+# 0. Initialize Jaka Bootstrap Environment
+# -----------------------------------------------------------------------------
+BOOTSTRAP_ENV="$PROJECT_ROOT/scripts/bootstrap/environment"
+if [ -f "$BOOTSTRAP_ENV" ]; then
+    echo "🐊 Running Jaka bootstrap environment initialization..."
+    source "$BOOTSTRAP_ENV"
+    echo ""
+else
+    echo "⚠️  Bootstrap environment script not found at $BOOTSTRAP_ENV."
+fi
+
+# -----------------------------------------------------------------------------
+# 0.1 Configure Gemini CLI Settings
+# -----------------------------------------------------------------------------
+GEMINI_BOOTSTRAP="$PROJECT_ROOT/scripts/bootstrap/gemini"
+if [ -x "$GEMINI_BOOTSTRAP" ]; then
+    "$GEMINI_BOOTSTRAP"
+else
+    echo "⚠️  Gemini bootstrap script not found or not executable at $GEMINI_BOOTSTRAP."
+fi
+
+# -----------------------------------------------------------------------------
 # 1. Setup Sandbox Directory (SELinux & Permissions)
 # -----------------------------------------------------------------------------
 SANDBOX_DIR="$PROJECT_ROOT/sandbox/copilot/.copilot"
@@ -43,8 +65,30 @@ export COPILOT_SANDBOXED_HOME="\$PROJECT_ROOT"
 "\$PROJECT_ROOT/scripts/copilot" "\$@"
 EOF
 
-chmod +x "$TARGET_SCRIPT"
-echo "✅ Wrapper script created: $TARGET_SCRIPT"
-
-echo ""
-echo "Setup complete! You can now run: copilot_sandboxed"
+# -----------------------------------------------------------------------------
+# 3. Setup can-gemini link in ~/bin
+# -----------------------------------------------------------------------------
+GEMINI_LINK="$HOME/bin/can-gemini"
+if [ ! -L "$GEMINI_LINK" ] && [ ! -f "$GEMINI_LINK" ]; then
+    echo "Creating symbolic link for can-gemini at $GEMINI_LINK..."
+    ln -s "$PROJECT_ROOT/scripts/can-gemini" "$GEMINI_LINK"
+    echo "✅ Link created: $GEMINI_LINK"
+else
+        echo "ℹ️  $GEMINI_LINK already exists. Skipping link creation."
+    fi
+    
+    # -----------------------------------------------------------------------------
+    # 4. Setup can-opencode link in ~/bin
+    # -----------------------------------------------------------------------------
+    OPENCODE_LINK="$HOME/bin/can-opencode"
+    if [ ! -L "$OPENCODE_LINK" ] && [ ! -f "$OPENCODE_LINK" ]; then
+        echo "Creating symbolic link for can-opencode at $OPENCODE_LINK..."
+        ln -s "$PROJECT_ROOT/scripts/can-opencode" "$OPENCODE_LINK"
+        echo "✅ Link created: $OPENCODE_LINK"
+    else
+        echo "ℹ️  $OPENCODE_LINK already exists. Skipping link creation."
+    fi
+    
+    echo ""
+    echo "Setup complete! You can now run: copilot_sandboxed, can-gemini or can-opencode"
+    

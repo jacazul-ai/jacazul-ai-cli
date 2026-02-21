@@ -537,3 +537,7 @@ If agent doesn't detect mode or behaves wrong:
 2. **Redirect agent:** "Stop. Switch to [GUIDE] mode and walk me through this"
 3. **Clarify expectations:** "This is [REVIEW] mode, so audit the code, don't modify it"
 
+
+---
+
+**Last Updated:** 2026-02-21

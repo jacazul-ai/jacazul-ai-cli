@@ -1,0 +1,94 @@
+#!/bin/bash
+[ -n "$DEBUG" ] && set -x
+
+# can-gemini: Gemini CLI unhinged (direct execution with candango config)
+
+# Get the absolute path to the script's directory
+SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
+PROJECT_ROOT="$(readlink -f "$SCRIPT_DIR/..")"
+TEMPLATES_TASKRC="$PROJECT_ROOT/templates/.taskrc"
+
+# Define host directories (mirroring the sandbox structure)
+# We use the existing sandbox directories to keep data persistence
+HOST_SANDBOX=${COPILOT_SANDBOXED_HOME:-$PROJECT_ROOT}/sandbox/copilot
+HOST_SANDBOX_CONFIG_DIR="$HOST_SANDBOX/.config"
+HOST_SANDBOX_COPILOT_DIR="$HOST_SANDBOX/.copilot"
+HOST_SANDBOX_TASK_DIR="$HOST_SANDBOX/.task"
+HOST_GITCONFIG="$HOST_SANDBOX/.gitconfig"
+
+# Calculate Project Identity
+PARENT_DIR=$(basename "$(dirname "$(pwd)")")
+CURRENT_DIR=$(basename "$(pwd)")
+PROJECT_ID="${PARENT_DIR}_${CURRENT_DIR}"
+
+# -----------------------------------------------------------------------------
+# 0. Initialize Jaka Bootstrap Environment
+# -----------------------------------------------------------------------------
+BOOTSTRAP_ENV="$PROJECT_ROOT/scripts/bootstrap/environment"
+if [ -f "$BOOTSTRAP_ENV" ]; then
+    source "$BOOTSTRAP_ENV"
+fi
+
+# Set JAKA_MODE to UNHINGED for this script
+export JAKA_MODE="UNHINGED"
+
+# Initialize Taskwarrior Bootstrap
+BOOTSTRAP_TW="$PROJECT_ROOT/scripts/bootstrap/taskwarrior"
+if [ -f "$BOOTSTRAP_TW" ]; then
+    source "$BOOTSTRAP_TW"
+fi
+
+# Initialize Gemini Bootstrap (Experimental Agents & Preview)
+BOOTSTRAP_GEMINI="$PROJECT_ROOT/scripts/bootstrap/gemini"
+if [ -x "$BOOTSTRAP_GEMINI" ]; then
+    "$BOOTSTRAP_GEMINI"
+fi
+
+# Export environment variables for Taskwarrior (via taskp/tw-flow)
+export PROJECT_ID="$PROJECT_ID"
+
+# Export Gemini specific configuration
+# We point to our templates and skills so gemini-cli knows where they are
+# export GEMINI_SKILLS_PATH="$PROJECT_ROOT/templates/skills"
+# export GEMINI_AGENTS_PATH="$PROJECT_ROOT/templates/agents"
+export GEMINI_INSTRUCTIONS_DIR="$PROJECT_ROOT/templates/context/instructions"
+
+# Add our scripts to PATH so we can use taskp, tw-flow, etc.
+export PATH="$PATH:$PROJECT_ROOT/templates/skills/taskwarrior_expert/scripts"
+
+# Load Git credentials if available
+if [ -f "$HOST_GITCONFIG" ]; then
+    export GIT_CONFIG_GLOBAL="$HOST_GITCONFIG"
+fi
+
+# Determine User Name for Prompt
+USER_NAME="${CONTEXT_GIT_USER:-$(whoami)}"
+
+# Base Onboard Prompt for Jaka
+ONBOARD_PROMPT="Initialize session. You are Jaka, o Jacaré Azul (Monstro do Lago), running $JAKA_MODE in a direct shell environment. You are assisting user $USER_NAME. The current project context is id $PROJECT_ID. \
+\
+ACTION REQUIRED: \
+1. Activate skill 'jaka' and 'taskwarrior-expert' immediately. \
+2. When the user says 'onboard', follow the Onboard Protocol in the Jacazul agent: display session context and run the ponder dashboard. \
+\
+Initially just ponder the state of $PROJECT_ID, give me your insight, and stop."
+
+# If no arguments provided, default to deterministic onboarding
+if [ $# -eq 0 ]; then
+    set -- -i "$ONBOARD_PROMPT"
+else
+    # Arguments provided: PREPEND onboarding context to the user's first prompt
+    USER_PROMPT="$*"
+    set -- -i "$ONBOARD_PROMPT" "$USER_PROMPT"
+fi
+
+# Check if gemini is installed
+if ! command -v gemini &> /dev/null; then
+    echo "❌ gemini command not found in PATH."
+    echo "Please ensure Gemini CLI is installed and available."
+    exit 1
+fi
+
+# Execute gemini with injected onboard prompt
+echo "🐊 can-gemini: Running unhinged for project [$PROJECT_ID]"
+exec gemini "$@"

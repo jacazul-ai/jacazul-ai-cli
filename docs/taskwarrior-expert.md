@@ -4,31 +4,28 @@ Complete guide for the taskwarrior-expert skill - a structured workflow system f
 
 ## 📍 Script Locations (IMPORTANT)
 
-**When this skill is activated, all scripts are located at:**
+**When this skill is activated in UNHINGED mode, scripts are located at:**
 
 ```
-~/.copilot/skills/taskwarrior_expert/scripts/
+~/.gemini/skills/taskwarrior_expert/scripts/
 ```
 
 **Available scripts:**
-- `~/.copilot/skills/taskwarrior_expert/scripts/tw-flow` - Main workflow tool
-- `~/.copilot/skills/taskwarrior_expert/scripts/taskp` - Project-aware wrapper
-- `~/.copilot/skills/taskwarrior_expert/scripts/ponder` - Dashboard visualization
+- `~/.gemini/skills/taskwarrior_expert/scripts/tw-flow` - Main workflow tool (v1.4.0)
+- `~/.gemini/skills/taskwarrior_expert/scripts/taskp` - Project-aware wrapper
+- `~/.gemini/skills/taskwarrior_expert/scripts/ponder` - Dashboard visualization (v1.4.0)
 
 **How to use them:**
 
 ```bash
 # Option 1: Direct path (always works)
-~/.copilot/skills/taskwarrior_expert/scripts/tw-flow initiative copilot:feature "task|tag|due"
+~/.gemini/skills/taskwarrior_expert/scripts/tw-flow initiative my-feature "task|tag|due"
 
-# Option 2: If scripts are in PATH
-tw-flow initiative copilot:feature "task|tag|due"
-
-# Option 3: Relative to skill directory (if in skill context)
-./scripts/tw-flow initiative copilot:feature "task|tag|due"
+# Option 2: If scripts are in PATH (after configure-direct)
+tw-flow initiative my-feature "task|tag|due"
 ```
 
-**For AI Agents:** Always use the full path `~/.copilot/skills/taskwarrior_expert/scripts/` when invoking these tools to ensure they are found regardless of working directory.
+**For AI Agents:** Always use `taskp` or `tw-flow`. NEVER invoke the raw `task` binary directly to maintain project isolation.
 
 ---
 
@@ -37,21 +34,21 @@ tw-flow initiative copilot:feature "task|tag|due"
 The taskwarrior-expert skill transforms Taskwarrior into a powerful workflow engine with:
 - **7-phase structured workflow** for consistent task execution
 - **8 interaction modes** controlling agent autonomy levels
+- **Per-project isolation** via `PROJECT_ID` detection
 - **Dashboard visualization** for quick state assessment
-- **Session continuity** through handoff protocols
-- **Context preservation** via structured annotations
+- **Context preservation** via structured annotations and inherited context
 
 ## 🚀 Quick Start
 
 ### 1. Check Current State
 ```bash
-ponder copilot
+ponder
 ```
-Shows pulse summary, active task, upcoming work, and blockers.
+Shows initiative landscape, active tasks, and tactical readout.
 
-### 2. Create a Initiative
+### 2. Create an Initiative
 ```bash
-tw-flow initiative copilot:my-feature \
+tw-flow initiative my-feature \
   "DESIGN|Design API schema|research|today" \
   "EXECUTE|Implement endpoints|implementation|tomorrow" \
   "TEST|Write tests|testing|2days"
@@ -60,18 +57,15 @@ tw-flow initiative copilot:my-feature \
 ### 3. Execute Tasks
 ```bash
 # Start work
-tw-flow execute 42
+tw-flow execute <uuid>
 
 # Add context
-tw-flow note 42 research "Found library X supports feature Y"
-tw-flow note 42 decision "Using approach A for performance"
+tw-flow note <uuid> research "Found library X supports feature Y"
+tw-flow note <uuid> decision "Using approach A for performance"
 
 # Record outcome and complete
-tw-flow outcome 42 "Implemented OAuth flow with JWT tokens"
-tw-flow done 42
-
-# Handoff to next
-tw-flow handoff 43 "Continue here. See task 42 for design decisions."
+tw-flow outcome <uuid> "Implemented OAuth flow with JWT tokens"
+tw-flow done <uuid>
 ```
 
 ---
@@ -80,571 +74,112 @@ tw-flow handoff 43 "Continue here. See task 42 for design decisions."
 
 ### Phase 1: Orient (Ponder)
 **Purpose:** Understand the current state before acting.
-
 ```bash
-ponder [project_root]
+ponder
 ```
-
-**Shows:**
-- Pulse summary (pending, completed today, overdue, active)
-- Current focus (active task)
-- Up next (top 3 ready tasks)
-- Blocked/waiting tasks
-
-**When to use:** Start of session, before planning, when context switching.
+**Tactical View (v1.4.0):**
+- **Initiative Landscape:** Summary of active/ready tasks per initiative.
+- **Tactical Readout:** Columnar table showing Status (⚡ ACTIVE, !! OVERDUE), UUID, Mode, and Urgency.
 
 ---
 
 ### Phase 2: Initiative (Decide)
 **Purpose:** Break down goals into actionable dependency chains.
-
 ```bash
 tw-flow initiative <feature> <tasks...>
 ```
-
 **Task format:** `"MODE|description|tag|due_offset"`
-
-**Example:**
-```bash
-tw-flow initiative copilot:auth \
-  "INVESTIGATE|Review existing auth code|research|today" \
-  "DESIGN|Design new auth flow|research|today" \
-  "EXECUTE|Implement JWT tokens|implementation|tomorrow" \
-  "TEST|Write integration tests|testing|2days" \
-  "REVIEW|Code review checklist|review|3days"
-```
-
-**Best practices:**
-- Start with investigation/planning tasks
-- Order tasks by logical dependencies (auto-created)
-- Use appropriate modes for each task
-- Set realistic due dates
+*Note: The `plan` command is deprecated in favor of `initiative`.*
 
 ---
 
 ### Phase 3: Execute (Act)
 **Purpose:** Start working on the highest priority ready task.
-
 ```bash
-tw-flow execute <id>
+tw-flow execute <uuid>
 ```
-
-**What happens:**
-- Task marked as active (+ACTIVE)
-- Start time recorded
-
-**Context Propagation (v1.3.0+):**
-When executing a task, tw-flow automatically displays inherited context from parent tasks (dependencies):
-
-```
- INHERITED CONTEXT ══
-Task (ae749be5) [Design auth flow]:
-  - OUTCOME: OAuth implementation complete with Google/GitHub providers
-  - DECISION: Using JWT with 15min access, 7 day refresh tokens
-  - LESSON: Always test token refresh edge cases
-```
-
-Shows annotations with prefixes:
-- `OUTCOME:` - What was achieved
-- `DECISION:` - Architectural choices
-- `LESSON:` - Important learnings
-- `HANDOFF:` - Session transfer notes
-
-This ensures you have full context before starting work on dependent tasks.
-
-- Task details displayed
-
-**Check what's ready:**
-```bash
-tw-flow next [feature]
-```
+**Context Propagation:** Displays inherited `OUTCOME`, `DECISION`, and `LESSON` notes from parent tasks automatically.
 
 ---
 
 ### Phase 4: Context (Record)
 **Purpose:** Document work as you go for future reference.
-
 ```bash
-tw-flow note <id> <type> <message>
+tw-flow note <uuid> <type> <message>
 ```
-
-**Note types:**
-- `research` - Findings and discoveries
-- `decision` - Key decisions made
-- `blocked` - Blockers and impediments
-- `lesson` - Lessons learned
-- `ac` - Acceptance criteria
-- `note` - General notes
-- `link` - References and URLs
-
-**Example:**
-```bash
-tw-flow note 42 research "Passport.js supports 500+ authentication strategies"
-tw-flow note 42 decision "Using JWT with 15min access tokens, 7d refresh"
-tw-flow note 42 link "https://github.com/jaredhanson/passport"
-```
+Types: `research` (r), `decision` (d), `blocked` (b), `lesson` (l), `ac` (a), `note` (n), `link`.
 
 ---
 
 ### Phase 5: Review (Verify)
-**Purpose:** NEVER close a task silently. Always show and verify results.
-
 **Protocol:**
-1. Summarize what was accomplished
-2. Show the result (code, file, output, test results)
+1. Summarize accomplishment.
+2. Show results (code, output, tests).
 3. Ask user: "Shall I close this task?"
-4. Wait for approval
-
-**Critical:** Do NOT proceed to Phase 6 without user confirmation.
 
 ---
 
 ### Phase 6: Outcome (Capture)
-**Purpose:** Record final results BEFORE closing for permanent history.
-
+**Purpose:** Record final results BEFORE closing. **MANDATORY** for `tw-flow done`.
 ```bash
-tw-flow outcome <id> <message>
+tw-flow outcome <uuid> "What was achieved"
 ```
-
-**Example:**
-```bash
-tw-flow outcome 42 "Implemented OAuth2 login flow with Google/GitHub providers. JWT tokens with 15min expiry."
-```
-
-**Best practices:**
-- Be specific about what was delivered
-- Include key technical details
-- Reference created files or endpoints
-- Note any important decisions
-
-**Why important:**
-- Creates permanent searchable record
-- Enables session handoff
-- Provides context for future tasks
-- Helps in retrospectives
 
 ---
 
 ### Phase 7: Close (Finalize)
-**Purpose:** Mark task complete and check for unblocked work.
-
 ```bash
-tw-flow done <id> [optional_note]
+tw-flow done <uuid> [optional_note]
 ```
-
-**What happens:**
-- Task marked complete
-- Dependent tasks unblocked
-- Project completion % updated
-- Shows newly ready tasks
-
-**Alternative - Handoff to next:**
-```bash
-tw-flow handoff <next_id> "Pick up here. See task 42 for implementation details."
-```
-
-Combines execute + context note for seamless transition.
+Checks for newly unblocked tasks and updates initiative progress.
 
 ---
 
 ## 🚦 Interaction Modes
 
-Modes define agent behavior and autonomy level. Prefix task descriptions with `[MODE]`.
-
-| Mode | Behavior | Autonomy | Output | Use When |
-|------|----------|----------|--------|----------|
-| **[PLAN]** | Requirements analysis & breakdown | Low | Structured initiative | Need to understand requirements |
-| **[INVESTIGATE]** | Codebase diving & de-risking | High (Read-only) | Findings & context | Need to explore unfamiliar code |
-| **[GUIDE]** | Navigator - instructions only | **Zero** (Write) | Step-by-step guide | Want manual control |
-| **[EXECUTE]** | Builder - implementing changes | High (Write) | Modified files | Ready for implementation |
-| **[TEST]** | Verification & QA | High | Test results | Need validation |
-| **[DEBUG]** | Root cause analysis | High (Read-only) | Diagnosis & fix | Something broken |
-| **[REVIEW]** | Code audit & feedback | Read-only | Suggestions | Need quality check |
-| **[PR-REVIEW]** | Prepare/check PR or diffs | Read-only | Summary & readiness | Before merging |
-
-**Examples:**
-```bash
-# Investigation before implementation
-tw-flow initiative copilot:refactor \
-  "INVESTIGATE|Review current architecture|research|today" \
-  "DESIGN|Design refactoring approach|research|today" \
-  "GUIDE|Create step-by-step initiative|documentation|tomorrow" \
-  "EXECUTE|Apply refactoring|implementation|2days"
-
-# Debug then fix
-tw-flow initiative copilot:bug-fix \
-  "DEBUG|Diagnose auth failure|research|today" \
-  "EXECUTE|Fix identified issue|implementation|today" \
-  "TEST|Verify fix with tests|testing|tomorrow"
-```
-
-**Choosing the right mode:**
-- Unknown codebase? → `[INVESTIGATE]`
-- Clear requirements? → `[EXECUTE]`
-- Want review first? → `[GUIDE]`
-- Need validation? → `[TEST]`
-- Something broke? → `[DEBUG]`
+| Mode | Behavior | Autonomy | Use When |
+|------|----------|----------|----------|
+| **[PLAN]** | Analysis & breakdown | Low | Need requirements consensus |
+| **[INVESTIGATE]** | Code exploration | High (Read) | Unknown codebase |
+| **[GUIDE]** | Step-by-step instructions | Zero | User wants manual control |
+| **[EXECUTE]** | Building/Coding | High | Approach is clear |
+| **[TEST]** | QA & Verification | High | Need validation |
+| **[DEBUG]** | Root cause analysis | High (Read) | Something is broken |
+| **[REVIEW]** | Code audit | Read-only | Quality check needed |
+| **[PR-REVIEW]** | Readiness check | Read-only | Before merging |
 
 ---
 
-## 🛠 Tools Reference
+## 🛠 Advanced Commands (v1.4.0)
 
-### ponder - Dashboard
+### tw-flow status
+Shows initiative status with a **split view**:
+- **PENDING:** Tasks remaining in the initiative.
+- **COMPLETED:** History of what has already been done.
+*Auto-detects active initiative if no argument provided.*
 
-Version 1.4.0
-
-**Usage:**
-```bash
-ponder [project_root]
+### tw-flow tree
+Visualizes dependencies in an ASCII tree:
+```
+ Initiative: my-feature ══
+ ✓ (ae749be5) | Design phase
+   ├── ⚡ (4facb768) | Implementation
+   └── 🔒 (0e7ab763) | Testing (Blocked)
 ```
 
-**Features:**
-- **Pulse Summary:** Pending, completed today, overdue, active counts
-- **Current Focus:** Shows active task with mode highlighting
-- **Up Next:** Top 3 ready tasks (no blockers)
-- **Blocked/Waiting:** Top 3 blocked tasks with dependencies
-
-
-**Modes:**
-- **Default (Tactical):** Columnar table with Initiative Landscape
-- **Classic:** Compact view with `--classic` flag
-
-**Tactical Mode Features (v1.4.0):**
-```bash
-ponder [project_root]
-```
-Shows:
-- **Initiative Landscape:** Breakdown by initiative (active/ready/total)
-- **Tactical Readout:** Columnar table with status, UUID, mode, initiative, description, urgency
-- Status icons: ⚡ (active), !! (overdue), ○ (normal), 🔒 (blocked)
-- Mode extraction: Displays `[PLAN]`, `[EXECUTE]`, etc. from task descriptions
-
-**Classic Mode:**
-```bash
-ponder --classic [project_root]
-```
-Compact view with focus on current task and next 3 ready tasks.
-
-
-**Automatically excludes:**
-- Projects ending in `_archive`
-- Completed tasks
-- Waiting tasks (unless in blocked section)
-
-**Color coding:**
-- CYAN: Project name, pending count
-- GREEN: Completed, up next section
-- YELLOW: Modes like [GUIDE], [PLAN]
-- BLUE: Active count
-- RED: Overdue, blocked section
-
-**When to use:**
-- Start of work session
-- Before creating new initiatives
-- After completing major tasks
-- When context switching between projects
-
----
-
-### tw-flow - Workflow Commands
-
-Version 1.4.0
-
-#### Planning Commands
-
-**initiative** - Create initiative with tasks
-```bash
-tw-flow initiative <feature> "task1" "task2" ...
-```
-Format: `"MODE|description|tag|due_offset"`
-
-**initiatives** - List all active initiatives
-```bash
-tw-flow initiatives
-```
-
-**status** - Show initiative overview
-```bash
-tw-flow status [feature]
-```
-
-#### Execution Commands
-
-**next** - Show ready tasks
-```bash
-tw-flow next [feature]
-```
-
-**execute** - Start task
-```bash
-tw-flow execute <id>
-```
-
-**done** - Complete task
-```bash
-tw-flow done <id> [note]
-```
-
-**outcome** - Record result (NEW in 1.2.0)
-```bash
-tw-flow outcome <id> "What was achieved"
-```
-
-**handoff** - Start next with context (NEW in 1.2.0)
-```bash
-tw-flow handoff <id> "Context for next person/session"
-```
-
-**pause** - Pause task
-```bash
-tw-flow pause <id>
-```
-
-#### Context Commands
-
-**note** - Add structured annotation
-```bash
-tw-flow note <id> <type> "message"
-```
-Types: research, decision, blocked, lesson, ac, note, link
-
-**context** - Show full task details
-```bash
-tw-flow context <id>
-```
-
-#### Viewing Commands
-
-**active** - Show active tasks
-```bash
-tw-flow active
-```
-
-**blocked** - Show blocked tasks
-```bash
-tw-flow blocked
-```
-
-**overdue** - Show overdue tasks
-```bash
-tw-flow overdue
-```
-
-#### Modification Commands
-
-**urgent** - Mark as urgent
-```bash
-tw-flow urgent <id> [urgency_value]
-```
-
-**block** - Add dependency
-```bash
-tw-flow block <id> <depends_on_id>
-```
-
-**unblock** - Remove dependency
-```bash
-tw-flow unblock <id> <depends_on_id>
-```
-
-**wait** - Put on hold
-```bash
-tw-flow wait <id> <date>
-```
-
-**discard** - Soft delete task (NEW in 1.4.0)
-```bash
-tw-flow discard <id>
-```
-Moves task to `trash` subproject with `+DISCARDED` tag. Preserves history while removing from active view. The `ponder` dashboard automatically hides trash projects.
-
-**tree** - Visualize dependencies (NEW in 1.4.0)
-```bash
-tw-flow tree [feature]
-```
-Shows ASCII hierarchy of tasks with dependencies:
-- ✓ = Completed
-- ⚡ = Active
-- 🔒 = Blocked
-- ○ = Pending
-
-Example output:
-```
- Initiative: copilot:auth ══
- ○ (ae749be5) | Design auth flow
-   ├── ⚡ (4facb768) | Implement JWT middleware
-   └── 🔒 (0e7ab763) | Add endpoints
-```
-
+### tw-flow discard
+Soft delete a task by moving it to an `_archive` project and marking it done.
 
 ---
 
 ## 💡 Best Practices
 
-### Project Naming
-Use hierarchical naming with colons:
-```
-subfeature
-```
-
-Examples:
-- `copilot:auth:oauth`
-- `copilot:api:endpoints`
-- `copilot:docs:taskwarrior`
-
-### Task Descriptions
-Format: `[Verb] [Object] [Optional Context]`
-
-Examples:
-- `Implement JWT token validation`
-- `Refactor database connection pool`
-- `Add unit tests for auth module`
-
-### Dependencies
-Let `initiative` command create dependencies automatically by task order, or add manually:
-```bash
-tw-flow block 43 42  # Task 43 depends on 42
-```
-
-### Priorities
-- **H (High):** Current focus, immediate action
-- **M (Medium):** Standard operational tasks
-- **L (Low):** Backlog, nice-to-have
-
-### Archive Pattern
-Hide completed or irrelevant work:
-```bash
-task 42 modify copilot:old-feature:_archive
-```
-
-The `ponder` dashboard automatically excludes `_archive` projects.
-
-### Session Handoff Protocol
-
-**When ending a session:**
-1. Complete current task with outcome
-2. Execute the next logical task
-3. Add handoff note with context
-
-```bash
-tw-flow outcome 42 "OAuth implementation complete with Google/GitHub"
-tw-flow done 42
-tw-flow handoff 43 "Implement token refresh. See task 42 for JWT config."
-```
-
-**Next session starts with:**
-```bash
-ponder copilot
-tw-flow context 43  # See handoff note
-```
+1. **Use UUIDs:** Always refer to tasks by their 8-character UUID.
+2. **One Active Task:** Avoid having multiple active tasks in the same initiative to maintain focus and urgency accuracy.
+3. **Structured Notes:** Use prefixes (`RESEARCH:`, `DECISION:`) to make context retrieval easy for future agents.
+4. **Never Bypass Abstractions:** Bypassing `taskp` to use `task` directly breaks project isolation and data integrity.
 
 ---
 
-## 📖 Complete Example
-
-### Scenario: Implement User Authentication
-
-```bash
-# 1. Orient - Check state
-ponder copilot
-
-# 2. Initiative - Break down goal
-tw-flow initiative copilot:auth \
-  "INVESTIGATE|Review current codebase|research|today" \
-  "DESIGN|Design auth architecture|research|today" \
-  "EXECUTE|Implement JWT middleware|implementation|tomorrow" \
-  "EXECUTE|Add login/logout endpoints|implementation|tomorrow" \
-  "EXECUTE|Implement token refresh|implementation|2days" \
-  "TEST|Write integration tests|testing|3days" \
-  "REVIEW|Security review checklist|review|4days"
-
-# Initiative created: tasks 50-56
-
-# 3. Execute - Start first task
-tw-flow execute 50
-
-# 4. Context - Document findings
-tw-flow note 50 research "Current auth is basic, no session management"
-tw-flow note 50 research "Using Express.js 4.x, no existing auth middleware"
-tw-flow note 50 link "https://jwt.io/introduction"
-
-# 5. Review - (Manual) Show findings to user
-# User approves moving to design
-
-# 6. Outcome - Record completion
-tw-flow outcome 50 "Investigated codebase - no existing auth, Express 4.x ready for middleware"
-
-# 7. Close - Complete and move forward
-tw-flow done 50
-
-# Handoff to next task
-tw-flow execute 51
-tw-flow note 51 decision "Using JWT with access (15min) + refresh (7d) tokens"
-tw-flow note 51 decision "Storing refresh tokens in Redis"
-tw-flow note 51 ac "Must support Google OAuth and email/password"
-
-# Design complete
-tw-flow outcome 51 "Designed JWT-based auth with OAuth2 support and Redis for refresh tokens"
-tw-flow done 51
-
-# Continue pattern for remaining tasks...
-
-# Check progress anytime
-ponder copilot
-tw-flow status copilot:auth
-```
-
----
-
-## 🔧 Troubleshooting
-
-### Task shows as BLOCKED
-Check dependencies:
-```bash
-tw-flow context <id>
-```
-Complete blocking tasks or remove dependency:
-```bash
-tw-flow unblock <id> <blocking_id>
-```
-
-### Can't find task
-List all tasks in 
-```bash
-tw-flow status copilot:feature
-```
-
-### Task not showing in ponder
-- Check if project is correct
-- Verify task not in `_archive`
-- Ensure task status is pending
-
-### Wrong task order in initiative
-Dependencies created in sequence. To reorder:
-```bash
-tw-flow unblock <id> <old_dep>
-tw-flow block <id> <new_dep>
-```
-
----
-
-## 📚 Additional Resources
-
-- **Complete skill documentation:** `/project/templates/skills/taskwarrior_expert/SKILL.md`
-- **Naming conventions:** `/project/templates/skills/taskwarrior_expert/HIERARCHY.md`
-- **Scripts reference:** `/project/templates/skills/taskwarrior_expert/scripts/README.md`
-- **Taskwarrior docs:** https://taskwarrior.org/docs/
-
----
-
-## 🎓 Learning Path
-
-1. **Beginner:** Use `ponder` and `tw-flow next/execute/done`
-2. **Intermediate:** Add `outcome` and `note` for context
-3. **Advanced:** Use modes, handoffs, and archive patterns
-4. **Expert:** Custom workflows with dependencies and priorities
-
----
-
-**Version:** 1.2.0  
-**Last Updated:** 2026-01-31
+**Version:** 1.4.0  
+**Last Updated:** 2026-02-21

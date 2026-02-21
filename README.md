@@ -1,53 +1,42 @@
-# AI CLI Sandboxed
+# Gemini CLI Sandboxed (Monstro do Lago)
 
-This project provides a containerized environment for running AI-powered command line interface (CLI) tools within Docker or Podman containers on Linux. It offers a flexible, isolated, and reproducible environment for experimenting with and deploying AI CLI agents.
+This project provides a powerful, dual-mode environment for running AI-powered command line interface (CLI) tools (Gemini, Opencode, Copilot) within Docker/Podman containers (**CAGED**) or directly on your host (**UNHINGED**).
 
 ## ✨ Features
 
-- **Containerized CLI environment** - Isolated and reproducible
-- **Supports Docker and Podman** - Use your preferred container runtime
+- **Dual-Mode Execution** - Choose between isolated containers (**CAGED**) or high-performance native execution (**UNHINGED**)
+- **Gemini & Opencode Ready** - Optimized for the latest Gemini CLI and Opencode tools
 - **Per-project task databases** - Isolated Taskwarrior databases for each project
-- **Pre-configured workflows** - Taskwarrior integration with structured 7-phase workflow
-- **Skill-based system** - Modular capabilities for different tasks
-- **Session persistence** - Maintain context across sessions
-- **Optimized for Linux** - Designed for Linux container environments
+- **Structured 7-Phase Workflow** - Robust task management with interaction modes
+- **Dual-Persona Navigation** - Jacazul (PT-BR) and Cortana (EN) workflow assistants
+- **Automated Bootstrap** - Instant environment preparation for each project
 
-## 🚀 Quick Start
+## 🚀 Quick Start (UNHINGED Mode)
 
-### Build the Container
+### 1. Configure the Environment
 ```bash
-# Using Docker
-docker build -f Dockerfile.copilot -t ai-cli-copilot .
-
-# Using Podman
-podman build -f Dockerfile.copilot -t ai-cli-copilot .
+./scripts/configure-direct
 ```
 
-### Run the Container
+### 2. Run your preferred CLI
 ```bash
-# Docker
-docker run -it --rm ai-cli-copilot
-
-# Podman
-podman run -it --rm ai-cli-copilot
+can-gemini      # Gemini CLI (Native)
+can-opencode    # Opencode CLI (Native)
+can-copilot     # Copilot CLI (Native)
 ```
 
-### Try Taskwarrior Workflow
+### 3. Try the Workflow
 ```bash
-# Check current state (auto-detects project)
-ponder piraz_ai_cli_sandboxed
+# Check current state
+ponder
 
-# Create an initiative (uses per-project database)
+# Create an initiative
 tw-flow initiative my-feature \
-  "Design API|research|today" \
-  "Build API|implementation|tomorrow"
+  "DESIGN|Design system|research|today" \
+  "EXECUTE|Build logic|implementation|tomorrow"
 
 # Start working
 tw-flow execute <task_id>
-
-# Use taskp for direct task management
-taskp list                    # Lists tasks in project database
-taskp add "New task"          # Adds to project database
 ```
 
 ## 📚 Documentation
@@ -56,24 +45,18 @@ taskp add "New task"          # Adds to project database
 - **[Taskwarrior Expert](docs/taskwarrior-expert.md)** - Complete workflow guide
 - **[Per-Project Databases](docs/per-project-taskwarrior.md)** - Database architecture and usage
 - **[Skills Overview](docs/skills/README.md)** - Available skills
+- **[Interaction Modes](docs/interaction-modes.md)** - Understanding PLAN, EXECUTE, GUIDE, etc.
 
 ## 🛠 Available Skills
 
-### Taskwarrior Expert (v1.3.0)
+### Taskwarrior Expert (v1.4.0)
 Structured workflow management with 7 phases, interaction modes, and per-project database isolation.
 
 **Features:**
-- **Per-project databases** - Isolated task storage for each project
-- **Project-aware wrapper** (`taskp`) - Auto-detects current project
-- Dashboard visualization (`ponder`) - Project-specific views
-- Task management (`tw-flow` v1.3.0) - Enhanced with TASKDATA support
-- Session continuity and handoffs
-- 18+ comprehensive tests
-
-**New in v1.3.0:**
-- Automatic project detection via `PROJECT_ID`
-- Per-project database isolation (`~/.task/$PROJECT_ID/`)
-- Backward compatible with central database
+- **Per-Project isolation** - Dedicated database at `~/.task/$PROJECT_ID/`
+- **Absolute Reliability** - Uses `taskp` and `tw-flow` v1.4.0 with JSON-based status
+- **Transparent Feedback** - Split view for PENDING and COMPLETED tasks
+- **Ghost-Output Protection** - Optimized command execution and output capture
 
 [→ Complete Guide](docs/taskwarrior-expert.md) | [→ Architecture](docs/per-project-taskwarrior.md)
 
@@ -82,69 +65,35 @@ Structured workflow management with 7 phases, interaction modes, and per-project
 ```
 /project/
 ├── docs/              # Documentation
-├── templates/         # Agent configurations
-│   ├── skills/       # Available skills
-│   └── context/      # Agent instructions
-├── scripts/          # CLI wrappers
-├── sandbox/          # Sandboxed environments
-└── Dockerfile.*      # Container definitions
+├── scripts/           # Entry points & Bootstraps
+│   ├── bootstrap/     # Environment preparation scripts
+│   ├── can-*          # CLI wrappers (unhinged/sandboxed)
+├── templates/         # Agent & Skill definitions
+│   ├── agents/        # Jacazul & Cortana persona files
+│   ├── skills/        # Taskwarrior & Jaka skills
+└── sandbox/           # Persistent data directories
 ```
 
 ## 🔧 Development
 
-### Adding a New Skill
-1. Create skill directory in `templates/skills/`
-2. Add SKILL.md documentation
-3. Create helper scripts in `scripts/`
-4. Add tests
-5. Update documentation
-
-### Running Tests
+### Running the Smoke Tests
 ```bash
-# Taskwarrior skill tests
 ./templates/skills/taskwarrior_expert/scripts/test-tw-flow.sh
 ```
-
-## 🤝 Contributing
-
-Contributions welcome! Please ensure:
-- Documentation is updated
-- Tests pass
-- Follows existing patterns
-- Uses Conventional Commits
 
 ## 📝 License
 
 MIT
 
-## 🔗 Resources
+## 🐊 Jacazul Agent
 
-- [Taskwarrior Documentation](https://taskwarrior.org/docs/)
-- [Docker Documentation](https://docs.docker.com/)
-- [Podman Documentation](https://podman.io/)
-
-## 🐊 Jacazul Agent - Quick Context
-
-**Jacazul** (Jacaré Azul / Blue Alligator) is your AI workflow navigator — get instant project orientation with one command.
-
-### Get Started
-```bash
-# In any Copilot CLI session:
-onboard
-```
-
-Jacazul will:
-1. ✅ Activate taskwarrior-expert skill
-2. ✅ Display your environment (git user, PROJECT_ID, paths)
-3. ✅ Show project dashboard (pending, active, overdue tasks)
-4. ✅ Present actionable next steps
-5. ✅ Wait for your direction
+**Jacazul** is your AI workflow navigator. He speaks PT-BR, knows the mission, and keeps you in the flow.
 
 ### Commands
 - **`onboard`** — Initialize session context
 - **`ponder`** — Refresh status dashboard
-- **`iniciativas`** — List all initiatives
-- **`trabalhar em [initiative]`** — Focus on specific initiative
+- **`tw-flow status`** — Focused initiative view
+- **`tw-flow initiatives`** — List all active initiatives
 
 **📖 Full documentation:** `docs/agents/jacazul.md`
 

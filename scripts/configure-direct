@@ -8,6 +8,18 @@ echo "Configuring direct (native) execution environment..."
 echo "Project root: $PROJECT_ROOT"
 echo ""
 
+# -----------------------------------------------------------------------------
+# 0. Initialize Jaka Bootstrap Environment
+# -----------------------------------------------------------------------------
+BOOTSTRAP_ENV="$PROJECT_ROOT/scripts/bootstrap/environment"
+if [ -f "$BOOTSTRAP_ENV" ]; then
+    echo "🐊 Running Jaka bootstrap environment initialization..."
+    source "$BOOTSTRAP_ENV"
+    echo ""
+else
+    echo "⚠️  Bootstrap environment script not found at $BOOTSTRAP_ENV."
+fi
+
 # Detect OS
 DETECT_OS_SCRIPT="$PROJECT_ROOT/scripts/detect-os.sh"
 if [ -f "$DETECT_OS_SCRIPT" ]; then
@@ -83,7 +95,19 @@ else
 fi
 
 # -----------------------------------------------------------------------------
-# 5. OS-Specific Setup
+# 5. Setup can-opencode link in ~/bin
+# -----------------------------------------------------------------------------
+OPENCODE_LINK="$HOME/bin/can-opencode"
+if [ ! -L "$OPENCODE_LINK" ] && [ ! -f "$OPENCODE_LINK" ]; then
+    echo "Creating symbolic link for can-opencode at $OPENCODE_LINK..."
+    ln -s "$PROJECT_ROOT/scripts/can-opencode" "$OPENCODE_LINK"
+    echo "✅ Link created: $OPENCODE_LINK"
+else
+    echo "ℹ️  $OPENCODE_LINK already exists. Skipping link creation."
+fi
+
+# -----------------------------------------------------------------------------
+# 6. OS-Specific Setup
 # -----------------------------------------------------------------------------
 if [ "$OS_TYPE" = "fedora" ]; then
     echo ""

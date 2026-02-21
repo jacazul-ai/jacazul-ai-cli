@@ -4,6 +4,8 @@ description: Expert system for managing session plans, tasks, and context using 
 license: MIT
 ---
 
+# Instructions
+
 # Taskwarrior Integration Protocol
 
 ## Environment Configuration

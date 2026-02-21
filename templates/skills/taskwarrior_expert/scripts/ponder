@@ -3,9 +3,19 @@
 # Provides a high-level tactical overview of focus and progress
 # Version: 1.4.0 (columnar mode is now default)
 
-# Detect project and set TASKDATA if PROJECT_ID is available
+# Detect project and set TASKDATA/TASKRC if PROJECT_ID is available and they are NOT already set
 if [ -n "$PROJECT_ID" ]; then
-    export TASKDATA="$HOME/.task/$PROJECT_ID"
+    if [ -z "$TASKRC" ] && [ "$JAKA_MODE" = "UNHINGED" ]; then
+        export TASKRC="$HOME/.candango/jaka_ai/.taskrc"
+    fi
+
+    if [ -z "$TASKDATA" ]; then
+        if [ "$JAKA_MODE" = "UNHINGED" ]; then
+            export TASKDATA="$HOME/.candango/jaka_ai/.task/$PROJECT_ID"
+        else
+            export TASKDATA="$HOME/.task/$PROJECT_ID"
+        fi
+    fi
     mkdir -p "$TASKDATA"
 fi
 

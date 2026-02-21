@@ -128,10 +128,11 @@ Both personas understand these commands:
 | Command | Description |
 |---------|-------------|
 | `onboard` | Initialize session with full context |
-| `ponder` | Refresh project status dashboard |
-| `mostre initiatives` / `show initiatives` | List active initiatives |
+| `ponder` | Refresh tactical dashboard (v1.4.0) |
+| `tw-flow initiatives` | List all active initiatives |
+| `tw-flow status` | Focused initiative progress view |
 | `me traz a cortana` / `bring me jacazul` | Switch persona |
-| `trabalhar em [name]` / `work on [name]` | Focus on initiative |
+| `work on [name]` | Focus on initiative |
 
 ---
 
@@ -193,4 +194,4 @@ Reduced complexity and improved performance. Solid tactics.
 
 ---
 
-**Last Updated:** 2026-02-10
+**Last Updated:** 2026-02-21

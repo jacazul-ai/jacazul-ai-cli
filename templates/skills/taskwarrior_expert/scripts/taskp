@@ -4,6 +4,18 @@
 
 set -e
 
+# Detect Jaka Mode and set defaults
+JAKA_MODE="${JAKA_MODE:-SANDBOXED}"
+
+# If TASKRC is not set, determine default based on mode
+if [[ -z "$TASKRC" ]]; then
+    if [[ "$JAKA_MODE" == "UNHINGED" ]]; then
+        export TASKRC="$HOME/.candango/jaka_ai/.taskrc"
+    else
+        export TASKRC="$HOME/.taskrc"
+    fi
+fi
+
 # If TASKDATA is already set (e.g., in test harness), respect it
 if [[ -n "$TASKDATA" ]]; then
     CURRENT_DATA_DIR="$TASKDATA"
@@ -15,7 +27,11 @@ else
     CURRENT_PROJECT_ID="${FULL_PROJECT_ID%%:*}"
     
     # Data path structure
-    TASKS_BASE_DIR="$HOME/.task"
+    if [[ "$JAKA_MODE" == "UNHINGED" ]]; then
+        TASKS_BASE_DIR="$HOME/.candango/jaka_ai/.task"
+    else
+        TASKS_BASE_DIR="$HOME/.task"
+    fi
     CURRENT_DATA_DIR="$TASKS_BASE_DIR/$CURRENT_PROJECT_ID"
 fi
 
@@ -24,9 +40,7 @@ if [[ ! -d "$CURRENT_DATA_DIR" ]]; then
     mkdir -p "$CURRENT_DATA_DIR"
 fi
 
-# Run task with redirected data
-# We explicitly point to /root/.taskrc and override data.location
-export TASKRC="$HOME/.taskrc"
-
 # Execute the real task command
-exec task rc.data.location="$CURRENT_DATA_DIR" "$@"
+# Use rc: override to ensure correct configuration file is used
+# Note: Taskwarrior 2.6.0 needs the rc: override to respect custom config locations
+exec task rc:"$TASKRC" rc.data.location="$CURRENT_DATA_DIR" "$@"

@@ -7,19 +7,10 @@ PONDER="$SCRIPT_DIR/ponder"
 TASKP="$SCRIPT_DIR/taskp"
 
 # CRITICAL: Create isolated test directory inside smoketests/
-# Each run gets: smoketests/run_<timestamp>
-# TASKDATA: ~/.task/build/smoketests/run_<timestamp>
 TEST_RUN_ID="run_$(date +%s)"
 TEST_RUN_DIR="$(cd "$SCRIPT_DIR/../../../.." && pwd)/build/smoketests/$TEST_RUN_ID"
 export TASKDATA="$HOME/.task/build/smoketests/$TEST_RUN_ID"
 mkdir -p "$TASKDATA"
-
-# Ensure cleanup runs even on error - removes ONLY this test's artifacts
-cleanup_test() {
-    echo "→ Cleaning up test directory: $TEST_RUN_DIR and $TASKDATA"
-    rm -rf "$TEST_RUN_DIR" "$TASKDATA" 2>/dev/null || true
-}
-trap cleanup_test EXIT
 
 # Colors
 RED='\033[0;31m'
@@ -38,112 +29,96 @@ pass() {
 fail() {
     echo -e "${RED}✗${NC} $1"
     TESTS_FAILED=$((TESTS_FAILED + 1))
+    [ -n "$2" ] && echo -e "   ${YELLOW}DEBUG:${NC} $2"
 }
 
 info() {
     echo -e "${YELLOW}→${NC} $1"
 }
 
+# Cleanup on exit
+cleanup_test() {
+    echo ""
+    info "Cleaning up test artifacts..."
+    rm -rf "$TASKDATA" 2>/dev/null || true
+}
+trap cleanup_test EXIT
+
 echo "═══════════════════════════════════════════════════"
-echo "  TW-FLOW SMOKE TEST (Test Isolation)"
+echo "  TW-FLOW SMOKE TEST (Improved Transparency)"
 echo "═══════════════════════════════════════════════════"
 echo ""
 info "Test Run: $TEST_RUN_ID"
-info "Project Directory: $TEST_RUN_DIR"
 info "TASKDATA: $TASKDATA"
-info "Production DB: ~/.task/piraz_ai_cli_sandboxed (NOT TOUCHED)"
 echo ""
 
-# Test 1: Initialize project
-info "Test 1: tw-flow init"
-$TW_FLOW init "$TEST_PROJECT" > /dev/null 2>&1
-if [ -n "$($TASKP project:$TEST_PROJECT export 2>/dev/null | grep -o 'testid')" ]; then
-    pass "Project created"
+# Test 1: Help
+info "Test 1: tw-flow help"
+HELP_OUT=$($TW_FLOW help)
+if echo "$HELP_OUT" | grep -qi "USAGE:"; then
+    pass "Help command works"
 else
-    pass "Project accessible (may already exist)"
+    fail "Help output missing or unexpected" "$HELP_OUT"
 fi
 
-# Test 2: Help
-info "Test 2: Help output"
-HELP_OUT=$($TW_FLOW help 2>&1)
-if echo "$HELP_OUT" | grep -q "Usage:"; then
-    pass "Help displays"
-else
-    fail "Help output missing"
-fi
+# Test 2: Create Initiative
+info "Test 2: Create initiative"
+# Using absolute path for taskp internal call check
+INI_OUT=$($TW_FLOW initiative "$TEST_PROJECT" \
+  "DESIGN|Design spec|research|today" \
+  "EXECUTE|Implement feature|implementation|tomorrow" \
+  "TEST|Write tests|testing|2days" 2>&1)
 
-# Test 3: Plan creation
-info "Test 3: Create plan with 3 tasks"
-PLAN_OUT=$($TW_FLOW plan "$TEST_PROJECT:test-feature" \
-  "Design spec|research|today" \
-  "Implement feature|implementation|tomorrow" \
-  "Write tests|testing|2days" 2>&1)
-TASK_1_ID=$(echo "$PLAN_OUT" | grep -oP '(?<=ID: )\S+' | head -1)
+TASK_1_ID=$(echo "$INI_OUT" | grep -oP 'Created task \K\d+' | head -1)
+
 if [ -n "$TASK_1_ID" ]; then
-    pass "Plan created with task ID: $TASK_1_ID"
+    pass "Initiative created (Task 1 ID: $TASK_1_ID)"
 else
-    fail "Could not create plan"
+    fail "Failed to create initiative" "$INI_OUT"
 fi
 
-# Test 4: Initiatives list (check tw-flow can display them)
-info "Test 4: List initiatives"
-INIT_OUT=$($TW_FLOW initiatives "$TEST_PROJECT" 2>&1)
-if echo "$INIT_OUT" | grep -q "test-feature"; then
-    pass "Initiatives displayed correctly"
+# Test 3: List initiatives
+info "Test 3: List initiatives"
+INIT_LIST=$($TW_FLOW initiatives 2>&1)
+if echo "$INIT_LIST" | grep -q "smoke"; then
+    pass "Initiative found in list"
 else
-    info "Initiatives output: $INIT_OUT"
-    fail "Could not find initiative in output"
+    fail "Initiative 'smoke' missing from list" "$INIT_LIST"
 fi
 
-# Test 5: Status output
-info "Test 5: Status with task count"
-STATUS_OUT=$($TW_FLOW status "$TEST_PROJECT:test-feature" 2>&1)
-if echo "$STATUS_OUT" | grep -qE "(Pending|pending|Active|active)"; then
-    pass "Status shows task info"
+# Test 4: Status
+info "Test 4: Status check"
+STATUS_OUT=$($TW_FLOW status "$TEST_PROJECT" 2>&1)
+if echo "$STATUS_OUT" | grep -qi "Initiative: smoke"; then
+    pass "Status displays initiative name"
 else
-    fail "Status output incomplete"
+    fail "Status output missing initiative info" "$STATUS_OUT"
 fi
 
-# Test 6: Next task
-info "Test 6: Next available task"
-NEXT_OUT=$($TW_FLOW next "$TEST_PROJECT:test-feature" 2>&1)
-if [ -n "$NEXT_OUT" ] && ! echo "$NEXT_OUT" | grep -q "Error"; then
-    pass "Next task found"
+# Test 5: Next task
+info "Test 5: Next task check"
+NEXT_OUT=$($TW_FLOW next "$TEST_PROJECT" 2>&1)
+if echo "$NEXT_OUT" | grep -qi "Design spec"; then
+    pass "Next task correctly identified"
 else
-    fail "Next task failed"
+    fail "Next task 'Design spec' not found" "$NEXT_OUT"
 fi
 
-# Test 7-14: Additional command tests (abbreviated for brevity)
-for i in {7..14}; do
-    pass "Test $i: Placeholder (command exists)"
-done
-
-# Test 15-24: UUID and isolation tests
-for i in {15..23}; do
-    pass "Test $i: Placeholder (extended validation)"
-done
-
-# Test 24: Verify test isolation (most important)
-info "Test 24: VERIFY TEST ISOLATION"
-PROD_DB="$HOME/.task/piraz_ai_cli_sandboxed"
-TEST_DB="$TASKDATA"
-if [ -d "$PROD_DB" ] && [ -d "$TEST_DB" ]; then
-    PROD_COUNT=$(taskp export 2>/dev/null | jq 'length' 2>/dev/null || echo "?")
-    TEST_COUNT=$(TASKDATA="$TEST_DB" taskp export 2>/dev/null | jq 'length' 2>/dev/null || echo "?")
-    info "Production DB: $PROD_COUNT tasks (should remain unchanged)"
-    info "Test DB: $TEST_COUNT tasks (isolated)"
-    pass "Test isolation verified (separate databases)"
+# Test 6: Isolation verification
+info "Test 6: Verify isolation"
+TEST_COUNT=$($TASKP status:pending count 2>/dev/null || echo "0")
+if [ "$TEST_COUNT" -ge 1 ]; then
+    pass "Isolation verified (found $TEST_COUNT tasks in isolated TASKDATA)"
 else
-    pass "Test isolation structure in place"
+    fail "No tasks found in isolated TASKDATA"
 fi
 
 echo ""
-"echo "═════════════════════════════
+echo "═══════════════════════════════════════════════════"
 echo "TEST RESULTS: $TESTS_PASSED passed, $TESTS_FAILED failed"
-"echo "══════════════════════════════════
+echo "═══════════════════════════════════════════════════"
 echo ""
 
-# Cleanup will run automatically via trap on EXIT
 if [ $TESTS_FAILED -eq 0 ]; then
     exit 0
 else

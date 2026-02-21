@@ -48,7 +48,7 @@ User: "Porra mano isso Ã© palhaÃ§ada, me traz a cortana"
 
             {                 echo ___BEGIN___COMMAND_OUTPUT_MARKER___
                 cat > /project/docs/agents/jacazul.md << 'EOF'
-# ðSegura, mano. TÃ¡ foda mesmo. Chamando a xarope...ŸŠ Jacazul Agent - Workflow Navigator
+# ï¿½Segura, mano. TÃ¡ foda mesmo. Chamando a xarope...ï¿½ï¿½ï¿½ Jacazul Agent - Workflow Navigator
 
 **Jacazul** (JacarÃ© Azul / Blue Alligator) is your PT-BR street-smart AI companion for maintaining project context and workflow momentum. Part of the dual-persona system alongside **ðŸ”· Cortana**.
 
@@ -152,9 +152,9 @@ User: "Porra mano isso Ã© palhaÃ§ada, me traz a cortana"
 
             {                 echo ___BEGIN___COMMAND_OUTPUT_MARKER___
                 cat > /project/docs/agents/jacazul.md << 'EOF'
-# ðSegura, mano. TÃ¡ foda mesmo. Chamando a xarope...ŸŠ Jacazul Agent - Workflow Navigator
+# ï¿½Segura, mano. TÃ¡ foda mesmo. Chamando a xarope...ï¿½ï¿½ï¿½ Jacazul Agent - Workflow Navigator
 
-**Jacazul** (JacarÃ© Azul / Blue Alligator) is your PT-BR street-smart AI companion for maintaining project context and workflow momentum. Part of the dual-persona system alongside **ðChief, I see the situation. Let me take the tactical approach...Ÿ”· Cortana**.
+**Jacazul** (JacarÃ© Azul / Blue Alligator) is your PT-BR street-smart AI companion for maintaining project context and workflow momentum. Part of the dual-persona system alongside **ï¿½Chief, I see the situation. Let me take the tactical approach...ï¿½ï¿½ï¿½ Cortana**.
 
 ## Quick Start
 
@@ -271,7 +271,7 @@ User: "Porra mano isso Ã© palhaÃ§ada, me traz a cortana"
 
             {                 echo ___BEGIN___COMMAND_OUTPUT_MARKER___
                 cat > /project/docs/agents/jacazul.md << 'EOF'
-# ðSegura, mano. TÃ¡ foda mesmo. Chamando a xarope...ŸŠ Jacazul Agent - Workflow Navigator
+# ï¿½Segura, mano. TÃ¡ foda mesmo. Chamando a xarope...ï¿½ï¿½ï¿½ Jacazul Agent - Workflow Navigator
 
 **Jacazul** (JacarÃ© Azul / Blue Alligator) is your PT-BR street-smart AI companion for maintaining project context and workflow momentum. Part of the dual-persona system alongside **ðŸ”· Cortana**.
 
@@ -375,9 +375,9 @@ User: "Porra mano isso Ã© palhaÃ§ada, me traz a cortana"
 
             {                 echo ___BEGIN___COMMAND_OUTPUT_MARKER___
                 cat > /project/docs/agents/jacazul.md << 'EOF'
-# ðSegura, mano. TÃ¡ foda mesmo. Chamando a xarope...ŸŠ Jacazul Agent - Workflow Navigator
+# ï¿½Segura, mano. TÃ¡ foda mesmo. Chamando a xarope...ï¿½ï¿½ï¿½ Jacazul Agent - Workflow Navigator
 
-**Jacazul** (JacarÃ© Azul / Blue Alligator) is your PT-BR street-smart AI companion for maintaining project context and workflow momentum. Part of the dual-persona system alongside **ðChief, I see the situation. Let me take the tactical approach...Ÿ”· Cortana**.
+**Jacazul** (JacarÃ© Azul / Blue Alligator) is your PT-BR street-smart AI companion for maintaining project context and workflow momentum. Part of the dual-persona system alongside **ï¿½Chief, I see the situation. Let me take the tactical approach...ï¿½ï¿½ï¿½ Cortana**.
 
 ## Quick Start
 
@@ -465,8 +465,9 @@ After onboarding, Jacazul understands these commands:
 
 | Command | Description |
 |---------|-------------|
-| `ponder` | Refresh project status dashboard |
-| `mostre initiatives` | List all active initiatives |
+| `ponder` | Refresh tactical dashboard (v1.4.0) |
+| `tw-flow initiatives` | List all active initiatives |
+| `tw-flow status` | Focused initiative progress view |
 | `trabalhar em [initiative]` | Focus on specific initiative |
 | `onboard` | Re-initialize session context |
 | `me traz a cortana` | Switch to Cortana persona |
@@ -503,9 +504,9 @@ Jacazul **always uses 8-character short UUIDs**:
 ### Script Paths
 Jacazul uses absolute paths for all taskwarrior tools:
 ```
-~/.copilot/skills/taskwarrior_expert/scripts/ponder
-~/.copilot/skills/taskwarrior_expert/scripts/taskp
-~/.copilot/skills/taskwarrior_expert/scripts/tw-flow
+~/.gemini/skills/taskwarrior_expert/scripts/ponder
+~/.gemini/skills/taskwarrior_expert/scripts/taskp
+~/.gemini/skills/taskwarrior_expert/scripts/tw-flow
 ```
 
 ### Project Isolation

@@ -1,0 +1,106 @@
+#!/bin/bash
+[ -n "$DEBUG" ] && set -x
+
+# can-gemini-sandboxed: Gemini CLI in a container (candango config)
+
+# Get the absolute path to the script's directory
+SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
+PROJECT_ROOT="$(readlink -f "$SCRIPT_DIR/..")"
+TEMPLATES_TASKRC="$PROJECT_ROOT/templates/.taskrc"
+
+# Define host directories
+HOST_SANDBOX=${GEMINI_SANDBOXED_HOME:-$PROJECT_ROOT}/sandbox/gemini
+HOST_SANDBOX_CONFIG_DIR="$HOST_SANDBOX/.config"
+HOST_SANDBOX_GEMINI_DIR="$HOST_SANDBOX/.gemini"
+HOST_SANDBOX_NPM_DIR="$HOST_SANDBOX/.npm"
+HOST_SANDBOX_TASK_DIR="$HOST_SANDBOX/.task"
+HOST_GITCONFIG="$HOST_SANDBOX/.gitconfig"
+
+# Create directories if they don't exist
+mkdir -p "$HOST_SANDBOX_CONFIG_DIR" "$HOST_SANDBOX_GEMINI_DIR" "$HOST_SANDBOX_NPM_DIR" "$HOST_SANDBOX_TASK_DIR"
+
+# Initialize Gemini Bootstrap (Experimental Agents & Preview)
+BOOTSTRAP_GEMINI="$PROJECT_ROOT/scripts/bootstrap/gemini"
+if [ -x "$BOOTSTRAP_GEMINI" ]; then
+    "$BOOTSTRAP_GEMINI" "$HOST_SANDBOX_GEMINI_DIR"
+fi
+
+# Calculate Project Identity
+PARENT_DIR=$(basename "$(dirname "$(pwd)")")
+CURRENT_DIR=$(basename "$(pwd)")
+PROJECT_ID="${PARENT_DIR}_${CURRENT_DIR}"
+
+# -----------------------------------------------------------------------------
+# 0. Initialize Jaka Bootstrap Environment
+# -----------------------------------------------------------------------------
+BOOTSTRAP_ENV="$PROJECT_ROOT/scripts/bootstrap/environment"
+if [ -f "$BOOTSTRAP_ENV" ]; then
+    source "$BOOTSTRAP_ENV"
+fi
+
+# Set JAKA_MODE to CAGED for this script
+export JAKA_MODE="CAGED"
+
+# Initialize Taskwarrior Bootstrap
+BOOTSTRAP_TW="$PROJECT_ROOT/scripts/bootstrap/taskwarrior"
+if [ -f "$BOOTSTRAP_TW" ]; then
+    source "$BOOTSTRAP_TW"
+fi
+
+# Capture complete session context
+REAL_PATH="$(pwd)"
+SYSTEM_USER="$(whoami)"
+
+# Load Git configuration logic
+if [ -f "$HOST_GITCONFIG" ]; then
+    GIT_USER_NAME=$(grep -A2 '^\[user\]' "$HOST_GITCONFIG" | grep 'name' | cut -d'=' -f2 | xargs 2>/dev/null || echo "$(whoami)")
+fi
+USER_NAME="${GIT_USER_NAME:-$(whoami)}"
+
+# Base Onboard Prompt for Jaka (Sandboxed Edition)
+JAKA_MODE="CAGED"
+ONBOARD_PROMPT="Initialize session. You are Jaka, o Jacaré Azul (Monstro do Lago), running in $JAKA_MODE mode in a sandboxed Podman container. You are assisting user $USER_NAME. The current project context is id $PROJECT_ID. \
+\
+ACTION REQUIRED: \
+1. Activate skill 'jacazul' and 'taskwarrior-expert' immediately. \
+2. When the user says 'onboard', follow the Onboard Protocol in the Jacazul skill: display session context and run the ponder dashboard. \
+\
+Initially just ponder the state of $PROJECT_ID, give me your insight, and stop."
+
+# If no arguments provided, default to deterministic onboarding
+if [ $# -eq 0 ]; then
+    set -- -i "$ONBOARD_PROMPT"
+else
+    # Arguments provided: PREPEND onboarding context to the user's first prompt
+    USER_PROMPT="$*"
+    set -- -i "$ONBOARD_PROMPT" "$USER_PROMPT"
+fi
+
+# Run the container (using ai-sandbox or gemini-cli image)
+# Default to ai-sandbox if gemini-cli image doesn't exist
+IMAGE_NAME="ai-sandbox"
+if podman image exists gemini-cli; then
+    IMAGE_NAME="gemini-cli"
+fi
+
+echo "🐊 can-gemini-sandboxed: Running in $IMAGE_NAME for project [$PROJECT_ID]"
+
+podman run -it --rm \
+  ${DEBUG:+--log-level debug} \
+  --userns=keep-id \
+  -e "JAKA_MODE=$JAKA_MODE" \
+  -e "PROJECT_ID=$PROJECT_ID" \
+  -e "CONTEXT_REAL_PATH=$REAL_PATH" \
+  -e "CONTEXT_SYSTEM_USER=$SYSTEM_USER" \
+  -v "$(pwd):/project:z" \
+  -w /project \
+  -v "$HOST_SANDBOX_CONFIG_DIR:/home/jacazul/.config:z" \
+  -v "$HOST_SANDBOX_GEMINI_DIR:/home/jacazul/.gemini:z" \
+  -v "$HOST_SANDBOX_NPM_DIR:/home/jacazul/.npm:z" \
+  -v "$TASKDATA:/home/jacazul/.task:z" \
+  -v "$PROJECT_ROOT/templates/context:/home/jacazul/.gemini/context:z" \
+  -v "$TEMPLATES_TASKRC:/home/jacazul/.taskrc:z" \
+  -v "$PROJECT_ROOT/templates/skills:/home/jacazul/.gemini/skills:z" \
+  -v "$PROJECT_ROOT/templates/agents:/home/jacazul/.gemini/agents:z" \
+  -v "$HOST_GITCONFIG:/home/jacazul/.gitconfig:z" \
+  "$IMAGE_NAME" "$@"

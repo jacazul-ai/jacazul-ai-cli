@@ -1,0 +1,77 @@
+#!/bin/bash
+[ -n "$DEBUG" ] && set -x
+
+# can-copilot: Copilot CLI unhinged (direct execution with candango config)
+
+# Get the absolute path to the script's directory
+SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
+PROJECT_ROOT="$(readlink -f "$SCRIPT_DIR/..")"
+TEMPLATES_TASKRC="$PROJECT_ROOT/templates/.taskrc"
+
+# Define host directories
+HOST_SANDBOX=${COPILOT_SANDBOXED_HOME:-$PROJECT_ROOT}/sandbox/copilot
+HOST_SANDBOX_CONFIG_DIR="$HOST_SANDBOX/.config"
+HOST_SANDBOX_COPILOT_DIR="$HOST_SANDBOX/.copilot"
+HOST_SANDBOX_TASK_DIR="$HOST_SANDBOX/.task"
+HOST_GITCONFIG="$HOST_SANDBOX/.gitconfig"
+
+# Calculate Project Identity
+PARENT_DIR=$(basename "$(dirname "$(pwd)")")
+CURRENT_DIR=$(basename "$(pwd)")
+PROJECT_ID="${PARENT_DIR}_${CURRENT_DIR}"
+
+# -----------------------------------------------------------------------------
+# 0. Initialize Jaka Bootstrap Environment
+# -----------------------------------------------------------------------------
+BOOTSTRAP_ENV="$PROJECT_ROOT/scripts/bootstrap/environment"
+if [ -f "$BOOTSTRAP_ENV" ]; then
+    source "$BOOTSTRAP_ENV"
+fi
+
+# Export environment variables
+export PROJECT_ID="$PROJECT_ID"
+export JAKA_MODE="UNHINGED"
+export TASKDATA="$HOST_SANDBOX_TASK_DIR"
+export TASKRC="$TEMPLATES_TASKRC"
+
+# Copilot specific instructions
+export COPILOT_CUSTOM_INSTRUCTIONS_DIRS="$PROJECT_ROOT/templates/context:$PROJECT_ROOT/templates/context/instructions"
+
+# Add our scripts to PATH
+export PATH="$PATH:$PROJECT_ROOT/templates/skills/taskwarrior_expert/scripts"
+
+# Load Git credentials
+if [ -f "$HOST_GITCONFIG" ]; then
+    export GIT_CONFIG_GLOBAL="$HOST_GITCONFIG"
+fi
+
+# Determine User Name for Prompt
+USER_NAME="${CONTEXT_GIT_USER:-$(whoami)}"
+
+# Base Onboard Prompt for Jaka (Copilot Edition)
+ONBOARD_PROMPT="Initialize session. You are Jaka, o Jacaré Azul (Monstro do Lago), running $JAKA_MODE in a direct shell environment via Copilot. You are assisting user $USER_NAME. The current project context is id $PROJECT_ID. \
+\
+ACTION REQUIRED: \
+1. Activate skill 'jacazul' and 'taskwarrior-expert' immediately. \
+2. When the user says 'onboard', follow the Onboard Protocol in the Jacazul skill: display session context and run the ponder dashboard. \
+\
+Initially just ponder the state of $PROJECT_ID, give me your insight, and stop."
+
+# If no arguments provided, default to deterministic onboarding
+if [ $# -eq 0 ]; then
+    set -- -i "$ONBOARD_PROMPT"
+else
+    # Arguments provided: PREPEND onboarding context to the user's first prompt
+    USER_PROMPT="$*"
+    set -- -i "$ONBOARD_PROMPT" "$USER_PROMPT"
+fi
+
+# Check if copilot is installed
+if ! command -v copilot &> /dev/null; then
+    echo "❌ copilot command not found in PATH."
+    exit 1
+fi
+
+# Execute copilot with injected onboard prompt
+echo "🐊 can-copilot: Running unhinged for project [$PROJECT_ID]"
+exec copilot "$@"

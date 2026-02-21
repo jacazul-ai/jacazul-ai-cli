@@ -50,15 +50,15 @@ Complete workflow management system. See [Taskwarrior Expert Guide](taskwarrior-
 **Quick example:**
 ```bash
 # Check current state
-ponder copilot
+ponder
 
-# Create a plan
-tw-flow plan copilot:my-feature \
-  "PLAN|Design API|research|today" \
+# Create an initiative
+tw-flow initiative my-feature \
+  "DESIGN|Design API|research|today" \
   "EXECUTE|Build API|implementation|tomorrow"
 
 # Start work
-tw-flow execute 42
+tw-flow execute <uuid>
 ```
 
 ---

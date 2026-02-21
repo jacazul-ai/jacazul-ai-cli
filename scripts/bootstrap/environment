@@ -1,0 +1,31 @@
+#!/bin/bash
+# 🐊 Jaka Bootstrap - Environment Check
+# This script ensures the base Jaka environment is initialized.
+
+CANDANGO_DIR="$HOME/.candango"
+JAKA_AI_HOME="$CANDANGO_DIR/jaka_ai"
+SMOKETEST_TASK_DIR="$JAKA_AI_HOME/.task/smoketest"
+
+# Ensure the full directory structure exists
+if [ ! -d "$SMOKETEST_TASK_DIR" ]; then
+    echo "🐊 Initializing Jaka environment structure at $SMOKETEST_TASK_DIR..."
+    mkdir -p "$SMOKETEST_TASK_DIR"
+    echo "✅ Jaka environment structure created."
+fi
+
+# Export JAKA_MODE if not already set (default to UNHINGED for direct env)
+export JAKA_MODE="${JAKA_MODE:-UNHINGED}"
+echo "🐊 Jaka Mode: $JAKA_MODE"
+
+# Bootstrap Taskwarrior
+BOOTSTRAP_TW="$PROJECT_ROOT/scripts/bootstrap/taskwarrior"
+if [ -f "$BOOTSTRAP_TW" ]; then
+    source "$BOOTSTRAP_TW"
+fi
+
+# Bootstrap Gemini
+BOOTSTRAP_GEMINI="$PROJECT_ROOT/scripts/bootstrap/gemini"
+if [ -f "$BOOTSTRAP_GEMINI" ]; then
+    # We pass HOME/.gemini as argument, or let it use default
+    source "$BOOTSTRAP_GEMINI" "$HOME/.gemini"
+fi

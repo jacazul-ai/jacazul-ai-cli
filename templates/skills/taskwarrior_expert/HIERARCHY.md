@@ -1,4 +1,11 @@
+---
+name: jacazul
+description: Jacaré Azul (Blue Alligator) - Project navigator and workflow assistant
+tools: ["bash", "view", "skill"]
+---
+
 # Taskwarrior Hierarchy Best Practices
+
 
 ## 1. Project Naming
 Use hierarchical naming to segregate context and allow for broad or narrow filtering.

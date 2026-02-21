@@ -1,8 +1,0 @@
-# Sample Taskwarrior configuration
-# See https://taskwarrior.org/docs/configuration/
-
-# Default Taskwarrior settings
-confirmation=off
-data.location=/home/jacazul/.task
-
-# You can add more custom settings below

@@ -1,0 +1,61 @@
+#!/bin/bash
+[ -n "$DEBUG" ] && set -x
+
+# can-opencode: Opencode CLI unhinged (direct execution)
+
+# Get the absolute path to the script's directory
+SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
+PROJECT_ROOT="$(readlink -f "$SCRIPT_DIR/..")"
+
+# Calculate Project Identity
+PARENT_DIR=$(basename "$(dirname "$(pwd)")")
+CURRENT_DIR=$(basename "$(pwd)")
+PROJECT_ID="${PARENT_DIR}_${CURRENT_DIR}"
+
+# -----------------------------------------------------------------------------
+# 0. Initialize Jaka Bootstrap Environment
+# -----------------------------------------------------------------------------
+BOOTSTRAP_ENV="$PROJECT_ROOT/scripts/bootstrap/environment"
+if [ -f "$BOOTSTRAP_ENV" ]; then
+    source "$BOOTSTRAP_ENV"
+fi
+
+# Set JAKA_MODE to UNHINGED for this script
+export JAKA_MODE="UNHINGED"
+
+# Initialize Taskwarrior Bootstrap
+BOOTSTRAP_TW="$PROJECT_ROOT/scripts/bootstrap/taskwarrior"
+if [ -f "$BOOTSTRAP_TW" ]; then
+    source "$BOOTSTRAP_TW"
+fi
+
+# Initialize Opencode Bootstrap (Global agents/skills)
+BOOTSTRAP_OPENCODE="$PROJECT_ROOT/scripts/bootstrap/opencode"
+if [ -x "$BOOTSTRAP_OPENCODE" ]; then
+    "$BOOTSTRAP_OPENCODE"
+fi
+
+# Export environment variables for Taskwarrior
+export PROJECT_ID="$PROJECT_ID"
+export CONTEXT_REAL_PATH="$(pwd)"
+export CONTEXT_SYSTEM_USER="$(whoami)"
+
+# Add our scripts to PATH for taskp, tw-flow
+export PATH="$PATH:$PROJECT_ROOT/templates/skills/taskwarrior_expert/scripts"
+
+# Check if opencode is installed
+OPENCODE_BIN=$(which opencode 2>/dev/null || echo "/home/fpiraz/.opencode/bin/opencode")
+
+if [ ! -x "$OPENCODE_BIN" ]; then
+    echo "❌ opencode command not found or not executable at $OPENCODE_BIN"
+    exit 1
+fi
+
+echo "🐊 can-opencode: Running unhinged for project [$PROJECT_ID]"
+
+# Execute opencode with jacazul agent by default if no agent specified
+if [[ "$*" == *"--agent"* ]]; then
+    exec "$OPENCODE_BIN" "$@"
+else
+    exec "$OPENCODE_BIN" --agent jacazul "$@"
+fi

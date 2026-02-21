@@ -57,9 +57,9 @@ Automatically sets `TASKDATA` based on `PROJECT_ID` before executing commands.
 
 **Usage:**
 ```bash
-./tw-flow plan piraz_ai_cli_sandboxed:feature "Task 1|research|today"
-./tw-flow next piraz_ai_cli_sandboxed:feature
-./tw-flow execute 42
+./tw-flow initiative my-feature "DESIGN|Task 1|research|today"
+./tw-flow next my-feature
+./tw-flow execute <uuid>
 ```
 
 #### 3. **ponder** - Dashboard with TASKDATA Support
@@ -140,15 +140,15 @@ PROJECT_ID=specific_project taskp list
 TASKDATA=~/.task/specific_project task list
 ```
 
-### Scenario 4: Creating a Plan
+### Scenario 4: Creating an Initiative
 
 ```bash
 cd /project/templates/skills/taskwarrior_expert/scripts
 
-./tw-flow plan piraz_ai_cli_sandboxed:new-feature \
-  "Design API|research|today" \
-  "Implement|implementation|tomorrow" \
-  "Test|testing|2days"
+./tw-flow initiative new-feature \
+  "DESIGN|Design API|research|today" \
+  "EXECUTE|Implement|implementation|tomorrow" \
+  "TEST|Test|testing|2days"
 
 # Tasks created in project database automatically
 ```

@@ -1,0 +1,38 @@
+#!/bin/bash
+# 🐊 Jaka - Bootstrap for Gemini CLI Settings
+# Configures experimental agents and preview features surgically.
+
+# Localiza o diretório raiz do projeto
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+
+GEMINI_DIR="${1:-$HOME/.gemini}"
+SETTINGS_FILE="$GEMINI_DIR/settings.json"
+TEMPLATE_SETTINGS="$PROJECT_ROOT/templates/gemini/unhinged/settings.json"
+
+echo "🐊 Jaka: Ajustando o terreno pro Gemini em $SETTINGS_FILE..."
+
+# 1. Garante que o diretório existe
+if [ ! -d "$GEMINI_DIR" ]; then
+    mkdir -p "$GEMINI_DIR"
+fi
+
+# 2. Garante que o settings.json existe (usa template se disponível)
+if [ ! -f "$SETTINGS_FILE" ]; then
+    if [ -f "$TEMPLATE_SETTINGS" ]; then
+        echo "🐊 Jaka: Criando settings.json a partir do template unhinged..."
+        cp "$TEMPLATE_SETTINGS" "$SETTINGS_FILE"
+    else
+        echo "{}" > "$SETTINGS_FILE"
+    fi
+fi
+
+# 3. Update cirúrgico com jq
+# Mantém o que já existe e só garante os campos necessários
+TMP_FILE=$(mktemp)
+jq '
+    .experimental.enableAgents = true | 
+    .general.previewFeatures = true
+' "$SETTINGS_FILE" > "$TMP_FILE" && mv "$TMP_FILE" "$SETTINGS_FILE"
+
+echo "✅ Jaka: Configurações aplicadas (enableAgents: true, previewFeatures: true)."

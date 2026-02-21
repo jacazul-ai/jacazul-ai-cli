@@ -1,0 +1,30 @@
+# Taskwarrior configuration file
+# Managed by Candango Jaka AI
+# See https://taskwarrior.org/docs/configuration/
+
+# Data location
+data.location=~/.candango/jaka_ai/.task
+
+# Disable confirmation prompts for AI-friendly execution
+confirmation=no
+allow.empty.filter=yes
+bulk=10
+
+# Theme / Appearance
+color=on
+verbose=nothing
+
+# UDA: Project Weight (Ranking)
+uda.project_weight.type=numeric
+uda.project_weight.label=Weight
+uda.project_weight.default=0
+
+# Report: Ranked Projects
+report.ranked.description=Tasks sorted by Project Weight
+report.ranked.columns=id,project,project_weight,description,urgency
+report.ranked.sort=project_weight-,urgency-
+report.ranked.filter=status:pending
+
+# Urgency Coefficients
+urgency.user.tag.critical.coefficient=5.0
+urgency.user.tag.next.coefficient=10.0

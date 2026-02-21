@@ -1,0 +1,44 @@
+#!/bin/bash
+# 🐊 Jaka - Bootstrap for Opencode (Global UNHINGED Mode)
+# Sets up global agents and skills for native Gemini CLI execution.
+
+PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+OPENCODE_GLOBAL_DIR="$HOME/.config/opencode"
+TEMPLATES_DIR="$PROJECT_ROOT/templates"
+
+echo "🐊 Jaka: Preparando o terreno pro Opencode GLOBAL (Modo UNHINGED)..."
+
+# 1. Garante que os diretórios globais existem
+mkdir -p "$OPENCODE_GLOBAL_DIR/agents" "$OPENCODE_GLOBAL_DIR/skills"
+
+# 2. Link Global Agents (Surgical)
+# Link individual agents from templates to global config
+for agent in "$TEMPLATES_DIR/agents"/*.md; do
+    [ -e "$agent" ] || continue
+    name=$(basename "$agent")
+    target="$OPENCODE_GLOBAL_DIR/agents/$name"
+    if [ ! -L "$target" ] && [ ! -f "$target" ]; then
+        echo "Linking agent: $name"
+        ln -s "$agent" "$target"
+    fi
+done
+
+# 3. Link Global Skills (Surgical)
+# Link individual skills from templates to global config
+for skill_dir in "$TEMPLATES_DIR/skills"/*; do
+    [ -d "$skill_dir" ] || continue
+    name=$(basename "$skill_dir")
+    
+    # Skip 'jaka' skill globally - it should only be an agent there
+    if [ "$name" = "jaka" ]; then
+        continue
+    fi
+
+    target="$OPENCODE_GLOBAL_DIR/skills/$name"
+    if [ ! -L "$target" ] && [ ! -d "$target" ]; then
+        echo "Linking skill: $name"
+        ln -s "$skill_dir" "$target"
+    fi
+done
+
+echo "✅ Global Opencode environment ready."

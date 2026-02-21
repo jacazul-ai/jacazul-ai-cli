@@ -1,0 +1,20 @@
+{
+  "context": {
+    "fileName": []
+  },
+  "security": {
+    "auth": {
+      "selectedType": "oauth-personal"
+    },
+    "folderTrust": {
+      "enabled": true
+    }
+  },
+  "general": {
+    "previewFeatures": true
+  },
+  "experimental": {
+    "skills": true,
+    "enableAgents": true
+  }
+}

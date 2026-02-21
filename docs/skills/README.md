@@ -19,8 +19,8 @@ Structured workflow management system with 7-phase workflow and interaction mode
 
 **Quick Start:**
 ```bash
-ponder copilot
-tw-flow plan copilot:feature "EXECUTE|Build API|implementation|today"
+ponder
+tw-flow initiative my-feature "EXECUTE|Build API|implementation|today"
 ```
 
 **Location:** `/project/templates/skills/taskwarrior_expert/`
