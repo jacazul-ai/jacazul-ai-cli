@@ -40,7 +40,32 @@ if [[ ! -d "$CURRENT_DATA_DIR" ]]; then
     mkdir -p "$CURRENT_DATA_DIR"
 fi
 
+# VACCINATION: Prevent direct 'done' command or manual '+DISCARDED' tag to enforce tw-flow usage
+# BYPASS: Allow if called internally by tw-flow
+for arg in "$@"; do
+    if [[ "$TW_FLOW_INTERNAL" != "true" ]]; then
+        if [[ "$arg" == "done" ]]; then
+            echo "ERROR: Direct 'done' command via taskp is restricted to enforce proper workflow." >&2
+            echo "Don't sweat it! Please use 'tw-flow done <uuid>' instead to capture OUTCOME." >&2
+            exit 1
+        elif [[ "$arg" == "+DISCARDED" ]]; then
+            echo "ERROR: Manual '+DISCARDED' tag via taskp is restricted." >&2
+            echo "Please use 'tw-flow discard <uuid>' instead to properly archive tasks." >&2
+            exit 1
+        fi
+    fi
+done
+
 # Execute the real task command
 # Use rc: override to ensure correct configuration file is used
 # Note: Taskwarrior 2.6.0 needs the rc: override to respect custom config locations
-exec task rc:"$TASKRC" rc.data.location="$CURRENT_DATA_DIR" "$@"
+# We also force rc.verbose=new-id to ensure tw-flow can capture created IDs
+# For 'info' command, we add more verbosity to ensure annotations are shown
+case "$1" in
+    info)
+        exec task rc:"$TASKRC" rc.data.location="$CURRENT_DATA_DIR" rc.verbose=affected,header,foot,label,columns,subtotal,stats,history,project,context,annotations "$@"
+        ;;
+    *)
+        exec task rc:"$TASKRC" rc.data.location="$CURRENT_DATA_DIR" rc.verbose=new-id "$@"
+        ;;
+esac

@@ -334,7 +334,7 @@ validate_outcome() {
     if "$TASKP_BIN" "$task_id" info 2>/dev/null | grep -qi "OUTCOME:"; then
         return 0
     else
-        error "Task $task_id cannot be completed without OUTCOME\n   Add outcome first: tw-flow outcome $task_id \"description\" or "$TASKP_BIN" $task_id annotate \"OUTCOME: description\""
+        error "Task $task_id cannot be completed without an OUTCOME record.\n   Don't sweat it! Just record what you achieved first: tw-flow outcome $task_id \"your result\"\n   This keeps our project history solid and helps future agents (or you) stay in context."
     fi
 }
 
@@ -350,12 +350,12 @@ cmd_done() {
     
     # Add completion note if provided
     if [[ -n "$note" ]]; then
-    "$TASKP_BIN" "$task_id" annotate "DONE: $note"
+        "$TASKP_BIN" "$task_id" annotate "DONE: $note"
     fi
     
+    export TW_FLOW_INTERNAL=true
     "$TASKP_BIN" "$task_id" done
     success "Task $task_id completed!"
-    
     # Check if any tasks were unblocked
     echo ""
     info "Checking for newly unblocked tasks..."
@@ -659,7 +659,9 @@ cmd_discard() {
     # Move to _archive project (soft delete)
     local archive_project="${current_project%:_archive}:_archive"
     
+    export TW_FLOW_INTERNAL=true
     "$TASKP_BIN" "$task_id" modify project:"$archive_project" +DISCARDED
+    "$TASKP_BIN" "$task_id" annotate "OUTCOME: Task discarded and moved to archive."
     "$TASKP_BIN" "$task_id" done
     
     success "Task $(short_id "$task_id") moved to archive and marked done."
