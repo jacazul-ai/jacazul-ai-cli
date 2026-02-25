@@ -268,12 +268,27 @@ if $TW_FLOW discard "$DIS_UUID" > /dev/null 2>&1; then
     else
         fail "Discard outcome missing"
     fi
+    else
+        fail "Discard command failed"
+fi
+
+# Test 22: Task Binary Obfuscation
+info "Test 22: Task binary obfuscation"
+# We simulate the project scripts/ being in PATH
+PROJECT_SCRIPTS="$(cd "$SCRIPT_DIR/../../../../scripts" && pwd)"
+info "DEBUG: Project scripts dir: $PROJECT_SCRIPTS"
+ls -d "$PROJECT_SCRIPTS" > /dev/null 2>&1 || fail "Project scripts directory not found"
+export PATH="$PROJECT_SCRIPTS:$PATH"
+hash -r # Clear bash command cache
+DET_TASK=$(which task 2>/dev/null)
+info "DEBUG: Found task at: $DET_TASK"
+if task 2>&1 | grep -q "ERROR: Direct usage of 'task' is restricted"; then
+    pass "Raw task binary obfuscated and blocked correctly"
 else
-    fail "Discard command failed"
+    fail "Raw task binary was NOT blocked"
 fi
 
 # --- SUMMARY ---
-
 echo ""
 echo "═══════════════════════════════════════════════════"
 echo "Test Summary"
@@ -283,7 +298,7 @@ echo -e "Failed: ${RED}$TESTS_FAILED${NC}"
 echo "═══════════════════════════════════════════════════"
 
 if [[ $TESTS_FAILED -eq 0 ]]; then
-    echo -e "${GREEN}All 21 tests passed! Workflow is stable. v1.4.0 verified.${NC}"
+    echo -e "${GREEN}All 22 tests passed! Workflow is stable. v1.4.0 verified.${NC}"
     exit 0
 else
     echo -e "${RED}Some tests failed! Check DEBUG info above.${NC}"

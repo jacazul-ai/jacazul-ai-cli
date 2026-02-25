@@ -23,6 +23,8 @@ The project adheres to a "Silent by Default" logging policy to maintain CLI usab
 
 ### 1. Taskwarrior Abstraction
 - **Mandate:** Agents and tools MUST NOT invoke the raw `task` binary directly.
+- **Security:** The raw `task` command is obfuscated to prevent accidental bypass. If an agent encounters the `scripts/task` wrapper, it MUST stop and consult the user.
+- **Admin Bypass:** The `rtask` command provides a project-specific bypass to the real binary. This tool is for MANUAL ADMINISTRATIVE USE ONLY.
 - **Protocol:** All operations MUST go through the `taskp` project-aware wrapper or the `tw-flow` workflow manager.
 - **Isolation:** Project isolation via `TASKDATA` MUST be preserved at all costs.
 

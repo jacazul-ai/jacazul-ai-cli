@@ -63,9 +63,9 @@ done
 # For 'info' command, we add more verbosity to ensure annotations are shown
 case "$1" in
     info)
-        exec task rc:"$TASKRC" rc.data.location="$CURRENT_DATA_DIR" rc.verbose=affected,header,foot,label,columns,subtotal,stats,history,project,context,annotations "$@"
+        exec "$JAKA_REAL_TASK" rc:"$TASKRC" rc.data.location="$CURRENT_DATA_DIR" rc.verbose=affected,header,foot,label,columns,subtotal,stats,history,project,context,annotations "$@"
         ;;
     *)
-        exec task rc:"$TASKRC" rc.data.location="$CURRENT_DATA_DIR" rc.verbose=new-id "$@"
+        exec "$JAKA_REAL_TASK" rc:"$TASKRC" rc.data.location="$CURRENT_DATA_DIR" rc.verbose=new-id "$@"
         ;;
 esac

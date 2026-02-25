@@ -74,9 +74,9 @@ else
         ln -s "$PROJECT_ROOT/scripts/can-opencode" "$OPENCODE_LINK"
         echo "✅ Link created: $OPENCODE_LINK"
     else
-        echo "ℹ️  $OPENCODE_LINK already exists. Skipping link creation."
-    fi
-    
-    echo ""
-    echo "Setup complete! You can now run: copilot_sandboxed, can-gemini or can-opencode"
-    
+            echo "ℹ️  $OPENCODE_LINK already exists. Skipping link creation."
+        fi
+        
+        echo ""
+        echo "Setup complete! You can now run: copilot_sandboxed, can-gemini or can-opencode"
+        
