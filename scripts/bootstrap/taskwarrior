@@ -10,14 +10,23 @@ if [ -n "$PROJECT_ID" ]; then
         
         # Ensure the .taskrc is in place
         if [ ! -f "$TASKRC" ]; then
-            echo "🐊 Initializing Unhinged Taskwarrior config..."
+            echo "🐊 Initializing Unhinged Taskwarrior config at $TASKRC..."
             mkdir -p "$JAKA_HOME"
             cp templates/taskwarrior/unhinged/.taskrc "$TASKRC"
         fi
     else
         export TASKDATA="$HOME/.task/$PROJECT_ID"
     fi
-    mkdir -p "$TASKDATA"
-    echo "🐊 Task Data: $TASKDATA"
-    [ -n "$TASKRC" ] && echo "🐊 Task RC: $TASKRC"
+
+    # Create task data directory if missing
+    if [ ! -d "$TASKDATA" ]; then
+        echo "🐊 Creating task data directory: $TASKDATA"
+        mkdir -p "$TASKDATA"
+    fi
+
+    # Emit logs only in DEBUG mode
+    if [ -n "$DEBUG" ]; then
+        echo "🐊 Task Data: $TASKDATA"
+        [ -n "$TASKRC" ] && echo "🐊 Task RC: $TASKRC"
+    fi
 fi

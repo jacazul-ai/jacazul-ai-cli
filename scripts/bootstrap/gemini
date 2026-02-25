@@ -10,17 +10,16 @@ GEMINI_DIR="${1:-$HOME/.gemini}"
 SETTINGS_FILE="$GEMINI_DIR/settings.json"
 TEMPLATE_SETTINGS="$PROJECT_ROOT/templates/gemini/unhinged/settings.json"
 
-echo "🐊 Jaka: Ajustando o terreno pro Gemini em $SETTINGS_FILE..."
-
 # 1. Garante que o diretório existe
 if [ ! -d "$GEMINI_DIR" ]; then
+    echo "🐊 Creating Gemini directory at $GEMINI_DIR..."
     mkdir -p "$GEMINI_DIR"
 fi
 
 # 2. Garante que o settings.json existe (usa template se disponível)
 if [ ! -f "$SETTINGS_FILE" ]; then
     if [ -f "$TEMPLATE_SETTINGS" ]; then
-        echo "🐊 Jaka: Criando settings.json a partir do template unhinged..."
+        echo "🐊 Initializing Gemini settings.json from template..."
         cp "$TEMPLATE_SETTINGS" "$SETTINGS_FILE"
     else
         echo "{}" > "$SETTINGS_FILE"
@@ -35,4 +34,7 @@ jq '
     .general.previewFeatures = true
 ' "$SETTINGS_FILE" > "$TMP_FILE" && mv "$TMP_FILE" "$SETTINGS_FILE"
 
-echo "✅ Jaka: Configurações aplicadas (enableAgents: true, previewFeatures: true)."
+# Log only in DEBUG mode
+if [ -n "$DEBUG" ]; then
+    echo "✅ Jaka: Gemini configuration verified (enableAgents: true, previewFeatures: true)."
+fi

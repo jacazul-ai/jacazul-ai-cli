@@ -5,20 +5,6 @@
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 echo "Configuring direct (native) execution environment..."
-echo "Project root: $PROJECT_ROOT"
-echo ""
-
-# -----------------------------------------------------------------------------
-# 0. Initialize Jaka Bootstrap Environment
-# -----------------------------------------------------------------------------
-BOOTSTRAP_ENV="$PROJECT_ROOT/scripts/bootstrap/environment"
-if [ -f "$BOOTSTRAP_ENV" ]; then
-    echo "🐊 Running Jaka bootstrap environment initialization..."
-    source "$BOOTSTRAP_ENV"
-    echo ""
-else
-    echo "⚠️  Bootstrap environment script not found at $BOOTSTRAP_ENV."
-fi
 
 # Detect OS
 DETECT_OS_SCRIPT="$PROJECT_ROOT/scripts/detect-os.sh"

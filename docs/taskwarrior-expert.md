@@ -172,6 +172,29 @@ Soft delete a task by moving it to an `_archive` project and marking it done.
 
 ---
 
+## 🛡 Security & Process Enforcement (v1.4.0)
+
+The v1.4.0 update introduces several measures to ensure data integrity and process compliance:
+
+### 1. Mandatory OUTCOME Record
+The `tw-flow done` command now **enforces** the presence of an `OUTCOME:` annotation.
+- **Goal:** Prevent "ghost tasks" closed without documentation.
+- **Behavior:** If no outcome is found, the command will block and provide instructional guidance on how to use `tw-flow outcome`.
+
+### 2. Taskp Vaccination (Command Interception)
+To prevent agents (or users) from bypassing the workflow, the `taskp` wrapper now intercepts specific commands:
+- **Blocked:** `taskp <uuid> done` is restricted.
+- **Blocked:** Manual addition of the `+DISCARDED` tag via `taskp modify`.
+- **Reason:** These actions must go through `tw-flow` to ensure proper archiving and documentation.
+
+### 3. Automatic Discard Audit
+The `tw-flow discard` command has been enhanced to maintain a perfect audit trail:
+- **Auto-Archive:** Moves tasks to a dedicated `: _archive` project.
+- **Auto-Tag:** Adds the `+DISCARDED` tag.
+- **Auto-Outcome:** Automatically annotates the task with `OUTCOME: Task discarded and moved to archive.`
+
+---
+
 ## 💡 Best Practices
 
 1. **Use UUIDs:** Always refer to tasks by their 8-character UUID.

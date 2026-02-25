@@ -12,7 +12,6 @@ bulk=10
 
 # Theme / Appearance
 color=on
-verbose=nothing
 
 # UDA: Project Weight (Ranking)
 uda.project_weight.type=numeric

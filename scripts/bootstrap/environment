@@ -1,31 +1,46 @@
 #!/bin/bash
 # 🐊 Jaka Bootstrap - Environment Check
-# This script ensures the base Jaka environment is initialized.
+# This script is the SOLE entry point for runtime configuration (Dynamics).
 
-CANDANGO_DIR="$HOME/.candango"
-JAKA_AI_HOME="$CANDANGO_DIR/jaka_ai"
-SMOKETEST_TASK_DIR="$JAKA_AI_HOME/.task/smoketest"
-
-# Ensure the full directory structure exists
-if [ ! -d "$SMOKETEST_TASK_DIR" ]; then
-    echo "🐊 Initializing Jaka environment structure at $SMOKETEST_TASK_DIR..."
-    mkdir -p "$SMOKETEST_TASK_DIR"
-    echo "✅ Jaka environment structure created."
+# 1. Run-once Guard
+if [ -n "$JAKA_ENV_INITIALIZED" ]; then
+    return 0
 fi
 
-# Export JAKA_MODE if not already set (default to UNHINGED for direct env)
+# 2. Dynamic Detection of Real Taskwarrior Binary
+if [ -z "$JAKA_REAL_TASK" ]; then
+    JAKA_REAL_TASK=$(which -a task 2>/dev/null | grep -v "$PROJECT_ROOT/scripts/task" | head -n 1)
+    if [ -z "$JAKA_REAL_TASK" ]; then
+        for p in /usr/bin/task /usr/local/bin/task /opt/homebrew/bin/task; do
+            if [ -x "$p" ]; then JAKA_REAL_TASK="$p"; break; fi
+        done
+    fi
+    export JAKA_REAL_TASK
+fi
+
+# 3. Mode Configuration
 export JAKA_MODE="${JAKA_MODE:-UNHINGED}"
-echo "🐊 Jaka Mode: $JAKA_MODE"
 
-# Bootstrap Taskwarrior
+# 4. Component Bootstraps (Dynamics)
+# 4.1 Taskwarrior
 BOOTSTRAP_TW="$PROJECT_ROOT/scripts/bootstrap/taskwarrior"
-if [ -f "$BOOTSTRAP_TW" ]; then
-    source "$BOOTSTRAP_TW"
+[ -f "$BOOTSTRAP_TW" ] && source "$BOOTSTRAP_TW"
+
+# 4.2 Gemini
+BOOTSTRAP_GEMINI="$PROJECT_ROOT/scripts/bootstrap/gemini"
+[ -f "$BOOTSTRAP_GEMINI" ] && source "$BOOTSTRAP_GEMINI" "$HOME/.gemini"
+
+# 4.3 Opencode
+BOOTSTRAP_OPENCODE="$PROJECT_ROOT/scripts/bootstrap/opencode"
+if [ -x "$BOOTSTRAP_OPENCODE" ]; then
+    # We call it as a script to maintain its internal logic
+    "$BOOTSTRAP_OPENCODE"
 fi
 
-# Bootstrap Gemini
-BOOTSTRAP_GEMINI="$PROJECT_ROOT/scripts/bootstrap/gemini"
-if [ -f "$BOOTSTRAP_GEMINI" ]; then
-    # We pass HOME/.gemini as argument, or let it use default
-    source "$BOOTSTRAP_GEMINI" "$HOME/.gemini"
+# 5. Finalize Initialization
+export JAKA_ENV_INITIALIZED=true
+
+# Initial feedback - ONLY if DEBUG is set
+if [ -n "$DEBUG" ]; then
+    echo "🐊 Jaka Runtime Initialized | Mode: $JAKA_MODE | Binary: ${JAKA_REAL_TASK:-not found}"
 fi

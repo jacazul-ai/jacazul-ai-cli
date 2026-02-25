@@ -6,25 +6,24 @@ PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 OPENCODE_GLOBAL_DIR="$HOME/.config/opencode"
 TEMPLATES_DIR="$PROJECT_ROOT/templates"
 
-echo "🐊 Jaka: Preparando o terreno pro Opencode GLOBAL (Modo UNHINGED)..."
-
 # 1. Garante que os diretórios globais existem
-mkdir -p "$OPENCODE_GLOBAL_DIR/agents" "$OPENCODE_GLOBAL_DIR/skills"
+if [ ! -d "$OPENCODE_GLOBAL_DIR/agents" ] || [ ! -d "$OPENCODE_GLOBAL_DIR/skills" ]; then
+    echo "🐊 Initializing global Opencode directories at $OPENCODE_GLOBAL_DIR..."
+    mkdir -p "$OPENCODE_GLOBAL_DIR/agents" "$OPENCODE_GLOBAL_DIR/skills"
+fi
 
 # 2. Link Global Agents (Surgical)
-# Link individual agents from templates to global config
 for agent in "$TEMPLATES_DIR/agents"/*.md; do
     [ -e "$agent" ] || continue
     name=$(basename "$agent")
     target="$OPENCODE_GLOBAL_DIR/agents/$name"
     if [ ! -L "$target" ] && [ ! -f "$target" ]; then
-        echo "Linking agent: $name"
+        echo "🐊 Linking global agent: $name"
         ln -s "$agent" "$target"
     fi
 done
 
 # 3. Link Global Skills (Surgical)
-# Link individual skills from templates to global config
 for skill_dir in "$TEMPLATES_DIR/skills"/*; do
     [ -d "$skill_dir" ] || continue
     name=$(basename "$skill_dir")
@@ -36,9 +35,12 @@ for skill_dir in "$TEMPLATES_DIR/skills"/*; do
 
     target="$OPENCODE_GLOBAL_DIR/skills/$name"
     if [ ! -L "$target" ] && [ ! -d "$target" ]; then
-        echo "Linking skill: $name"
+        echo "🐊 Linking global skill: $name"
         ln -s "$skill_dir" "$target"
     fi
 done
 
-echo "✅ Global Opencode environment ready."
+# Log only in DEBUG mode
+if [ -n "$DEBUG" ]; then
+    echo "✅ Jaka: Global Opencode environment verified."
+fi
