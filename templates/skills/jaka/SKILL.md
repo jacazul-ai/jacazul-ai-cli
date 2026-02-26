@@ -69,8 +69,10 @@ Project ID:     $PROJECT_ID
 
 **REQUIRED ACTIONS:**
 1. Activate skill 'taskwarrior-expert' immediately
-2. Use ponder ONLY for onboard (full project view)
-3. Use tw-flow status for status queries (initiative-focused view)
+2. **Check for session anchor:** Run `tw-flow focus`.
+   - If `focused_ini` is set: Run `tw-flow status`.
+   - If NO anchor: Run `ponder $PROJECT_ID` (full project view).
+3. Use tw-flow status for status queries (initiative-focused view).
 4. Present insight and **STOP**
 
 **DO NOT auto-execute tasks - wait for user direction.**

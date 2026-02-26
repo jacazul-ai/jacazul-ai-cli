@@ -34,6 +34,76 @@ detect_and_set_taskdata() {
 # Set TASKDATA before doing anything
 detect_and_set_taskdata
 
+# --- FOCUS SYSTEM HELPERS ---
+
+get_focus_file() {
+    echo "$TASKDATA/focus.json"
+}
+
+# Initialize or load the focus file
+load_focus() {
+    local file
+    file=$(get_focus_file)
+    if [ ! -f "$file" ]; then
+        echo '{"focused_ini": null, "focused_task_uuid": null, "task_track": [], "inis_of_interest": []}' > "$file"
+    fi
+    cat "$file"
+}
+
+# Save focus state
+save_focus() {
+    local json="$1"
+    local file
+    file=$(get_focus_file)
+    echo "$json" > "$file"
+}
+
+# Update a specific focus field
+update_focus() {
+    local key="$1"
+    local value="$2"
+    local json
+    json=$(load_focus)
+    
+    if [[ "$value" == "null" ]]; then
+        json=$(echo "$json" | jq ".$key = null")
+    else
+        json=$(echo "$json" | jq ".$key = \"$value\"")
+    fi
+    save_focus "$json"
+}
+
+# Push a task to the focus stack
+push_task_focus() {
+    local uuid="$1"
+    local json
+    json=$(load_focus)
+    
+    # Remove if already exists (bring to top) then push
+    json=$(echo "$json" | jq ".task_track = ([\"$uuid\"] + (.task_track | map(select(. != \"$uuid\"))))")
+    json=$(echo "$json" | jq ".focused_task_uuid = \"$uuid\"")
+    save_focus "$json"
+}
+
+# Pop from the focus stack
+pop_task_focus() {
+    local json
+    json=$(load_focus)
+    
+    local stack_size
+    stack_size=$(echo "$json" | jq '.task_track | length')
+    
+    if [[ "$stack_size" -le 1 ]]; then
+        json=$(echo "$json" | jq ".task_track = [] | .focused_task_uuid = null")
+    else
+        json=$(echo "$json" | jq ".task_track = .task_track[1:]")
+        local new_top
+        new_top=$(echo "$json" | jq -r '.task_track[0]')
+        json=$(echo "$json" | jq ".focused_task_uuid = \"$new_top\"")
+    fi
+    save_focus "$json"
+}
+
 # Helper functions
 error() {
     echo -e "ERROR: $1" >&2
@@ -72,11 +142,21 @@ resolve_uuid() {
         return 0
     fi
     
+    # If it's a numeric ID, find the matching task UUID
+    if [[ "$input" =~ ^[0-9]+$ ]]; then
+        local full_uuid
+        full_uuid=$("$TASKP_BIN" export 2>/dev/null | jq -r ".[] | select(.id == $input) | .uuid" | head -1)
+        if [[ -n "$full_uuid" ]] && [[ "$full_uuid" != "null" ]]; then
+            echo "$full_uuid"
+            return 0
+        fi
+    fi
+
     # If it's a short UUID (8 chars), find the matching task
     if [[ "$input" =~ ^[0-9a-fA-F]{8}$ ]]; then
         local full_uuid
         full_uuid=$("$TASKP_BIN" export 2>/dev/null | jq -r ".[] | select(.uuid | startswith(\"$input\")) | .uuid" | head -1)
-        if [[ -n "$full_uuid" ]]; then
+        if [[ -n "$full_uuid" ]] && [[ "$full_uuid" != "null" ]]; then
             echo "$full_uuid"
             return 0
         fi
@@ -114,6 +194,7 @@ COMMANDS:
     note <id> <type> <message>         Add structured annotation
                                        Types: research, decision, blocked, lesson, ac, note, link
     context <id>                       Show full task context (annotations, deps, etc.)
+    focus [ini|task|pop|clear]         Manage session focus (Anchor System)
     
   Viewing:
     initiatives|inis                              List all initiatives with pending tasks
@@ -455,15 +536,28 @@ cmd_status() {
     local filter="$1"
     local initiative_name
     
+    # Load focus data
+    local focus_json
+    focus_json=$(load_focus)
+   local focused_ini
+    focused_ini=$(echo "$focus_json" | jq -r '.focused_ini // ""')
+    local focused_task
+    focused_task=$(echo "$focus_json" | jq -r '.focused_task_uuid // ""')
+
     if [[ -z "$filter" ]]; then
-        # Try to detect active initiative from current active task
-        initiative_name=$("$TASKP_BIN" +ACTIVE export | jq -r '.[0].project // ""')
-        if [[ -z "$initiative_name" ]]; then
-            # Fallback to all pending tasks if no active task
-            filter="status:pending"
-            initiative_name="ALL ACTIVE"
-        else
+        if [[ -n "$focused_ini" ]]; then
+            initiative_name="$focused_ini"
             filter="project:$initiative_name"
+        else
+            # Try to detect active initiative from current active task
+            initiative_name=$("$TASKP_BIN" +ACTIVE export | jq -r '.[0].project // ""')
+            if [[ -z "$initiative_name" ]]; then
+                # Fallback to all pending tasks if no active task
+                filter="status:pending"
+                initiative_name="ALL ACTIVE"
+            else
+                filter="project:$initiative_name"
+            fi
         fi
     else
         if [[ "$filter" =~ ^project: ]]; then
@@ -493,7 +587,15 @@ cmd_status() {
     next_uuid=$(echo "$tasks_json" | jq -r '.[] | select(.status=="pending" and .start==null) | .uuid' | head -n1)
     
     echo -e "══ Initiative: $initiative_name ══"
-    
+    [[ -n "$focused_ini" ]] && [[ "$initiative_name" == "$focused_ini" ]] && echo -e "📌 ANCHORED SESSION"
+
+    # Display recursive context if a task is focused
+    if [[ -n "$focused_task" ]]; then
+        echo -e "\n🎯 FOCUS CONTEXT [$(short_id "$focused_task")]:"
+        get_parent_context "$focused_task" | sed 's/^/  /'
+        "$TASKP_BIN" "$focused_task" export | jq -r '.[0].annotations // [] | .[] | "  - \(.description)"'
+    fi
+
     if [[ "$total_pending" -gt 0 ]]; then
         echo -e "\nPENDING:"
         echo "$tasks_list" | while read -r task; do
@@ -502,7 +604,9 @@ cmd_status() {
             short_uuid=$(short_id "$uuid")
             desc=$(echo "$t" | jq -r '.desc')
             if [[ "$uuid" == "$active_uuid" ]]; then
-                echo -e "- ✓ [$short_uuid - ATIVA] $desc"
+                echo -e "- ✓ [$short_uuid - ACTIVE] $desc"
+            elif [[ "$uuid" == "$focused_task" ]]; then
+                echo -e "- 🎯 [$short_uuid - FOCUSED] $desc"
             else
                 echo -e "- [$short_uuid] $desc"
             fi
@@ -664,12 +768,83 @@ cmd_discard() {
     "$TASKP_BIN" "$task_id" annotate "OUTCOME: Task discarded and moved to archive."
     "$TASKP_BIN" "$task_id" done
     
-    success "Task $(short_id "$task_id") moved to archive and marked done."
+        success "Task $(short_id "$task_id") moved to archive and marked done."
+    }
+    
+# Command: focus - Manage session focus (Anchor System)
+cmd_focus() {
+    local sub="$1"
+    shift
+    
+    case "$sub" in
+        ini)
+            local name="$1"
+            [[ -z "$name" ]] && {
+                # If no name provided, try to detect from active task
+                name=$("$TASKP_BIN" +ACTIVE export | jq -r '.[0].project // ""')
+                [[ -z "$name" ]] && error "No active task found to anchor initiative. Please specify name."
+            }
+            update_focus "focused_ini" "$name"
+            success "Focused initiative anchored to: $name"
+            ;;
+        interest)
+            local action="$1"
+            local name="$2"
+            local json
+            json=$(load_focus)
+            
+            case "$action" in
+                add)
+                    [[ -z "$name" ]] && error "Initiative name required"
+                    json=$(echo "$json" | jq ".inis_of_interest = (.inis_of_interest + [\"$name\"] | unique)")
+                    save_focus "$json"
+                    success "Added '$name' to interests."
+                    ;;
+                remove)
+                    [[ -z "$name" ]] && error "Initiative name required"
+                    json=$(echo "$json" | jq ".inis_of_interest = (.inis_of_interest | map(select(. != \"$name\")))")
+                    save_focus "$json"
+                    success "Removed '$name' from interests."
+                    ;;
+                list)
+                    echo -e "══ Initiatives of Interest ══"
+                    echo "$json" | jq -r '.inis_of_interest[]' || echo "(empty)"
+                    ;;
+                *)
+                    error "Usage: focus interest [add|remove|list] <name>"
+                    ;;
+            esac
+            ;;
+        task)
+            local input_id="$1"
+            [[ -z "$input_id" ]] && error "Task ID required"
+            local uuid
+            uuid=$(resolve_uuid "$input_id")
+            push_task_focus "$uuid"
+            success "Focused task anchored to: $(short_id "$uuid") (pushed to stack)"
+            ;;
+        pop)
+            pop_task_focus
+            local top
+            top=$(load_focus | jq -r '.focused_task_uuid // "none"')
+            success "Popped task focus. Current top: $top"
+            ;;
+        clear)
+            save_focus '{"focused_ini": null, "focused_task_uuid": null, "task_track": [], "inis_of_interest": []}'
+            success "Focus and task track cleared."
+            ;;
+        *)
+            # Show current focus
+            local json
+            json=$(load_focus)
+            echo -e "══ Current Session Focus ══"
+            echo "$json" | jq .
+            ;;
+    esac
 }
-
-
-
-cmd_tree() {
+    
+    cmd_tree() {
+    
     local filter="${1:-status:pending}"
     if [[ "project:$filter" != status:* ]] && [[ "project:$filter" != * ]]; then
         filter="project:$filter"
@@ -774,6 +949,7 @@ main() {
         wait)       cmd_wait "$@" ;;
         discard)    cmd_discard "$@" ;;
         tree)       cmd_tree "$@" ;;
+        focus)      cmd_focus "$@" ;;
         help|-h|--help) show_usage ;;
         *)          error "Unknown command: $command (use '$SCRIPT_NAME help' for usage)" ;;
     esac

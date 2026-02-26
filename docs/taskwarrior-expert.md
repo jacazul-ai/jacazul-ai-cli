@@ -170,6 +170,17 @@ Visualizes dependencies in an ASCII tree:
 ### tw-flow discard
 Soft delete a task by moving it to an `_archive` project and marking it done.
 
+### tw-flow focus (Anchor System)
+Manage session continuity by "locking" attention on specific initiatives or tasks.
+- `tw-flow focus ini <name>`: Anchors the session to a specific initiative.
+- `tw-flow focus task <uuid>`: Anchors to a task and pushes it to the focus stack.
+- `tw-flow focus pop`: Reverts focus to the previous task in the stack.
+- `tw-flow focus interest add <name>`: Adds an initiative to the "Signal over Noise" dashboard.
+- `tw-flow focus clear`: Resets all session anchors.
+
+### ponder --all
+Bypass interest filters to see the full global project status without clearing your session focus.
+
 ---
 
 ## 🛡 Security & Process Enforcement (v1.4.0)

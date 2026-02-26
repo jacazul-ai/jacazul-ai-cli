@@ -284,11 +284,54 @@ DET_TASK=$(which task 2>/dev/null)
 info "DEBUG: Found task at: $DET_TASK"
 if task 2>&1 | grep -q "ERROR: Direct usage of 'task' is restricted"; then
     pass "Raw task binary obfuscated and blocked correctly"
+    else
+        fail "Raw task binary was NOT blocked"
+fi
+
+# Test 23: Anchor System (Focus)
+info "Test 23: Anchor system (Focus)"
+# 1. Anchor initiative
+$TW_FLOW focus ini "$TEST_PROJECT" > /dev/null 2>&1
+if $TW_FLOW status 2>&1 | grep -q "📌 ANCHORED SESSION"; then
+    # 2. Anchor task
+    $TW_FLOW focus task "$TASK_2_ID" > /dev/null 2>&1
+    if $TW_FLOW status 2>&1 | grep -q "🎯 .* FOCUSED"; then
+        # 3. Clear focus
+        $TW_FLOW focus clear > /dev/null 2>&1
+        if ! $TW_FLOW status 2>&1 | grep -q "📌 ANCHORED SESSION"; then
+            pass "Anchor system (ini/task/clear) verified"
+        else
+            fail "Focus clear failed"
+        fi
+    else
+        fail "Task anchoring failed"
+    fi
 else
-    fail "Raw task binary was NOT blocked"
+    fail "Initiative anchoring failed"
+fi
+
+# Test 24: Ponder Interest Filtering
+info "Test 24: Ponder interest filtering"
+# 1. Add interest
+OTHER_PROJECT="interest-$(date +%s)"
+$TASKP add project:"$OTHER_PROJECT" "Interesting task" > /dev/null 2>&1
+$TW_FLOW focus interest add "$TEST_PROJECT" > /dev/null 2>&1
+# 2. Ponder should show TEST_PROJECT but NOT OTHER_PROJECT
+PONDER_FOCUSED=$($PONDER "$TEST_PROJECT" 2>&1)
+if echo "$PONDER_FOCUSED" | grep -q "$TEST_PROJECT" && ! echo "$PONDER_FOCUSED" | grep -q "$OTHER_PROJECT"; then
+    # 3. Ponder --all should show both
+    PONDER_ALL=$($PONDER --all "$TEST_PROJECT" 2>&1)
+    if echo "$PONDER_ALL" | grep -q "$TEST_PROJECT" && echo "$PONDER_ALL" | grep -q "$OTHER_PROJECT"; then
+        pass "Ponder interest filtering and --all bypass verified"
+    else
+        fail "Ponder --all failed to show all initiatives"
+    fi
+else
+    fail "Ponder failed to filter initiatives correctly"
 fi
 
 # --- SUMMARY ---
+
 echo ""
 echo "═══════════════════════════════════════════════════"
 echo "Test Summary"
@@ -298,7 +341,7 @@ echo -e "Failed: ${RED}$TESTS_FAILED${NC}"
 echo "═══════════════════════════════════════════════════"
 
 if [[ $TESTS_FAILED -eq 0 ]]; then
-    echo -e "${GREEN}All 22 tests passed! Workflow is stable. v1.4.0 verified.${NC}"
+    echo -e "${GREEN}All 24 tests passed! Workflow is stable. v1.4.0 verified.${NC}"
     exit 0
 else
     echo -e "${RED}Some tests failed! Check DEBUG info above.${NC}"

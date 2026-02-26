@@ -20,19 +20,55 @@ if [ -n "$PROJECT_ID" ]; then
 fi
 
 # Use taskp wrapper for PROJECT_ID isolation
-TASK_CMD="$HOME/.copilot/skills/taskwarrior_expert/scripts/taskp"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+TASK_CMD="$SCRIPT_DIR/taskp"
 if [[ ! -x "$TASK_CMD" ]]; then
     TASK_CMD="task"
 fi
 
+# --- FOCUS SYSTEM HELPERS ---
+load_focus() {
+    local file="$TASKDATA/focus.json"
+    if [ -f "$file" ]; then
+        cat "$file"
+    else
+        echo '{"focused_ini": null, "focused_task_uuid": null, "task_track": [], "inis_of_interest": []}'
+    fi
+}
+
+# Load focus data
+FOCUS_JSON=$(load_focus)
+FOCUSED_INI=$(echo "$FOCUS_JSON" | jq -r '.focused_ini // ""')
+FOCUSED_TASK=$(echo "$FOCUS_JSON" | jq -r '.focused_task_uuid // ""')
+INIS_OF_INTEREST=$(echo "$FOCUS_JSON" | jq -r '.inis_of_interest // [] | join(",")')
+
+# Helper: Check if an initiative is interesting
+is_interesting() {
+    local ini="$1"
+    [[ "$SHOW_ALL" == "true" ]] && return 0 # Show all bypasses filters
+    [[ -z "$INIS_OF_INTEREST" ]] && return 0 # If list empty, all are interesting
+    [[ "$ini" == "$FOCUSED_INI" ]] && return 0 # Anchor is always interesting
+    
+    IFS=',' read -ra INTERESTS <<< "$INIS_OF_INTEREST"
+    for interest in "${INTERESTS[@]}"; do
+        [[ "$ini" == "$interest" ]] && return 0
+    done
+    return 1
+}
+
 # Parse arguments
 CLASSIC_MODE=false
+SHOW_ALL=false
 PROJECT_ROOT=""
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --classic)
             CLASSIC_MODE=true
+            shift
+            ;;
+        --all)
+            SHOW_ALL=true
             shift
             ;;
         *)
@@ -164,7 +200,10 @@ format_task_line() {
     local status_icon="○"
     local color="$NC"
     
-    if [[ -n "$start" ]]; then
+    if [[ "$uuid" == "$FOCUSED_TASK" ]]; then
+        status_icon="🎯"
+        color="$CYAN"
+    elif [[ -n "$start" ]]; then
         status_icon="⚡"
         color="$NEON_GREEN"
     elif [[ -n "$due" ]] && [[ "$due" < "$(date +%Y-%m-%dT%H:%M:%S)" ]]; then
@@ -206,6 +245,7 @@ echo ""
 echo -e "${YELLOW}[INITIATIVE LANDSCAPE]${NC}"
 echo "$ALL_TASKS_JSON" | jq -r '.[].project // "unscoped"' | sort | uniq | while read -r initiative; do
     [[ "$initiative" == *"_archive"* || "$initiative" == *"_trash"* ]] && continue
+    is_interesting "$initiative" || continue
     
     i_tasks=$(echo "$ALL_TASKS_JSON" | jq "[.[] | select(.project == \"$initiative\")]")
     i_active=$(echo "$i_tasks" | jq '[.[] | select(.start != null)] | length')
@@ -213,7 +253,11 @@ echo "$ALL_TASKS_JSON" | jq -r '.[].project // "unscoped"' | sort | uniq | while
     i_total=$(echo "$i_tasks" | jq '. | length')
     
     i_icon="○"
-    [[ "$i_active" -gt 0 ]] && i_icon="${NEON_GREEN}⚡${NC}"
+    if [[ "$initiative" == "$FOCUSED_INI" ]]; then
+        i_icon="📌"
+    elif [[ "$i_active" -gt 0 ]]; then
+        i_icon="${NEON_GREEN}⚡${NC}"
+    fi
     
     # Display name (strip PROJECT_ROOT prefix)
     display_name="${initiative#$PROJECT_ROOT:}"
@@ -230,9 +274,11 @@ printf "  %s | %-8s | %-10s | %-25s | %-50s | %s\n" "ST" "UUID" "MODE" "INITIATI
 printf "  %s\n" "----------------------------------------------------------------------------------------------------------------------------"
 
 # Show Active first, then by Urgency
-echo "$ALL_TASKS_JSON" | jq -c '.[] | select(.project | test("_archive$|_trash$") | not) | . + {sort_status: (if .start then 2 else 1 end)}' | jq -s 'sort_by(.sort_status, .urgency) | reverse | .[]' -c | head -n 15 | while read -r row; do
+echo "$ALL_TASKS_JSON" | jq -c '.[] | select(.project | test("_archive$|_trash$") | not) | . + {sort_status: (if .start then 2 else 1 end)}' | jq -s 'sort_by(.sort_status, .urgency) | reverse | .[]' -c | while read -r row; do
+    project=$(echo "$row" | jq -r '.project')
+    is_interesting "$project" || continue
     format_task_line "$row"
-done
+done | head -n 15
 
 echo ""
 
