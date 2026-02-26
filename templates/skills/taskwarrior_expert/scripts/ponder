@@ -1,291 +1,142 @@
-#!/bin/bash
-# Ponder - Taskwarrior Dashboard
-# Provides a high-level tactical overview of focus and progress
-# Version: 1.4.0 (columnar mode is now default)
+#!/home/fpiraz/.candango/jaka_ai/.venv/bin/python
+import sys
+import os
+import re
+import orjson
+from datetime import datetime
+from typing import List, Dict, Any
+from tw_expert import Environment, TaskWrapper, FocusManager
 
-# Detect JAKA_REAL_TASK if not provided (Dynamics)
-if [ -z "$JAKA_REAL_TASK" ]; then
-    JAKA_REAL_TASK=$(which -a task 2>/dev/null | grep -v "/scripts/task" | head -n 1)
-    [ -z "$JAKA_REAL_TASK" ] && JAKA_REAL_TASK="/usr/bin/task"
-    export JAKA_REAL_TASK
-fi
-
-# Detect project and set TASKDATA/TASKRC if PROJECT_ID is available and they are NOT already set
-if [ -n "$PROJECT_ID" ]; then
-    if [ -z "$TASKRC" ] && [ "$JAKA_MODE" = "UNHINGED" ]; then
-        export TASKRC="$HOME/.candango/jaka_ai/.taskrc"
-    fi
-
-    if [ -z "$TASKDATA" ]; then
-        if [ "$JAKA_MODE" = "UNHINGED" ]; then
-            export TASKDATA="$HOME/.candango/jaka_ai/.task/$PROJECT_ID"
-        else
-            export TASKDATA="$HOME/.task/$PROJECT_ID"
-        fi
-    fi
-    mkdir -p "$TASKDATA"
-fi
-
-# Use taskp wrapper for PROJECT_ID isolation
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-TASK_CMD="$SCRIPT_DIR/taskp"
-if [[ ! -x "$TASK_CMD" ]]; then
-    TASK_CMD="task"
-fi
-
-# --- FOCUS SYSTEM HELPERS ---
-load_focus() {
-    local file="$TASKDATA/focus.json"
-    if [ -f "$file" ]; then
-        cat "$file"
-    else
-        echo '{"focused_ini": null, "focused_task_uuid": null, "task_track": [], "inis_of_interest": []}'
-    fi
-}
-
-# Load focus data
-FOCUS_JSON=$(load_focus)
-FOCUSED_INI=$(echo "$FOCUS_JSON" | jq -r '.focused_ini // ""')
-FOCUSED_TASK=$(echo "$FOCUS_JSON" | jq -r '.focused_task_uuid // ""')
-INIS_OF_INTEREST=$(echo "$FOCUS_JSON" | jq -r '.inis_of_interest // [] | join(",")')
-
-# Helper: Check if an initiative is interesting
-is_interesting() {
-    local ini="$1"
-    [[ "$SHOW_ALL" == "true" ]] && return 0 # Show all bypasses filters
-    [[ -z "$INIS_OF_INTEREST" ]] && return 0 # If list empty, all are interesting
-    [[ "$ini" == "$FOCUSED_INI" ]] && return 0 # Anchor is always interesting
-    
-    IFS=',' read -ra INTERESTS <<< "$INIS_OF_INTEREST"
-    for interest in "${INTERESTS[@]}"; do
-        [[ "$ini" == "$interest" ]] && return 0
-    done
-    return 1
-}
-
-# Parse arguments
-CLASSIC_MODE=false
-SHOW_ALL=false
-PROJECT_ROOT=""
-
-while [[ $# -gt 0 ]]; do
-    case "$1" in
-        --classic)
-            CLASSIC_MODE=true
-            shift
-            ;;
-        --all)
-            SHOW_ALL=true
-            shift
-            ;;
-        *)
-            PROJECT_ROOT="$1"
-            shift
-            ;;
-    esac
-done
-
-if [[ -z "$PROJECT_ROOT" ]]; then
-    PROJECT_ROOT="copilot" # Default if no project given
-fi
+# 🐊 ponder.py (v1.4.0)
+# Python port of the tactical Taskwarrior dashboard.
 
 # Colors
-CYAN='\033[0;36m'
-GREEN='\033[0;32m'
-NEON_GREEN='\033[1;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-RED='\033[0;31m'
-BLOODY_RED='\033[1;31m'
-GREY='\033[0;90m'
-NC='\033[0m'
+CYAN = '\033[0;36m'
+GREEN = '\033[0;32m'
+NEON_GREEN = '\033[1;32m'
+YELLOW = '\033[1;33m'
+BLUE = '\033[0;34m'
+RED = '\033[0;31m'
+BLOODY_RED = '\033[1;31m'
+NC = '\033[0m'
 
-# UUID helper
-short_id() {
-    local uuid="$1"
-    if [[ "$uuid" =~ ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$ ]]; then
-        echo "${uuid:0:8}"
-    elif [[ "$uuid" =~ ^[0-9a-f]{8,}$ ]]; then
-        echo "${uuid:0:8}"
-    else
-        echo "$uuid"
-    fi
-}
+class Dashboard:
+    def __init__(self, project_root: str = "copilot", show_all: bool = False):
+        self.project_root = project_root
+        self.show_all = show_all
+        self.tw = TaskWrapper()
+        self.focus = FocusManager()
+        self.state = self.focus.load()
 
-#############################################
-# CLASSIC MODE (Original compact view)
-#############################################
-if [[ "$CLASSIC_MODE" == "true" ]]; then
-    # Helper to print tasks in one line
-    print_task_line() {
-        local uuid=$1
-        # Use export to safely get fields
-        local json=$($TASK_CMD "$uuid" export 2>/dev/null | jq '.[0]')
-        local short_uuid=$(short_id "$uuid")
-        local desc=$(echo "$json" | jq -r '.description // "?"')
-        local urgency=$(echo "$json" | jq -r '.urgency // 0')
-        local urgency_fmt=$(printf "%.1f" "$urgency")
+    def is_interesting(self, ini: str) -> bool:
+        if self.show_all: return True
+        if not self.state.inis_of_interest: return True
+        if ini == self.state.focused_ini: return True
+        return ini in self.state.inis_of_interest
+
+    def render(self):
+        # Fetch all pending tasks
+        all_tasks = self.tw.export(["status:pending"])
+        # Filter: project must be a string and not None
+        all_tasks = [t for t in all_tasks if isinstance(t.get("project"), str)]
         
-        # Highlight mode prefixes if present
-        if [[ "$desc" =~ ^\[([A-Z-]+)\] ]]; then
-            local mode="${BASH_REMATCH[1]}"
-            local rest="${desc#\[$mode\] }"
-            desc="${YELLOW}[$mode]${NC} $rest"
-        fi
+        print(f"{CYAN}══ TACTICAL VIEW: {self.project_root} ══{NC}")
         
-        printf "  %-8s | %-70s [%s]\n" "$short_uuid" "$(echo -e "$desc")" "$urgency_fmt"
-    }
-    
-    # JQ filter to exclude _archive projects
-    JQ_EXCLUDE_ARCHIVE_FILTER='select(.project | test("_archive$") | not)'
-    
-    # 1. Pulse Summary
-    PENDING=$($TASK_CMD export status:pending 2>/dev/null | jq -r ".[]? | select((.project // empty) | startswith(\"$PROJECT_ROOT\"))" | jq "$JQ_EXCLUDE_ARCHIVE_FILTER" | jq -r '.uuid' | wc -l)
-    COMPLETED_TODAY=$($TASK_CMD export status:completed end:today 2>/dev/null | jq -r ".[]? | select((.project // empty) | startswith(\"$PROJECT_ROOT\"))" | jq "$JQ_EXCLUDE_ARCHIVE_FILTER" | jq -r '.uuid' | wc -l)
-    OVERDUE=$($TASK_CMD all status:pending +OVERDUE export 2>/dev/null | jq -r ".[]? | select((.project // empty) | startswith(\"$PROJECT_ROOT\"))" | jq "$JQ_EXCLUDE_ARCHIVE_FILTER" | jq -r '.uuid' | wc -l)
-    ACTIVE_COUNT=$($TASK_CMD +ACTIVE export 2>/dev/null | jq -r '.[]? | select((.project // empty) | startswith("'$PROJECT_ROOT'")) | .uuid' | wc -l)
-    
-    echo -e "${CYAN}══ PONDER: $PROJECT_ROOT ══${NC}"
-    echo -e "Pending: ${CYAN}$PENDING${NC} | Completed Today: ${GREEN}$COMPLETED_TODAY${NC} | Overdue: ${RED}$OVERDUE${NC} | Active: ${BLUE}$ACTIVE_COUNT${NC}"
-    echo ""
-    
-    # 2. Top Task (Current Focus)
-    echo -e "${YELLOW}[CURRENT FOCUS]${NC}"
-    ACTIVE_UUID=$($TASK_CMD +ACTIVE export 2>/dev/null | jq -r '.[]? | select((.project // empty) | startswith("'$PROJECT_ROOT'")) | .uuid' | head -n1)
-    if [[ -n "$ACTIVE_UUID" ]]; then
-        print_task_line "$ACTIVE_UUID"
-    else
-        echo "  No active tasks."
-    fi
-    echo ""
-    
-    # 3. Up Next (Ready tasks)
-    echo -e "${GREEN}[UP NEXT]${NC}"
-    READY_UUIDS=$($TASK_CMD export status:pending 2>/dev/null | jq -r '.[]? | select(((.project // empty) | startswith("'$PROJECT_ROOT'")) and (.depends == null or (.depends | length == 0)))' | jq "$JQ_EXCLUDE_ARCHIVE_FILTER" | jq -r '.uuid' | head -n3)
-    if [[ -n "$READY_UUIDS" ]]; then
-        while read -r uuid; do
-            [[ -n "$uuid" ]] && print_task_line "$uuid"
-        done <<< "$READY_UUIDS"
-    else
-        echo "  No ready tasks."
-    fi
-    echo ""
-    
-    # 4. Blocked
-    echo -e "${RED}[BLOCKED / WAITING]${NC}"
-    BLOCKED_UUIDS=$($TASK_CMD export status:pending 2>/dev/null | jq -r '.[]? | select(((.project // empty) | startswith("'$PROJECT_ROOT'")) and (.depends != null and (.depends | length > 0)))' | jq "$JQ_EXCLUDE_ARCHIVE_FILTER" | jq -r '.uuid' | head -n3)
-    if [[ -n "$BLOCKED_UUIDS" ]]; then
-        while read -r uuid; do
-            [[ -n "$uuid" ]] && print_task_line "$uuid"
-        done <<< "$BLOCKED_UUIDS"
-    else
-        echo "  No blocked tasks."
-    fi
-    echo ""
-    exit 0
-fi
+        # 1. Pulse Summary
+        pending_count = len(all_tasks)
+        active_count = len([t for t in all_tasks if t.get("start")])
+        now_str = datetime.now().strftime("%Y%m%dT%H%M%SZ")
+        overdue_count = len([t for t in all_tasks if t.get("due") and t["due"] < now_str])
+        
+        # Completed today
+        comp_today = self.tw.export(["status:completed", "end:today"])
+        comp_count = len([t for t in comp_today if isinstance(t.get("project"), str) and t["project"].startswith(self.project_root)])
+        
+        print(f"Pulse: Pending ({CYAN}{pending_count}{NC}) | Active ({NEON_GREEN}{active_count}{NC}) | Overdue ({BLOODY_RED}{overdue_count}{NC}) | Done Today ({GREEN}{comp_count}{NC})\n")
 
-#############################################
-# TACTICAL MODE (Default - Columnar view)
-#############################################
+        # 2. Initiative Landscape
+        print(f"{YELLOW}[INITIATIVE LANDSCAPE]{NC}")
+        projects = sorted(list(set(t["project"] for t in all_tasks)))
+        for p in projects:
+            if "_archive" in p or "_trash" in p: continue
+            if not self.is_interesting(p): continue
+            
+            p_tasks = [t for t in all_tasks if t["project"] == p]
+            p_active = len([t for t in p_tasks if t.get("start")])
+            p_ready = len([t for t in p_tasks if not t.get("depends")])
+            p_total = len(p_tasks)
+            
+            icon = "○"
+            if p == self.state.focused_ini: icon = "📌"
+            elif p_active > 0: icon = f"{NEON_GREEN}⚡{NC}"
+            
+            display_name = p.replace(f"{self.project_root}:", "")
+            if display_name == self.project_root: display_name = "[root]"
+            
+            print(f"  {icon} {display_name:<35} | Active: {p_active:<2} | Ready: {p_ready:<2} | Total: {p_total:<2}")
+        print("")
 
-# Fetch all relevant tasks - SAFE filter with type check
-ALL_TASKS_JSON=$($TASK_CMD status:pending export rc.verbose=no 2>/dev/null | jq "[.[] | select(.project != null and (.project | type) == \"string\")]")
+        # 3. Tactical Readout
+        print(f"{YELLOW}[TACTICAL READOUT]{NC}")
+        print(f"  ST | UUID     | MODE       | INITIATIVE                | DESCRIPTION                                        | URG")
+        print("  " + "-" * 124)
+        
+        # Sort: Active first (sort_status 2), then by urgency
+        readout_tasks = [t for t in all_tasks if not re.search(r'(_archive|_trash)$', t["project"])]
+        readout_tasks = [t for t in readout_tasks if self.is_interesting(t["project"])]
+        
+        for t in readout_tasks:
+            t["sort_status"] = 2 if t.get("start") else 1
+            
+        readout_tasks.sort(key=lambda x: (x["sort_status"], x.get("urgency", 0)), reverse=True)
+        
+        for t in readout_tasks[:15]:
+            self.render_task_line(t)
+        print("")
 
-# Helper: Format task line
-format_task_line() {
-    local row="$1"
-    
-    local uuid=$(echo "$row" | jq -r '.uuid')
-    local project=$(echo "$row" | jq -r '.project // "[none]"')
-    local desc=$(echo "$row" | jq -r '.description')
-    local urgency=$(echo "$row" | jq -r '.urgency // 0')
-    local start=$(echo "$row" | jq -r '.start // ""')
-    local due=$(echo "$row" | jq -r '.due // ""')
-    
-    # 1. Status Icon
-    local status_icon="○"
-    local color="$NC"
-    
-    if [[ "$uuid" == "$FOCUSED_TASK" ]]; then
-        status_icon="🎯"
-        color="$CYAN"
-    elif [[ -n "$start" ]]; then
-        status_icon="⚡"
-        color="$NEON_GREEN"
-    elif [[ -n "$due" ]] && [[ "$due" < "$(date +%Y-%m-%dT%H:%M:%S)" ]]; then
-        status_icon="!!"
-        color="$BLOODY_RED"
-    fi
-    
-    # 2. Extract Mode
-    local mode="--------"
-    if [[ "$desc" =~ ^\[([A-Z-]+)\] ]]; then
-        mode="${BASH_REMATCH[1]}"
-        desc="${desc#*[$mode] }"
-    fi
-    
-    # 3. Format Strings
-    local uuid_short=$(short_id "$uuid")
-    local urgency_fmt=$(printf "%.1f" "$urgency")
-    
-    # Initiative stripping (remove PROJECT_ROOT prefix)
-    local initiative="${project}"
-    [[ "$initiative" == "$PROJECT_ROOT" ]] && initiative="[root]"
-    
-    printf "  %b%-2s${NC} | %-8s | %-10s | %-25s | %-50s | [%s]\n" "$color" "$status_icon" "$uuid_short" "$mode" "$initiative" "${desc:0:50}" "$urgency_fmt"
-}
+    def render_task_line(self, t: Dict[str, Any]):
+        uuid = t["uuid"]
+        desc = t["description"]
+        urgency = t.get("urgency", 0)
+        start = t.get("start")
+        due = t.get("due")
+        project = t.get("project", "[none]")
+        
+        status_icon = "○"
+        color = NC
+        if uuid == self.state.focused_task_uuid:
+            status_icon = "🎯"
+            color = CYAN
+        elif start:
+            status_icon = "⚡"
+            color = NEON_GREEN
+        elif due and due < datetime.now().strftime("%Y%m%dT%H%M%SZ"):
+            status_icon = "!!"
+            color = BLOODY_RED
+            
+        mode = "--------"
+        # Match interaction modes like [EXECUTE], [PLAN], etc.
+        match = re.search(r'\[([A-Z-]+)\]', desc)
+        if match:
+            mode = match.group(1)
+            # Remove the mode prefix from description for cleaner view
+            desc = re.sub(r'\[[A-Z-]+\]\s*', '', desc)
+            
+        initiative = project.replace(f"{self.project_root}:", "")
+        if initiative == self.project_root: initiative = "[root]"
+        
+        print(f"  {color}{status_icon:<2}{NC} | {uuid[:8]} | {mode:<10} | {initiative[:25]:<25} | {desc[:50]:<50} | [{urgency:.1f}]")
 
-echo -e "${CYAN}══ TACTICAL VIEW: $PROJECT_ROOT ══${NC}"
+def main():
+    show_all = "--all" in sys.argv
+    project_root = "copilot"
+    for arg in sys.argv[1:]:
+        if not arg.startswith("-"):
+            project_root = arg
+            break
+            
+    db = Dashboard(project_root, show_all)
+    db.render()
 
-# 1. Pulse Summary
-PENDING_COUNT=$(echo "$ALL_TASKS_JSON" | jq '. | length')
-ACTIVE_COUNT=$(echo "$ALL_TASKS_JSON" | jq '[.[] | select(.start != null)] | length')
-OVERDUE_COUNT=$(echo "$ALL_TASKS_JSON" | jq "[.[] | select(.due != null and .due < \"$(date +%Y-%m-%dT%H:%M:%S)\")] | length")
-COMPLETED_TODAY=$($TASK_CMD export status:completed end:today 2>/dev/null | jq "[.[] | select(.project != null and (.project | type) == \"string\" and (.project | startswith(\"$PROJECT_ROOT\")))] | length")
-
-echo -e "Pulse: Pending (${CYAN}$PENDING_COUNT${NC}) | Active (${NEON_GREEN}$ACTIVE_COUNT${NC}) | Overdue (${BLOODY_RED}$OVERDUE_COUNT${NC}) | Done Today (${GREEN}$COMPLETED_TODAY${NC})"
-echo ""
-
-
-# 2. Initiative Landscape
-echo -e "${YELLOW}[INITIATIVE LANDSCAPE]${NC}"
-echo "$ALL_TASKS_JSON" | jq -r '.[].project // "unscoped"' | sort | uniq | while read -r initiative; do
-    [[ "$initiative" == *"_archive"* || "$initiative" == *"_trash"* ]] && continue
-    is_interesting "$initiative" || continue
-    
-    i_tasks=$(echo "$ALL_TASKS_JSON" | jq "[.[] | select(.project == \"$initiative\")]")
-    i_active=$(echo "$i_tasks" | jq '[.[] | select(.start != null)] | length')
-    i_ready=$(echo "$i_tasks" | jq '[.[] | select(.depends == null or (.depends | length == 0))] | length')
-    i_total=$(echo "$i_tasks" | jq '. | length')
-    
-    i_icon="○"
-    if [[ "$initiative" == "$FOCUSED_INI" ]]; then
-        i_icon="📌"
-    elif [[ "$i_active" -gt 0 ]]; then
-        i_icon="${NEON_GREEN}⚡${NC}"
-    fi
-    
-    # Display name (strip PROJECT_ROOT prefix)
-    display_name="${initiative#$PROJECT_ROOT:}"
-    [[ "$display_name" == "$PROJECT_ROOT" ]] && display_name="[root]"
-    
-    printf "  %b %-35s | Active: %-2s | Ready: %-2s | Total: %-2s\n" "$i_icon" "$display_name" "$i_active" "$i_ready" "$i_total"
-done
-echo ""
-
-
-# 3. Task Readout (Current Focus)
-echo -e "${YELLOW}[TACTICAL READOUT]${NC}"
-printf "  %s | %-8s | %-10s | %-25s | %-50s | %s\n" "ST" "UUID" "MODE" "INITIATIVE" "DESCRIPTION" "URG"
-printf "  %s\n" "----------------------------------------------------------------------------------------------------------------------------"
-
-# Show Active first, then by Urgency
-echo "$ALL_TASKS_JSON" | jq -c '.[] | select(.project | test("_archive$|_trash$") | not) | . + {sort_status: (if .start then 2 else 1 end)}' | jq -s 'sort_by(.sort_status, .urgency) | reverse | .[]' -c | while read -r row; do
-    project=$(echo "$row" | jq -r '.project')
-    is_interesting "$project" || continue
-    format_task_line "$row"
-done | head -n 15
-
-echo ""
-
+if __name__ == "__main__":
+    main()

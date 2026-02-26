@@ -1,78 +1,37 @@
-#!/bin/bash
-# taskp - Task Project-Aware
-# Automatically uses per-project Taskwarrior databases based on PROJECT_ID or TASKDATA
+#!/home/fpiraz/.candango/jaka_ai/.venv/bin/python
+import sys
+from tw_expert import TaskWrapper
 
-set -e
+# 🐊 taskp.py (v1.4.0)
+# Python port of the project-aware Taskwarrior wrapper.
 
-# Detect JAKA_REAL_TASK if not provided (Dynamics)
-if [ -z "$JAKA_REAL_TASK" ]; then
-    JAKA_REAL_TASK=$(which -a task 2>/dev/null | grep -v "/scripts/task" | head -n 1)
-    [ -z "$JAKA_REAL_TASK" ] && JAKA_REAL_TASK="/usr/bin/task"
-    export JAKA_REAL_TASK
-fi
-
-# Detect Jaka Mode and set defaults
-JAKA_MODE="${JAKA_MODE:-SANDBOXED}"
-
-# If TASKRC is not set, determine default based on mode
-if [[ -z "$TASKRC" ]]; then
-    if [[ "$JAKA_MODE" == "UNHINGED" ]]; then
-        export TASKRC="$HOME/.candango/jaka_ai/.taskrc"
-    else
-        export TASKRC="$HOME/.taskrc"
-    fi
-fi
-
-# If TASKDATA is already set (e.g., in test harness), respect it
-if [[ -n "$TASKDATA" ]]; then
-    CURRENT_DATA_DIR="$TASKDATA"
-else
-    # Default to 'global' if PROJECT_ID is not set
-    FULL_PROJECT_ID="${PROJECT_ID:-global}"
+def main():
+    args = sys.argv[1:]
+    tw = TaskWrapper()
     
-    # Extract root project (everything before the first colon)
-    CURRENT_PROJECT_ID="${FULL_PROJECT_ID%%:*}"
+    # VACCINATION: Prevent direct 'done' command or manual '+DISCARDED' tag
+    # BYPASS: Check if called internally (environment variable)
+    internal = sys.stdin.isatty() is False or "TW_FLOW_INTERNAL" in sys.modules or True # Temporary loose bypass for porting
+    # Actually, we should check for an env var like the bash version does
+    import os
+    is_internal = os.environ.get("TW_FLOW_INTERNAL") == "true"
     
-    # Data path structure
-    if [[ "$JAKA_MODE" == "UNHINGED" ]]; then
-        TASKS_BASE_DIR="$HOME/.candango/jaka_ai/.task"
-    else
-        TASKS_BASE_DIR="$HOME/.task"
-    fi
-    CURRENT_DATA_DIR="$TASKS_BASE_DIR/$CURRENT_PROJECT_ID"
-fi
+    if not is_internal:
+        for arg in args:
+            if arg == "done":
+                print("ERROR: Direct 'done' command via taskp is restricted to enforce proper workflow.", file=sys.stderr)
+                print("Don't sweat it! Please use 'tw-flow done <uuid>' instead to capture OUTCOME.", file=sys.stderr)
+                sys.exit(1)
+            elif arg == "+DISCARDED":
+                print("ERROR: Manual '+DISCARDED' tag via taskp is restricted.", file=sys.stderr)
+                print("Please use 'tw-flow discard <uuid>' instead to properly archive tasks.", file=sys.stderr)
+                sys.exit(1)
 
-# Ensure directory exists
-if [[ ! -d "$CURRENT_DATA_DIR" ]]; then
-    mkdir -p "$CURRENT_DATA_DIR"
-fi
+    # Special handling for 'info' to increase verbosity
+    verbose = "affected,header,foot,label,columns,subtotal,stats,history,project,context,annotations" if "info" in args else "new-id"
+    
+    res = tw.run(args, capture=False, verbose=verbose)
+    sys.exit(res.returncode)
 
-# VACCINATION: Prevent direct 'done' command or manual '+DISCARDED' tag to enforce tw-flow usage
-# BYPASS: Allow if called internally by tw-flow
-for arg in "$@"; do
-    if [[ "$TW_FLOW_INTERNAL" != "true" ]]; then
-        if [[ "$arg" == "done" ]]; then
-            echo "ERROR: Direct 'done' command via taskp is restricted to enforce proper workflow." >&2
-            echo "Don't sweat it! Please use 'tw-flow done <uuid>' instead to capture OUTCOME." >&2
-            exit 1
-        elif [[ "$arg" == "+DISCARDED" ]]; then
-            echo "ERROR: Manual '+DISCARDED' tag via taskp is restricted." >&2
-            echo "Please use 'tw-flow discard <uuid>' instead to properly archive tasks." >&2
-            exit 1
-        fi
-    fi
-done
-
-# Execute the real task command
-# Use rc: override to ensure correct configuration file is used
-# Note: Taskwarrior 2.6.0 needs the rc: override to respect custom config locations
-# We also force rc.verbose=new-id to ensure tw-flow can capture created IDs
-# For 'info' command, we add more verbosity to ensure annotations are shown
-case "$1" in
-    info)
-        exec "$JAKA_REAL_TASK" rc:"$TASKRC" rc.data.location="$CURRENT_DATA_DIR" rc.verbose=affected,header,foot,label,columns,subtotal,stats,history,project,context,annotations "$@"
-        ;;
-    *)
-        exec "$JAKA_REAL_TASK" rc:"$TASKRC" rc.data.location="$CURRENT_DATA_DIR" rc.verbose=new-id "$@"
-        ;;
-esac
+if __name__ == "__main__":
+    main()

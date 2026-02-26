@@ -1,986 +1,289 @@
-#!/bin/bash
-# Taskwarrior Flow - Imperative commands for task management
-# Makes Taskwarrior easier to use for AI agents
-
-set -e
-
-SCRIPT_NAME="tw-flow"
-VERSION="1.3.0"
-
-# Detect JAKA_REAL_TASK if not provided (Dynamics)
-if [ -z "$JAKA_REAL_TASK" ]; then
-    JAKA_REAL_TASK=$(which -a task 2>/dev/null | grep -v "/scripts/task" | head -n 1)
-    [ -z "$JAKA_REAL_TASK" ] && JAKA_REAL_TASK="/usr/bin/task"
-    export JAKA_REAL_TASK
-fi
-
-# Set absolute paths for internal tools
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-TASKP_BIN="$SCRIPT_DIR/taskp"
-PONDER_BIN="$SCRIPT_DIR/ponder"
-
-# Detect project and set TASKDATA if PROJECT_ID is available
-detect_and_set_taskdata() {
-    if [ -z "$TASKRC" ] && [ "$JAKA_MODE" = "UNHINGED" ]; then
-        export TASKRC="$HOME/.candango/jaka_ai/.taskrc"
-    fi
-
-    if [ -z "$TASKDATA" ] && [ -n "$PROJECT_ID" ]; then
-        if [ "$JAKA_MODE" = "UNHINGED" ]; then
-            export TASKDATA="$HOME/.candango/jaka_ai/.task/$PROJECT_ID"
-        else
-            export TASKDATA="$HOME/.task/$PROJECT_ID"
-        fi
-    fi
-    
-    if [ -n "$TASKDATA" ]; then
-        mkdir -p "$TASKDATA"
-    fi
-}
-
-# Set TASKDATA before doing anything
-detect_and_set_taskdata
-
-# --- FOCUS SYSTEM HELPERS ---
-
-get_focus_file() {
-    echo "$TASKDATA/focus.json"
-}
-
-# Initialize or load the focus file
-load_focus() {
-    local file
-    file=$(get_focus_file)
-    if [ ! -f "$file" ]; then
-        echo '{"focused_ini": null, "focused_task_uuid": null, "task_track": [], "inis_of_interest": []}' > "$file"
-    fi
-    cat "$file"
-}
-
-# Save focus state
-save_focus() {
-    local json="$1"
-    local file
-    file=$(get_focus_file)
-    echo "$json" > "$file"
-}
-
-# Update a specific focus field
-update_focus() {
-    local key="$1"
-    local value="$2"
-    local json
-    json=$(load_focus)
-    
-    if [[ "$value" == "null" ]]; then
-        json=$(echo "$json" | jq ".$key = null")
-    else
-        json=$(echo "$json" | jq ".$key = \"$value\"")
-    fi
-    save_focus "$json"
-}
-
-# Push a task to the focus stack (as an object with ini)
-push_task_focus() {
-    local uuid="$1"
-    local json
-    json=$(load_focus)
-    
-    # Resolve the initiative for this task
-    local ini
-    ini=$("$TASKP_BIN" "$uuid" export | jq -r '.[0].project // ""')
-    
-    # Construct stack item
-    local item
-    item=$(jq -n --arg uuid "$uuid" --arg ini "$ini" '{uuid: $uuid, ini: $ini}')
-    
-    # Remove if already exists (bring to top) then push
-    # We check if the entry is an object with .uuid OR just a string equal to the uuid
-    json=$(echo "$json" | jq ".task_track = ([$item] + (.task_track | map(select((type == \"object\" and .uuid != \"$uuid\") or (type == \"string\" and . != \"$uuid\")))))")
-    json=$(echo "$json" | jq ".focused_task_uuid = \"$uuid\" | .focused_ini = \"$ini\"")
-    save_focus "$json"
-}
-
-# Pop from the focus stack
-pop_task_focus() {
-    local json
-    json=$(load_focus)
-    
-    local stack_size
-    stack_size=$(echo "$json" | jq '.task_track | length')
-    
-    if [[ "$stack_size" -le 1 ]]; then
-        json=$(echo "$json" | jq ".task_track = [] | .focused_task_uuid = null | .focused_ini = null")
-    else
-        json=$(echo "$json" | jq ".task_track = .task_track[1:]")
-        local new_top_uuid new_top_ini
-        new_top_uuid=$(echo "$json" | jq -r '.task_track[0].uuid')
-        new_top_ini=$(echo "$json" | jq -r '.task_track[0].ini')
-        json=$(echo "$json" | jq ".focused_task_uuid = \"$new_top_uuid\" | .focused_ini = \"$new_top_ini\"")
-    fi
-    save_focus "$json"
-}
-
-# Helper functions
-error() {
-    echo -e "ERROR: $1" >&2
-    exit 1
-}
-
-success() {
-    echo -e "✓ $1"
-}
-
-info() {
-    echo -e "ℹ $1"
-}
-
-warning() {
-    echo -e "⚠ $1"
-}
-
-# Helper: Shorten UUID for display (8 chars)
-short_id() {
-    local id="$1"
-    if [[ "$id" =~ ^[0-9a-fA-F-]{8,}$ ]]; then
-        echo "${id:0:8}"
-    else
-        echo "$id"
-    fi
-}
-
-# Helper: Resolve UUID (expand short UUID or validate full UUID)
-resolve_uuid() {
-    local input="$1"
-    
-    # If it's already a full UUID (36 chars with dashes), return it
-    if [[ "$input" =~ ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$ ]]; then
-        echo "$input"
-        return 0
-    fi
-    
-    # If it's a numeric ID, find the matching task UUID
-    if [[ "$input" =~ ^[0-9]+$ ]]; then
-        local full_uuid
-        full_uuid=$("$TASKP_BIN" export 2>/dev/null | jq -r ".[] | select(.id == $input) | .uuid" | head -1)
-        if [[ -n "$full_uuid" ]] && [[ "$full_uuid" != "null" ]]; then
-            echo "$full_uuid"
-            return 0
-        fi
-    fi
-
-    # If it's a short UUID (8 chars), find the matching task
-    if [[ "$input" =~ ^[0-9a-fA-F]{8}$ ]]; then
-        local full_uuid
-        full_uuid=$("$TASKP_BIN" export 2>/dev/null | jq -r ".[] | select(.uuid | startswith(\"$input\")) | .uuid" | head -1)
-        if [[ -n "$full_uuid" ]] && [[ "$full_uuid" != "null" ]]; then
-            echo "$full_uuid"
-            return 0
-        fi
-    fi
-    
-    # Otherwise, assume it's a valid identifier and return as-is
-    echo "$input"
-}
-
-
-
-show_usage() {
-    cat <<EOF
-Taskwarrior Flow - Simplified task management commands
-
-USAGE:
-    $SCRIPT_NAME <command> [options]
-
-COMMANDS:
-
-  Initiatives:
-    initiative|ini <initiative> <tasks...>    Create a new initiative with multiple tasks
-                                       Tasks format: "mode|description|tag|due_offset"
-                                       Modes: DESIGN, INVESTIGATE, GUIDE, EXECUTE, TEST, DEBUG, REVIEW, PR-REVIEW
-    
-  Execution:
-    next [initiative]                Show next task(s) ready to work
-    execute <id>                       Start working on a task
-    done <id> [note]                   Complete a task with optional note
-    outcome <id> <message>             Record final outcome before closing
-    handoff <id> <message>             Start next task and add handoff note
-    pause <id>                         Pause work on a task
-    
-  Context:
-    note <id> <type> <message>         Add structured annotation
-                                       Types: research, decision, blocked, lesson, ac, note, link
-    context <id>                       Show full task context (annotations, deps, etc.)
-    focus [ini|task|pop|clear]         Manage session focus (Anchor System)
-    
-  Viewing:
-    initiatives|inis                              List all initiatives with pending tasks
-    status [initiative]              Show initiative status overview
-    active                             Show currently active tasks
-    blocked                            Show blocked tasks
-    overdue                            Show overdue tasks
-    
-  Modifications:
-    urgent <id> [urgency]              Make task urgent (default: 15.0)
-    block <id> <depends_on_id>         Add dependency to task
-    unblock <id> <depends_on_id>       Remove dependency from task
-    wait <id> <date>                   Put task on hold until date
-    discard <id>                       Soft delete - move to trash and mark done
-    tree [project]                     Show visual dependency tree
-    discard <id>                       Soft delete - move to trash and mark done
-
-EXAMPLES:
-
-  # Create a 3-task initiative with modes
-  $SCRIPT_NAME initiative login-feature \\
-    "DESIGN|Design auth flow|research|today" \\
-    "EXECUTE|Implement JWT|implementation|tomorrow" \\
-    "TEST|Write tests|testing|2days"
-
-  # See what's next
-  $SCRIPT_NAME next login-feature
-
-  # Start working
-  $SCRIPT_NAME execute 42
-
-  # Add research note
-  $SCRIPT_NAME note 42 research "Found passport.js library"
-
-  # Record outcome
-  $SCRIPT_NAME outcome 42 "Implemented OAuth login flow"
-
-  # Complete task
-  $SCRIPT_NAME done 42
-
-  # Handoff to next task
-  $SCRIPT_NAME handoff 43 "Pick up implementation. See Task 42 for design docs."
-
-  # Check status
-  $SCRIPT_NAME status login-feature
-  $SCRIPT_NAME done 42 "Completed design phase"
-
-  # Check status
-  $SCRIPT_NAME status login-feature
-
-EOF
-}
-
-# Command: initiative - Create a new initiative with tasks
-cmd_initiative() {
-    local initiative="$1"
-    shift
-    
-    [[ -z "$initiative" ]] && error "Initiative name required"
-    [[ $# -eq 0 ]] && error "At least one task required"
-    
-    info "Creating initiative: $initiative"
-    
-    local urgency=9.0
-    local task_ids=()
-    local prev_id=""
-    
-    for task_spec in "$@"; do
-        # Parse mode|description|tag|due_offset
-        IFS='|' read -r mode description tag due_offset <<< "$task_spec"
-        
-        # If the first field isn't a known mode, assume the old format (description|tag|due)
-        # or that mode was omitted.
-        if [[ ! "$mode" =~ ^(DESIGN|PLAN|INVESTIGATE|GUIDE|EXECUTE|TEST|DEBUG|REVIEW|PR-REVIEW)$ ]]; then
-            # Shift everything right
-            due_offset=$tag
-            tag=$description
-            description=$mode
-            mode=""
-        fi
-
-        [[ -z "$description" ]] && error "Task description cannot be empty"
-        
-        # Format description with mode
-        local final_desc="$description"
-        if [[ -n "$mode" ]]; then
-            final_desc="[$mode] $description"
-        fi
-
-        # Set defaults
-        tag=${tag:-implementation}
-        due_offset=${due_offset:-today}
-        
-        # Build task command with priority based on position
-        local priority="M"
-        if (( $(echo "$urgency >= 9.0" | bc -l) )); then
-            priority="H"
-        elif (( $(echo "$urgency <= 3.0" | bc -l) )); then
-            priority="L"
-        fi
-        
-        # Build task command arguments
-        local args=(add project:"$initiative" "$final_desc" due:"$due_offset" priority:"$priority" "+$tag")
-        [[ -n "$prev_id" ]] && args+=(depends:"$prev_id")
-        
-        # Execute and capture ID
-        local output
-        output=$("$TASKP_BIN" "${args[@]}" 2>&1)
-        local new_id
-        new_id=$(echo "$output" | grep -oP 'Created task \K\d+' || echo "")
-        
-        if [[ -n "$new_id" ]]; then
-            task_ids+=("$new_id")
-            success "Created task $new_id: $final_desc [priority: $priority]"
-            prev_id="$new_id"
-        else
-            echo "DEBUG: Command output: $output" >&2
-            error "Failed to create task: $final_desc"
-        fi
-        
-        # Decrease urgency for next task
-        urgency=$(echo "$urgency - 2.0" | bc)
-    done
-    
-    echo ""
-    success "Initiative created with ${#task_ids[@]} tasks"
-    info "Task IDs: ${task_ids[*]}"
-    info "First task ready to work: ${task_ids[0]}"
-}
-
-# Command: next - Show next task(s) ready to work
-cmd_next() {
-    local filter="${1:-status:pending}"
-    
-    if [[ "project:$filter" != status:* ]] && [[ "project:$filter" != * ]]; then
-        filter="$filter status:pending"
-    fi
-    
-    info "Next tasks ready to work:"
-    echo ""
-    
-    "$TASKP_BIN" "project:$filter" ready 2>/dev/null || warning "No tasks ready"
-}
-
-# Helper: Get inherited context from parent tasks (dependencies)
-get_parent_context() {
-    local task_id="$1"
-    local json
-    json=$("$TASKP_BIN" "$task_id" export 2>/dev/null | jq '.[0]')
-    
-    # UUIDs of dependencies
-    local deps
-    deps=$(echo "$json" | jq -r '.depends // [] | join(" ")')
-    
-    if [[ -n "$deps" ]]; then
-        local found_context=false
-        for dep_uuid in $deps; do
-            local dep_json
-            dep_json=$("$TASKP_BIN" "$dep_uuid" export 2>/dev/null | jq '.[0]')
-            [[ -z "$dep_json" || "$dep_json" == "null" ]] && continue
-            
-            local dep_desc=$(echo "$dep_json" | jq -r '.description')
-            local uuid=$(echo "$dep_json" | jq -r '.uuid')
-            
-            # Extract relevant annotations
-            local annotations
-            annotations=$(echo "$dep_json" | jq -r '.annotations // [] | .[] | select(.description | test("^(OUTCOME|DECISION|LESSON|HANDOFF):")) | .description')
-            
-            if [[ -n "$annotations" ]]; then
-                if [[ "$found_context" == false ]]; then
-                    echo -e "\n══ INHERITED CONTEXT ══"
-                    found_context=true
-                fi
-                echo -e "Task (${uuid:0:8}) [$dep_desc]:"
-                echo "$annotations" | sed 's/^/  - /'
-            fi
-        done
-        [[ "$found_context" == true ]] && echo ""
-    fi
-}
-
-# Command: execute - Start working on a task
-cmd_execute() {
-    local input_id="$1"
-    local task_id
-    task_id=$(resolve_uuid "$input_id")
-    
-    [[ -z "$task_id" ]] && error "Task ID required"
-    
-    # Check if task is blocked
-    local status
-    status=$("$TASKP_BIN" "$task_id" export 2>/dev/null | jq -r '.[0].status // "notfound"')
-    
-    [[ "$status" == "notfound" ]] && error "Task $task_id not found"
-    
-    local tags
-    tags=$("$TASKP_BIN" "$task_id" export 2>/dev/null | jq -r '.[0].tags // [] | join(" ")')
-    
-    if [[ "$tags" == *"BLOCKED"* ]]; then
-        error "Task $task_id is BLOCKED by dependencies"
-    fi
-    
-    # Show inherited context from dependencies
-    get_parent_context "$task_id"
-
-    "$TASKP_BIN" "$task_id" start
-    success "Started working on task $(short_id "$task_id")"
-    
-    # Show task info
-    echo ""
-    "$TASKP_BIN" "$task_id"
-}
-
-# Validate that task has OUTCOME annotation
-validate_outcome() {
-    local task_id="$1"
-    
-    if "$TASKP_BIN" "$task_id" info 2>/dev/null | grep -qi "OUTCOME:"; then
-        return 0
-    else
-        error "Task $task_id cannot be completed without an OUTCOME record.\n   Don't sweat it! Just record what you achieved first: tw-flow outcome $task_id \"your result\"\n   This keeps our project history solid and helps future agents (or you) stay in context."
-    fi
-}
-
-# Command: done - Complete a task
-cmd_done() {
-    local task_id="$1"
-    local note="$2"
-    
-    [[ -z "$task_id" ]] && error "Task ID required"
-    
-    # Validate outcome before completing
-    validate_outcome "$task_id" || exit 1
-    
-    # Add completion note if provided
-    if [[ -n "$note" ]]; then
-        "$TASKP_BIN" "$task_id" annotate "DONE: $note"
-    fi
-    
-    export TW_FLOW_INTERNAL=true
-    "$TASKP_BIN" "$task_id" done
-    success "Task $task_id completed!"
-    # Check if any tasks were unblocked
-    echo ""
-    info "Checking for newly unblocked tasks..."
-    local unblocked
-    unblocked=$("$TASKP_BIN" status:pending ready 2>/dev/null | grep -c "^[0-9]" || echo "0")
-    
-    if [[ "$unblocked" -gt 0 ]]; then
-        success "$unblocked task(s) now ready to work"
-    "$TASKP_BIN" status:pending ready limit:3
-    fi
-}
-
-# Command: pause - Pause work on a task
-cmd_pause() {
-    local task_id="$1"
-    
-    [[ -z "$task_id" ]] && error "Task ID required"
-    
-    "$TASKP_BIN" "$task_id" stop
-    success "Paused task $(short_id "$task_id")"
-}
-
-# Command: outcome - Record final outcome
-cmd_outcome() {
-    local task_id="$1"
-    shift
-    local message="$*"
-    
-    [[ -z "$task_id" ]] && error "Task ID required"
-    [[ -z "$message" ]] && error "Outcome message required"
-    
-    "$TASKP_BIN" "$task_id" annotate "OUTCOME: $message"
-    success "Recorded outcome for task $(short_id "$task_id")"
-}
-
-# Command: handoff - Start next task and add handoff note
-cmd_handoff() {
-    local task_id="$1"
-    shift
-    local message="$*"
-    
-    [[ -z "$task_id" ]] && error "Task ID required"
-    [[ -z "$message" ]] && error "Handoff message required"
-    
-    # Execute the next task
-    cmd_execute "$task_id"
-    
-    # Add the handoff note
-    "$TASKP_BIN" "$task_id" annotate "HANDOFF: $message"
-    success "Handoff to task $task_id with note"
-}
-
-# Command: note - Add structured annotation
-cmd_note() {
-    local task_id="$1"
-    local type="$2"
-    shift 2
-    local message="$*"
-    
-    [[ -z "$task_id" ]] && error "Task ID required"
-    [[ -z "$type" ]] && error "Note type required (research, decision, blocked, lesson, ac, note, link)"
-    [[ -z "$message" ]] && error "Note message required"
-    
-    # Convert type to uppercase prefix
-    local prefix
-    case "$type" in
-        research|r)   prefix="RESEARCH" ;;
-        decision|d)   prefix="DECISION" ;;
-        blocked|b)    prefix="BLOCKED" ;;
-        lesson|l)     prefix="LESSON" ;;
-        ac|a)         prefix="AC" ;;
-        note|n)       prefix="NOTE" ;;
-        link)         prefix="LINK" ;;
-        *)            error "Invalid note type: $type" ;;
-    esac
-    
-    "$TASKP_BIN" "$task_id" annotate "$prefix: $message"
-    success "Added $prefix note to task $task_id"
-}
-
-# Command: context - Show full task context
-cmd_context() {
-    local task_id="$1"
-    
-    [[ -z "$task_id" ]] && error "Task ID required"
-    
-    # Resolve UUID if short UUID provided
-    task_id=$(resolve_uuid "$task_id")
- 
-    info "Full context for task $task_id:"
-    echo ""
-    "$TASKP_BIN" "$task_id" info
-}
-
-# Command: status - Show initiative status overview
-cmd_status() {
-    local filter="$1"
-    local initiative_name
-    
-    # Load focus data
-    local focus_json
-    focus_json=$(load_focus)
-   local focused_ini
-    focused_ini=$(echo "$focus_json" | jq -r '.focused_ini // ""')
-    local focused_task
-    focused_task=$(echo "$focus_json" | jq -r '.focused_task_uuid // ""')
-
-    if [[ -z "$filter" ]]; then
-        if [[ -n "$focused_ini" ]]; then
-            initiative_name="$focused_ini"
-            filter="project:$initiative_name"
-        else
-            # Try to detect active initiative from current active task
-            initiative_name=$("$TASKP_BIN" +ACTIVE export | jq -r '.[0].project // ""')
-            if [[ -z "$initiative_name" ]]; then
-                # Fallback to all pending tasks if no active task
-                filter="status:pending"
-                initiative_name="ALL ACTIVE"
-            else
-                filter="project:$initiative_name"
-            fi
-        fi
-    else
-        if [[ "$filter" =~ ^project: ]]; then
-            initiative_name="${filter#project:}"
-        elif [[ "$filter" == "status:pending" ]]; then
-            initiative_name="ALL ACTIVE"
-        else
-            initiative_name="$filter"
-            filter="project:$filter"
-        fi
-    fi
- 
-    # Custom initiative status overview
-    local tasks_json
-    tasks_json=$("$TASKP_BIN" "$filter" export)
-    
-    local tasks_list
-    tasks_list=$(echo "$tasks_json" | jq -r '.[] | select(.status=="pending") | {uuid: .uuid, id: .id, active: (.start!=null), desc: .description} | @base64')
-    
-    local total_pending
-    total_pending=$(echo "$tasks_json" | jq -r '[.[] | select(.status=="pending")] | length')
-    
-    local active_uuid
-    active_uuid=$(echo "$tasks_json" | jq -r '.[] | select(.status=="pending" and .start!=null) | .uuid' | head -n1)
-    
-    local next_uuid
-    next_uuid=$(echo "$tasks_json" | jq -r '.[] | select(.status=="pending" and .start==null) | .uuid' | head -n1)
-    
-    echo -e "══ Initiative: $initiative_name ══"
-    [[ -n "$focused_ini" ]] && [[ "$initiative_name" == "$focused_ini" ]] && echo -e "📌 ANCHORED SESSION"
-
-    # Display recursive context if a task is focused
-    if [[ -n "$focused_task" ]]; then
-        echo -e "\n🎯 FOCUS CONTEXT [$(short_id "$focused_task")]:"
-        get_parent_context "$focused_task" | sed 's/^/  /'
-        "$TASKP_BIN" "$focused_task" export | jq -r '.[0].annotations // [] | .[] | "  - \(.description)"'
-    fi
-
-    if [[ "$total_pending" -gt 0 ]]; then
-        echo -e "\nPENDING:"
-        echo "$tasks_list" | while read -r task; do
-            t=$(echo "$task" | base64 -d)
-            uuid=$(echo "$t" | jq -r '.uuid')
-            short_uuid=$(short_id "$uuid")
-            desc=$(echo "$t" | jq -r '.desc')
-            if [[ "$uuid" == "$active_uuid" ]]; then
-                echo -e "- ✓ [$short_uuid - ACTIVE] $desc"
-            elif [[ "$uuid" == "$focused_task" ]]; then
-                echo -e "- 🎯 [$short_uuid - FOCUSED] $desc"
-            else
-                echo -e "- [$short_uuid] $desc"
-            fi
-        done
-    else
-        success "No pending tasks found for this filter."
-    fi
-
-    # Display completed tasks if any
-    local completed_list
-    completed_list=$(echo "$tasks_json" | jq -r '.[] | select(.status=="completed") | "✓ [\(.uuid | .[0:8])] \(.description)"' || echo "")
-    if [[ -n "$completed_list" ]]; then
-        echo -e "\nCOMPLETED:"
-        echo "$completed_list" | sed 's/^/  /'
-    fi
-    
-    echo -e "\nTotal: $total_pending tasks. Active: $(short_id "$active_uuid"). Next: $(short_id "$next_uuid").\n"
-    
-    # Count tasks by status using the JSON we already have
-    local pending active blocked completed
-    pending=$(echo "$tasks_json" | jq -r '[.[] | select(.status=="pending")] | length')
-    active=$(echo "$tasks_json" | jq -r '[.[] | select(.status=="pending" and .start!=null)] | length')
-    blocked=$(echo "$tasks_json" | jq -r '[.[] | select(.status=="pending" and .tags!=null and (.tags | contains(["BLOCKED"])))] | length')
-    completed=$(echo "$tasks_json" | jq -r '[.[] | select(.status=="completed")] | length')
-    
-    echo -e "Completed: $completed"
-    echo -e "Active: $active"
-    echo -e "Blocked: $blocked"
-    echo -e "Pending: $((pending - active))"
-    echo ""
-}
-
-# Command: initiatives - List all initiatives with pending tasks
-cmd_initiatives() {
-    info "Initiatives with pending tasks:"
-    echo ""
-    
-    local initiatives_json
-    initiatives_json=$("$TASKP_BIN" status:pending export)
-    
-    local initiative_names
-    initiative_names=$(echo "$initiatives_json" | jq -r '.[].project' | sort | uniq | grep -v "^$" || echo "")
-    
-    if [[ -z "$initiative_names" ]]; then
-        success "No active initiatives!"
-        return
-    fi
-    
-    while IFS= read -r initiative; do
-        [[ -z "$initiative" ]] && continue
-        
-        local pending active blocked
-        pending=$(echo "$initiatives_json" | jq -r "[.[] | select(.project==\"$initiative\")] | length")
-        active=$(echo "$initiatives_json" | jq -r "[.[] | select(.project==\"$initiative\" and .start!=null)] | length")
-        blocked=$(echo "$initiatives_json" | jq -r "[.[] | select(.project==\"$initiative\" and .tags!=null and (.tags | contains([\"BLOCKED\"])))] | length")
-        
-        echo -e "● $initiative"
-        echo -e "  Pending: $((pending - active)) | Active: $active | Blocked: $blocked"
-        echo ""
-    done <<< "$initiative_names"
-}
-
-# Command: active - Show currently active tasks
-cmd_active() {
-    info "Currently active tasks:"
-    echo ""
-    "$TASKP_BIN" +ACTIVE 2>/dev/null || warning "No active tasks"
-}
-
-# Command: blocked - Show blocked tasks
-cmd_blocked() {
-    info "Blocked tasks:"
-    echo ""
-    "$TASKP_BIN" +BLOCKED 2>/dev/null || success "No blocked tasks"
-}
-
-# Command: overdue - Show overdue tasks
-cmd_overdue() {
-    info "Overdue tasks:"
-    echo ""
-    "$TASKP_BIN" due.before:today status:pending 2>/dev/null || success "No overdue tasks"
-}
-
-# Command: urgent - Make task urgent
-cmd_urgent() {
-    local task_id="$1"
-    local urgency="${2:-15.0}"
-    
-    [[ -z "$task_id" ]] && error "Task ID required"
-    
-    "$TASKP_BIN" "$task_id" modify "urgency:$urgency" priority:H
-    success "Task $task_id marked as urgent (urgency: $urgency)"
-}
-
-# Command: block - Add dependency
-cmd_block() {
-    local task_id="$1"
-    local depends_on="$2"
-    
-    [[ -z "$task_id" ]] && error "Task ID required"
-    [[ -z "$depends_on" ]] && error "Dependency task ID required"
-    
-    "$TASKP_BIN" "$task_id" modify "depends:$depends_on"
-    success "Task $task_id now depends on task $depends_on"
-}
-
-# Command: unblock - Remove dependency
-cmd_unblock() {
-    local task_id="$1"
-    local depends_on="$2"
-    
-    [[ -z "$task_id" ]] && error "Task ID required"
-    [[ -z "$depends_on" ]] && error "Dependency task ID required"
-    
-    # Get current dependencies
-    local current_deps
-    current_deps=$("$TASKP_BIN" "$task_id" export | jq -r '.[0].depends // [] | join(",")')
-    
-    # Remove the specific dependency
-    local new_deps
-    new_deps=$(echo "$current_deps" | tr ',' '\n' | grep -v "^$depends_on$" | tr '\n' ',' | sed 's/,$//')
-    
-    if [[ -n "$new_deps" ]]; then
-    "$TASKP_BIN" "$task_id" modify "depends:$new_deps"
-    else
-    "$TASKP_BIN" "$task_id" modify depends:
-    fi
-    
-    success "Removed dependency on task $depends_on from task $task_id"
-}
-
-# Command: wait - Put task on hold
-cmd_wait() {
-    local task_id="$1"
-    local date="$2"
-    
-    [[ -z "$task_id" ]] && error "Task ID required"
-    [[ -z "$date" ]] && error "Wait date required (e.g., friday, 2026-02-01)"
-    
-    "$TASKP_BIN" "$task_id" modify "wait:$date"
-    success "Task $task_id waiting until $date"
-}
-
-# Soft delete - move task to trash
-cmd_discard() {
-    local task_id="$1"
-    
-    [[ -z "$task_id" ]] && error "Task ID required"
-    
-    # Get current project to preserve context in trash
-    local current_project
-    current_project=$("$TASKP_BIN" "$task_id" export 2>/dev/null | jq -r '.[0].project // "unscoped"')
-    
-    # Move to _archive project (soft delete)
-    local archive_project="${current_project%:_archive}:_archive"
-    
-    export TW_FLOW_INTERNAL=true
-    "$TASKP_BIN" "$task_id" modify project:"$archive_project" +DISCARDED
-    "$TASKP_BIN" "$task_id" annotate "OUTCOME: Task discarded and moved to archive."
-    "$TASKP_BIN" "$task_id" done
-    
-        success "Task $(short_id "$task_id") moved to archive and marked done."
-    }
-    
-# Command: focus - Manage session focus (Anchor System)
-cmd_focus() {
-    local sub="$1"
-    [[ -n "$sub" ]] && shift
-    
-    case "$sub" in
-        ini)
-            local name="$1"
-            [[ -z "$name" ]] && {
-                # If no name provided, try to detect from active task
-                name=$("$TASKP_BIN" +ACTIVE export | jq -r '.[0].project // ""')
-                [[ -z "$name" ]] && error "No active task found to anchor initiative. Please specify name."
-            }
-            
-            # Anchor to initiative but PRESERVE the task stack
-            update_focus "focused_ini" "$name"
-            
-            # Automatically anchor to the 'next' task in this initiative and push to heap
-            local next_uuid
-            next_uuid=$("$TASKP_BIN" "project:$name" status:pending limit:1 export | jq -r '.[0].uuid // ""')
-            if [[ -n "$next_uuid" ]] && [[ "$next_uuid" != "null" ]]; then
-                push_task_focus "$next_uuid"
-                success "Focused initiative anchored to: $name (Task pushed to heap: $(short_id "$next_uuid"))"
-            else
-                success "Focused initiative anchored to: $name (No pending tasks found)"
-            fi
-            ;;
-        interest)
-            local action="$1"
-            local name="$2"
-            local json
-            json=$(load_focus)
-            
-            case "$action" in
-                add)
-                    [[ -z "$name" ]] && error "Initiative name required"
-                    json=$(echo "$json" | jq ".inis_of_interest = (.inis_of_interest + [\"$name\"] | unique)")
-                    save_focus "$json"
-                    success "Added '$name' to interests."
-                    ;;
-                remove)
-                    [[ -z "$name" ]] && error "Initiative name required"
-                    json=$(echo "$json" | jq ".inis_of_interest = (.inis_of_interest | map(select(. != \"$name\")))")
-                    save_focus "$json"
-                    success "Removed '$name' from interests."
-                    ;;
-                list)
-                    echo -e "══ Initiatives of Interest ══"
-                    echo "$json" | jq -r '.inis_of_interest[]' || echo "(empty)"
-                    ;;
-                *)
-                    error "Usage: focus interest [add|remove|list] <name>"
-                    ;;
-            esac
-            ;;
-        task)
-            local input_id="$1"
-            [[ -z "$input_id" ]] && error "Task ID required"
-            local uuid
-            uuid=$(resolve_uuid "$input_id")
-            push_task_focus "$uuid"
-            success "Focused task anchored to: $(short_id "$uuid") (pushed to stack)"
-            ;;
-        pop)
-            pop_task_focus
-            local top
-            top=$(load_focus | jq -r '.focused_task_uuid // "none"')
-            success "Popped task focus. Current top: $top"
-            ;;
-        clear)
-            save_focus '{"focused_ini": null, "focused_task_uuid": null, "task_track": [], "inis_of_interest": []}'
-            success "Focus and task track cleared."
-            ;;
-        *)
-            # Show current focus
-            local json
-            json=$(load_focus)
-            echo -e "══ Current Session Focus ══"
-            echo "$json" | jq .
-            ;;
-    esac
-}
-    
-    cmd_tree() {
-    
-    local filter="${1:-status:pending}"
-    if [[ "project:$filter" != status:* ]] && [[ "project:$filter" != * ]]; then
-        filter="project:$filter"
-    fi
-
-    local project_name
-    project_name=$(echo "project:$filter" | sed 's/^//')
-    echo -e "══ Initiative: $project_name ══"
-
-    # Helper for recursive tree rendering
-    render_tree_node() {
-        local uuid="$1"
-        local indent="$2"
-        local is_last="$3"
-
-        local json
-        json=$("$TASKP_BIN" "$uuid" export 2>/dev/null | jq '.[0]')
-        [[ -z "$json" || "$json" == "null" ]] && return
-
-        local desc=$(echo "$json" | jq -r '.description')
-        local status=$(echo "$json" | jq -r '.status')
-        local start=$(echo "$json" | jq -r '.start // ""')
-
-        local icon="○"
-        [[ "$status" == "completed" ]] && icon="✓"
-        [[ -n "$start" ]] && icon="⚡"
-        
-        # Check if blocked
-        local is_ready
-        is_ready=$("$TASKP_BIN" "$uuid" +READY export 2>/dev/null | jq -r '.[0].id // ""')
-        if [[ "$status" == "pending" && -z "$is_ready" ]]; then
-            icon="🔒"
-        fi
-
-        local marker="├──"
-        [[ "$is_last" == "true" ]] && marker="└──"
-        [[ -z "$indent" ]] && marker=""
-
-        printf "%b%b %b (%s) | %s\n" "$indent" "$marker" "$icon" "${uuid:0:8}" "$desc"
-
-        # Find children (tasks that depend on this one)
-        local children
-        children=$("$TASKP_BIN" "depends.contains:$uuid" status:pending export 2>/dev/null | jq -r '.[] | select(.project | test("_archive$|_trash$") | not) | .uuid' || echo "")
-        
-        local child_indent="$indent    "
-        [[ "$marker" == "├──" ]] && child_indent="$indent│   "
-        [[ -z "$indent" ]] && child_indent=""
-
-        local count
-        count=$(echo "$children" | grep -c . || echo 0)
-        local i=1
-        while read -r child_uuid; do
-            [[ -z "$child_uuid" ]] && continue
-            local last_child="false"
-            [[ "$i" -eq "$count" ]] && last_child="true"
-            render_tree_node "$child_uuid" "$child_indent" "$last_child"
-            i=$((i+1))
-        done <<< "$children"
-    }
-
-    # Find root nodes (tasks in project with no dependencies or whose dependencies are outside this project/completed)
-    local root_uuids
-    root_uuids=$("$TASKP_BIN" "project:$filter" export 2>/dev/null | jq -r '.[] | select(.project | test("_archive$|_trash$") | not) | select(.depends == null or (.depends | length == 0)) | .uuid')
-
-    if [[ -z "$root_uuids" ]]; then
-        # If no strict roots, just show all tasks in project as a list for now
-    "$TASKP_BIN" "project:$filter" export 2>/dev/null | jq -r '.[] | select(.project | test("_archive$|_trash$") | not) | .uuid' | while read -r uuid; do
-             [[ -n "$uuid" ]] && render_tree_node "$uuid" "" "false"
-        done
-    else
-        while read -r uuid; do
-            [[ -n "$uuid" ]] && render_tree_node "$uuid" "" "false"
-        done <<< "$root_uuids"
-    fi
-}
-
-# Main command dispatcher
-main() {
-    [[ $# -eq 0 ]] && { show_usage; exit 0; }
-    
-    local command="$1"
-    shift
-    
-    case "$command" in
-        initiative|ini)       cmd_initiative "$@" ;;
-        initiatives|inis)      cmd_initiatives "$@" ;;
-        next)       cmd_next "$@" ;;
-        execute)    cmd_execute "$@" ;;
-        done)       cmd_done "$@" ;;
-        outcome)    cmd_outcome "$@" ;;
-        handoff)    cmd_handoff "$@" ;;
-        pause)      cmd_pause "$@" ;;
-        note)       cmd_note "$@" ;;
-        context)    cmd_context "$@" ;;
-        status)     cmd_status "$@" ;;
-        active)     cmd_active "$@" ;;
-        blocked)    cmd_blocked "$@" ;;
-        overdue)    cmd_overdue "$@" ;;
-        urgent)     cmd_urgent "$@" ;;
-        block)      cmd_block "$@" ;;
-        unblock)    cmd_unblock "$@" ;;
-        wait)       cmd_wait "$@" ;;
-        discard)    cmd_discard "$@" ;;
-        tree)       cmd_tree "$@" ;;
-        focus)      cmd_focus "$@" ;;
-        help|-h|--help) show_usage ;;
-        *)          error "Unknown command: $command (use '$SCRIPT_NAME help' for usage)" ;;
-    esac
-}
-
-main "$@"
+#!/home/fpiraz/.candango/jaka_ai/.venv/bin/python
+import sys
+import os
+import re
+import base64
+import orjson
+from typing import List, Optional, Dict, Any
+from tw_expert import Environment, TaskWrapper, FocusManager, FocusState
+
+# 🐊 tw_flow.py (v1.4.0)
+# Python port of the Taskwarrior Flow manager.
+
+VERSION = "1.4.0"
+
+class FlowManager:
+    def __init__(self):
+        self.tw = TaskWrapper()
+        self.focus = FocusManager()
+
+    def error(self, msg: str):
+        print(f"ERROR: {msg}", file=sys.stderr)
+        sys.exit(1)
+
+    def success(self, msg: str):
+        print(f"✓ {msg}")
+
+    def info(self, msg: str):
+        print(f"ℹ {msg}")
+
+    def warning(self, msg: str):
+        print(f"⚠ {msg}")
+
+    def resolve_uuid(self, input_val: str) -> str:
+        if re.match(r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$', input_val): return input_val
+        tasks = self.tw.export()
+        if input_val.isdigit():
+            for t in tasks:
+                if str(t.get("id")) == input_val: return t["uuid"]
+        if len(input_val) >= 8:
+            for t in tasks:
+                if t["uuid"].startswith(input_val.lower()): return t["uuid"]
+        return input_val
+
+    def get_parent_context(self, uuid: str):
+        tasks = self.tw.export([uuid])
+        if not tasks: return
+        deps = tasks[0].get("depends", [])
+        if deps:
+            found = False
+            for dep_uuid in deps:
+                dep_tasks = self.tw.export([dep_uuid])
+                if not dep_tasks: continue
+                dep = dep_tasks[0]
+                annots = [a["description"] for a in dep.get("annotations", []) 
+                         if re.match(r'^(OUTCOME|DECISION|LESSON|HANDOFF):', a["description"])]
+                if annots:
+                    if not found: print("\n══ INHERITED CONTEXT ══"); found = True
+                    print(f"Task ({dep_uuid[:8]}) [{dep['description']}]:")
+                    for a in annots: print(f"  - {a}")
+            if found: print("")
+
+    def cmd_initiative(self, name: str, tasks: List[str]):
+        if not name: self.error("Initiative name required")
+        if not tasks: self.error("At least one task required")
+        self.info(f"Creating initiative: {name}")
+        urgency, prev_uuid = 9.0, None
+        for spec in tasks:
+            parts = spec.split("|")
+            mode, desc, tag, due = "", "", "implementation", "today"
+            if len(parts) >= 1:
+                if parts[0] in ["DESIGN", "PLAN", "INVESTIGATE", "GUIDE", "EXECUTE", "TEST", "DEBUG", "REVIEW", "PR-REVIEW"]:
+                    mode, desc = parts[0], (parts[1] if len(parts) > 1 else "")
+                    tag, due = (parts[2] if len(parts) > 2 else tag), (parts[3] if len(parts) > 3 else due)
+                else:
+                    desc, tag, due = parts[0], (parts[1] if len(parts) > 1 else tag), (parts[2] if len(parts) > 2 else due)
+            if not desc: self.error("Task description cannot be empty")
+            final_desc = f"[{mode}] {desc}" if mode else desc
+            priority = "H" if urgency >= 9.0 else ("L" if urgency <= 3.0 else "M")
+            args = ["add", f"project:{name}", final_desc, f"due:{due}", f"priority:{priority}", f"+{tag}"]
+            if prev_uuid: args.append(f"depends:{prev_uuid}")
+            res = self.tw.run(args)
+            match = re.search(r'Created task (\d+)', res.stdout)
+            if match:
+                new_id = match.group(1)
+                new_tasks = self.tw.export([new_id])
+                if new_tasks: prev_uuid = new_tasks[0]["uuid"]; self.success(f"Created task {new_id}: {final_desc} [priority: {priority}]")
+            else: self.error(f"Failed to create task: {final_desc}\n{res.stderr}")
+            urgency -= 2.0
+        self.success(f"Initiative created with {len(tasks)} tasks")
+
+    def cmd_status(self, filter_val: Optional[str] = None):
+        state = self.focus.load()
+        ini_name = filter_val or state.focused_ini
+        if not ini_name:
+            active = self.tw.export(["+ACTIVE"])
+            ini_name = active[0].get("project") if active else "ALL ACTIVE"
+        filter_args = ["status:pending"] if ini_name == "ALL ACTIVE" else [f"project:{ini_name}"]
+        tasks = self.tw.export(filter_args)
+        print(f"══ Initiative: {ini_name} ══")
+        if ini_name == state.focused_ini: print("📌 ANCHORED SESSION")
+        if state.focused_task_uuid:
+            print(f"\n🎯 FOCUS CONTEXT [{state.focused_task_uuid[:8]}]:")
+            self.get_parent_context(state.focused_task_uuid)
+            ft_tasks = self.tw.export([state.focused_task_uuid])
+            if ft_tasks:
+                for a in ft_tasks[0].get("annotations", []): print(f"  - {a['description']}")
+        pending = [t for t in tasks if t["status"] == "pending"]
+        completed = [t for t in tasks if t["status"] == "completed"]
+        if pending:
+            print("\nPENDING:")
+            for t in pending:
+                mark = " - ACTIVE" if t.get("start") else (" - FOCUSED" if t["uuid"] == state.focused_task_uuid else "")
+                print(f"- [{t['uuid'][:8]}{mark}] {t['description']}")
+        if completed:
+            print("\nCOMPLETED:")
+            for t in completed: print(f"  ✓ [{t['uuid'][:8]}] {t['description']}")
+        print(f"\nTotal: {len(pending)} pending, {len(completed)} completed.")
+
+    def cmd_next(self, filter_val: str = "status:pending"):
+        self.info("Next tasks ready to work:"); print("")
+        args = [filter_val, "ready"] if "project:" in filter_val or "status:" in filter_val else [f"project:{filter_val}", "status:pending", "ready"]
+        self.tw.run(args, capture=False)
+
+    def cmd_execute(self, input_id: str):
+        uuid = self.resolve_uuid(input_id)
+        self.get_parent_context(uuid)
+        res = self.tw.run([uuid, "start"])
+        if res.returncode == 0: self.success(f"Started working on task {uuid[:8]}"); self.tw.run([uuid], capture=False)
+        else: self.error(f"Failed to start task: {res.stderr}")
+
+    def cmd_done(self, input_id: str, note: Optional[str] = None):
+        uuid = self.resolve_uuid(input_id)
+        tasks = self.tw.export([uuid])
+        if not tasks: self.error("Task not found")
+        if not any("OUTCOME:" in a["description"] for a in tasks[0].get("annotations", [])):
+            self.error(f"Task {uuid[:8]} cannot be completed without an OUTCOME record.\n   Use: tw-flow outcome {uuid[:8]} \"your result\"")
+        if note: self.tw.run([uuid, "annotate", f"DONE: {note}"])
+        os.environ["TW_FLOW_INTERNAL"] = "true"
+        res = self.tw.run([uuid, "done"])
+        if res.returncode == 0: self.success(f"Task {uuid[:8]} completed!")
+        else: self.error(f"Failed to complete task: {res.stderr}")
+
+    def cmd_outcome(self, input_id: str, msg: str):
+        uuid = self.resolve_uuid(input_id)
+        self.tw.run([uuid, "annotate", f"OUTCOME: {msg}"])
+        self.success(f"Recorded outcome for task {uuid[:8]}")
+
+    def cmd_handoff(self, input_id: str, msg: str):
+        uuid = self.resolve_uuid(input_id)
+        self.cmd_execute(uuid)
+        self.tw.run([uuid, "annotate", f"HANDOFF: {msg}"])
+        self.success(f"Handoff to task {uuid[:8]} with note")
+
+    def cmd_note(self, input_id: str, note_type: str, msg: str):
+        uuid = self.resolve_uuid(input_id)
+        prefixes = {"research": "RESEARCH", "r": "RESEARCH", "decision": "DECISION", "d": "DECISION", "blocked": "BLOCKED", "b": "BLOCKED", "lesson": "LESSON", "l": "LESSON", "ac": "AC", "a": "AC", "note": "NOTE", "n": "NOTE", "link": "LINK"}
+        prefix = prefixes.get(note_type.lower())
+        if not prefix: self.error(f"Invalid note type: {note_type}")
+        self.tw.run([uuid, "annotate", f"{prefix}: {msg}"])
+        self.success(f"Added {prefix} note to task {uuid[:8]}")
+
+    def cmd_context(self, input_id: str):
+        uuid = self.resolve_uuid(input_id)
+        self.info(f"Full context for task {uuid[:8]}:"); print("")
+        verbose = "affected,header,foot,label,columns,subtotal,stats,history,project,context,annotations"
+        self.tw.run([uuid, "info"], capture=False, verbose=verbose)
+
+    def cmd_initiatives(self):
+        self.info("Initiatives with pending tasks:"); print("")
+        tasks = self.tw.export(["status:pending"])
+        inis = sorted(list(set(t["project"] for t in tasks if t.get("project"))))
+        if not inis: self.success("No active initiatives!"); return
+        for ini in inis:
+            p = [t for t in tasks if t["project"] == ini]
+            a = len([t for t in p if t.get("start")])
+            b = len([t for t in p if t.get("tags") and "BLOCKED" in t["tags"]])
+            print(f"● {ini}\n  Pending: {len(p)-a} | Active: {a} | Blocked: {b}\n")
+
+    def cmd_active(self):
+        self.info("Currently active tasks:"); print("")
+        self.tw.run(["+ACTIVE"], capture=False)
+
+    def cmd_blocked(self):
+        self.info("Blocked tasks:"); print("")
+        self.tw.run(["+BLOCKED"], capture=False)
+
+    def cmd_overdue(self):
+        self.info("Overdue tasks:"); print("")
+        self.tw.run(["due.before:today", "status:pending"], capture=False)
+
+    def cmd_urgent(self, input_id: str, urgency: str = "15.0"):
+        uuid = self.resolve_uuid(input_id)
+        self.tw.run([uuid, "modify", f"urgency:{urgency}", "priority:H"])
+        self.success(f"Task {uuid[:8]} marked as urgent (urgency: {urgency})")
+
+    def cmd_block(self, input_id: str, dep_id: str):
+        uuid, dep_uuid = self.resolve_uuid(input_id), self.resolve_uuid(dep_id)
+        self.tw.run([uuid, "modify", f"depends:{dep_uuid}"])
+        self.success(f"Task {uuid[:8]} now depends on task {dep_uuid[:8]}")
+
+    def cmd_unblock(self, input_id: str, dep_id: str):
+        uuid, dep_uuid = self.resolve_uuid(input_id), self.resolve_uuid(dep_id)
+        tasks = self.tw.export([uuid])
+        if not tasks: return
+        new_deps = [d for t in tasks for d in t.get("depends", []) if d != dep_uuid]
+        self.tw.run([uuid, "modify", f"depends:{','.join(new_deps)}" if new_deps else "depends:"])
+        self.success(f"Removed dependency on task {dep_uuid[:8]} from task {uuid[:8]}")
+
+    def cmd_wait(self, input_id: str, date: str):
+        uuid = self.resolve_uuid(input_id)
+        self.tw.run([uuid, "modify", f"wait:{date}"])
+        self.success(f"Task {uuid[:8]} waiting until {date}")
+
+    def cmd_discard(self, input_id: str):
+        uuid = self.resolve_uuid(input_id)
+        tasks = self.tw.export([uuid])
+        if not tasks: return
+        ini = tasks[0].get("project", "unscoped")
+        archive = f"{ini.split(':_archive')[0]}:_archive"
+        os.environ["TW_FLOW_INTERNAL"] = "true"
+        self.tw.run([uuid, "modify", f"project:{archive}", "+DISCARDED"])
+        self.tw.run([uuid, "annotate", "OUTCOME: Task discarded and moved to archive."])
+        self.tw.run([uuid, "done"])
+        self.success(f"Task {uuid[:8]} moved to archive and marked done.")
+
+    def cmd_tree(self, filter_val: str = "status:pending"):
+        ini = filter_val if "project:" in filter_val or "status:" in filter_val else f"project:{filter_val}"
+        print(f"══ Initiative: {filter_val} ══")
+        def render(uuid, indent="", last=True):
+            tasks = self.tw.export([uuid])
+            if not tasks: return
+            t = tasks[0]
+            icon = "✓" if t["status"] == "completed" else ("⚡" if t.get("start") else ("🔒" if "READY" not in self.tw.run([uuid, "+READY"], capture=True).stdout else "○"))
+            marker = ("└── " if last else "├── ") if indent else ""
+            print(f"{indent}{marker}{icon} ({uuid[:8]}) | {t['description']}")
+            children = [c["uuid"] for c in self.tw.export([f"depends.contains:{uuid}", "status:pending"]) if "_archive" not in c.get("project", "")]
+            for i, c_uuid in enumerate(children): render(c_uuid, indent + ("    " if last else "│   "), i == len(children)-1)
+        roots = [t["uuid"] for t in self.tw.export([ini]) if not t.get("depends") and "_archive" not in t.get("project", "")]
+        for uuid in roots: render(uuid)
+
+def main():
+    if len(sys.argv) < 2: print(f"tw-flow v{VERSION}"); sys.exit(0)
+    cmd, args, flow = sys.argv[1], sys.argv[2:], FlowManager()
+    if cmd in ["initiative", "ini"]: flow.cmd_initiative(args[0], args[1:])
+    elif cmd == "status": flow.cmd_status(args[0] if args else None)
+    elif cmd == "next": flow.cmd_next(args[0] if args else "status:pending")
+    elif cmd == "execute": flow.cmd_execute(args[0])
+    elif cmd == "done": flow.cmd_done(args[0], args[1] if len(args) > 1 else None)
+    elif cmd == "outcome": flow.cmd_outcome(args[0], " ".join(args[1:]))
+    elif cmd == "handoff": flow.cmd_handoff(args[0], " ".join(args[1:]))
+    elif cmd == "note": flow.cmd_note(args[0], args[1], " ".join(args[2:]))
+    elif cmd == "context": flow.cmd_context(args[0])
+    elif cmd in ["inis", "initiatives"]: flow.cmd_initiatives()
+    elif cmd == "active": flow.cmd_active()
+    elif cmd == "blocked": flow.cmd_blocked()
+    elif cmd == "overdue": flow.cmd_overdue()
+    elif cmd == "urgent": flow.cmd_urgent(args[0], args[1] if len(args) > 1 else "15.0")
+    elif cmd == "block": flow.cmd_block(args[0], args[1])
+    elif cmd == "unblock": flow.cmd_unblock(args[0], args[1])
+    elif cmd == "wait": flow.cmd_wait(args[0], args[1])
+    elif cmd == "discard": flow.cmd_discard(args[0])
+    elif cmd == "tree": flow.cmd_tree(args[0] if args else "status:pending")
+    elif cmd == "focus":
+        sub = args[0] if args else None
+        if sub == "ini":
+            name = args[1] if len(args) > 1 else (flow.tw.export(["+ACTIVE"])[0].get("project") if flow.tw.export(["+ACTIVE"]) else None)
+            if name:
+                flow.focus.update_ini(name)
+                tasks = flow.tw.export([f"project:{name}", "status:pending", "limit:1"])
+                if tasks: flow.focus.push_task(tasks[0]["uuid"], name); flow.success(f"Focused initiative anchored to: {name} (Task pushed to heap: {tasks[0]['uuid'][:8]})")
+                else: flow.success(f"Focused initiative anchored to: {name}")
+            else: flow.error("Initiative name required")
+        elif sub == "task":
+            uuid = flow.resolve_uuid(args[1]); tasks = flow.tw.export([uuid])
+            if tasks: flow.focus.push_task(uuid, tasks[0].get("project", "")); flow.success(f"Focused task anchored to: {uuid[:8]} (pushed to stack)")
+        elif sub == "pop": flow.focus.pop_task(); flow.success(f"Popped task focus. Current top: {flow.focus.load().focused_task_uuid or 'none'}")
+        elif sub == "interest":
+            action, name = (args[1] if len(args) > 1 else None), (args[2] if len(args) > 2 else None)
+            state = flow.focus.load()
+            if action == "add" and name: state.inis_of_interest = sorted(list(set(state.inis_of_interest + [name]))); flow.focus.save(state); flow.success(f"Added '{name}' to interests.")
+            elif action == "remove" and name: state.inis_of_interest = [i for i in state.inis_of_interest if i != name]; flow.focus.save(state); flow.success(f"Removed '{name}' from interests.")
+            elif action == "list": print("══ Initiatives of Interest ══\n" + ("\n".join(state.inis_of_interest) if state.inis_of_interest else "(empty)"))
+            else: flow.error("Usage: focus interest [add|remove|list] <name>")
+        elif sub == "clear": from tw_expert import FocusState; flow.focus.save(FocusState(task_track=[], inis_of_interest=[])); flow.success("Focus and task track cleared.")
+        else: print("══ Current Session Focus ══\n" + orjson.dumps(flow.focus.load().to_dict(), option=orjson.OPT_INDENT_2).decode())
+    elif cmd in ["help", "--help", "-h"]: print("tw-flow USAGE:\n  ini <ini> <tasks...>\n  next [ini]\n  execute <id>\n  done <id> [note]\n  outcome <id> <msg>\n  note <id> <type> <msg>\n  context <id>\n  inis | status [ini]\n  focus [ini|task|pop|interest|clear]\n  tree [ini]")
+    else: flow.error(f"Unknown command: {cmd}")
+
+if __name__ == "__main__": main()
