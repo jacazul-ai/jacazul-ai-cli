@@ -27,6 +27,11 @@ export COPILOT_CUSTOM_INSTRUCTIONS_DIRS="$HOME/.copilot:$HOME/.github/instructio
 # Add workflow scripts to PATH
 export PATH="$PATH:$PROJECT_ROOT/templates/skills/taskwarrior_expert/scripts"
 
+# If no arguments provided, default to 'onboard' prompt
+if [ $# -eq 0 ]; then
+    set -- -i "onboard"
+fi
+
 # Run GitHub Copilot CLI directly
 [ -n "$DEBUG" ] && echo "🐊 can-copilot: Starting for project [$PROJECT_ID]"
 
@@ -36,4 +41,9 @@ if [ -n "$DRY" ]; then
     exit 0
 fi
 
-exec copilot "$@"
+# Execute copilot with jacazul agent by default
+if [[ "$*" == *"--agent"* ]]; then
+    exec copilot "$@"
+else
+    exec copilot --agent jacazul "$@"
+fi

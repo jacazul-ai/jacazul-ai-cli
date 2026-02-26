@@ -1,0 +1,54 @@
+#!/bin/bash
+# 🐊 Jaka - Bootstrap for Copilot (Global UNHINGED Mode)
+# Sets up global agents and skills for native Copilot CLI execution.
+
+PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+COPILOT_GLOBAL_DIR="$HOME/.copilot"
+TEMPLATES_DIR="$PROJECT_ROOT/templates"
+
+# 1. Garante que os diretórios globais existem
+if [ ! -d "$COPILOT_GLOBAL_DIR/agents" ] || [ ! -d "$COPILOT_GLOBAL_DIR/skills" ]; then
+    echo "🐊 Initializing global Copilot directories at $COPILOT_GLOBAL_DIR..."
+    mkdir -p "$COPILOT_GLOBAL_DIR/agents" "$COPILOT_GLOBAL_DIR/skills"
+fi
+
+# 2. Link Global Agents (Surgical)
+for agent in "$TEMPLATES_DIR/agents"/*.md; do
+    [ -e "$agent" ] || continue
+    name=$(basename "$agent")
+    target="$COPILOT_GLOBAL_DIR/agents/$name"
+    if [ ! -L "$target" ] && [ ! -f "$target" ]; then
+        echo "🐊 Linking global agent: $name"
+        ln -s "$agent" "$target"
+    fi
+done
+
+# 3. Link Global Skills (Surgical)
+for skill_dir in "$TEMPLATES_DIR/skills"/*; do
+    [ -d "$skill_dir" ] || continue
+    name=$(basename "$skill_dir")
+    
+    # Skip 'jaka' skill globally - it should only be an agent there
+    if [ "$name" = "jaka" ]; then
+        continue
+    fi
+
+    target="$COPILOT_GLOBAL_DIR/skills/$name"
+    if [ ! -L "$target" ] && [ ! -d "$target" ]; then
+        echo "🐊 Linking global skill: $name"
+        ln -s "$skill_dir" "$target"
+    fi
+done
+
+# 4. Link Instructions Template (Surgical)
+INSTRUCTIONS_SRC="$TEMPLATES_DIR/context/copilot-instructions.md"
+INSTRUCTIONS_TARGET="$COPILOT_GLOBAL_DIR/copilot-instructions.md"
+if [ ! -L "$INSTRUCTIONS_TARGET" ] && [ ! -f "$INSTRUCTIONS_TARGET" ]; then
+    echo "🐊 Linking global instructions: $INSTRUCTIONS_TARGET"
+    ln -s "$INSTRUCTIONS_SRC" "$INSTRUCTIONS_TARGET"
+fi
+
+# Log only in DEBUG mode
+if [ -n "$DEBUG" ]; then
+    echo "✅ Jaka: Global Copilot environment verified."
+fi

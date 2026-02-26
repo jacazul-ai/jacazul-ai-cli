@@ -42,45 +42,6 @@ chmod +x "$TARGET_SCRIPT"
 echo "✅ Wrapper script created: $TARGET_SCRIPT"
 
 # -----------------------------------------------------------------------------
-# 3. Symlink skills to native home
-# -----------------------------------------------------------------------------
-SKILL_SOURCE="$PROJECT_ROOT/templates/skills"
-SKILL_TARGET="$HOME/.copilot/skills"
-
-if [ ! -d "$HOME/.copilot" ]; then
-    echo "Creating ~/.copilot directory..."
-    mkdir -p "$HOME/.copilot"
-fi
-
-if [ -L "$SKILL_TARGET" ]; then
-    echo "⚠️  Skill symlink already exists: $SKILL_TARGET"
-elif [ -d "$SKILL_TARGET" ]; then
-    echo "⚠️  Skills directory already exists (not a symlink): $SKILL_TARGET"
-    echo "    Skipping skill setup. Remove it first if you want to use project skills."
-else
-    echo "Creating skill symlink: $SKILL_TARGET -> $SKILL_SOURCE"
-    ln -s "$SKILL_SOURCE" "$SKILL_TARGET"
-    echo "✅ Skills symlinked"
-fi
-
-# -----------------------------------------------------------------------------
-# 4. Symlink templates to custom instructions
-# -----------------------------------------------------------------------------
-TEMPLATES_SOURCE="$PROJECT_ROOT/templates"
-TEMPLATES_TARGET="$HOME/.copilot/templates"
-
-if [ -L "$TEMPLATES_TARGET" ]; then
-    echo "⚠  Templates symlink already exists: $TEMPLATES_TARGET"
-elif [ -d "$TEMPLATES_TARGET" ]; then
-    echo "⚠️  Templates directory already exists (not a symlink): $TEMPLATES_TARGET"
-    echo "    Skipping templates setup."
-else
-    echo "Creating templates symlink: $TEMPLATES_TARGET -> $TEMPLATES_SOURCE"
-    ln -s "$TEMPLATES_SOURCE" "$TEMPLATES_TARGET"
-    echo "✅ Templates symlinked"
-fi
-
-# -----------------------------------------------------------------------------
 # 5. Setup can-opencode link in ~/bin
 # -----------------------------------------------------------------------------
 OPENCODE_LINK="$HOME/bin/can-opencode"

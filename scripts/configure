@@ -74,9 +74,21 @@ else
         ln -s "$PROJECT_ROOT/scripts/can-opencode" "$OPENCODE_LINK"
         echo "✅ Link created: $OPENCODE_LINK"
     else
-            echo "ℹ️  $OPENCODE_LINK already exists. Skipping link creation."
-        fi
+        echo "ℹ️  $OPENCODE_LINK already exists. Skipping link creation."
+    fi
+
+    # -----------------------------------------------------------------------------
+    # 5. Setup can-copilot link in ~/bin
+    # -----------------------------------------------------------------------------
+    COPILOT_LINK="$HOME/bin/can-copilot"
+    if [ ! -L "$COPILOT_LINK" ] && [ ! -f "$COPILOT_LINK" ]; then
+        echo "Creating symbolic link for can-copilot at $COPILOT_LINK..."
+        ln -s "$PROJECT_ROOT/scripts/can-copilot" "$COPILOT_LINK"
+        echo "✅ Link created: $COPILOT_LINK"
+    else
+        echo "ℹ️  $COPILOT_LINK already exists. Skipping link creation."
+    fi
         
-        echo ""
-        echo "Setup complete! You can now run: copilot_sandboxed, can-gemini or can-opencode"
+    echo ""
+    echo "Setup complete! You can now run: copilot_sandboxed, can-gemini, can-opencode or can-copilot"
         

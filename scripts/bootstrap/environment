@@ -48,7 +48,13 @@ if [ -x "$BOOTSTRAP_OPENCODE" ]; then
     "$BOOTSTRAP_OPENCODE"
 fi
 
-# 4.4 Python VENV
+# 4.4 Copilot
+BOOTSTRAP_COPILOT="$PROJECT_ROOT/scripts/bootstrap/copilot"
+if [ -x "$BOOTSTRAP_COPILOT" ]; then
+    "$BOOTSTRAP_COPILOT"
+fi
+
+# 4.5 Python VENV
 BOOTSTRAP_PYTHON="$PROJECT_ROOT/scripts/bootstrap/python"
 [ -f "$BOOTSTRAP_PYTHON" ] && source "$BOOTSTRAP_PYTHON"
 
