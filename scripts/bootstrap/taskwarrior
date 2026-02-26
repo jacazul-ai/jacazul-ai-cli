@@ -6,6 +6,7 @@ if [ -n "$PROJECT_ID" ]; then
     if [ "$JAKA_MODE" = "UNHINGED" ]; then
         export JAKA_HOME="$HOME/.candango/jaka_ai"
         export TASKRC="$JAKA_HOME/.taskrc"
+        # In unhinged mode, we use a global task base but isolated per project
         export TASKDATA="$JAKA_HOME/.task/$PROJECT_ID"
         
         # Ensure the .taskrc is in place
@@ -13,6 +14,9 @@ if [ -n "$PROJECT_ID" ]; then
             echo "🐊 Initializing Unhinged Taskwarrior config at $TASKRC..."
             mkdir -p "$JAKA_HOME"
             cp templates/taskwarrior/unhinged/.taskrc "$TASKRC"
+            # Explicitly override data.location to avoid confusion, 
+            # though TASKDATA env var takes precedence.
+            sed -i "s|data.location=.*|data.location=$JAKA_HOME/.task|" "$TASKRC"
         fi
     else
         export TASKDATA="$HOME/.task/$PROJECT_ID"

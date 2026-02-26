@@ -21,6 +21,7 @@ Welcome to the AI CLI Sandboxed documentation.
 
 ### Advanced Topics
 - [Dual-Persona System](agents/persona-system.md) - Architecture and design
+- [Environment Modes](environment-modes.md) - UNHINGED vs CAGED (Native vs Container)
 - [NO BULLSHIT Policy](agents/no-bullshit-policy.md) - Global feedback standard
 - Session continuity and handoffs
 - Custom workflow patterns

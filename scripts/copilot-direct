@@ -27,5 +27,16 @@ export CONTEXT_PARENT_DIR="$PARENT_DIR"
 export CONTEXT_CURRENT_DIR="$CURRENT_DIR"
 export COPILOT_CUSTOM_INSTRUCTIONS_DIRS="$HOME/.copilot:$HOME/.github/instructions"
 
+# -----------------------------------------------------------------------------
+# Unhinged Bootstrap Dynamics
+# -----------------------------------------------------------------------------
+# Determine the absolute project root directory
+export PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+# Initialize environment (Taskwarrior, Gemini, Python VENV, etc.)
+if [ -f "$SCRIPT_DIR/bootstrap/environment" ]; then
+    source "$SCRIPT_DIR/bootstrap/environment"
+fi
+
 # Run GitHub Copilot CLI directly (no container, uses PATH)
 exec copilot "$@"

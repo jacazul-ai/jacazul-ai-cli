@@ -35,7 +35,20 @@ COMMANDS=(
     "npm:nodejs-npm"
 )
 
+# Function to install uv if missing
+install_uv() {
+    if ! command -v uv &>/dev/null; then
+        echo "Installing 'uv' (Python package manager)..."
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        # Source cargo env or similar if needed, or rely on next session
+        echo "✅ 'uv' installed successfully via astral.sh"
+    else
+        echo "✓ uv"
+    fi
+}
+
 echo "Checking for missing commands on Fedora..."
+install_uv
 MISSING=()
 
 for cmd_pkg in "${COMMANDS[@]}"; do

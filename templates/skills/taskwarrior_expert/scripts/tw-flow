@@ -95,7 +95,8 @@ push_task_focus() {
     item=$(jq -n --arg uuid "$uuid" --arg ini "$ini" '{uuid: $uuid, ini: $ini}')
     
     # Remove if already exists (bring to top) then push
-    json=$(echo "$json" | jq ".task_track = ([$item] + (.task_track | map(select(.uuid != \"$uuid\"))))")
+    # We check if the entry is an object with .uuid OR just a string equal to the uuid
+    json=$(echo "$json" | jq ".task_track = ([$item] + (.task_track | map(select((type == \"object\" and .uuid != \"$uuid\") or (type == \"string\" and . != \"$uuid\")))))")
     json=$(echo "$json" | jq ".focused_task_uuid = \"$uuid\" | .focused_ini = \"$ini\"")
     save_focus "$json"
 }

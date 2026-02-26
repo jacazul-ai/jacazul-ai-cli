@@ -48,6 +48,10 @@ if [ -x "$BOOTSTRAP_OPENCODE" ]; then
     "$BOOTSTRAP_OPENCODE"
 fi
 
+# 4.4 Python VENV
+BOOTSTRAP_PYTHON="$PROJECT_ROOT/scripts/bootstrap/python"
+[ -f "$BOOTSTRAP_PYTHON" ] && source "$BOOTSTRAP_PYTHON"
+
 # 5. Finalize Initialization
 export JAKA_ENV_INITIALIZED=true
 
