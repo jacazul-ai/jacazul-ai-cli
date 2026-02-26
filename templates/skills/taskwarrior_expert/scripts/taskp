@@ -4,6 +4,13 @@
 
 set -e
 
+# Detect JAKA_REAL_TASK if not provided (Dynamics)
+if [ -z "$JAKA_REAL_TASK" ]; then
+    JAKA_REAL_TASK=$(which -a task 2>/dev/null | grep -v "/scripts/task" | head -n 1)
+    [ -z "$JAKA_REAL_TASK" ] && JAKA_REAL_TASK="/usr/bin/task"
+    export JAKA_REAL_TASK
+fi
+
 # Detect Jaka Mode and set defaults
 JAKA_MODE="${JAKA_MODE:-SANDBOXED}"
 

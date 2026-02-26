@@ -3,6 +3,13 @@
 # Provides a high-level tactical overview of focus and progress
 # Version: 1.4.0 (columnar mode is now default)
 
+# Detect JAKA_REAL_TASK if not provided (Dynamics)
+if [ -z "$JAKA_REAL_TASK" ]; then
+    JAKA_REAL_TASK=$(which -a task 2>/dev/null | grep -v "/scripts/task" | head -n 1)
+    [ -z "$JAKA_REAL_TASK" ] && JAKA_REAL_TASK="/usr/bin/task"
+    export JAKA_REAL_TASK
+fi
+
 # Detect project and set TASKDATA/TASKRC if PROJECT_ID is available and they are NOT already set
 if [ -n "$PROJECT_ID" ]; then
     if [ -z "$TASKRC" ] && [ "$JAKA_MODE" = "UNHINGED" ]; then

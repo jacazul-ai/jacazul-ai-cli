@@ -7,6 +7,13 @@ set -e
 SCRIPT_NAME="tw-flow"
 VERSION="1.3.0"
 
+# Detect JAKA_REAL_TASK if not provided (Dynamics)
+if [ -z "$JAKA_REAL_TASK" ]; then
+    JAKA_REAL_TASK=$(which -a task 2>/dev/null | grep -v "/scripts/task" | head -n 1)
+    [ -z "$JAKA_REAL_TASK" ] && JAKA_REAL_TASK="/usr/bin/task"
+    export JAKA_REAL_TASK
+fi
+
 # Set absolute paths for internal tools
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TASKP_BIN="$SCRIPT_DIR/taskp"
@@ -73,15 +80,23 @@ update_focus() {
     save_focus "$json"
 }
 
-# Push a task to the focus stack
+# Push a task to the focus stack (as an object with ini)
 push_task_focus() {
     local uuid="$1"
     local json
     json=$(load_focus)
     
+    # Resolve the initiative for this task
+    local ini
+    ini=$("$TASKP_BIN" "$uuid" export | jq -r '.[0].project // ""')
+    
+    # Construct stack item
+    local item
+    item=$(jq -n --arg uuid "$uuid" --arg ini "$ini" '{uuid: $uuid, ini: $ini}')
+    
     # Remove if already exists (bring to top) then push
-    json=$(echo "$json" | jq ".task_track = ([\"$uuid\"] + (.task_track | map(select(. != \"$uuid\"))))")
-    json=$(echo "$json" | jq ".focused_task_uuid = \"$uuid\"")
+    json=$(echo "$json" | jq ".task_track = ([$item] + (.task_track | map(select(.uuid != \"$uuid\"))))")
+    json=$(echo "$json" | jq ".focused_task_uuid = \"$uuid\" | .focused_ini = \"$ini\"")
     save_focus "$json"
 }
 
@@ -94,12 +109,13 @@ pop_task_focus() {
     stack_size=$(echo "$json" | jq '.task_track | length')
     
     if [[ "$stack_size" -le 1 ]]; then
-        json=$(echo "$json" | jq ".task_track = [] | .focused_task_uuid = null")
+        json=$(echo "$json" | jq ".task_track = [] | .focused_task_uuid = null | .focused_ini = null")
     else
         json=$(echo "$json" | jq ".task_track = .task_track[1:]")
-        local new_top
-        new_top=$(echo "$json" | jq -r '.task_track[0]')
-        json=$(echo "$json" | jq ".focused_task_uuid = \"$new_top\"")
+        local new_top_uuid new_top_ini
+        new_top_uuid=$(echo "$json" | jq -r '.task_track[0].uuid')
+        new_top_ini=$(echo "$json" | jq -r '.task_track[0].ini')
+        json=$(echo "$json" | jq ".focused_task_uuid = \"$new_top_uuid\" | .focused_ini = \"$new_top_ini\"")
     fi
     save_focus "$json"
 }
@@ -774,7 +790,7 @@ cmd_discard() {
 # Command: focus - Manage session focus (Anchor System)
 cmd_focus() {
     local sub="$1"
-    shift
+    [[ -n "$sub" ]] && shift
     
     case "$sub" in
         ini)
@@ -784,8 +800,19 @@ cmd_focus() {
                 name=$("$TASKP_BIN" +ACTIVE export | jq -r '.[0].project // ""')
                 [[ -z "$name" ]] && error "No active task found to anchor initiative. Please specify name."
             }
+            
+            # Anchor to initiative but PRESERVE the task stack
             update_focus "focused_ini" "$name"
-            success "Focused initiative anchored to: $name"
+            
+            # Automatically anchor to the 'next' task in this initiative and push to heap
+            local next_uuid
+            next_uuid=$("$TASKP_BIN" "project:$name" status:pending limit:1 export | jq -r '.[0].uuid // ""')
+            if [[ -n "$next_uuid" ]] && [[ "$next_uuid" != "null" ]]; then
+                push_task_focus "$next_uuid"
+                success "Focused initiative anchored to: $name (Task pushed to heap: $(short_id "$next_uuid"))"
+            else
+                success "Focused initiative anchored to: $name (No pending tasks found)"
+            fi
             ;;
         interest)
             local action="$1"

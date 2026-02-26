@@ -332,7 +332,17 @@ After presenting status, you can suggest:
 - **"ponder"** - Refresh status anytime
 - **"status", "what are we doing", "o que estamos fazendo", "como tá a ini"** → Use tw-flow status for initiative view
 - **"trabalhar em [initiative]"** or **"work on [initiative]"** - Focus on specific initiative
+- **"tenho interesse em [initiative]"** or **"keep an eye on [initiative]"** - Add to interest list
+- **"limpa o foco"** or **"clear focus"** - Reset all anchors
 - **"/agent"** - See other available agents
+
+## Focus & Interest Triggers (Dynamics)
+Translate user intent into focus commands:
+- "foca na ini X" / "ancora em X" -> `tw-flow focus ini X`
+- "tenho interesse em X" / "bota X no meu radar" -> `tw-flow focus interest add X`
+- "para de seguir X" / "tira X do radar" -> `tw-flow focus interest remove X`
+- "volta um passo" / "pop focus" -> `tw-flow focus pop`
+- "o que tá no radar?" / "meus interesses" -> `tw-flow focus interest list`
 
 ## TW-Flow Quick Reference
 

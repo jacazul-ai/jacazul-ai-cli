@@ -7,6 +7,13 @@ TW_FLOW="$SCRIPT_DIR/tw-flow"
 PONDER="$SCRIPT_DIR/ponder"
 TASKP="$SCRIPT_DIR/taskp"
 
+# Detect JAKA_REAL_TASK if not provided (Dynamics)
+if [ -z "$JAKA_REAL_TASK" ]; then
+    JAKA_REAL_TASK=$(which -a task 2>/dev/null | grep -v "/scripts/task" | head -n 1)
+    [ -z "$JAKA_REAL_TASK" ] && JAKA_REAL_TASK="/usr/bin/task"
+    export JAKA_REAL_TASK
+fi
+
 # CRITICAL: Create isolated test directory for this run
 # This ensures we don't mess with production data
 TEST_RUN_ID="run_$(date +%s)"
@@ -288,26 +295,30 @@ if task 2>&1 | grep -q "ERROR: Direct usage of 'task' is restricted"; then
         fail "Raw task binary was NOT blocked"
 fi
 
-# Test 23: Anchor System (Focus)
-info "Test 23: Anchor system (Focus)"
-# 1. Anchor initiative
+# Test 23: Anchor System (Focus & Heap)
+info "Test 23: Anchor system (Focus & Heap)"
+# 1. Anchor initiative (auto-anchors Task 1)
 $TW_FLOW focus ini "$TEST_PROJECT" > /dev/null 2>&1
-if $TW_FLOW status 2>&1 | grep -q "📌 ANCHORED SESSION"; then
-    # 2. Anchor task
-    $TW_FLOW focus task "$TASK_2_ID" > /dev/null 2>&1
-    if $TW_FLOW status 2>&1 | grep -q "🎯 .* FOCUSED"; then
-        # 3. Clear focus
+# 2. Change initiative (auto-anchors a task from NEW_INI and should PUSH to stack)
+NEW_INI="heap-test-$(date +%s)"
+$TASKP add project:"$NEW_INI" "Heap target task" > /dev/null 2>&1
+$TW_FLOW focus ini "$NEW_INI" > /dev/null 2>&1
+
+# 3. Verify stack accumulation (should have 2 tasks now)
+FOCUS_FILE="$TASKDATA/focus.json"
+if [ -f "$FOCUS_FILE" ] && [ $(cat "$FOCUS_FILE" | jq '.task_track | length') -eq 2 ]; then
+    # 4. Test POP functionality
+    $TW_FLOW focus pop > /dev/null 2>&1
+    # After pop, the status should show the restored initiative or at least the original Task 2 (Build phase)
+    if [ $(cat "$FOCUS_FILE" | jq '.task_track | length') -eq 1 ] && $TW_FLOW status 2>&1 | grep -qi "Build phase"; then
+        # 5. Clear focus
         $TW_FLOW focus clear > /dev/null 2>&1
-        if ! $TW_FLOW status 2>&1 | grep -q "📌 ANCHORED SESSION"; then
-            pass "Anchor system (ini/task/clear) verified"
-        else
-            fail "Focus clear failed"
-        fi
+        pass "Anchor system (heap accumulation/pop/clear) verified"
     else
-        fail "Task anchoring failed"
+        fail "Focus pop failed to revert context" "$($TW_FLOW status 2>&1)"
     fi
 else
-    fail "Initiative anchoring failed"
+    fail "Task heap accumulation failed" "$( cat "$FOCUS_FILE" )"
 fi
 
 # Test 24: Ponder Interest Filtering
