@@ -244,7 +244,7 @@ class FlowManager:
             self.success("No active initiatives!")
             return
         for ini in inis:
-            p = [t for t in tasks if t["project"] == ini]
+            p = [t for t in tasks if t.get("project") == ini]
             a = len([t for t in p if t.get("start")])
             b = len([t for t in p if t.get("tags") and "BLOCKED" in t["tags"]])
             print(f"● {ini}\n  Pending: {len(p)-a} | Active: {a} | Blocked: {b}\n")

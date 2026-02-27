@@ -16,10 +16,10 @@ Simplified task management - Version 1.2.0
 tw-flow <command> [options]
 ```
 
-### test-tw-flow.sh
-Comprehensive smoke test suite (18 tests).
+### run_smoke.py
+Hardened modular smoke test suite (24 logical cases).
 ```bash
-./test-tw-flow.sh
+./run_smoke.py
 ```
 
 ---
@@ -113,16 +113,17 @@ tw-flow note 42 lesson "Learned W"      # LESSON:
 
 ## ✅ Testing
 
-All 18 tests passing:
+All 24 logical cases passing:
 
 ```bash
-./test-tw-flow.sh
-# ✓ Scripts executable
-# ✓ Plan with modes
-# ✓ Outcome/handoff commands  
-# ✓ Archive pattern
-# ✓ Mode highlighting
-# + 13 more...
+./run_smoke.py
+# ✓ Core scripts are executable
+# ✓ Help command returns valid usage
+# ✓ Initiative workflow (7 phases)
+# ✓ UUID Standardization
+# ✓ Security Vaccination
+# ✓ Anchor system (heap)
+# + 18 more...
 ```
 
 ---

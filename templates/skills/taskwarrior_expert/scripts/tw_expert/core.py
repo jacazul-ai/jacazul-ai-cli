@@ -30,6 +30,7 @@ class Environment:
 
     @staticmethod
     def get_taskdata() -> str:
+        # If TASKDATA is explicitly set in env, we MUST respect it (e.g. tests)
         if "TASKDATA" in os.environ:
             return os.environ["TASKDATA"]
         
