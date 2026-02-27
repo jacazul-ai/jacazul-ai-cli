@@ -3,11 +3,19 @@ import subprocess
 import sys
 import re
 
-# 🐊 Jaka py-check (v1.0.0)
-# Standard Python validation with "Error as Prompt" feedback.
+# 🐊 Jaka py-check (v1.1.0)
+# Standard Python validation with "Error as Prompt" feedback and auto-beautify.
+
+def run_beautifier(target):
+    print(f"🐊 Beautifying {target} via 'ruff format'...")
+    subprocess.run(["ruff", "format", target], capture_output=True, text=True)
 
 def run_ruff(target):
-    print("🐊 Running ruff check...")
+    print("🐊 Running ruff logic check...")
+    # Attempt auto-fix for fixable rules
+    subprocess.run(["ruff", "check", "--fix", target], capture_output=True, text=True)
+    
+    # Final check
     res = subprocess.run(["ruff", "check", target], capture_output=True, text=True)
     if res.returncode != 0:
         print(res.stdout)
@@ -16,7 +24,7 @@ def run_ruff(target):
     return True
 
 def run_pycodestyle(target):
-    print("🐊 Running pycodestyle...")
+    print("🐊 Running pycodestyle final validation...")
     # Use --first to avoid flooding the agent with redundant errors
     res = subprocess.run(["pycodestyle", "--first", target], capture_output=True, text=True)
     if res.returncode == 0:
@@ -50,7 +58,13 @@ def run_pycodestyle(target):
 def main():
     target = sys.argv[1] if len(sys.argv) > 1 else "."
     
+    # Phase 1: Auto-Beautify and Auto-Fix
+    run_beautifier(target)
+    
+    # Phase 2: Logic Check
     ruff_ok = run_ruff(target)
+    
+    # Phase 3: Final Style Validation
     pycode_ok = run_pycodestyle(target)
     
     if not ruff_ok or not pycode_ok:
