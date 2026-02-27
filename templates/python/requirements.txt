@@ -8,5 +8,8 @@ orjson
 # Linter and Formatter (Rust-based, extremely fast)
 ruff
 
+# PEP 8 style guide checker
+pycodestyle
+
 # Test dependency to verify update mechanism
 firenado
