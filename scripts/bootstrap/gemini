@@ -5,6 +5,7 @@
 # Localiza o diretório raiz do projeto
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+TEMPLATES_DIR="$PROJECT_ROOT/templates"
 
 GEMINI_DIR="${1:-$HOME/.gemini}"
 SETTINGS_FILE="$GEMINI_DIR/settings.json"
@@ -33,6 +34,21 @@ jq '
     .experimental.enableAgents = true | 
     .general.previewFeatures = true
 ' "$SETTINGS_FILE" > "$TMP_FILE" && mv "$TMP_FILE" "$SETTINGS_FILE"
+
+# 4. Link Global Skills (Surgical)
+SKILLS_DIR="$GEMINI_DIR/skills"
+mkdir -p "$SKILLS_DIR"
+
+for skill_dir in "$TEMPLATES_DIR/skills"/*; do
+    [ -d "$skill_dir" ] || continue
+    name=$(basename "$skill_dir")
+    
+    target="$SKILLS_DIR/$name"
+    if [ ! -L "$target" ] && [ ! -d "$target" ]; then
+        echo "🐊 Linking global Gemini skill: $name"
+        ln -sf "$skill_dir" "$target"
+    fi
+done
 
 # Log only in DEBUG mode
 if [ -n "$DEBUG" ]; then

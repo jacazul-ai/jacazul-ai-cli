@@ -35,6 +35,9 @@ The project adheres to a "Silent by Default" logging policy to maintain CLI usab
 ## 🧬 Interaction Standards
 - **UUID Priority:** Tasks MUST be referenced by their 8-character UUID. Numeric Task IDs are transient and MUST NOT be shown to users.
 - **Persona Voice:** Responses MUST align with the active persona (Jacazul/Cortana) and the detected user language, while persistent data (tasks, commits) remains in English.
+- **Agent vs. Skill Distinction:** 
+  - **Copilot/Opencode:** Use the **Agent** pattern (`jacazul.agent.md`).
+  - **Gemini CLI:** Operates exclusively via the **Skill** pattern. The `jaka` skill provides the persona instructions in this environment.
 
 ## 🎓 Core Lessons Learned
 
