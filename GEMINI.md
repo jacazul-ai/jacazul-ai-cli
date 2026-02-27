@@ -36,5 +36,12 @@ The project adheres to a "Silent by Default" logging policy to maintain CLI usab
 - **UUID Priority:** Tasks MUST be referenced by their 8-character UUID. Numeric Task IDs are transient and MUST NOT be shown to users.
 - **Persona Voice:** Responses MUST align with the active persona (Jacazul/Cortana) and the detected user language, while persistent data (tasks, commits) remains in English.
 
+## 🎓 Core Lessons Learned
+
+### Error as Prompt
+Workflow and control scripts MUST NOT simply fail. Their `stderr` output must act as a functional **Prompt** for the Agent.
+- **Mandate:** Errors must provide clear tactical guidance (e.g., "Stop and consult the user", "Intent mismatch: use X instead of Y").
+- **Goal:** Turn terminal failures into actionable instructions that maintain the Agent's productive flow and adherence to project standards.
+
 ---
-**Last Updated:** 2026-02-21
+**Last Updated:** 2026-02-26
