@@ -5,5 +5,8 @@
 # Fast JSON library (145x faster than standard json)
 orjson
 
+# Linter and Formatter (Rust-based, extremely fast)
+ruff
+
 # Test dependency to verify update mechanism
 firenado

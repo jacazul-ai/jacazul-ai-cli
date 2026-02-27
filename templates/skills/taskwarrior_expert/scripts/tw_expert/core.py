@@ -1,7 +1,7 @@
 import os
 import subprocess
 import orjson
-from typing import Optional, List, Dict, Any, Union
+from typing import Optional, List, Dict, Any
 from dataclasses import dataclass, asdict
 
 # 🐊 tw_expert Core Module (v1.4.0)
@@ -45,12 +45,12 @@ class Environment:
         
         try:
             # We want to avoid our own scripts/task wrapper
-            res = subprocess.run(["which", "-a", "task"], capture_output=True, text=True)
+            res = subprocess.run(["which", "-a", "task"], capture_output=True, text=True, check=False)
             bins = res.stdout.strip().split("\n")
             for b in bins:
                 if "scripts/task" not in b:
                     return b
-        except:
+        except Exception:
             pass
         return "/usr/bin/task"
 
@@ -71,7 +71,8 @@ class TaskWrapper:
             cmd, 
             capture_output=capture, 
             text=True, 
-            env=os.environ.copy()
+            env=os.environ.copy(),
+            check=False
         )
         return res
 
@@ -84,7 +85,7 @@ class TaskWrapper:
             return []
         try:
             return orjson.loads(res.stdout)
-        except:
+        except Exception:
             return []
 
 @dataclass
@@ -115,7 +116,7 @@ class FocusManager:
                     task_track=data.get("task_track", []),
                     inis_of_interest=data.get("inis_of_interest", [])
                 )
-        except:
+        except Exception:
             return FocusState(task_track=[], inis_of_interest=[])
 
     def save(self, state: FocusState):

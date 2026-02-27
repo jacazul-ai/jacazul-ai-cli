@@ -1,13 +1,13 @@
-#!/home/fpiraz/.candango/jaka_ai/.venv/bin/python
+#!/usr/bin/env python
 import sys
 import os
 import re
 import orjson
 from datetime import datetime
 from typing import List, Dict, Any
-from tw_expert import Environment, TaskWrapper, FocusManager
+from tw_expert import TaskWrapper, FocusManager
 
-# 🐊 ponder.py (v1.4.0)
+# 🐊 ponder (v1.4.0)
 # Python port of the tactical Taskwarrior dashboard.
 
 # Colors
@@ -29,9 +29,12 @@ class Dashboard:
         self.state = self.focus.load()
 
     def is_interesting(self, ini: str) -> bool:
-        if self.show_all: return True
-        if not self.state.inis_of_interest: return True
-        if ini == self.state.focused_ini: return True
+        if self.show_all:
+            return True
+        if not self.state.inis_of_interest:
+            return True
+        if ini == self.state.focused_ini:
+            return True
         return ini in self.state.inis_of_interest
 
     def render(self):
@@ -52,14 +55,17 @@ class Dashboard:
         comp_today = self.tw.export(["status:completed", "end:today"])
         comp_count = len([t for t in comp_today if isinstance(t.get("project"), str) and t["project"].startswith(self.project_root)])
         
-        print(f"Pulse: Pending ({CYAN}{pending_count}{NC}) | Active ({NEON_GREEN}{active_count}{NC}) | Overdue ({BLOODY_RED}{overdue_count}{NC}) | Done Today ({GREEN}{comp_count}{NC})\n")
+        print(f"Pulse: Pending ({CYAN}{pending_count}{NC}) | Active ({NEON_GREEN}{active_count}{NC}) | "
+              f"Overdue ({BLOODY_RED}{overdue_count}{NC}) | Done Today ({GREEN}{comp_count}{NC})\n")
 
         # 2. Initiative Landscape
         print(f"{YELLOW}[INITIATIVE LANDSCAPE]{NC}")
         projects = sorted(list(set(t["project"] for t in all_tasks)))
         for p in projects:
-            if "_archive" in p or "_trash" in p: continue
-            if not self.is_interesting(p): continue
+            if "_archive" in p or "_trash" in p:
+                continue
+            if not self.is_interesting(p):
+                continue
             
             p_tasks = [t for t in all_tasks if t["project"] == p]
             p_active = len([t for t in p_tasks if t.get("start")])
@@ -67,11 +73,14 @@ class Dashboard:
             p_total = len(p_tasks)
             
             icon = "○"
-            if p == self.state.focused_ini: icon = "📌"
-            elif p_active > 0: icon = f"{NEON_GREEN}⚡{NC}"
+            if p == self.state.focused_ini:
+                icon = "📌"
+            elif p_active > 0:
+                icon = f"{NEON_GREEN}⚡{NC}"
             
             display_name = p.replace(f"{self.project_root}:", "")
-            if display_name == self.project_root: display_name = "[root]"
+            if display_name == self.project_root:
+                display_name = "[root]"
             
             print(f"  {icon} {display_name:<35} | Active: {p_active:<2} | Ready: {p_ready:<2} | Total: {p_total:<2}")
         print("")
@@ -123,9 +132,11 @@ class Dashboard:
             desc = re.sub(r'\[[A-Z-]+\]\s*', '', desc)
             
         initiative = project.replace(f"{self.project_root}:", "")
-        if initiative == self.project_root: initiative = "[root]"
+        if initiative == self.project_root:
+            initiative = "[root]"
         
-        print(f"  {color}{status_icon:<2}{NC} | {uuid[:8]} | {mode:<10} | {initiative[:25]:<25} | {desc[:50]:<50} | [{urgency:.1f}]")
+        print(f"  {color}{status_icon:<2}{NC} | {uuid[:8]} | {mode:<10} | {initiative[:25]:<25} | "
+              f"{desc[:50]:<50} | [{urgency:.1f}]")
 
 def main():
     show_all = "--all" in sys.argv

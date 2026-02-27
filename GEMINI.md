@@ -43,5 +43,10 @@ Workflow and control scripts MUST NOT simply fail. Their `stderr` output must ac
 - **Mandate:** Errors must provide clear tactical guidance (e.g., "Stop and consult the user", "Intent mismatch: use X instead of Y").
 - **Goal:** Turn terminal failures into actionable instructions that maintain the Agent's productive flow and adherence to project standards.
 
+### Test-First (Empirical Failure)
+Validation is the only path to finality. No logic change should occur without a prior failing test.
+- **Mandate:** Bug fixes and new features MUST start with an empirical reproduction test case (smoke test or script) that fails in the current environment.
+- **Goal:** Prove the existence of the problem and verify that the solution actually addresses the root cause.
+
 ---
-**Last Updated:** 2026-02-26
+**Last Updated:** 2026-02-27

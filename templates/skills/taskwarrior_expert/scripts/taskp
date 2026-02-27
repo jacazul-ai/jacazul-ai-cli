@@ -1,19 +1,55 @@
-#!/home/fpiraz/.candango/jaka_ai/.venv/bin/python
+#!/usr/bin/env python
 import sys
+import os
+import re
+from typing import List
 from tw_expert import TaskWrapper
 
-# 🐊 taskp.py (v1.4.0)
+# 🐊 taskp (v1.4.0)
 # Python port of the project-aware Taskwarrior wrapper.
+
+def resolve_args(tw: TaskWrapper, args: List[str]) -> List[str]:
+    """Resolve IDs/UUIDs in arguments, prioritizing UUIDs."""
+    if not args:
+        return []
+    
+    # Only resolve the first few arguments that might be IDs/UUIDs
+    # (e.g., 'taskp <uuid> done' or 'taskp <uuid> modify ...')
+    resolved = []
+    tasks = None
+    
+    for arg in args:
+        # Check if arg looks like a UUID (8+ hex chars or full UUID)
+        is_uuid_format = re.match(r'^[0-9a-fA-F]{8,36}$', arg) or \
+                         re.match(r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$', arg)
+        
+        if is_uuid_format:
+            if tasks is None:
+                tasks = tw.export()
+            
+            # Find matching UUID
+            found_uuid = None
+            for t in tasks:
+                if t["uuid"].startswith(arg.lower()):
+                    found_uuid = t["uuid"]
+                    break
+            
+            if found_uuid:
+                resolved.append(found_uuid)
+                continue
+        
+        resolved.append(arg)
+    return resolved
 
 def main():
     args = sys.argv[1:]
     tw = TaskWrapper()
     
+    # Resolve and prioritize UUIDs
+    args = resolve_args(tw, args)
+    
     # VACCINATION: Prevent direct 'done' command or manual '+DISCARDED' tag
     # BYPASS: Check if called internally (environment variable)
-    internal = sys.stdin.isatty() is False or "TW_FLOW_INTERNAL" in sys.modules or True # Temporary loose bypass for porting
-    # Actually, we should check for an env var like the bash version does
-    import os
     is_internal = os.environ.get("TW_FLOW_INTERNAL") == "true"
     
     if not is_internal:
