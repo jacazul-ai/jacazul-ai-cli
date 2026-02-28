@@ -49,7 +49,7 @@ All automatically set `TASKDATA=~/.task/$PROJECT_ID` when PROJECT_ID is availabl
 
 ### Task Organization Pattern
 
-Within each project database, organize work by **initiatives** using simple task descriptions:
+Within each project database, organize work by **initiatives** using simple taskp descriptions:
 
 **Key Concept:** Tasks are isolated by **separate databases** (`TASKDATA`). Each project has its own database, so no prefixes or special attributes needed.
 
@@ -63,7 +63,7 @@ taskp add "Write tests for auth flow" urgency:7.2
 taskp list
 taskp status:pending
 
-# ✅ Using tw-flow for multi-task planning
+# ✅ Using tw-flow for multi-taskp planning
 tw-flow plan "login-feature" \
   "Design auth flow|research|today" \
   "Implement JWT tokens|code|tomorrow"
@@ -85,7 +85,7 @@ tw-flow plan "login-feature" \
 
 **CRITICAL: Always use short UUIDs (8 chars) when referring to tasks to users.**
 
-- **NEVER** show numeric task IDs to users
+- **NEVER** show numeric taskp IDs to users
 - **ALWAYS** display short UUIDs (first 8 characters)
 - Both `ponder` and `tw-flow status` already show UUIDs correctly
 - When using `taskp` output, extract UUID with: `taskp <ID> | grep UUID | awk '{print substr($2,1,8)}'`
@@ -124,7 +124,7 @@ Task annotation: "Blocking issue identified - dependency on crypto-lib v3.2"
 
 **Jacazul Example:**
 - User: "meu quiridu, faz isso aí" (Portuguese)
-- Jacazul: Responds in Portuguese, creates task in English
+- Jacazul: Responds in Portuguese, creates taskp in English
 
 
 ## 🌟 Philosophy
@@ -177,7 +177,7 @@ tw-flow plan my-feature-x \
 ```
 
 ### Phase 3: Execute (Act)
-Pick the top task and work.
+Pick the top taskp and work.
 ```bash
 tw-flow execute <id>
 ```
@@ -189,7 +189,7 @@ tw-flow note <id> decision "Using library Y."
 ```
 
 ### Phase 5: Review (Verify)
-**CRITICAL:** Never close a task silently.
+**CRITICAL:** Never close a taskp silently.
 1.  Summarize the work.
 2.  Show the result (code, file, output).
 3.  Ask: "Shall I close this?"
@@ -199,7 +199,7 @@ Upon user approval ("looks good", "yes"), you **MUST** record the final result.
 ```bash
 tw-flow outcome <id> "Created file X and updated Y."
 ```
-This ensures the `task log` contains a permanent record of *what* was achieved.
+This ensures the `taskp log` contains a permanent record of *what* was achieved.
 
 ### Phase 7: Close (Finalize)
 Only after recording the outcome.
@@ -211,9 +211,9 @@ tw-flow done <id>
 
 To ensure continuity between sessions (or agents), use this protocol when wrapping up:
 
-1.  **Close:** Ensure the current task is `done` with a clear outcome.
+1.  **Close:** Ensure the current taskp is `done` with a clear outcome.
 2.  **Anchor:** Explicitly `execute` the *next* logical task.
-3.  **Bridge:** Add a specific note to the *newly started* task pointing to the context.
+3.  **Bridge:** Add a specific note to the *newly started* taskp pointing to the context.
 
 ```bash
 tw-flow handoff <next_id> "Pick up here. See Task <prev_id> for investigation details."
@@ -229,7 +229,7 @@ Sometimes, you'll find legacy tasks that don't fit the current plan. These are "
 
 ```bash
 # Example
-task <legacy_id> modify <current_project>:_archive
+taskp <legacy_id> modify <current_project>:_archive
 ```
 
 The `ponder` dashboard is configured to automatically ignore any project ending in `_archive`, keeping your view clean and focused.
@@ -239,13 +239,13 @@ The `ponder` dashboard is configured to automatically ignore any project ending 
 ## 🛠 Core Tools
 
 - **`ponder`**: High-level project dashboard with PROJECT_ID isolation support
-- **`tw-flow`**: Simplified task management workflow
+- **`tw-flow`**: Simplified taskp management workflow
 
 Refer to the script headers for detailed usage.
 
 ---
 
-**Always use Taskwarrior for session plans and task breakdowns. Do not create or persist plans in files unless absolutely necessary.**
+**Always use Taskwarrior for session plans and taskp breakdowns. Do not create or persist plans in files unless absolutely necessary.**
 
 ## Purpose
 Use Taskwarrior as a context cache for plans, tasks, research findings, and lessons learned. This ensures continuity and progress tracking between sessions.
@@ -265,40 +265,40 @@ Example: `copilot-session:auth-system:implement-login`
 **ALWAYS follow this pattern when creating a new plan:**
 
 ```bash
-# Step 1: Add first task (highest urgency + earliest due date)
-task add copilot:PLAN_NAME "First task to do" due:today urgency:9.0 +research
+# Step 1: Add first taskp (highest urgency + earliest due date)
+taskp add copilot:PLAN_NAME "First taskp to do" due:today urgency:9.0 +research
 
-# Step 2: Add second task (depends on first, due tomorrow)
-task add copilot:PLAN_NAME "Second task to do" due:tomorrow depends:FIRST_UUID urgency:7.0 +implementation
+# Step 2: Add second taskp (depends on first, due tomorrow)
+taskp add copilot:PLAN_NAME "Second taskp to do" due:tomorrow depends:FIRST_UUID urgency:7.0 +implementation
 
-# Step 3: Add third task (depends on second, due in 2 days)
-task add copilot:PLAN_NAME "Third task to do" due:2days depends:SECOND_UUID urgency:5.0 +testing
+# Step 3: Add third taskp (depends on second, due in 2 days)
+taskp add copilot:PLAN_NAME "Third taskp to do" due:2days depends:SECOND_UUID urgency:5.0 +testing
 ```
 
 **Real Example:**
 ```bash
 # Creating a login feature plan
-task add copilot:login-feature "Design authentication flow" due:today urgency:9.0 +research
-# Returns: Created task fa145ef2
+taskp add copilot:login-feature "Design authentication flow" due:today urgency:9.0 +research
+# Returns: Created taskp fa145ef2
 
-task add copilot:login-feature "Implement JWT tokens" due:tomorrow depends:fa145ef2 urgency:7.0 +implementation
-# Returns: Created task 8db30af7
+taskp add copilot:login-feature "Implement JWT tokens" due:tomorrow depends:fa145ef2 urgency:7.0 +implementation
+# Returns: Created taskp 8db30af7
 
-task add copilot:login-feature "Write integration tests" due:2days depends:8db30af7 urgency:5.0 +testing
-# Returns: Created task b3c7d891
+taskp add copilot:login-feature "Write integration tests" due:2days depends:8db30af7 urgency:5.0 +testing
+# Returns: Created taskp b3c7d891
 ```
 
 ### Step 2: See What to Work On
 
 ```bash
 # Show all tasks ready to work (no blockers)
-task status:pending ready
+taskp status:pending ready
 
 # Show tasks for specific plan
-task copilot:login-feature status:pending
+taskp copilot:login-feature status:pending
 
 # Show what you're currently working on
-task +ACTIVE
+taskp +ACTIVE
 ```
 
 ### Step 3: Start Working on a Task
@@ -322,7 +322,7 @@ taskp fa145ef2 annotate "LINK: https://github.com/jaredhanson/passport"
 ### Step 5: Complete a Task
 
 ```bash
-# When task is done
+# When taskp is done
 taskp fa145ef2 done
 
 # This automatically unblocks the next task!
@@ -333,13 +333,13 @@ taskp fa145ef2 done
 
 ```bash
 # See what's completed today
-task end:today status:completed
+taskp end:today status:completed
 
 # See what's overdue (needs attention!)
-task due.before:today status:pending
+taskp due.before:today status:pending
 
 # See all blocked tasks
-task +BLOCKED
+taskp +BLOCKED
 ```
 
 ## Core Workflow
@@ -349,7 +349,7 @@ task +BLOCKED
 When starting work on a plan or feature, **ALWAYS use this formula:**
 
 ```bash
-task add PROJECT:PLAN "Description" due:DATE urgency:NUMBER +tag depends:UUID
+taskp add PROJECT:PLAN "Description" due:DATE urgency:NUMBER +tag depends:UUID
 ```
 
 **Each part explained:**
@@ -358,10 +358,10 @@ task add PROJECT:PLAN "Description" due:DATE urgency:NUMBER +tag depends:UUID
 - `due:DATE` - Deadline (today, tomorrow, friday, eow, 3days, etc.)
 - `urgency:NUMBER` - Manual priority (9.0 = highest, 1.0 = lowest)
 - `+tag` - Category (+research, +implementation, +testing, +documentation)
-- `depends:UUID` - Blocks this task until task ID is done
+- `depends:UUID` - Blocks this taskp until taskp ID is done
 
 **Priority System (USE THIS):**
-- First task in plan: `urgency:9.0 due:today` (work on this NOW)
+- First taskp in plan: `urgency:9.0 due:today` (work on this NOW)
 - Second task: `urgency:7.0 due:tomorrow depends:FIRST_UUID` (blocked until first is done)
 - Third task: `urgency:5.0 due:2days depends:SECOND_UUID` (blocked until second is done)
 - Fourth task: `urgency:3.0 due:3days depends:THIRD_UUID` (blocked until third is done)
@@ -372,24 +372,24 @@ task add PROJECT:PLAN "Description" due:DATE urgency:NUMBER +tag depends:UUID
 - Tasks due sooner automatically get higher urgency
 
 **Dependencies System:**
-- `depends:UUID` makes current task BLOCKED until task ID is completed
-- When you do `task ID done`, ALL tasks depending on it become UNBLOCKED automatically
+- `depends:UUID` makes current taskp BLOCKED until taskp ID is completed
+- When you do `taskp ID done`, ALL tasks depending on it become UNBLOCKED automatically
 - Use dependencies for tasks that CANNOT start before another finishes
 
 **Example with ALL elements:**
 ```bash
 # Plan: Build API endpoint
-task add copilot:api-endpoint "Design API schema" due:today urgency:9.0 +research
-# Created task c9e2f4a3
+taskp add copilot:api-endpoint "Design API schema" due:today urgency:9.0 +research
+# Created taskp c9e2f4a3
 
-task add copilot:api-endpoint "Implement POST endpoint" due:tomorrow urgency:7.0 +implementation depends:c9e2f4a3
-# Created task 7dc51db6 (BLOCKED until 10 is done)
+taskp add copilot:api-endpoint "Implement POST endpoint" due:tomorrow urgency:7.0 +implementation depends:c9e2f4a3
+# Created taskp 7dc51db6 (BLOCKED until 10 is done)
 
-task add copilot:api-endpoint "Add validation middleware" due:2days urgency:5.0 +implementation depends:7dc51db6
-# Created task f29672dd (BLOCKED until 11 is done)
+taskp add copilot:api-endpoint "Add validation middleware" due:2days urgency:5.0 +implementation depends:7dc51db6
+# Created taskp f29672dd (BLOCKED until 11 is done)
 
-task add copilot:api-endpoint "Write unit tests" due:3days urgency:3.0 +testing depends:f29672dd
-# Created task a4b8e1c5 (BLOCKED until 12 is done)
+taskp add copilot:api-endpoint "Write unit tests" due:3days urgency:3.0 +testing depends:f29672dd
+# Created taskp a4b8e1c5 (BLOCKED until 12 is done)
 ```
 
 **Tags to use:**
@@ -425,7 +425,7 @@ taskp fa145ef2 annotate "NOTE: Customer prefers dark mode"
 taskp fa145ef2 annotate "LINK: https://docs.example.com/api"
 ```
 
-**Example - Complete research task with annotations:**
+**Example - Complete research taskp with annotations:**
 ```bash
 taskp fa145ef2 start
 taskp fa145ef2 annotate "RESEARCH: Evaluated 3 auth libraries: passport.js, jsonwebtoken, auth0"
@@ -441,11 +441,11 @@ Annotations are timestamped and append to the task, building a context history.
 
 **Urgency (Priority Ordering):**
 - Use numerical values for fine-grained control: 9.0 (highest) to 1.0 (lowest)
-- First task in plan gets 9.0, second gets 7.0, third gets 5.0, etc.
-- Adjust dynamically based on user feedback: if user says "task X is more important", increase its urgency
+- First taskp in plan gets 9.0, second gets 7.0, third gets 5.0, etc.
+- Adjust dynamically based on user feedback: if user says "taskp X is more important", increase its urgency
 
 ```bash
-# Make task highest priority
+# Make taskp highest priority
 taskp fa145ef2 modify urgency:10.0
 
 # Lower priority
@@ -456,8 +456,8 @@ taskp fa145ef2 modify urgency:
 ```
 
 **Dependencies (Task Blocking):**
-- Use `depends:UUID` to block a task until another is completed
-- When prerequisite is done, dependent task automatically becomes UNBLOCKED
+- Use `depends:UUID` to block a taskp until another is completed
+- When prerequisite is done, dependent taskp automatically becomes UNBLOCKED
 
 ```bash
 # Task 2 cannot start until taskp c9e2f4a3 is done
@@ -504,10 +504,10 @@ taskp fa145ef2 stop
 # Mark complete (unblocks dependent tasks!)
 taskp fa145ef2 done
 
-# Delete task (removes from plan)
+# Delete taskp (removes from plan)
 taskp fa145ef2 delete
 
-# Put task on hold until specific date
+# Put taskp on hold until specific date
 taskp fa145ef2 modify wait:friday
 ```
 
@@ -517,27 +517,27 @@ taskp fa145ef2 modify wait:friday
 
 ```bash
 # Show all pending tasks for a plan (most common)
-task copilot:PLAN_NAME status:pending
+taskp copilot:PLAN_NAME status:pending
 
 # Show tasks ready to work (no blockers, highest urgency first)
-task status:pending ready
+taskp status:pending ready
 
 # Show tasks ready for specific plan
-task copilot:PLAN_NAME status:pending ready
+taskp copilot:PLAN_NAME status:pending ready
 
 # Show what you're actively working on
-task +ACTIVE
+taskp +ACTIVE
 
 # Show blocked tasks (waiting on dependencies)
-task +BLOCKED
+taskp +BLOCKED
 
 # Show completed tasks today
-task end:today status:completed
+taskp end:today status:completed
 
 # Show overdue tasks (needs attention!)
-task due.before:today status:pending
+taskp due.before:today status:pending
 
-# Get full details of a specific task (shows annotations, dependencies, etc.)
+# Get full details of a specific taskp (shows annotations, dependencies, etc.)
 taskp fa145ef2 info
 ```
 
@@ -553,7 +553,7 @@ Plan: copilot:feature-name
 
 Format explanation:
 - Task number (1, 2, 3...) - Sequential order
-- Short UUID (8 chars) - Unique task identifier for commands
+- Short UUID (8 chars) - Unique taskp identifier for commands
 - Description - What to do
 - [Urgency] - Priority score in brackets
 - Status indicators:
@@ -563,20 +563,20 @@ Format explanation:
   - ✅ READY - Can start now
 
 **When to update urgencies:**
-- When a task is completed, the next task automatically becomes highest priority (due to dependencies)
-- If user says "task X is more important", increase its urgency: `task X modify urgency:10.0`
-- Always ensure task numbers and urgencies reflect the intended execution order
+- When a taskp is completed, the next taskp automatically becomes highest priority (due to dependencies)
+- If user says "taskp X is more important", increase its urgency: `taskp X modify urgency:10.0`
+- Always ensure taskp numbers and urgencies reflect the intended execution order
 
 **Focusing on a specific plan:**
-When user says "let's work on plan X", filter all subsequent task operations to that plan:
+When user says "let's work on plan X", filter all subsequent taskp operations to that plan:
 
 ```bash
 # User: "Let's work on the auth feature"
-# You should use: task copilot:auth-feature status:pending
+# You should use: taskp copilot:auth-feature status:pending
 
 # All subsequent commands focus on that plan
-task copilot:auth-feature +ACTIVE
-task copilot:auth-feature +BLOCKED
+taskp copilot:auth-feature +ACTIVE
+taskp copilot:auth-feature +BLOCKED
 ```
 
 ### 5. Retrieving Context - DETAILED
@@ -585,9 +585,9 @@ task copilot:auth-feature +BLOCKED
 
 ```bash
 # See all pending tasks in a plan
-task copilot:PLAN_NAME status:pending
+taskp copilot:PLAN_NAME status:pending
 
-# Get FULL details of a specific task (annotations, dependencies, dates, etc.)
+# Get FULL details of a specific taskp (annotations, dependencies, dates, etc.)
 taskp fa145ef2 info
 
 # This shows:
@@ -625,7 +625,7 @@ Annotations:
 
 ```bash
 # 1. Check what's ready to work on
-task status:pending ready
+taskp status:pending ready
 # Shows: Task 42 "Design API schema"
 
 # 2. Start working (tracks time)
@@ -641,7 +641,7 @@ taskp fa145ef2 done
 # Task 43 (which depends on 42) is now UNBLOCKED automatically!
 
 # 5. Check what's next
-task status:pending ready
+taskp status:pending ready
 # Shows: Task 43 "Implement endpoints" (no longer blocked!)
 ```
 
@@ -651,10 +651,10 @@ task status:pending ready
 # Mark progress - start tracking time
 taskp fa145ef2 start
 
-# Stop tracking time (task remains pending)
+# Stop tracking time (taskp remains pending)
 taskp fa145ef2 stop
 
-# Complete task (unblocks dependent tasks!)
+# Complete taskp (unblocks dependent tasks!)
 taskp fa145ef2 done
 
 # Change urgency (make more/less important)
@@ -677,19 +677,19 @@ taskp fa145ef2 modify wait:friday
 ```
 
 **Adding subtasks:**
-If you need to break a task into smaller pieces:
+If you need to break a taskp into smaller pieces:
 
 ```bash
 # Original task
 taskp fa145ef2 "Implement API endpoints"
 
 # Break it down
-task add copilot:api "Implement POST /users" depends:2a9f7e3b urgency:6.5 +implementation
-task add copilot:api "Implement GET /users/:id" depends:2a9f7e3b urgency:6.3 +implementation
-task add copilot:api "Implement PUT /users/:id" depends:2a9f7e3b urgency:6.1 +implementation
+taskp add copilot:api "Implement POST /users" depends:2a9f7e3b urgency:6.5 +implementation
+taskp add copilot:api "Implement GET /users/:id" depends:2a9f7e3b urgency:6.3 +implementation
+taskp add copilot:api "Implement PUT /users/:id" depends:2a9f7e3b urgency:6.1 +implementation
 
-# These all depend on task 2a9f7e3b (design) and must be done before task 8db30af7 (tests)
-task 8db30af7 modify depends:fa145ef2,6c3e9a1d,8f1d4b7e,4b9e2a5c
+# These all depend on taskp 2a9f7e3b (design) and must be done before taskp 8db30af7 (tests)
+taskp 8db30af7 modify depends:fa145ef2,6c3e9a1d,8f1d4b7e,4b9e2a5c
 ```
 
 ## Practical Examples - COMPLETE WORKFLOWS
@@ -700,34 +700,34 @@ task 8db30af7 modify depends:fa145ef2,6c3e9a1d,8f1d4b7e,4b9e2a5c
 
 ```bash
 # Step 1: Create the plan with 3 tasks
-task add copilot:login "Design authentication flow" due:today urgency:9.0 +research
-# Created task c9e2f4a3
+taskp add copilot:login "Design authentication flow" due:today urgency:9.0 +research
+# Created taskp c9e2f4a3
 
-task add copilot:login "Implement JWT authentication" due:tomorrow urgency:7.0 +implementation depends:c9e2f4a3
-# Created task 7dc51db6 (BLOCKED by task 10)
+taskp add copilot:login "Implement JWT authentication" due:tomorrow urgency:7.0 +implementation depends:c9e2f4a3
+# Created taskp 7dc51db6 (BLOCKED by taskp 10)
 
-task add copilot:login "Write integration tests" due:2days urgency:5.0 +testing depends:7dc51db6
-# Created task f29672dd (BLOCKED by task 11)
+taskp add copilot:login "Write integration tests" due:2days urgency:5.0 +testing depends:7dc51db6
+# Created taskp f29672dd (BLOCKED by taskp 11)
 
 # Step 2: Work on first task
-task c9e2f4a3 start
-task c9e2f4a3 annotate "RESEARCH: Comparing passport.js vs auth0"
-task c9e2f4a3 annotate "DECISION: Using passport.js for flexibility"
-task c9e2f4a3 annotate "AC: Must support OAuth and local auth"
-task c9e2f4a3 done
+taskp c9e2f4a3 start
+taskp c9e2f4a3 annotate "RESEARCH: Comparing passport.js vs auth0"
+taskp c9e2f4a3 annotate "DECISION: Using passport.js for flexibility"
+taskp c9e2f4a3 annotate "AC: Must support OAuth and local auth"
+taskp c9e2f4a3 done
 # Task 11 is now UNBLOCKED!
 
 # Step 3: Work on second task
-task 7dc51db6 start
-task 7dc51db6 annotate "IMPLEMENTATION: Using jsonwebtoken library"
-task 7dc51db6 annotate "NOTE: Access tokens expire in 15 minutes"
-task 7dc51db6 done
+taskp 7dc51db6 start
+taskp 7dc51db6 annotate "IMPLEMENTATION: Using jsonwebtoken library"
+taskp 7dc51db6 annotate "NOTE: Access tokens expire in 15 minutes"
+taskp 7dc51db6 done
 # Task 12 is now UNBLOCKED!
 
 # Step 4: Work on third task
-task f29672dd start
-task f29672dd annotate "TESTING: Covering success and failure cases"
-task f29672dd done
+taskp f29672dd start
+taskp f29672dd annotate "TESTING: Covering success and failure cases"
+taskp f29672dd done
 # Plan complete! ✅
 ```
 
@@ -737,25 +737,25 @@ task f29672dd done
 
 ```bash
 # Design must be done first
-task add copilot:dashboard "Design dashboard layout" due:today urgency:9.0 +research
-# Created task d1f3a7b2
+taskp add copilot:dashboard "Design dashboard layout" due:today urgency:9.0 +research
+# Created taskp d1f3a7b2
 
 # These 3 can be done in parallel (all depend only on design)
-task add copilot:dashboard "Implement user stats widget" due:tomorrow urgency:7.0 +implementation depends:d1f3a7b2
-# Created task e5c9f2a8
+taskp add copilot:dashboard "Implement user stats widget" due:tomorrow urgency:7.0 +implementation depends:d1f3a7b2
+# Created taskp e5c9f2a8
 
-task add copilot:dashboard "Implement activity feed widget" due:tomorrow urgency:7.0 +implementation depends:d1f3a7b2
-# Created task 6b4d8e1a
+taskp add copilot:dashboard "Implement activity feed widget" due:tomorrow urgency:7.0 +implementation depends:d1f3a7b2
+# Created taskp 6b4d8e1a
 
-task add copilot:dashboard "Implement notifications widget" due:tomorrow urgency:7.0 +implementation depends:d1f3a7b2
-# Created task 9a2c5f7b
+taskp add copilot:dashboard "Implement notifications widget" due:tomorrow urgency:7.0 +implementation depends:d1f3a7b2
+# Created taskp 9a2c5f7b
 
 # Integration depends on all 3 widgets
-task add copilot:dashboard "Integrate all widgets" due:3days urgency:5.0 +implementation depends:e5c9f2a8,22,23
-# Created task 1f8e4b3c (BLOCKED by 21, 22, AND 23)
+taskp add copilot:dashboard "Integrate all widgets" due:3days urgency:5.0 +implementation depends:e5c9f2a8,22,23
+# Created taskp 1f8e4b3c (BLOCKED by 21, 22, AND 23)
 
-# When task d1f3a7b2 is done, tasks 21, 22, 23 all become ready simultaneously!
-task d1f3a7b2 done
+# When taskp d1f3a7b2 is done, tasks 21, 22, 23 all become ready simultaneously!
+taskp d1f3a7b2 done
 
 # You can work on 21, 22, 23 in any order
 # Task 24 only becomes ready when ALL THREE are done
@@ -769,18 +769,18 @@ task d1f3a7b2 done
 # Current plan tasks exist with urgency 9.0, 7.0, 5.0...
 
 # Add urgent bug fix (higher urgency than everything else!)
-task add copilot:hotfix "Fix login crash on Safari" due:today urgency:15.0 +bug +urgent priority:H
-# Created task 3d7a9e2f
+taskp add copilot:hotfix "Fix login crash on Safari" due:today urgency:15.0 +bug +urgent priority:H
+# Created taskp 3d7a9e2f
 
-# This task now appears FIRST in ready list because urgency 15.0 > 9.0
-task status:pending ready
-# Shows task 3d7a9e2f at the top!
+# This taskp now appears FIRST in ready list because urgency 15.0 > 9.0
+taskp status:pending ready
+# Shows taskp 3d7a9e2f at the top!
 
 # Work on it immediately
-task 3d7a9e2f start
-task 3d7a9e2f annotate "BUG: Null pointer exception in auth middleware"
-task 3d7a9e2f annotate "FIX: Added null check before token validation"
-task 3d7a9e2f done
+taskp 3d7a9e2f start
+taskp 3d7a9e2f annotate "BUG: Null pointer exception in auth middleware"
+taskp 3d7a9e2f annotate "FIX: Added null check before token validation"
+taskp 3d7a9e2f done
 
 # Now back to regular plan tasks
 ```
@@ -790,15 +790,15 @@ task 3d7a9e2f done
 **Scenario:** Task can't start until next week (waiting for external event)
 
 ```bash
-# Add task but it can't start yet
-task add copilot:deploy "Deploy to production" wait:friday urgency:8.0 +deployment
-# Created task 5e1b8c4a
+# Add taskp but it can't start yet
+taskp add copilot:deploy "Deploy to production" wait:friday urgency:8.0 +deployment
+# Created taskp 5e1b8c4a
 
 # Task 40 has status:waiting (won't show in pending list)
-task status:pending
+taskp status:pending
 # Task 40 NOT shown
 
-# On Friday, task automatically becomes status:pending
+# On Friday, taskp automatically becomes status:pending
 # Then it shows up in ready list
 ```
 
@@ -808,66 +808,66 @@ task status:pending
 Generate a quick daily standup view:
 ```bash
 # What did I complete yesterday?
-task end.after:yesterday end.before:today
+taskp end.after:yesterday end.before:today
 
 # What am I working on today?
-task +ACTIVE
+taskp +ACTIVE
 
 # What's due today?
-task due:today status:pending
+taskp due:today status:pending
 
 # What's overdue?
-task due.before:today status:pending
+taskp due.before:today status:pending
 
 # What's blocked?
-task +BLOCKED
+taskp +BLOCKED
 ```
 
 ### Weekly Review
 Comprehensive weekly review process:
 ```bash
 # Completed this week
-task end.after:sow status:completed
+taskp end.after:sow status:completed
 
 # Due this week
-task due.after:sow due.before:eow status:pending
+taskp due.after:sow due.before:eow status:pending
 
 # New tasks this week
-task entry.after:sow
+taskp entry.after:sow
 
 # Tasks by project (JSON export)
-task status:pending export | jq 'group_by(.project) | .[] | { .[0].project, count: length}'
+taskp status:pending export | jq 'group_by(.project) | .[] | { .[0].project, count: length}'
 ```
 
 ### Progress Dashboard
 Create a progress summary:
 ```bash
 # Overall stats
-echo "Pending: $(task status:pending count)"
-echo "Completed today: $(task end:today count)"
-echo "Completed this week: $(task end.after:sow count)"
-echo "Overdue: $(task +OVERDUE count)"
-echo "Active: $(task +ACTIVE count)"
-echo "Blocked: $(task +BLOCKED count)"
+echo "Pending: $(taskp status:pending count)"
+echo "Completed today: $(taskp end:today count)"
+echo "Completed this week: $(taskp end.after:sow count)"
+echo "Overdue: $(taskp +OVERDUE count)"
+echo "Active: $(taskp +ACTIVE count)"
+echo "Blocked: $(taskp +BLOCKED count)"
 ```
 
 ### Plan Health Check
 Check health of a specific plan:
 ```bash
 # All tasks in plan
-task copilot:plan-x status:pending
+taskp copilot:plan-x status:pending
 
 # Blocked tasks in plan
-task copilot:plan-x +BLOCKED
+taskp copilot:plan-x +BLOCKED
 
 # Tasks without dependencies
-task copilot:plan-x depends: status:pending
+taskp copilot:plan-x depends: status:pending
 
 # Tasks ready to work on (no blockers)
-task copilot:plan-x status:pending ready
+taskp copilot:plan-x status:pending ready
 
 # Average urgency of plan tasks
-task copilot:plan-x export | jq '[.[] | .urgency] | add/length'
+taskp copilot:plan-x export | jq '[.[] | .urgency] | add/length'
 ```
 
 ## Best Practices
@@ -908,30 +908,30 @@ Use prefixes for better context organization:
 Customize urgency calculation for your workflow:
 ```bash
 # Make due dates more important
-task config urgency.due.coefficient 15.0
+taskp config urgency.due.coefficient 15.0
 
 # Reduce priority influence
-task config urgency.priority.coefficient 3.0
+taskp config urgency.priority.coefficient 3.0
 
 # Boost active tasks
-task config urgency.active.coefficient 8.0
+taskp config urgency.active.coefficient 8.0
 
 # Penalize blocked tasks
-task config urgency.blocked.coefficient -10.0
+taskp config urgency.blocked.coefficient -10.0
 ```
 
 ## Troubleshooting
 
 ### Task Not Showing Up
 ```bash
-# Check if task is deleted or completed
+# Check if taskp is deleted or completed
 taskp fa145ef2 info
 
 # Check all statuses
-task status:completed,deleted,waiting <filter>
+taskp status:completed,deleted,waiting <filter>
 
-# Check if task is waiting
-task +WAITING
+# Check if taskp is waiting
+taskp +WAITING
 ```
 
 ### Incorrect Task Order
@@ -949,25 +949,25 @@ taskp fa145ef2 modify urgency:
 ### Lost Tasks
 ```bash
 # View all tasks (including completed/deleted)
-task all
+taskp all
 
 # Search by description
-task description.contains:"keyword"
+taskp description.contains:"keyword"
 
 # Search by date range
-task entry.after:2026-01-01 entry.before:2026-01-31
+taskp entry.after:2026-01-01 entry.before:2026-01-31
 ```
 
 ### Performance Issues
 ```bash
 # Check database status
-task diagnostics
+taskp diagnostics
 
 # Clean up old completed tasks
-task status:completed end.before:6months delete
+taskp status:completed end.before:6months delete
 
 # Garbage collection
-task gc
+taskp gc
 ```
 
 ## 🤖 Imperative Script Commands (RECOMMENDED FOR AI AGENTS)
@@ -980,11 +980,11 @@ A helper script `tw-flow` is located in the skill's scripts directory.
 
 ```bash
 # Script location (relative to skill directory)
-./scripts/tw-flow
+tw-flow
 
 # Usage examples
-./scripts/./scripts/tw-flow help
-./scripts/./scripts/tw-flow plan copilot:feature "task1|tag|due"
+tw-flow help
+tw-flow plan copilot:feature "task1|tag|due"
 ```
 
 ### Core Commands
@@ -992,7 +992,7 @@ A helper script `tw-flow` is located in the skill's scripts directory.
 #### 1. Create a Plan
 
 ```bash
-./scripts/tw-flow plan <plan> <task1> <task2> <task3>...
+tw-flow plan <plan> <task1> <task2> <task3>...
 
 # Task format: "description|tag|due_offset"
 # - description: What to do
@@ -1002,60 +1002,60 @@ A helper script `tw-flow` is located in the skill's scripts directory.
 
 **Example:**
 ```bash
-./scripts/tw-flow plan copilot:login-feature \
+tw-flow plan copilot:login-feature \
   "Design auth flow|research|today" \
   "Implement JWT|implementation|tomorrow" \
   "Write tests|testing|2days"
 
 # Output:
-# ✓ Created task fa145ef2: Design auth flow [urgency: 9.0]
-# ✓ Created task 8db30af7: Implement JWT [urgency: 7.0]
-# ✓ Created task b3c7d891: Write tests [urgency: 5.0]
+# ✓ Created taskp fa145ef2: Design auth flow [urgency: 9.0]
+# ✓ Created taskp 8db30af7: Implement JWT [urgency: 7.0]
+# ✓ Created taskp b3c7d891: Write tests [urgency: 5.0]
 # ✓ Plan created with 3 tasks
 ```
 
 #### 2. See What's Next
 
 ```bash
-./scripts/tw-flow next [plan]
+tw-flow next [plan]
 
 # Examples:
-./scripts/tw-flow next                           # All ready tasks
-./scripts/tw-flow next copilot:login-feature     # Ready tasks in specific plan
+tw-flow next                           # All ready tasks
+tw-flow next copilot:login-feature     # Ready tasks in specific plan
 ```
 
 #### 3. Start Working
 
 ```bash
-./scripts/tw-flow execute <task_id>
+tw-flow execute <task_id>
 
 # Example:
-./scripts/tw-flow execute 42
-# ✓ Started working on task 42
+tw-flow execute 42
+# ✓ Started working on taskp 42
 ```
 
 #### 4. Add Notes/Context
 
 ```bash
-./scripts/tw-flow note <task_id> <type> <message>
+tw-flow note <task_id> <type> <message>
 
 # Types: research, decision, blocked, lesson, ac, note, link
 # Or short: r, d, b, l, a, n, link
 
 # Examples:
-./scripts/tw-flow note 42 research "Found passport.js library"
-./scripts/tw-flow note 42 decision "Using JWT with 15min expiry"
-./scripts/tw-flow note 42 link "https://github.com/jaredhanson/passport"
+tw-flow note 42 research "Found passport.js library"
+tw-flow note 42 decision "Using JWT with 15min expiry"
+tw-flow note 42 link "https://github.com/jaredhanson/passport"
 ```
 
 #### 5. Complete Task
 
 ```bash
-./scripts/tw-flow done <task_id> [completion_note]
+tw-flow done <task_id> [completion_note]
 
 # Examples:
-./scripts/tw-flow done 42
-./scripts/tw-flow done 42 "Completed design phase"
+tw-flow done 42
+tw-flow done 42 "Completed design phase"
 
 # Automatically shows newly unblocked tasks!
 ```
@@ -1063,11 +1063,11 @@ A helper script `tw-flow` is located in the skill's scripts directory.
 #### 6. Check Status
 
 ```bash
-./scripts/tw-flow status [plan]
+tw-flow status [plan]
 
 # Examples:
-./scripts/tw-flow status                         # All tasks
-./scripts/tw-flow status copilot:login-feature   # Specific plan
+tw-flow status                         # All tasks
+tw-flow status copilot:login-feature   # Specific plan
 
 # Output:
 # ═══ Plan Status ═══
@@ -1081,64 +1081,64 @@ A helper script `tw-flow` is located in the skill's scripts directory.
 
 ```bash
 # Pause work on a task
-./scripts/tw-flow pause <task_id>
+tw-flow pause <task_id>
 
-# Show full task context
-./scripts/tw-flow context <task_id>
+# Show full taskp context
+tw-flow context <task_id>
 
 # Show active tasks
-./scripts/tw-flow active
+tw-flow active
 
 # Show blocked tasks
-./scripts/tw-flow blocked
+tw-flow blocked
 
 # Show overdue tasks
-./scripts/tw-flow overdue
+tw-flow overdue
 
-# Make task urgent
-./scripts/tw-flow urgent <task_id> [urgency]
+# Make taskp urgent
+tw-flow urgent <task_id> [urgency]
 
 # Add dependency
-./scripts/tw-flow block <task_id> <depends_on_id>
+tw-flow block <task_id> <depends_on_id>
 
 # Remove dependency
-./scripts/tw-flow unblock <task_id> <depends_on_id>
+tw-flow unblock <task_id> <depends_on_id>
 
-# Put task on hold
-./scripts/tw-flow wait <task_id> <date>
+# Put taskp on hold
+tw-flow wait <task_id> <date>
 ```
 
 ### Complete Workflow Example
 
 ```bash
 # 1. Create plan
-./scripts/tw-flow plan copilot:api-endpoint \
+tw-flow plan copilot:api-endpoint \
   "Design schema|research|today" \
   "Implement POST|implementation|tomorrow" \
   "Add validation|implementation|2days" \
   "Write tests|testing|3days"
 
-# Output shows task IDs: 10, 11, 12, 13
+# Output shows taskp IDs: 10, 11, 12, 13
 
 # 2. Work on first task
-./scripts/tw-flow execute 10
-./scripts/tw-flow note 10 research "REST API with JSON schema validation"
-./scripts/tw-flow note 10 decision "Using express-validator middleware"
-./scripts/tw-flow done 10 "Schema designed and documented"
+tw-flow execute 10
+tw-flow note 10 research "REST API with JSON schema validation"
+tw-flow note 10 decision "Using express-validator middleware"
+tw-flow done 10 "Schema designed and documented"
 
 # 3. Task 11 auto-unblocks, work on it
-./scripts/tw-flow execute 11
-./scripts/tw-flow note 11 implementation "Created /api/users POST endpoint"
-./scripts/tw-flow done 11
+tw-flow execute 11
+tw-flow note 11 implementation "Created /api/users POST endpoint"
+tw-flow done 11
 
 # 4. Check status
-./scripts/tw-flow status copilot:api-endpoint
+tw-flow status copilot:api-endpoint
 
 # 5. Continue with next tasks
-./scripts/tw-flow next copilot:api-endpoint
+tw-flow next copilot:api-endpoint
 ```
 
-### Why Use ./scripts/tw-flow Instead of Raw Taskwarrior?
+### Why Use tw-flow Instead of Raw Taskwarrior?
 
 ✅ **Simpler syntax** - No need to remember complex filters
 ✅ **Automatic dependencies** - `plan` command creates them automatically
@@ -1148,67 +1148,67 @@ A helper script `tw-flow` is located in the skill's scripts directory.
 ✅ **Error checking** - Prevents executing blocked tasks
 ✅ **Status overview** - Quick dashboard of plan progress
 
-**FOR AI AGENTS: Use ./scripts/tw-flow commands instead of raw taskwarrior commands for simpler, more reliable task management!**
+**FOR AI AGENTS: Use tw-flow commands instead of raw taskwarrior commands for simpler, more reliable taskp management!**
 
 ## 🎓 Cheat Sheet for Simple Models
 
-### OPTION 1: Use ./scripts/tw-flow (RECOMMENDED)
+### OPTION 1: Use tw-flow (RECOMMENDED)
 
 ```bash
 # Create plan
-./scripts/tw-flow plan copilot:PLAN "Task 1|research|today" "Task 2|implementation|tomorrow"
+tw-flow plan copilot:PLAN "Task 1|research|today" "Task 2|implementation|tomorrow"
 
 # Work on it
-./scripts/tw-flow next copilot:PLAN
-./scripts/tw-flow execute ID
-./scripts/tw-flow note ID research "your note"
-./scripts/tw-flow done ID
+tw-flow next copilot:PLAN
+tw-flow execute ID
+tw-flow note ID research "your note"
+tw-flow done ID
 
 # Check status
-./scripts/tw-flow status copilot:PLAN
+tw-flow status copilot:PLAN
 ```
 
-### OPTION 2: Use Raw Taskwarrior (if ./scripts/tw-flow not available)
+### OPTION 2: Use Raw Taskwarrior (if tw-flow not available)
 
 #### Creating Tasks - COPY THIS PATTERN
 
 ```bash
-# First task (highest priority)
-task add copilot:PLAN_NAME "Description" due:today urgency:9.0 +TAG
+# First taskp (highest priority)
+taskp add copilot:PLAN_NAME "Description" due:today urgency:9.0 +TAG
 
-# Second task (depends on first)
-task add copilot:PLAN_NAME "Description" due:tomorrow urgency:7.0 +TAG depends:FIRST_UUID
+# Second taskp (depends on first)
+taskp add copilot:PLAN_NAME "Description" due:tomorrow urgency:7.0 +TAG depends:FIRST_UUID
 
-# Third task (depends on second)
-task add copilot:PLAN_NAME "Description" due:2days urgency:5.0 +TAG depends:SECOND_UUID
+# Third taskp (depends on second)
+taskp add copilot:PLAN_NAME "Description" due:2days urgency:5.0 +TAG depends:SECOND_UUID
 ```
 
 ### Common Commands - MEMORIZE THESE
 
 ```bash
 # See what to work on
-task status:pending ready
+taskp status:pending ready
 
 # Start working
-task ID start
+taskp ID start
 
 # Add note
-task ID annotate "PREFIX: your note"
+taskp ID annotate "PREFIX: your note"
 
 # Complete task
-task ID done
+taskp ID done
 
-# See task details
-task ID info
+# See taskp details
+taskp ID info
 
 # See plan tasks
-task copilot:PLAN_NAME status:pending
+taskp copilot:PLAN_NAME status:pending
 
 # See what's overdue
-task due.before:today status:pending
+taskp due.before:today status:pending
 
 # See what's blocked
-task +BLOCKED
+taskp +BLOCKED
 ```
 
 ### Urgency Numbers - USE THIS SCALE
@@ -1216,10 +1216,10 @@ task +BLOCKED
 ```
 15.0 = CRITICAL (production bugs)
 10.0 = VERY URGENT (must do today)
-9.0  = First task in plan
-7.0  = Second task in plan
-5.0  = Third task in plan
-3.0  = Fourth task in plan
+9.0  = First taskp in plan
+7.0  = Second taskp in plan
+5.0  = Third taskp in plan
+3.0  = Fourth taskp in plan
 1.0  = Low priority (documentation, cleanup)
 ```
 
@@ -1263,16 +1263,16 @@ LINK:       = URL reference
 
 ```bash
 # 1. Create plan
-task add copilot:feature-x "Design" due:today urgency:9.0 +research
-task add copilot:feature-x "Build" due:tomorrow urgency:7.0 +implementation depends:1
-task add copilot:feature-x "Test" due:2days urgency:5.0 +testing depends:2
+taskp add copilot:feature-x "Design" due:today urgency:9.0 +research
+taskp add copilot:feature-x "Build" due:tomorrow urgency:7.0 +implementation depends:1
+taskp add copilot:feature-x "Test" due:2days urgency:5.0 +testing depends:2
 
 # 2. Work on it
 taskp c9e2f4a3 start
 taskp c9e2f4a3 annotate "RESEARCH: Found library X"
 taskp c9e2f4a3 done
 
-# 3. Next task auto-unblocks
+# 3. Next taskp auto-unblocks
 taskp 7dc51db6 start
 taskp 7dc51db6 annotate "IMPLEMENTATION: Using approach Y"
 taskp 7dc51db6 done
@@ -1297,93 +1297,93 @@ taskp f29672dd done
 Create tailored views for different workflows:
 ```bash
 # Weekly agenda - all tasks due this week
-task due.after:sow due.before:eow status:pending
+taskp due.after:sow due.before:eow status:pending
 
 # Urgent items - high priority tasks
-task priority:H status:pending
+taskp priority:H status:pending
 
 # Blocked tasks - waiting on dependencies
-task +BLOCKED
+taskp +BLOCKED
 
 # Active work - currently started tasks
-task +ACTIVE
+taskp +ACTIVE
 ```
 
 ### Recurring Tasks
 For repetitive maintenance or review tasks:
 ```bash
 # Weekly code review
-task add "Weekly code review" copilot:maintenance due:friday recur:weekly
+taskp add "Weekly code review" copilot:maintenance due:friday recur:weekly
 
 # Monthly cleanup
-task add "Archive old tasks" copilot:maintenance due:eom recur:monthly
+taskp add "Archive old tasks" copilot:maintenance due:eom recur:monthly
 ```
 
 ### Urgency Coefficients
-Fine-tune task ordering with custom urgency calculation:
+Fine-tune taskp ordering with custom urgency calculation:
 ```bash
 # Make certain projects more urgent
-task config urgency.user.project.copilot.coefficient 5.0
+taskp config urgency.user.project.copilot.coefficient 5.0
 
 # Boost urgency of specific tags
-task config urgency.user.tag.blocked.coefficient -10.0
-task config urgency.user.tag.critical.coefficient 15.0
+taskp config urgency.user.tag.blocked.coefficient -10.0
+taskp config urgency.user.tag.critical.coefficient 15.0
 ```
 
 ### JSON Export and Analysis
 Export tasks for dashboards, reports, or integration:
 ```bash
 # Export all pending tasks
-task status:pending export
+taskp status:pending export
 
 # Export specific plan
-task copilot:feature-x export
+taskp copilot:feature-x export
 
 # Use with jq for analysis
-task export | jq '.[] | select(.priority=="H")'
-task export | jq 'group_by(.project) | .[] | { .[0].project, count: length}'
+taskp export | jq '.[] | select(.priority=="H")'
+taskp export | jq 'group_by(.project) | .[] | { .[0].project, count: length}'
 ```
 
 ### Time Tracking
 Track time spent on tasks:
 ```bash
-# Start working on a task (tracks start time)
+# Start working on a taskp (tracks start time)
 taskp fa145ef2 start
 
 # Stop tracking (records duration)
 taskp fa145ef2 stop
 
 # View active tasks with duration
-task +ACTIVE
+taskp +ACTIVE
 ```
 
 ### Date Filters
 Powerful date-based filtering:
 ```bash
 # Tasks due today
-task due:today
+taskp due:today
 
 # Overdue tasks
-task due.before:today status:pending
+taskp due.before:today status:pending
 
 # Tasks due this week
-task due.after:sow due.before:eow
+taskp due.after:sow due.before:eow
 
 # Tasks due in next 3 days
-task due.after:today due.before:3days
+taskp due.after:today due.before:3days
 ```
 
 ### Bulk Operations
 Modify multiple tasks at once:
 ```bash
 # Add tag to all tasks in a plan
-task copilot:plan-x modify +urgent
+taskp copilot:plan-x modify +urgent
 
 # Complete all tasks in a category
-task +research status:pending done
+taskp +research status:pending done
 
 # Change priority for filtered tasks
-task copilot:plan-x priority: modify priority:H
+taskp copilot:plan-x priority: modify priority:H
 ```
 
 ### Context Annotations with Metadata
@@ -1408,11 +1408,11 @@ taskp fa145ef2 annotate "AC: Must handle 1000+ concurrent users"
 ## Integration Rules
 1. **Default to Taskwarrior**: Use tasks instead of creating plan files
 2. **Context is additive**: Always use annotations to add context, never replace
-3. **Dynamic prioritization**: Adjust task priorities (numerical values) based on user feedback during conversation
+3. **Dynamic prioritization**: Adjust taskp priorities (numerical values) based on user feedback during conversation
 4. **Session awareness**: When starting or asked "what are we working on?", list all plans and started tasks
-5. **Plan focus**: When user says "let's work on plan X", focus all task operations on that plan
+5. **Plan focus**: When user says "let's work on plan X", focus all taskp operations on that plan
 6. **User requests context storage**: When user says "add this to the task" or "save this context", use annotations
-7. **Review before work**: Always check `task ... status:pending` before starting to see current state
+7. **Review before work**: Always check `taskp ... status:pending` before starting to see current state
 8. **Use structured annotations**: Prefix annotations with type (RESEARCH, DECISION, BLOCKED, LESSON, AC) for better context retrieval
 9. **Time tracking**: Use `start`/`stop` commands when actively working on tasks to track effort
 10. **Leverage filters**: Use date filters, status filters, and tag combinations to create powerful views
