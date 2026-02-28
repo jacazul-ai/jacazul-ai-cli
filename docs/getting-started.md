@@ -1,63 +1,95 @@
 # Getting Started
 
-Quick start guide for the AI CLI Sandboxed environment.
+Quick start guide for the Jacazul AI CLI environment.
 
 ## 🎯 Overview
 
-AI CLI Sandboxed provides a containerized environment for running AI-powered command line tools with:
-- Isolated, reproducible containers (Docker/Podman)
-- Pre-configured AI CLI agents
-- Skill-based workflow systems
-- Session persistence
+Jacazul AI CLI is a powerful workflow automation system that runs directly on your machine or inside a container. It provides:
+- **Direct Native Setup:** Run directly in your shell for maximum speed.
+- **Isolated Containers:** Sandboxed environment for safe experimentation.
+- **Expert Skills:** Taskwarrior-based workflow management, Python expert system, and more.
+- **Rebranded Identity:** Modern, direct, and action-oriented.
 
-## 🚀 Quick Start
+---
 
-### 1. Build the Container
+## 🚀 Direct Setup (Recommended)
+
+The fastest way to get started is by configuring your local environment to use the Jacazul wrappers.
+
+### 1. Run Configuration
+
+This will create symbolic links in `~/bin` and prepare your local environment.
 
 ```bash
-# Using Docker
-docker build -f Dockerfile.copilot -t ai-cli-copilot .
+make configure
+```
 
-# Using Podman
-podman build -f Dockerfile.copilot -t ai-cli-copilot .
+### 2. Update your PATH
+
+Ensure `~/bin` is in your shell path:
+
+```bash
+echo 'export PATH="$HOME/bin:$PATH"' >> ~/.bashrc
+source ~/.bashrc
+```
+
+### 3. Start the Agent
+
+Now you can call the Jacazul agents from anywhere:
+
+```bash
+# Start Jacazul for Gemini CLI
+jacazul-gemini
+
+# Start Jacazul for GitHub Copilot CLI
+jacazul-copilot
+
+# Start Jacazul for OpenCode
+jacazul-opencode
+```
+
+---
+
+## 🐳 Container Setup (Sandbox)
+
+If you prefer isolation, use the containerized environment.
+
+### 1. Build the Image
+
+```bash
+make sandbox
 ```
 
 ### 2. Run the Container
 
 ```bash
-# Docker
-docker run -it --rm ai-cli-copilot
-
-# Podman
-podman run -it --rm ai-cli-copilot
+# Using the jacazul-gemini wrapper in sandboxed mode
+./scripts/jacazul-gemini-sandboxed
 ```
-
-### 3. Inside the Container
-
-The environment comes pre-configured with:
-- **Taskwarrior** for task management
-- **tw-flow** and **ponder** scripts
-- **Copilot CLI** integration
 
 ---
 
-## 🛠 Available Tools
+## 🛠 Core Workflow
 
-### Taskwarrior Expert Skill
+Jacazul is built on top of **Taskwarrior**. Use the expert tools to manage your progress.
 
-Complete workflow management system. See [Taskwarrior Expert Guide](taskwarrior-expert.md).
-
-**Quick example:**
+### 1. Orient (Ponder)
+See the state of your project.
 ```bash
-# Check current state
 ponder
+```
 
-# Create an initiative
-tw-flow initiative my-feature \
-  "DESIGN|Design API|research|today" \
-  "EXECUTE|Build API|implementation|tomorrow"
+### 2. Plan (tw-flow)
+Break down your goals into actionable tasks.
+```bash
+tw-flow plan my-feature \
+  "DESIGN|Schema review|research|today" \
+  "EXECUTE|Implementation|implementation|tomorrow"
+```
 
-# Start work
+### 3. Execute
+Pick the top task and start working.
+```bash
 tw-flow execute <uuid>
 ```
 
@@ -65,75 +97,20 @@ tw-flow execute <uuid>
 
 ## 📁 Directory Structure
 
-```
-/project/
-├── templates/          # Agent configurations
-│   ├── skills/        # Available skills
-│   └── context/       # Agent instructions
-├── scripts/           # CLI wrappers
-├── docs/              # Documentation (you are here)
-└── sandbox/           # Sandboxed environments
-```
-
----
-
-## 🔧 Configuration
-
-### Customizing the Environment
-
-Edit `Dockerfile.copilot` to add packages or tools:
-
-```dockerfile
-RUN apt-get update && apt-get install -y \
-    your-package-here
-```
-
-### Adding Skills
-
-Place skill directories in `/project/templates/skills/`
-
-Structure:
-```
-templates/skills/my-skill/
-├── SKILL.md           # Skill documentation
-├── scripts/           # Helper scripts
-└── ...
-```
+- `scripts/`: Core CLI wrappers and bootstraps.
+- `templates/`: Skill definitions and agent instructions.
+- `docs/`: Documentation and guides.
+- `~/bin/`: (After configure) Symbolic links to core tools.
+- `~/.jacazul-ai/`: Global configuration and Taskwarrior databases.
 
 ---
 
 ## 📚 Next Steps
 
-1. **Learn Taskwarrior workflow:** Read [Taskwarrior Expert Guide](taskwarrior-expert.md)
-2. **Explore skills:** Check [Skills Overview](skills/README.md)
-3. **Run examples:** Try the complete workflow example
+1. **Taskwarrior Mastery:** Read the [Taskwarrior Expert Guide](taskwarrior-expert.md).
+2. **Explore Skills:** See [Skills Overview](skills/README.md).
+3. **Environment Modes:** Understand [Unhinged vs Caged modes](environment-modes.md).
 
 ---
 
-## 🆘 Troubleshooting
-
-### Container won't build
-- Check Docker/Podman is installed
-- Verify you're in the project root
-- Try removing cached layers: `docker system prune`
-
-### Scripts not found
-- Ensure you're inside the container
-- Check `/project/templates/skills/*/scripts/` paths
-- Verify scripts are executable: `chmod +x script-name`
-
-### Taskwarrior not working
-- Initialize if needed: `task` (first time)
-- Check data location: `~/.task/` or `~/.local/share/task/`
-
----
-
-## 🔗 Additional Resources
-
-- [Main README](../README.md)
-- [Taskwarrior Official Docs](https://taskwarrior.org/docs/)
-- [Docker Documentation](https://docs.docker.com/)
-
----
-
-**Last Updated:** 2026-01-31
+**Last Updated:** 2026-02-27
