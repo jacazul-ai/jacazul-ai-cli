@@ -33,7 +33,15 @@ for skill_dir in "$TEMPLATES_DIR/skills"/*; do
     fi
 
     target="$OPENCODE_GLOBAL_DIR/skills/$name"
-    if [ ! -L "$target" ] && [ ! -d "$target" ]; then
+    # Always ensure the link points to the CURRENT PROJECT_ROOT
+    if [ -L "$target" ]; then
+        current_target=$(readlink -f "$target")
+        expected_target=$(readlink -f "$skill_dir")
+        if [ "$current_target" != "$expected_target" ]; then
+            echo "⚠️  Skill $name points to wrong location. Re-linking..."
+            ln -sf "$skill_dir" "$target"
+        fi
+    else
         echo "🐊 Linking global skill: $name"
         ln -sf "$skill_dir" "$target"
     fi
