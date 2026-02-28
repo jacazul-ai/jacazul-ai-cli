@@ -42,40 +42,41 @@ chmod +x "$TARGET_SCRIPT"
 echo "✅ Wrapper script created: $TARGET_SCRIPT"
 
 # -----------------------------------------------------------------------------
-# 3. Setup jacazul-gemini link in ~/bin
+# Function: setup_link
+# Usage: setup_link <source_path> <target_link>
 # -----------------------------------------------------------------------------
-GEMINI_LINK="$HOME/bin/jacazul-gemini"
-if [ ! -L "$GEMINI_LINK" ] && [ ! -f "$GEMINI_LINK" ]; then
-    echo "Creating symbolic link for jacazul-gemini at $GEMINI_LINK..."
-    ln -s "$PROJECT_ROOT/scripts/jacazul-gemini" "$GEMINI_LINK"
-    echo "✅ Link created: $GEMINI_LINK"
-else
-    echo "ℹ️  $GEMINI_LINK already exists. Skipping link creation."
-fi
+setup_link() {
+    local source_path="$1"
+    local target_link="$2"
+    local link_name=$(basename "$target_link")
+
+    if [ -L "$target_link" ]; then
+        local current_target=$(readlink -f "$target_link")
+        local expected_target=$(readlink -f "$source_path")
+        
+        if [ "$current_target" != "$expected_target" ]; then
+            echo "⚠️  $link_name points to wrong location. Re-linking..."
+            rm "$target_link"
+            ln -s "$source_path" "$target_link"
+            echo "✅ $link_name updated: $target_link -> $source_path"
+        else
+            echo "ℹ️  $link_name already correctly linked."
+        fi
+    elif [ -f "$target_link" ]; then
+        echo "⚠️  $target_link is a regular file. Skipping link creation to avoid data loss."
+    else
+        echo "Creating symbolic link for $link_name at $target_link..."
+        ln -s "$source_path" "$target_link"
+        echo "✅ Link created: $target_link"
+    fi
+}
 
 # -----------------------------------------------------------------------------
-# 4. Setup jacazul-opencode link in ~/bin
+# 3. Setup Tool Links in ~/bin
 # -----------------------------------------------------------------------------
-OPENCODE_LINK="$HOME/bin/jacazul-opencode"
-if [ ! -L "$OPENCODE_LINK" ] && [ ! -f "$OPENCODE_LINK" ]; then
-    echo "Creating symbolic link for jacazul-opencode at $OPENCODE_LINK..."
-    ln -s "$PROJECT_ROOT/scripts/jacazul-opencode" "$OPENCODE_LINK"
-    echo "✅ Link created: $OPENCODE_LINK"
-else
-    echo "ℹ️  $OPENCODE_LINK already exists. Skipping link creation."
-fi
-
-# -----------------------------------------------------------------------------
-# 5. Setup jacazul-copilot link in ~/bin
-# -----------------------------------------------------------------------------
-COPILOT_LINK="$HOME/bin/jacazul-copilot"
-if [ ! -L "$COPILOT_LINK" ] && [ ! -f "$COPILOT_LINK" ]; then
-    echo "Creating symbolic link for jacazul-copilot at $COPILOT_LINK..."
-    ln -s "$PROJECT_ROOT/scripts/jacazul-copilot" "$COPILOT_LINK"
-    echo "✅ Link created: $COPILOT_LINK"
-else
-    echo "ℹ️  $COPILOT_LINK already exists. Skipping link creation."
-fi
+setup_link "$PROJECT_ROOT/scripts/jacazul-gemini" "$HOME/bin/jacazul-gemini"
+setup_link "$PROJECT_ROOT/scripts/jacazul-opencode" "$HOME/bin/jacazul-opencode"
+setup_link "$PROJECT_ROOT/scripts/jacazul-copilot" "$HOME/bin/jacazul-copilot"
 
 # -----------------------------------------------------------------------------
 # 6. OS-Specific Setup
