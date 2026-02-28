@@ -87,7 +87,7 @@ Each project has its own Taskwarrior database:
 
 ```
 ~/.task/
-  ├── piraz_ai_cli_sandboxed/    # Project-specific database
+  ├── jacazul-ai_jacazul-ai-cli/    # Project-specific database
   │   ├── pending.data
   │   ├── completed.data
   │   └── backlog.data
@@ -111,7 +111,7 @@ Each project has its own isolated Taskwarrior database:
 
 ```
 ~/.task/
-  ├── piraz_ai_cli_sandboxed/     # Database for piraz_ai_cli_sandboxed project
+  ├── jacazul-ai_jacazul-ai-cli/     # Database for jacazul-ai_jacazul-ai-cli project
   │   ├── pending.data
   │   ├── completed.data
 

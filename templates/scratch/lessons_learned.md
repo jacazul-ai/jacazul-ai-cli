@@ -11,7 +11,7 @@ for uuid in $(TASKDATA=/home/jacazul/.task/$PROJECT_ID task project:old-name uui
 done
 ```
 
-**Example:** Renamed `piraz_ai_cli_sandboxed.sandbox-entrypoint` → `sandbox-entrypoint`
+**Example:** Renamed `jacazul-ai_jacazul-ai-cli.sandbox-entrypoint` → `sandbox-entrypoint`
 
 **Implementation needed:**
 - Add `tw-flow rename <old-name> <new-name>` command

@@ -1,12 +1,12 @@
-import unittest
+#!/home/fpiraz/.jacazul-ai/.venv/bin/python
 import os
 import shutil
 import tempfile
 import subprocess
 from typing import Tuple
 
-class JakaTest(unittest.TestCase):
-    """Base class for Jaka tool tests with strict environment isolation."""
+class JacazulTest(unittest.TestCase):
+    """Base class for Jacazul tool tests with strict environment isolation."""
     
     @classmethod
     def setUpClass(cls):
@@ -19,7 +19,7 @@ class JakaTest(unittest.TestCase):
 
     def setUp(self):
         # Create a unique temporary directory for Taskwarrior data
-        self.test_dir = tempfile.mkdtemp(prefix="jaka_test_")
+        self.test_dir = tempfile.mkdtemp(prefix="jacazul_test_")
         self.taskdata = os.path.join(self.test_dir, "data")
         os.makedirs(self.taskdata, exist_ok=True)
         
@@ -29,7 +29,7 @@ class JakaTest(unittest.TestCase):
         self.env["PROJECT_ID"] = "test_project"
         # Ensure PYTHONPATH includes the script directory for tw_expert import
         self.env["PYTHONPATH"] = f"{self.script_dir}:{self.env.get('PYTHONPATH', '')}"
-        # Prevent Jaka scripts from looking at real user config
+        # Prevent Jacazul scripts from looking at real user config
         self.env["TASKRC"] = os.path.join(self.test_dir, ".taskrc")
         
         # Create a dummy .taskrc to avoid Taskwarrior complaints

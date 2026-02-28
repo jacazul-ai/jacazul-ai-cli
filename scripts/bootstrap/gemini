@@ -1,5 +1,5 @@
 #!/bin/bash
-# 🐊 Jaka - Bootstrap for Gemini CLI Settings
+# 🐊 Jacazul - Bootstrap for Gemini CLI Settings
 # Configures experimental agents and preview features surgically.
 
 # Localiza o diretório raiz do projeto
@@ -52,5 +52,5 @@ done
 
 # Log only in DEBUG mode
 if [ -n "$DEBUG" ]; then
-    echo "✅ Jaka: Gemini configuration verified (enableAgents: true, previewFeatures: true)."
+    echo "✅ Jacazul: Gemini configuration verified (enableAgents: true, previewFeatures: true)."
 fi

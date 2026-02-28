@@ -1,8 +1,8 @@
 #!/bin/bash
-# 🐊 Jaka Python Bootstrap (Unhinged Mode)
+# 🐊 Jacazul Python Bootstrap (Unhinged Mode)
 # Manages the persistent Python venv using 'uv'.
 
-VENV_DIR="$HOME/.candango/jaka_ai/.venv"
+VENV_DIR="$HOME/.jacazul-ai/.venv"
 REQUIREMENTS_FILE="$PROJECT_ROOT/templates/python/requirements.txt"
 
 # 1. Ensure the venv directory exists
@@ -31,5 +31,5 @@ fi
 
 # Log status in DEBUG mode
 if [ -n "$DEBUG" ]; then
-    echo "✅ Jaka: Python environment ready ($VENV_DIR)."
+    echo "✅ Jacazul: Python environment ready ($VENV_DIR)."
 fi

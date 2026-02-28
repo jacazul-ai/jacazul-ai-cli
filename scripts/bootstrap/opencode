@@ -1,5 +1,5 @@
 #!/bin/bash
-# 🐊 Jaka - Bootstrap for Opencode (Global UNHINGED Mode)
+# 🐊 Jacazul - Bootstrap for Opencode (Global UNHINGED Mode)
 # Sets up global agents and skills for native Gemini CLI execution.
 
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -27,6 +27,11 @@ for skill_dir in "$TEMPLATES_DIR/skills"/*; do
     [ -d "$skill_dir" ] || continue
     name=$(basename "$skill_dir")
     
+    # 🚨 EXCLUSION: jacazul is NOT a skill for Opencode, it is an agent.
+    if [ "$name" = "jacazul" ]; then
+        continue
+    fi
+
     target="$OPENCODE_GLOBAL_DIR/skills/$name"
     if [ ! -L "$target" ] && [ ! -d "$target" ]; then
         echo "🐊 Linking global skill: $name"
@@ -36,5 +41,5 @@ done
 
 # Log only in DEBUG mode
 if [ -n "$DEBUG" ]; then
-    echo "✅ Jaka: Global Opencode environment verified."
+    echo "✅ Jacazul: Global Opencode environment verified."
 fi

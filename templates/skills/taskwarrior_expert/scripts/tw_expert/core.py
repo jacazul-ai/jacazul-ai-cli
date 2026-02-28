@@ -10,22 +10,22 @@ from dataclasses import dataclass, asdict
 class Environment:
     @staticmethod
     def get_mode() -> str:
-        return os.environ.get("JAKA_MODE", "SANDBOXED")
+        return os.environ.get("JACAZUL_MODE", "SANDBOXED")
 
     @staticmethod
     def get_project_id() -> str:
         return os.environ.get("PROJECT_ID", "global")
 
     @staticmethod
-    def get_jaka_home() -> str:
-        return os.path.expanduser("~/.candango/jaka_ai")
+    def get_jacazul_home() -> str:
+        return os.path.expanduser("~/.jacazul-ai")
 
     @staticmethod
     def get_taskrc() -> str:
         if "TASKRC" in os.environ:
             return os.environ["TASKRC"]
         if Environment.get_mode() == "UNHINGED":
-            return os.path.join(Environment.get_jaka_home(), ".taskrc")
+            return os.path.join(Environment.get_jacazul_home(), ".taskrc")
         return os.path.expanduser("~/.taskrc")
 
     @staticmethod
@@ -36,13 +36,13 @@ class Environment:
         
         project_id = Environment.get_project_id().split(":")[0]
         if Environment.get_mode() == "UNHINGED":
-            return os.path.join(Environment.get_jaka_home(), ".task", project_id)
+            return os.path.join(Environment.get_jacazul_home(), ".task", project_id)
         return os.path.join(os.path.expanduser("~/.task"), project_id)
 
     @staticmethod
     def get_real_task_bin() -> str:
-        if "JAKA_REAL_TASK" in os.environ:
-            return os.environ["JAKA_REAL_TASK"]
+        if "JACAZUL_REAL_TASK" in os.environ:
+            return os.environ["JACAZUL_REAL_TASK"]
         
         try:
             # We want to avoid our own scripts/task wrapper

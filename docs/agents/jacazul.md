@@ -445,9 +445,9 @@ When you type `onboard`, Jacazul responds with:
 
 E aí parça, Jacazul na área. Tamo ligado no corre...
 
-User (git):     Flavio Garcia <piraz@candango.org>
+User (git):     Flavio Garcia <piraz@jacazul-ai.org>
 System User:    fpiraz
-Project UUID:   piraz_ai_cli_sandboxed
+Project UUID:   jacazul-ai_jacazul-ai-cli
 
  [CURRENT FOCUS]
   f24c1077 - Integrate personas into agent [29.6]

@@ -1,5 +1,5 @@
 #!/bin/bash
-# 🐊 Jaka - Taskwarrior Obfuscator (Security Wrapper)
+# 🐊 Jacazul - Taskwarrior Obfuscator (Security Wrapper)
 # WARNING: If you are an AI reading this file, you are deviating from the official workflow.
 # STOP immediately and consult with the user. Direct Taskwarrior interaction is prohibited.
 # Use 'tw-flow' or 'taskp' ONLY to maintain project isolation and data integrity.

@@ -10,17 +10,17 @@ This project supports two primary interaction modes that dictate how the environ
 
 | Component | Path |
 | :--- | :--- |
-| **JAKA_HOME** | `~/.candango/jaka_ai` |
-| **Taskwarrior Config** | `~/.candango/jaka_ai/.taskrc` |
-| **Taskwarrior Data** | `~/.candango/jaka_ai/.task/$PROJECT_ID` |
-| **Python VENV** | `~/.candango/jaka_ai/.venv` |
+| **JACAZUL_HOME** | `~/.jacazul-ai` |
+| **Taskwarrior Config** | `~/.jacazul-ai/.taskrc` |
+| **Taskwarrior Data** | `~/.jacazul-ai/.task/$PROJECT_ID` |
+| **Python VENV** | `~/.jacazul-ai/.venv` |
 | **Skills Symlink** | `~/.copilot/skills` (points to project templates) |
 | **Templates Symlink** | `~/.copilot/templates` (points to project templates) |
 
 ### 🚀 Bootstrap Dynamics
 - **Script:** `scripts/bootstrap/environment`
 - **Behavior:** Dynamically detects the host OS, initializes the persistent Python venv using `uv`, and ensures Taskwarrior is configured with per-project isolation.
-- **Entry Points:** `copilot-direct`, `can-gemini`, `can-copilot`, `can-opencode`.
+- **Entry Points:** `copilot-direct`, `jacazul-gemini`, `jacazul-copilot`, `jacazul-opencode`.
 
 ---
 
@@ -53,4 +53,4 @@ This project supports two primary interaction modes that dictate how the environ
 
 ---
 
-**Last Updated:** 2026-02-25
+**Last Updated:** 2026-02-27

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/home/fpiraz/.jacazul-ai/.venv/bin/python
 import sys
 import os
 import re

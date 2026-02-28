@@ -1,26 +1,26 @@
 #!/bin/bash
-# 🐊 Jaka Bootstrap - Environment Check
+# 🐊 Jacazul Bootstrap - Environment Check
 # This script is the SOLE entry point for runtime configuration (Dynamics).
 
 # 1. Run-once Guard
-if [ -n "$JAKA_ENV_INITIALIZED" ]; then
+if [ -n "$JACAZUL_ENV_INITIALIZED" ]; then
     return 0
 fi
 
 # 2. Dynamic Detection of Real Taskwarrior Binary
-if [ -z "$JAKA_REAL_TASK" ]; then
-    JAKA_REAL_TASK=$(which -a task 2>/dev/null | grep -v "$PROJECT_ROOT/scripts/task" | head -n 1)
-    if [ -z "$JAKA_REAL_TASK" ]; then
+if [ -z "$JACAZUL_REAL_TASK" ]; then
+    JACAZUL_REAL_TASK=$(which -a task 2>/dev/null | grep -v "$PROJECT_ROOT/scripts/task" | head -n 1)
+    if [ -z "$JACAZUL_REAL_TASK" ]; then
         for p in /usr/bin/task /usr/local/bin/task /opt/homebrew/bin/task; do
-            if [ -x "$p" ]; then JAKA_REAL_TASK="$p"; break; fi
+            if [ -x "$p" ]; then JACAZUL_REAL_TASK="$p"; break; fi
         done
     fi
-    export JAKA_REAL_TASK
+    export JACAZUL_REAL_TASK
 fi
 
 # 2.1 Administrative Alias
 # Provides a session-specific bypass to the real binary for project maintenance.
-alias rtask="$JAKA_REAL_TASK"
+alias rtask="$JACAZUL_REAL_TASK"
 
 # 3. Project Identity Calculation
 if [ -z "$PROJECT_ID" ]; then
@@ -30,7 +30,7 @@ if [ -z "$PROJECT_ID" ]; then
 fi
 
 # 4. Mode Configuration
-export JAKA_MODE="${JAKA_MODE:-UNHINGED}"
+export JACAZUL_MODE="${JACAZUL_MODE:-UNHINGED}"
 
 # 4. Component Bootstraps (Dynamics)
 # 4.1 Taskwarrior
@@ -59,9 +59,9 @@ BOOTSTRAP_PYTHON="$PROJECT_ROOT/scripts/bootstrap/python"
 [ -f "$BOOTSTRAP_PYTHON" ] && source "$BOOTSTRAP_PYTHON"
 
 # 5. Finalize Initialization
-export JAKA_ENV_INITIALIZED=true
+export JACAZUL_ENV_INITIALIZED=true
 
 # Initial feedback - ONLY if DEBUG is set
 if [ -n "$DEBUG" ]; then
-    echo "🐊 Jaka Runtime Initialized | Mode: $JAKA_MODE | Binary: ${JAKA_REAL_TASK:-not found}"
+    echo "🐊 Jacazul Runtime Initialized | Mode: $JACAZUL_MODE | Binary: ${JACAZUL_REAL_TASK:-not found}"
 fi

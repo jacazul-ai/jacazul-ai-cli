@@ -29,15 +29,15 @@ CURRENT_DIR=$(basename "$(pwd)")
 PROJECT_ID="${PARENT_DIR}_${CURRENT_DIR}"
 
 # -----------------------------------------------------------------------------
-# 0. Initialize Jaka Bootstrap Environment
+# 0. Initialize Jacazul Bootstrap Environment
 # -----------------------------------------------------------------------------
 BOOTSTRAP_ENV="$SCRIPT_DIR/bootstrap/environment"
 if [ -f "$BOOTSTRAP_ENV" ]; then
     source "$BOOTSTRAP_ENV"
 fi
 
-# Set JAKA_MODE to CAGED for this script
-export JAKA_MODE="CAGED"
+# Set JACAZUL_MODE to CAGED for this script
+export JACAZUL_MODE="CAGED"
 
 # Initialize Taskwarrior Bootstrap
 BOOTSTRAP_TW="$SCRIPT_DIR/bootstrap/taskwarrior"
@@ -115,7 +115,7 @@ fi
 podman run -it --rm \
   ${DEBUG:+--log-level debug} \
   --userns=keep-id \
-  -e "JAKA_MODE=$JAKA_MODE" \
+  -e "JACAZUL_MODE=$JACAZUL_MODE" \
   -e "COPILOT_CUSTOM_INSTRUCTIONS_DIRS=/home/jacazul/.copilot:/home/jacazul/.github/instructions" \
   -e "PROJECT_ID=$PROJECT_ID" \
   -e "CONTEXT_REAL_PATH=$REAL_PATH" \

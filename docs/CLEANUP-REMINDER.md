@@ -6,7 +6,7 @@
 
 ### ✅ Antes de Arquivar - Checklist:
 
-- [ ] Base do projeto (`~/.task/piraz_ai_cli_sandboxed/`) está funcionando bem?
+- [ ] Base do projeto (`~/.task/jacazul-ai_jacazul-ai-cli/`) está funcionando bem?
 - [ ] Todas as tasks estão acessíveis via `taskp`?
 - [ ] `tw-flow` e `ponder` funcionam corretamente?
 - [ ] Nenhum problema encontrado nas últimas 2 semanas?

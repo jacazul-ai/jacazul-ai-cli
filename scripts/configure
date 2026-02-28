@@ -54,41 +54,41 @@ export COPILOT_SANDBOXED_HOME="\$PROJECT_ROOT"
 EOF
 
 # -----------------------------------------------------------------------------
-# 3. Setup can-gemini link in ~/bin
+# 3. Setup jacazul-gemini link in ~/bin
 # -----------------------------------------------------------------------------
-GEMINI_LINK="$HOME/bin/can-gemini"
+GEMINI_LINK="$HOME/bin/jacazul-gemini"
 if [ ! -L "$GEMINI_LINK" ] && [ ! -f "$GEMINI_LINK" ]; then
-    echo "Creating symbolic link for can-gemini at $GEMINI_LINK..."
-    ln -s "$PROJECT_ROOT/scripts/can-gemini" "$GEMINI_LINK"
+    echo "Creating symbolic link for jacazul-gemini at $GEMINI_LINK..."
+    ln -s "$PROJECT_ROOT/scripts/jacazul-gemini" "$GEMINI_LINK"
     echo "✅ Link created: $GEMINI_LINK"
 else
-        echo "ℹ️  $GEMINI_LINK already exists. Skipping link creation."
-    fi
-    
-    # -----------------------------------------------------------------------------
-    # 4. Setup can-opencode link in ~/bin
-    # -----------------------------------------------------------------------------
-    OPENCODE_LINK="$HOME/bin/can-opencode"
-    if [ ! -L "$OPENCODE_LINK" ] && [ ! -f "$OPENCODE_LINK" ]; then
-        echo "Creating symbolic link for can-opencode at $OPENCODE_LINK..."
-        ln -s "$PROJECT_ROOT/scripts/can-opencode" "$OPENCODE_LINK"
-        echo "✅ Link created: $OPENCODE_LINK"
-    else
-        echo "ℹ️  $OPENCODE_LINK already exists. Skipping link creation."
-    fi
+    echo "ℹ️  $GEMINI_LINK already exists. Skipping link creation."
+fi
 
-    # -----------------------------------------------------------------------------
-    # 5. Setup can-copilot link in ~/bin
-    # -----------------------------------------------------------------------------
-    COPILOT_LINK="$HOME/bin/can-copilot"
-    if [ ! -L "$COPILOT_LINK" ] && [ ! -f "$COPILOT_LINK" ]; then
-        echo "Creating symbolic link for can-copilot at $COPILOT_LINK..."
-        ln -s "$PROJECT_ROOT/scripts/can-copilot" "$COPILOT_LINK"
-        echo "✅ Link created: $COPILOT_LINK"
-    else
-        echo "ℹ️  $COPILOT_LINK already exists. Skipping link creation."
-    fi
-        
-    echo ""
-    echo "Setup complete! You can now run: copilot_sandboxed, can-gemini, can-opencode or can-copilot"
+# -----------------------------------------------------------------------------
+# 4. Setup jacazul-opencode link in ~/bin
+# -----------------------------------------------------------------------------
+OPENCODE_LINK="$HOME/bin/jacazul-opencode"
+if [ ! -L "$OPENCODE_LINK" ] && [ ! -f "$OPENCODE_LINK" ]; then
+    echo "Creating symbolic link for jacazul-opencode at $OPENCODE_LINK..."
+    ln -s "$PROJECT_ROOT/scripts/jacazul-opencode" "$OPENCODE_LINK"
+    echo "✅ Link created: $OPENCODE_LINK"
+else
+    echo "ℹ️  $OPENCODE_LINK already exists. Skipping link creation."
+fi
+
+# -----------------------------------------------------------------------------
+# 5. Setup jacazul-copilot link in ~/bin
+# -----------------------------------------------------------------------------
+COPILOT_LINK="$HOME/bin/jacazul-copilot"
+if [ ! -L "$COPILOT_LINK" ] && [ ! -f "$COPILOT_LINK" ]; then
+    echo "Creating symbolic link for jacazul-copilot at $COPILOT_LINK..."
+    ln -s "$PROJECT_ROOT/scripts/jacazul-copilot" "$COPILOT_LINK"
+    echo "✅ Link created: $COPILOT_LINK"
+else
+    echo "ℹ️  $COPILOT_LINK already exists. Skipping link creation."
+fi
+    
+echo ""
+echo "Setup complete! You can now run: copilot_sandboxed, jacazul-gemini, jacazul-opencode or jacazul-copilot"
         

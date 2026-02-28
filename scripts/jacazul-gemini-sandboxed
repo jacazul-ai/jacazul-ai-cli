@@ -1,7 +1,7 @@
 #!/bin/bash
 [ -n "$DEBUG" ] && set -x
 
-# can-gemini-sandboxed: Gemini CLI in a container (candango config)
+# jacazul-gemini-sandboxed: Gemini CLI in a container (jacazul-ai config)
 
 # Get the absolute path to the script's directory
 SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
@@ -31,15 +31,15 @@ CURRENT_DIR=$(basename "$(pwd)")
 PROJECT_ID="${PARENT_DIR}_${CURRENT_DIR}"
 
 # -----------------------------------------------------------------------------
-# 0. Initialize Jaka Bootstrap Environment
+# 0. Initialize Jacazul Bootstrap Environment
 # -----------------------------------------------------------------------------
 BOOTSTRAP_ENV="$PROJECT_ROOT/scripts/bootstrap/environment"
 if [ -f "$BOOTSTRAP_ENV" ]; then
     source "$BOOTSTRAP_ENV"
 fi
 
-# Set JAKA_MODE to CAGED for this script
-export JAKA_MODE="CAGED"
+# Set JACAZUL_MODE to CAGED for this script
+export JACAZUL_MODE="CAGED"
 
 # Initialize Taskwarrior Bootstrap
 BOOTSTRAP_TW="$PROJECT_ROOT/scripts/bootstrap/taskwarrior"
@@ -57,9 +57,9 @@ if [ -f "$HOST_GITCONFIG" ]; then
 fi
 USER_NAME="${GIT_USER_NAME:-$(whoami)}"
 
-# Base Onboard Prompt for Jaka (Sandboxed Edition)
-JAKA_MODE="CAGED"
-ONBOARD_PROMPT="Initialize session. You are Jaka, o Jacaré Azul (Monstro do Lago), running in $JAKA_MODE mode in a sandboxed Podman container. You are assisting user $USER_NAME. The current project context is id $PROJECT_ID. \
+# Base Onboard Prompt for Jacazul (Sandboxed Edition)
+JACAZUL_MODE="CAGED"
+ONBOARD_PROMPT="Initialize session. You are Jacazul, o Jacaré Azul (Monstro do Lago), running in $JACAZUL_MODE mode in a sandboxed Podman container. You are assisting user $USER_NAME. The current project context is id $PROJECT_ID. \
 \
 ACTION REQUIRED: \
 1. Activate skill 'jacazul' and 'taskwarrior-expert' immediately. \
@@ -83,12 +83,12 @@ if podman image exists gemini-cli; then
     IMAGE_NAME="gemini-cli"
 fi
 
-echo "🐊 can-gemini-sandboxed: Running in $IMAGE_NAME for project [$PROJECT_ID]"
+echo "🐊 jacazul-gemini-sandboxed: Running in $IMAGE_NAME for project [$PROJECT_ID]"
 
 podman run -it --rm \
   ${DEBUG:+--log-level debug} \
   --userns=keep-id \
-  -e "JAKA_MODE=$JAKA_MODE" \
+  -e "JACAZUL_MODE=$JACAZUL_MODE" \
   -e "PROJECT_ID=$PROJECT_ID" \
   -e "CONTEXT_REAL_PATH=$REAL_PATH" \
   -e "CONTEXT_SYSTEM_USER=$SYSTEM_USER" \

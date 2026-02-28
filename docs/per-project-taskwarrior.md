@@ -10,7 +10,7 @@ This architecture enables isolated Taskwarrior databases per project, providing 
 
 ```
 ~/.task/
-  ├── piraz_ai_cli_sandboxed/      # Project-specific database
+  ├── jacazul-ai_jacazul-ai-cli/      # Project-specific database
   │   ├── pending.data
   │   ├── completed.data
   │   ├── backlog.data
@@ -68,8 +68,8 @@ Automatically uses project-specific database when `PROJECT_ID` is set.
 
 **Usage:**
 ```bash
-./ponder piraz_ai_cli_sandboxed           # Show project overview
-./ponder piraz_ai_cli_sandboxed:feature   # Show specific plan
+./ponder jacazul-ai_jacazul-ai-cli           # Show project overview
+./ponder jacazul-ai_jacazul-ai-cli:feature   # Show specific plan
 ```
 
 ## Migration Process
@@ -115,8 +115,8 @@ TASKDATA=~/.task/PROJECT_ID task count
 
 ```bash
 # Automatic detection via PROJECT_ID
-cd /path/to/piraz_ai_cli_sandboxed/
-taskp list                    # Uses piraz_ai_cli_sandboxed DB
+cd /path/to/jacazul-ai_jacazul-ai-cli/
+taskp list                    # Uses jacazul-ai_jacazul-ai-cli DB
 taskp add "New feature"       # Adds to project DB
 ```
 

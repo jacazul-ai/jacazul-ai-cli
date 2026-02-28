@@ -1,9 +1,9 @@
-import re
+#!/home/fpiraz/.jacazul-ai/.venv/bin/python
 import orjson
 import os
-from .base import JakaTest
+from .base import JacazulTest
 
-class FlowTest(JakaTest):
+class FlowTest(JacazulTest):
     """Atomic tests for the 7-phase Taskwarrior workflow."""
 
     def setUp(self):

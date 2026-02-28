@@ -1,8 +1,8 @@
-import os
+#!/home/fpiraz/.jacazul-ai/.venv/bin/python
 import re
-from .base import JakaTest
+from .base import JacazulTest
 
-class SecurityTest(JakaTest):
+class SecurityTest(JacazulTest):
     """Atomic tests for vaccination, obfuscation, and environment safety."""
 
     def test_task_description_quote_handling(self):

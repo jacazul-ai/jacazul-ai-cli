@@ -1,7 +1,7 @@
-import os
-from .base import JakaTest
+#!/home/fpiraz/.jacazul-ai/.venv/bin/python
+from .base import JacazulTest
 
-class CoreTest(JakaTest):
+class CoreTest(JacazulTest):
     """Atomic tests for core environment and isolation."""
 
     def test_tools_executable(self):

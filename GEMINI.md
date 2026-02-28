@@ -1,6 +1,6 @@
-# Gemini CLI Sandboxed Manifesto
+# Jacazul AI CLI Manifesto
 
-This document defines the foundational engineering standards, architectural patterns, and operational philosophies for the Gemini CLI Sandboxed project.
+This document defines the foundational engineering standards, architectural patterns, and operational philosophies for the Jacazul AI CLI project.
 
 ## 🏛 Architectural Boundaries
 
@@ -37,7 +37,7 @@ The project adheres to a "Silent by Default" logging policy to maintain CLI usab
 - **Persona Voice:** Responses MUST align with the active persona (Jacazul/Cortana) and the detected user language, while persistent data (tasks, commits) remains in English.
 - **Agent vs. Skill Distinction:** 
   - **Copilot/Opencode:** Use the **Agent** pattern (`jacazul.agent.md`).
-  - **Gemini CLI:** Operates exclusively via the **Skill** pattern. The `jaka` skill provides the persona instructions in this environment.
+  - **Gemini CLI:** Operates exclusively via the **Skill** pattern. The `jacazul` skill provides the persona instructions in this environment.
 
 ## 🎓 Core Lessons Learned
 

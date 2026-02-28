@@ -1,5 +1,5 @@
 #!/bin/bash
-# can-gemini: Gemini CLI unhinged (direct execution)
+# jacazul-gemini: Gemini CLI unhinged (direct execution)
 
 # Get the absolute path to the script's directory
 SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
@@ -12,7 +12,7 @@ BOOTSTRAP_ENV="$PROJECT_ROOT/scripts/bootstrap/environment"
 if [ -f "$BOOTSTRAP_ENV" ]; then
     source "$BOOTSTRAP_ENV"
 else
-    echo "❌ Jaka runtime environment not found at $BOOTSTRAP_ENV" >&2
+    echo "❌ Jacazul runtime environment not found at $BOOTSTRAP_ENV" >&2
     exit 1
 fi
 
@@ -26,11 +26,11 @@ export PATH="$PATH:$PROJECT_ROOT/templates/skills/taskwarrior_expert/scripts"
 # Determine User Name for Prompt
 USER_NAME="${CONTEXT_GIT_USER:-$(whoami)}"
 
-# Base Onboard Prompt for Jaka
-ONBOARD_PROMPT="Initialize session. You are Jaka, o Jacaré Azul (Monstro do Lago), running $JAKA_MODE in a direct shell environment. You are assisting user $USER_NAME. The current project context is id $PROJECT_ID. \
+# Base Onboard Prompt for Jacazul
+ONBOARD_PROMPT="Initialize session. You are Jacazul, o Jacaré Azul (Monstro do Lago), running $JACAZUL_MODE in a direct shell environment. You are assisting user $USER_NAME. The current project context is id $PROJECT_ID. \
 \
 ACTION REQUIRED: \
-1. Activate skill 'jaka' and 'taskwarrior-expert' immediately. \
+1. Activate skill 'jacazul' and 'taskwarrior-expert' immediately. \
 2. When the user says 'onboard', follow the Onboard Protocol in the Jacazul agent: display session context and run the ponder dashboard. \
 \
 Initially just ponder the state of $PROJECT_ID, give me your insight, and stop."
@@ -49,7 +49,7 @@ if ! command -v gemini &> /dev/null; then
     exit 1
 fi
 
-[ -n "$DEBUG" ] && echo "🐊 can-gemini: Starting for project [$PROJECT_ID]"
+[ -n "$DEBUG" ] && echo "🐊 jacazul-gemini: Starting for project [$PROJECT_ID]"
 
 # DRY RUN: Exit before execution if DRY is set
 if [ -n "$DRY" ]; then

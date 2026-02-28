@@ -1,11 +1,11 @@
-# Gemini CLI Sandboxed (Monstro do Lago)
+# Jacazul AI CLI (Monstro do Lago)
 
 This project provides a powerful, dual-mode environment for running AI-powered command line interface (CLI) tools (Gemini, Opencode, Copilot) within Docker/Podman containers (**CAGED**) or directly on your host (**UNHINGED**).
 
 ## ✨ Features
 
 - **Dual-Mode Execution** - Choose between isolated containers (**CAGED**) or high-performance native execution (**UNHINGED**)
-- **Gemini & Opencode Ready** - Optimized for the latest Gemini CLI and Opencode tools
+- **Jacazul AI Ecosystem** - Optimized for the latest Gemini CLI, Opencode, and Copilot tools
 - **Per-project task databases** - Isolated Taskwarrior databases for each project
 - **Structured 7-Phase Workflow** - Robust task management with interaction modes
 - **Dual-Persona Navigation** - Jacazul (PT-BR) and Cortana (EN) workflow assistants
@@ -20,9 +20,9 @@ This project provides a powerful, dual-mode environment for running AI-powered c
 
 ### 2. Run your preferred CLI
 ```bash
-can-gemini      # Gemini CLI (Native)
-can-opencode    # Opencode CLI (Native)
-can-copilot     # Copilot CLI (Native)
+jacazul-gemini      # Gemini CLI (Native)
+jacazul-opencode    # Opencode CLI (Native)
+jacazul-copilot     # Copilot CLI (Native)
 ```
 
 ### 3. Try the Workflow
@@ -36,7 +36,7 @@ tw-flow initiative my-feature \
   "EXECUTE|Build logic|implementation|tomorrow"
 
 # Start working
-tw-flow execute <task_id>
+tw-flow execute <uuid>
 ```
 
 ## 📚 Documentation
@@ -53,7 +53,7 @@ tw-flow execute <task_id>
 Structured workflow management with 7 phases, interaction modes, and per-project database isolation.
 
 **Features:**
-- **Per-Project isolation** - Dedicated database at `~/.task/$PROJECT_ID/`
+- **Per-Project isolation** - Dedicated database at `~/.jacazul-ai/.task/$PROJECT_ID/`
 - **Absolute Reliability** - Uses `taskp` and `tw-flow` v1.4.0 with JSON-based status
 - **Transparent Feedback** - Split view for PENDING and COMPLETED tasks
 - **Ghost-Output Protection** - Optimized command execution and output capture
@@ -67,10 +67,10 @@ Structured workflow management with 7 phases, interaction modes, and per-project
 ├── docs/              # Documentation
 ├── scripts/           # Entry points & Bootstraps
 │   ├── bootstrap/     # Environment preparation scripts
-│   ├── can-*          # CLI wrappers (unhinged/sandboxed)
+│   ├── jacazul-*      # CLI wrappers (unhinged/sandboxed)
 ├── templates/         # Agent & Skill definitions
 │   ├── agents/        # Jacazul & Cortana persona files
-│   ├── skills/        # Taskwarrior & Jaka skills
+│   ├── skills/        # Taskwarrior & Jacazul skills
 └── sandbox/           # Persistent data directories
 ```
 
@@ -78,7 +78,7 @@ Structured workflow management with 7 phases, interaction modes, and per-project
 
 ### Running the Smoke Tests
 ```bash
-./templates/skills/taskwarrior_expert/scripts/test-tw-flow.sh
+./templates/skills/taskwarrior_expert/scripts/run_smoke.py
 ```
 
 ## 📝 License
@@ -98,4 +98,3 @@ MIT
 **📖 Full documentation:** `docs/agents/jacazul.md`
 
 ---
-

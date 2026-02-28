@@ -1,9 +1,9 @@
-#!/usr/bin/env python
+#!/home/fpiraz/.jacazul-ai/.venv/bin/python
 import unittest
 import sys
 import os
 
-# 🐊 Jaka Hardened Smoke Test Runner (Firenado Pattern)
+# 🐊 Jacazul Hardened Smoke Test Runner (Firenado Pattern)
 # Provides modular test execution with strict isolation.
 
 # Add current directory to sys.path to allow importing the 'tests' package
@@ -25,7 +25,7 @@ def smoke_suite():
 
 def main():
     print("═══════════════════════════════════════════════════")
-    print("  JAKA HARDENED SMOKE TEST SUITE (v1.4.0)")
+    print("  JACAZUL HARDENED SMOKE TEST SUITE (v1.4.0)")
     print("═══════════════════════════════════════════════════\n")
     
     # Run tests with high verbosity

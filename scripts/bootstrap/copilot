@@ -1,5 +1,5 @@
 #!/bin/bash
-# 🐊 Jaka - Bootstrap for Copilot (Global UNHINGED Mode)
+# 🐊 Jacazul - Bootstrap for Copilot (Global UNHINGED Mode)
 # Sets up global agents and skills for native Copilot CLI execution.
 
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -27,6 +27,11 @@ for skill_dir in "$TEMPLATES_DIR/skills"/*; do
     [ -d "$skill_dir" ] || continue
     name=$(basename "$skill_dir")
     
+    # 🚨 EXCLUSION: jacazul is NOT a skill for Copilot, it is an agent.
+    if [ "$name" = "jacazul" ]; then
+        continue
+    fi
+
     target="$COPILOT_GLOBAL_DIR/skills/$name"
     if [ ! -L "$target" ] && [ ! -d "$target" ]; then
         echo "🐊 Linking global skill: $name"
@@ -44,5 +49,5 @@ fi
 
 # Log only in DEBUG mode
 if [ -n "$DEBUG" ]; then
-    echo "✅ Jaka: Global Copilot environment verified."
+    echo "✅ Jacazul: Global Copilot environment verified."
 fi

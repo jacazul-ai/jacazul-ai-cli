@@ -42,15 +42,39 @@ chmod +x "$TARGET_SCRIPT"
 echo "✅ Wrapper script created: $TARGET_SCRIPT"
 
 # -----------------------------------------------------------------------------
-# 5. Setup can-opencode link in ~/bin
+# 3. Setup jacazul-gemini link in ~/bin
 # -----------------------------------------------------------------------------
-OPENCODE_LINK="$HOME/bin/can-opencode"
+GEMINI_LINK="$HOME/bin/jacazul-gemini"
+if [ ! -L "$GEMINI_LINK" ] && [ ! -f "$GEMINI_LINK" ]; then
+    echo "Creating symbolic link for jacazul-gemini at $GEMINI_LINK..."
+    ln -s "$PROJECT_ROOT/scripts/jacazul-gemini" "$GEMINI_LINK"
+    echo "✅ Link created: $GEMINI_LINK"
+else
+    echo "ℹ️  $GEMINI_LINK already exists. Skipping link creation."
+fi
+
+# -----------------------------------------------------------------------------
+# 4. Setup jacazul-opencode link in ~/bin
+# -----------------------------------------------------------------------------
+OPENCODE_LINK="$HOME/bin/jacazul-opencode"
 if [ ! -L "$OPENCODE_LINK" ] && [ ! -f "$OPENCODE_LINK" ]; then
-    echo "Creating symbolic link for can-opencode at $OPENCODE_LINK..."
-    ln -s "$PROJECT_ROOT/scripts/can-opencode" "$OPENCODE_LINK"
+    echo "Creating symbolic link for jacazul-opencode at $OPENCODE_LINK..."
+    ln -s "$PROJECT_ROOT/scripts/jacazul-opencode" "$OPENCODE_LINK"
     echo "✅ Link created: $OPENCODE_LINK"
 else
     echo "ℹ️  $OPENCODE_LINK already exists. Skipping link creation."
+fi
+
+# -----------------------------------------------------------------------------
+# 5. Setup jacazul-copilot link in ~/bin
+# -----------------------------------------------------------------------------
+COPILOT_LINK="$HOME/bin/jacazul-copilot"
+if [ ! -L "$COPILOT_LINK" ] && [ ! -f "$COPILOT_LINK" ]; then
+    echo "Creating symbolic link for jacazul-copilot at $COPILOT_LINK..."
+    ln -s "$PROJECT_ROOT/scripts/jacazul-copilot" "$COPILOT_LINK"
+    echo "✅ Link created: $COPILOT_LINK"
+else
+    echo "ℹ️  $COPILOT_LINK already exists. Skipping link creation."
 fi
 
 # -----------------------------------------------------------------------------
@@ -75,13 +99,11 @@ elif [ "$OS_TYPE" = "debian" ]; then
 fi
 
 # -----------------------------------------------------------------------------
-# 6. Configure Taskwarrior database location
+# 7. Configure Taskwarrior database location
 # -----------------------------------------------------------------------------
 echo ""
 echo "📝 Taskwarrior database will use per-project structure:"
-echo "   ~/.task/\$PROJECT_ID/"
-echo ""
-echo "   Example: ~/.task/piraz_ai_cli_sandboxed/"
+echo "   ~/.jacazul-ai/.task/\$PROJECT_ID/"
 echo ""
 echo "   This is automatically handled by taskp, tw-flow, and ponder scripts."
 
@@ -92,6 +114,9 @@ echo "============================================"
 echo ""
 echo "You can now run:"
 echo "  copilot-direct"
+echo "  jacazul-copilot"
+echo "  jacazul-gemini"
+echo "  jacazul-opencode"
 echo ""
 echo "Or add ~/bin to your PATH permanently:"
 echo "  echo 'export PATH=\"\$HOME/bin:\$PATH\"' >> ~/.bashrc"

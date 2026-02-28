@@ -3,7 +3,7 @@ import subprocess
 import sys
 import re
 
-# 🐊 Jaka py-check (v1.1.0)
+# 🐊 Jacazul py-check (v1.1.0)
 # Standard Python validation with "Error as Prompt" feedback and auto-beautify.
 
 def run_beautifier(target):

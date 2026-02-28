@@ -1,5 +1,5 @@
 #!/bin/bash
-# can-opencode: Opencode CLI unhinged (direct execution)
+# jacazul-opencode: Opencode CLI unhinged (direct execution)
 
 # Get the absolute path to the script's directory
 SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
@@ -12,7 +12,7 @@ BOOTSTRAP_ENV="$PROJECT_ROOT/scripts/bootstrap/environment"
 if [ -f "$BOOTSTRAP_ENV" ]; then
     source "$BOOTSTRAP_ENV"
 else
-    echo "❌ Jaka runtime environment not found at $BOOTSTRAP_ENV" >&2
+    echo "❌ Jacazul runtime environment not found at $BOOTSTRAP_ENV" >&2
     exit 1
 fi
 
@@ -32,7 +32,7 @@ if [ ! -x "$OPENCODE_BIN" ]; then
     exit 1
 fi
 
-[ -n "$DEBUG" ] && echo "🐊 can-opencode: Starting for project [$PROJECT_ID]"
+[ -n "$DEBUG" ] && echo "🐊 jacazul-opencode: Starting for project [$PROJECT_ID]"
 
 # DRY RUN: Exit before execution if DRY is set
 if [ -n "$DRY" ]; then

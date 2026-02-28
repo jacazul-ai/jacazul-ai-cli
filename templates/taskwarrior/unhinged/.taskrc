@@ -1,9 +1,9 @@
 # Taskwarrior configuration file
-# Managed by Candango Jaka AI
+# Managed by Jacazul AI AI
 # See https://taskwarrior.org/docs/configuration/
 
 # Data location
-data.location=~/.candango/jaka_ai/.task
+data.location=~/.jacazul-ai/jacazul_ai/.task
 
 # Disable confirmation prompts for AI-friendly execution
 confirmation=no

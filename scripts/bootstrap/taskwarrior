@@ -1,22 +1,22 @@
 #!/bin/bash
-# 🐊 Jaka Taskwarrior Bootstrap
-# Sets TASKDATA based on JAKA_MODE and PROJECT_ID
+# 🐊 Jacazul Taskwarrior Bootstrap
+# Sets TASKDATA based on JACAZUL_MODE and PROJECT_ID
 
 if [ -n "$PROJECT_ID" ]; then
-    if [ "$JAKA_MODE" = "UNHINGED" ]; then
-        export JAKA_HOME="$HOME/.candango/jaka_ai"
-        export TASKRC="$JAKA_HOME/.taskrc"
+    if [ "$JACAZUL_MODE" = "UNHINGED" ]; then
+        export JACAZUL_HOME="$HOME/.jacazul-ai"
+        export TASKRC="$JACAZUL_HOME/.taskrc"
         # In unhinged mode, we use a global task base but isolated per project
-        export TASKDATA="$JAKA_HOME/.task/$PROJECT_ID"
+        export TASKDATA="$JACAZUL_HOME/.task/$PROJECT_ID"
         
         # Ensure the .taskrc is in place
         if [ ! -f "$TASKRC" ]; then
             echo "🐊 Initializing Unhinged Taskwarrior config at $TASKRC..."
-            mkdir -p "$JAKA_HOME"
+            mkdir -p "$JACAZUL_HOME"
             cp templates/taskwarrior/unhinged/.taskrc "$TASKRC"
             # Explicitly override data.location to avoid confusion, 
             # though TASKDATA env var takes precedence.
-            sed -i "s|data.location=.*|data.location=$JAKA_HOME/.task|" "$TASKRC"
+            sed -i "s|data.location=.*|data.location=$JACAZUL_HOME/.task|" "$TASKRC"
         fi
     else
         export TASKDATA="$HOME/.task/$PROJECT_ID"

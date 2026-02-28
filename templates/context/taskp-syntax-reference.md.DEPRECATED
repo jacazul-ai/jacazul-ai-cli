@@ -73,18 +73,18 @@ tw-flow plan feature "Task 1|tag|today" "Task 2|tag|tomorrow"
 PROJECT_ID="${PARENT_DIR}_${CURRENT_DIR}"
 
 # Examples of actual values:
-piraz_ai_cli_sandboxed
-candango_sqlok
+jacazul-ai_jacazul-ai-cli
+jacazul-ai_sqlok
 myteam_myproject
 
 # When you use $PROJECT_ID in a command, it expands to the actual value
-echo "feature"  # Outputs: piraz_ai_cli_sandboxed:feature
+echo "feature"  # Outputs: jacazul-ai_jacazul-ai-cli:feature
 ```
 
 ## Rule of Thumb
 
 **Whenever you see `$PROJECT_ID` in an example, mentally think:**
-> "This will expand to something like `piraz_ai_cli_sandboxed` + whatever comes after. I need quotes to keep it together."
+> "This will expand to something like `jacazul-ai_jacazul-ai-cli` + whatever comes after. I need quotes to keep it together."
 
 ```
 "initiative"  = "initiative"  ✅
