@@ -13,8 +13,7 @@ if [ ! -d "$OPENCODE_GLOBAL_DIR/agents" ] || [ ! -d "$OPENCODE_GLOBAL_DIR/skills
 fi
 
 # 2. Link Global Agents (Surgical)
-# Link Gemini-specific version as the default 'jacazul.agent.md'
-AGENT_SRC="$TEMPLATES_DIR/agents/jacazul.gemini.md"
+AGENT_SRC="$PROJECT_ROOT/agents/jacazul-opencode.md"
 AGENT_TARGET="$OPENCODE_GLOBAL_DIR/agents/jacazul.agent.md"
 
 if [ -e "$AGENT_SRC" ]; then
@@ -23,14 +22,17 @@ if [ -e "$AGENT_SRC" ]; then
 fi
 
 # 3. Link Global Skills (Surgical)
-for skill_dir in "$TEMPLATES_DIR/skills"/*; do
+for skill_dir in "$PROJECT_ROOT/skills/jacazul-partial" "$TEMPLATES_DIR/skills"/*; do
     [ -d "$skill_dir" ] || continue
     name=$(basename "$skill_dir")
     
-    # 🚨 EXCLUSION: jacazul is NOT a skill for Opencode, it is an agent.
-    if [ "$name" = "jacazul" ]; then
-        continue
+    # Mapping for JIT forge artifacts
+    if [ "$name" = "jacazul-partial" ]; then
+        name="jacazul"
     fi
+
+    # 🚨 EXCLUSION: jacazul is NOT a skill for Opencode, it is an agent.
+    # In the new architecture, it IS a skill too (for delegation).
 
     target="$OPENCODE_GLOBAL_DIR/skills/$name"
     # Always ensure the link points to the CURRENT PROJECT_ROOT

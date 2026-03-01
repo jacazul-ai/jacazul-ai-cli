@@ -5,14 +5,26 @@
 VENV_DIR="$HOME/.jacazul-ai/.venv"
 REQUIREMENTS_FILE="$PROJECT_ROOT/templates/python/requirements.txt"
 
-# 1. Ensure the venv directory exists
+# 0. Kill existing shell VENV if it points to legacy paths
+# This prevents 'uv' from exploding due to an active, broken environment.
+unset VIRTUAL_ENV
+
+# 1. Ensure the venv directory exists and is valid
+RECREATE_VENV=false
 if [ ! -d "$VENV_DIR" ]; then
-    echo "🐊 Creating persistent Python venv at $VENV_DIR..."
+    RECREATE_VENV=true
+elif ! "$VENV_DIR/bin/python" --version &>/dev/null; then
+    echo "⚠️  Python venv at $VENV_DIR is invalid or broken. Recreating..."
+    RECREATE_VENV=true
+fi
+
+if [ "$RECREATE_VENV" = true ]; then
+    echo "🐊 Initializing persistent Python venv at $VENV_DIR..."
+    rm -rf "$VENV_DIR"
     mkdir -p "$(dirname "$VENV_DIR")"
     if command -v uv &> /dev/null; then
         uv venv "$VENV_DIR"
     else
-        echo "⚠️  'uv' not found. Falling back to 'python3 -m venv' (slower)..."
         python3 -m venv "$VENV_DIR"
     fi
 fi

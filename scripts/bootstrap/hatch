@@ -1,0 +1,16 @@
+#!/bin/bash
+# 🐊 Jacazul Hatch Bootstrap
+# Centralized JIT Prompt Forge trigger for the current session.
+
+# Determine the absolute project root directory
+PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+HATCH_ENGINE="$PROJECT_ROOT/scripts/jacazul/hatch.py"
+
+if [ -x "$HATCH_ENGINE" ]; then
+    # Hatch all clients to ensure total pântano alignment
+    "$HATCH_ENGINE" --client gemini
+    "$HATCH_ENGINE" --client copilot
+    "$HATCH_ENGINE" --client opencode
+else
+    echo "⚠️  Hatch engine not found or not executable at $HATCH_ENGINE."
+fi

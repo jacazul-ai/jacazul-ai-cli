@@ -39,21 +39,42 @@ jq '
 SKILLS_DIR="$GEMINI_DIR/skills"
 mkdir -p "$SKILLS_DIR"
 
+# 4.1 Link Jacazul Expert Skill (JIT Forge Artifact)
+JACAZUL_SKILL_SRC="$PROJECT_ROOT/skills/jacazul-gemini"
+JACAZUL_SKILL_TARGET="$SKILLS_DIR/jacazul"
+if [ -d "$JACAZUL_SKILL_SRC" ]; then
+    rm -rf "$JACAZUL_SKILL_TARGET"
+    if [ -n "$DEBUG" ]; then
+        echo "🐊 Linking global Gemini skill: jacazul (JIT Forge)"
+    fi
+    ln -sf "$JACAZUL_SKILL_SRC" "$JACAZUL_SKILL_TARGET"
+fi
+
+# 4.2 Link other skills from templates
 for skill_dir in "$TEMPLATES_DIR/skills"/*; do
     [ -d "$skill_dir" ] || continue
     name=$(basename "$skill_dir")
-    
+
+    # Skip jacazul as it's handled above
+    if [ "$name" = "jacazul" ]; then
+        continue
+    fi
+
     target="$SKILLS_DIR/$name"
     # Always ensure the link points to the CURRENT PROJECT_ROOT
     if [ -L "$target" ]; then
         current_target=$(readlink -f "$target")
         expected_target=$(readlink -f "$skill_dir")
         if [ "$current_target" != "$expected_target" ]; then
-            echo "⚠️  Gemini skill $name points to wrong location. Re-linking..."
+            if [ -n "$DEBUG" ]; then
+                echo "⚠️  Gemini skill $name points to wrong location. Re-linking..."
+            fi
             ln -sf "$skill_dir" "$target"
         fi
     else
-        echo "🐊 Linking global Gemini skill: $name"
+        if [ -n "$DEBUG" ]; then
+            echo "🐊 Linking global Gemini skill: $name"
+        fi
         ln -sf "$skill_dir" "$target"
     fi
 done

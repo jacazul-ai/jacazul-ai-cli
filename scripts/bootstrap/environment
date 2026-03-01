@@ -33,30 +33,21 @@ fi
 export JACAZUL_MODE="${JACAZUL_MODE:-UNHINGED}"
 
 # 4. Component Bootstraps (Dynamics)
-# 4.1 Taskwarrior
+# 4.1 Python VENV (Foundation)
+BOOTSTRAP_PYTHON="$PROJECT_ROOT/scripts/bootstrap/python"
+[ -f "$BOOTSTRAP_PYTHON" ] && source "$BOOTSTRAP_PYTHON"
+
+# 4.2 JIT Prompt Hatching (The Forge)
+BOOTSTRAP_HATCH="$PROJECT_ROOT/scripts/bootstrap/hatch"
+[ -x "$BOOTSTRAP_HATCH" ] && "$BOOTSTRAP_HATCH"
+
+# 4.3 Taskwarrior
 BOOTSTRAP_TW="$PROJECT_ROOT/scripts/bootstrap/taskwarrior"
 [ -f "$BOOTSTRAP_TW" ] && source "$BOOTSTRAP_TW"
 
-# 4.2 Gemini
+# 4.4 Gemini
 BOOTSTRAP_GEMINI="$PROJECT_ROOT/scripts/bootstrap/gemini"
 [ -f "$BOOTSTRAP_GEMINI" ] && source "$BOOTSTRAP_GEMINI" "$HOME/.gemini"
-
-# 4.3 Opencode
-BOOTSTRAP_OPENCODE="$PROJECT_ROOT/scripts/bootstrap/opencode"
-if [ -x "$BOOTSTRAP_OPENCODE" ]; then
-    # We call it as a script to maintain its internal logic
-    "$BOOTSTRAP_OPENCODE"
-fi
-
-# 4.4 Copilot
-BOOTSTRAP_COPILOT="$PROJECT_ROOT/scripts/bootstrap/copilot"
-if [ -x "$BOOTSTRAP_COPILOT" ]; then
-    "$BOOTSTRAP_COPILOT"
-fi
-
-# 4.5 Python VENV
-BOOTSTRAP_PYTHON="$PROJECT_ROOT/scripts/bootstrap/python"
-[ -f "$BOOTSTRAP_PYTHON" ] && source "$BOOTSTRAP_PYTHON"
 
 # 5. Finalize Initialization
 export JACAZUL_ENV_INITIALIZED=true

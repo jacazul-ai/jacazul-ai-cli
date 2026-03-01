@@ -13,8 +13,7 @@ if [ ! -d "$COPILOT_GLOBAL_DIR/agents" ] || [ ! -d "$COPILOT_GLOBAL_DIR/skills" 
 fi
 
 # 2. Link Global Agents (Surgical)
-# Link Copilot-specific version as the default 'jacazul.agent.md'
-AGENT_SRC="$TEMPLATES_DIR/agents/jacazul.copilot.md"
+AGENT_SRC="$PROJECT_ROOT/agents/jacazul-copilot.md"
 AGENT_TARGET="$COPILOT_GLOBAL_DIR/agents/jacazul.agent.md"
 
 if [ -e "$AGENT_SRC" ]; then
@@ -23,14 +22,18 @@ if [ -e "$AGENT_SRC" ]; then
 fi
 
 # 3. Link Global Skills (Surgical)
-for skill_dir in "$TEMPLATES_DIR/skills"/*; do
+for skill_dir in "$PROJECT_ROOT/skills/jacazul-partial" "$TEMPLATES_DIR/skills"/*; do
     [ -d "$skill_dir" ] || continue
     name=$(basename "$skill_dir")
     
-    # 🚨 EXCLUSION: jacazul is NOT a skill for Copilot, it is an agent.
-    if [ "$name" = "jacazul" ]; then
-        continue
+    # Mapping for JIT forge artifacts
+    if [ "$name" = "jacazul-partial" ]; then
+        name="jacazul"
     fi
+
+    # 🚨 EXCLUSION: jacazul is NOT a skill for Copilot, it is an agent.
+    # Wait, in the new architecture, it IS a skill too (for delegation).
+    # So we remove the old exclusion and let it link as 'jacazul'.
 
     target="$COPILOT_GLOBAL_DIR/skills/$name"
     # Always ensure the link points to the CURRENT PROJECT_ROOT

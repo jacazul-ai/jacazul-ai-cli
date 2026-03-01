@@ -1,0 +1,85 @@
+## 📋 The Workflow Loop
+
+### Phase 0: Orient (History-First)
+**CRITICAL:** Before touching the filesystem, you MUST understand the mission history.
+1.  **Git Log**: Run `git log -n 5` to see recent tactical changes.
+2.  **Task Context**: Run `tw-flow context <uuid>` to read previous outcomes and decisions.
+3.  **Source of Truth**: If a task is marked `done` with an `OUTCOME`, trust that outcome. Do NOT re-investigate.
+4.  **Search Throttling**: Broad searches (recursive greps) are forbidden unless the agent has already read specific files mentioned in history.
+
+### Phase 1: Orient (Ponder)
+Before acting, understand the state of the world.
+```bash
+ponder {{ project_id }}
+```
+This shows your active, ready, and blocked tasks.
+
+### Phase 2: Create Initiative
+Break down a goal into a dependency chain.
+```bash
+tw-flow initiative feature-x 
+  "DESIGN|Design API schema|research|today" 
+  "PLAN|Break down endpoints|implementation|tomorrow" 
+  "EXECUTE|Implement logic|implementation|tomorrow"
+```
+
+### Phase 3: Execute (Act)
+Pick the top task and work.
+```bash
+tw-flow execute <uuid>
+```
+**CRITICAL:** This command triggers the **Context Briefing**. You MUST read and acknowledge any `══ INHERITED CONTEXT ══` displayed.
+
+### Phase 4: Context (Record)
+Document your work as you go. Use `tw-flow note` for mid-task decisions and `tw-flow outcome` for final results.
+```bash
+tw-flow note <uuid> decision "Using library Y."
+```
+
+### Phase 5: Review (Verify)
+**CRITICAL:** Never close a task silently.
+1.  Summarize the work.
+2.  Show the result (code, file, output).
+3.  Ask: "Shall I close this?"
+
+### Phase 6: Outcome (Capture)
+Upon user approval ("looks good", "yes"), you **MUST** record the final result.
+```bash
+tw-flow outcome <uuid> "Created file X and updated Y."
+```
+
+### Phase 7: Close (Finalize)
+Only after recording the outcome.
+```bash
+tw-flow done <uuid>
+```
+
+## 🧠 Context Propagation (The "Briefing")
+
+The system automatically carries intelligence across dependencies.
+1.  **Parent Outcomes:** `tw-flow execute` fetches `OUTCOME`, `DECISION`, and `LESSON` notes from all parent tasks.
+2.  **Handoffs:** `tw-flow handoff <uuid> "msg"` bridges the current outcome into the next task's context.
+
+## 🤝 Session Handoff
+
+To ensure continuity between sessions (or agents), use this protocol when wrapping up:
+
+1.  **Close:** Ensure the current task is `done` with a clear outcome.
+2.  **Anchor:** Explicitly `execute` the *next* logical task.
+3.  **Bridge:** Use `tw-flow handoff <next_uuid> "..."` to link them.
+
+---
+
+### 🛡 Safety & Archiving
+
+#### 🗑 Soft Delete (Discard)
+**NEVER** use `taskp delete`. It is permanent and destroys history.
+Use `tw-flow discard <uuid>` to move tasks to a `:trash` project.
+
+#### 🗄 Archiving Unplanned Tasks
+Move legacy/unscoped tasks to the `_archive` project.
+```bash
+taskp <uuid> modify {{ project_id }}:_archive
+```
+
+The `ponder` dashboard automatically ignores any project ending in `_archive` or `_trash`.

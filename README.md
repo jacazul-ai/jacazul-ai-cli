@@ -1,21 +1,37 @@
 # Jacazul AI CLI (Monstro do Lago)
 
-This project provides a powerful, dual-mode environment for running AI-powered command line interface (CLI) tools (Gemini, Opencode, Copilot) within Docker/Podman containers (**CAGED**) or directly on your host (**UNHINGED**).
+This project provides a powerful, dual-mode environment for running AI-powered command line interface (CLI) tools (Gemini, Opencode, Copilot) within Docker/Podman containers (**CAGED**) or directly on your host (**COMPANION**).
 
 ## ✨ Features
 
-- **Dual-Mode Execution** - Choose between isolated containers (**CAGED**) or high-performance native execution (**UNHINGED**)
-- **Jacazul AI Ecosystem** - Optimized for the latest Gemini CLI, Opencode, and Copilot tools
-- **Per-project task databases** - Isolated Taskwarrior databases for each project
-- **Structured 7-Phase Workflow** - Robust task management with interaction modes
-- **Dual-Persona Navigation** - Jacazul (PT-BR) and Cortana (EN) workflow assistants
-- **Automated Bootstrap** - Instant environment preparation for each project
+- **JIT Prompt Forge** - Just-in-Time generation of session-aware instructions.
+- **Dual-Mode Execution** - Choose between isolated containers (**CAGED**) or high-performance native execution (**COMPANION**).
+- **Jacazul AI Ecosystem** - Optimized for Gemini CLI, Opencode, and Copilot tools.
+- **Per-project task databases** - Isolated Taskwarrior databases for each project.
+- **Structured 7-Phase Workflow** - Robust task management with interaction modes.
+- **Context Delegation** - Intelligent Lazy Loading to minimize context window bloat.
 
-## 🚀 Quick Start (UNHINGED Mode)
+## 🏗️ Project Architecture (JIT Forge)
+
+Jacazul AI CLI uses a dynamic factory to forge prompts during initialization.
+
+### Core Structure
+- **/agents/**: Generated persona files (Copilot/Opencode). These use **Context Delegation**.
+- **/skills/**: Expert capability modules.
+  - `jacazul-gemini/`: Full unified context for Gemini CLI.
+  - `jacazul-partial/`: Core technical logic (UUID, Git, TW) for agent delegation.
+  - `taskwarrior-expert/`, `python-expert/`, etc.
+- **/scripts/jacazul/**: The **Incubator**. Contains the `hatch.py` engine and Tornado templates (`.tmpl`).
+- **/build/**: Destination for tool-specific generated artifacts (git-ignored).
+
+### Context Delegation (Lazy Loading)
+To optimize the context window, Copilot and Opencode agents are generated with identity and voice only, delegating core technical mandates to the `jacazul-partial` skill. Gemini CLI receives a single, unified `jacazul-gemini` skill containing the full context.
+
+## 🚀 Quick Start (COMPANION Mode)
 
 ### 1. Configure the Environment
 ```bash
-./scripts/configure-direct
+make configure
 ```
 
 ### 2. Run your preferred CLI
@@ -31,7 +47,7 @@ jacazul-copilot     # Copilot CLI (Native)
 ponder
 
 # Create an initiative
-tw-flow initiative my-feature \
+tw-flow ini my-feature \
   "DESIGN|Design system|research|today" \
   "EXECUTE|Build logic|implementation|tomorrow"
 
@@ -39,62 +55,17 @@ tw-flow initiative my-feature \
 tw-flow execute <uuid>
 ```
 
-## 📚 Documentation
+## 🛠️ Expert Skills
 
-- **[Getting Started](docs/getting-started.md)** - Setup and first steps
-- **[Taskwarrior Expert](docs/taskwarrior-expert.md)** - Complete workflow guide
-- **[Per-Project Databases](docs/per-project-taskwarrior.md)** - Database architecture and usage
-- **[Skills Overview](docs/skills/README.md)** - Available skills
-- **[Interaction Modes](docs/interaction-modes.md)** - Understanding PLAN, EXECUTE, GUIDE, etc.
-
-## 🛠 Available Skills
-
-### Taskwarrior Expert (v1.4.0)
-Structured workflow management with 7 phases, interaction modes, and per-project database isolation.
-
-**Features:**
-- **Per-Project isolation** - Dedicated database at `~/.jacazul-ai/.task/$PROJECT_ID/`
-- **Absolute Reliability** - Uses `taskp` and `tw-flow` v1.4.0 with JSON-based status
-- **Transparent Feedback** - Split view for PENDING and COMPLETED tasks
-- **Ghost-Output Protection** - Optimized command execution and output capture
-
-[→ Complete Guide](docs/taskwarrior-expert.md) | [→ Architecture](docs/per-project-taskwarrior.md)
-
-## 📁 Project Structure
-
-```
-/project/
-├── docs/              # Documentation
-├── scripts/           # Entry points & Bootstraps
-│   ├── bootstrap/     # Environment preparation scripts
-│   ├── jacazul-*      # CLI wrappers (unhinged/sandboxed)
-├── templates/         # Agent & Skill definitions
-│   ├── agents/        # Jacazul & Cortana persona files
-│   ├── skills/        # Taskwarrior & Jacazul skills
-└── sandbox/           # Persistent data directories
-```
-
-## 🔧 Development
-
-### Running the Smoke Tests
-```bash
-./templates/skills/taskwarrior_expert/scripts/run_smoke.py
-```
+- **Taskwarrior Expert:** Workflow management and persistence.
+- **Python Expert:** PEP 8 compliance and automated linting.
+- **Git Expert:** Conventional commits and repository integrity.
+- **Commit Expert:** Standardized commit message generation.
 
 ## 📝 License
 
 MIT
 
-## 🐊 Jacazul Agent
-
-**Jacazul** is your AI workflow navigator. He speaks PT-BR, knows the mission, and keeps you in the flow.
-
-### Commands
-- **`onboard`** — Initialize session context
-- **`ponder`** — Refresh status dashboard
-- **`tw-flow status`** — Focused initiative view
-- **`tw-flow initiatives`** — List all active initiatives
-
-**📖 Full documentation:** `docs/agents/jacazul.md`
-
 ---
+
+**Philosophy:** "Plan effectively, execute efficiently, and never lose context."
