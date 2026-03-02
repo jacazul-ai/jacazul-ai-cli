@@ -21,7 +21,8 @@ Jacazul AI CLI uses a dynamic factory to forge prompts during initialization.
   - `jacazul-gemini/`: Full unified context for Gemini CLI.
   - `jacazul-partial/`: Core technical logic (UUID, Git, TW) for agent delegation.
   - `taskwarrior-expert/`, `python-expert/`, etc.
-- **/scripts/jacazul/**: The **Incubator**. Contains the `hatch.py` engine and Tornado templates (`.tmpl`).
+- **/scripts/jacazul/**: The **Incubator**. Contains the `hatch.py` engine and the dynamic template system.
+  - `templates/`: Categorized fragments in `core/`, `front/`, `persona/`, and `protocols/` subdirectories using `.md` extension.
 - **/build/**: Destination for tool-specific generated artifacts (git-ignored).
 
 ### Context Delegation (Lazy Loading)
