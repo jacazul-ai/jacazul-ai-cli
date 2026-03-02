@@ -39,26 +39,10 @@ jq '
 SKILLS_DIR="$GEMINI_DIR/skills"
 mkdir -p "$SKILLS_DIR"
 
-# 4.1 Link Jacazul Engine Skill (JIT Forge Artifact)
-JACAZUL_SKILL_SRC="$PROJECT_ROOT/skills/jacazul-gemini"
-JACAZUL_SKILL_TARGET="$SKILLS_DIR/jacazul-engine"
-if [ -d "$JACAZUL_SKILL_SRC" ]; then
-    rm -rf "$JACAZUL_SKILL_TARGET"
-    if [ -n "$DEBUG" ]; then
-        echo "🐊 Linking global Gemini skill: jacazul-engine (JIT Forge)"
-    fi
-    ln -sf "$JACAZUL_SKILL_SRC" "$JACAZUL_SKILL_TARGET"
-fi
-
-# 4.2 Link other skills from templates
-for skill_dir in "$TEMPLATES_DIR/skills"/*; do
+# 4.1 Link skills from root-level /skills directory
+for skill_dir in "$PROJECT_ROOT/skills"/*; do
     [ -d "$skill_dir" ] || continue
     name=$(basename "$skill_dir")
-
-    # Skip jacazul as it's handled above
-    if [ "$name" = "jacazul" ]; then
-        continue
-    fi
 
     target="$SKILLS_DIR/$name"
     # Always ensure the link points to the CURRENT PROJECT_ROOT
@@ -78,6 +62,23 @@ for skill_dir in "$TEMPLATES_DIR/skills"/*; do
         ln -sf "$skill_dir" "$target"
     fi
 done
+
+# 4.2 Link legacy skills from templates (if any left)
+if [ -d "$TEMPLATES_DIR/skills" ]; then
+    for skill_dir in "$TEMPLATES_DIR/skills"/*; do
+        [ -d "$skill_dir" ] || continue
+        name=$(basename "$skill_dir")
+
+        # Skip if already linked from root
+        [ -e "$SKILLS_DIR/$name" ] && continue
+
+        target="$SKILLS_DIR/$name"
+        if [ -n "$DEBUG" ]; then
+            echo "🐊 Linking legacy Gemini skill from templates: $name"
+        fi
+        ln -sf "$skill_dir" "$target"
+    done
+fi
 
 # Log only in DEBUG mode
 if [ -n "$DEBUG" ]; then

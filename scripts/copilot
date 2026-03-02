@@ -133,8 +133,8 @@ podman run -it --rm \
   -v "$SCRIPT_DIR/../templates/context/copilot-instructions.md:/home/jacazul/.copilot/copilot-instructions.md:z" \
   -v "$SCRIPT_DIR/../templates/context/instructions:/home/jacazul/.github/instructions:z" \
   -v "$TEMPLATES_TASKRC:/home/jacazul/.taskrc:z" \
-  -v "$SCRIPT_DIR/../templates/skills:/home/jacazul/.copilot/skills:z" \
-  -v "$SCRIPT_DIR/../templates/agents:/home/jacazul/.copilot/agents:z" \
+  -v "$SCRIPT_DIR/../skills:/home/jacazul/.copilot/skills:z" \
+  -v "$SCRIPT_DIR/../agents:/home/jacazul/.copilot/agents:z" \
   -v "$HOST_GITCONFIG:/home/jacazul/.gitconfig:z" \
   -v "$HOST_VENV_DIR:/project/sandbox/venv:z" \
   ai-sandbox "${AGENT_ARGS[@]}" "$@"

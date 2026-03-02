@@ -7,22 +7,22 @@ Complete guide for the taskwarrior-expert skill - a structured workflow system f
 **When this skill is activated in UNHINGED mode, scripts are located at:**
 
 ```
-~/.gemini/skills/taskwarrior_expert/scripts/
+~/bin/  (Symlinked from /project/skills/taskwarrior_expert/scripts/)
 ```
 
 **Available scripts:**
-- `~/.gemini/skills/taskwarrior_expert/scripts/tw-flow` - Main workflow tool (v1.4.0)
-- `~/.gemini/skills/taskwarrior_expert/scripts/taskp` - Project-aware wrapper
-- `~/.gemini/skills/taskwarrior_expert/scripts/ponder` - Dashboard visualization (v1.4.0)
+- `skills/taskwarrior_expert/scripts/tw-flow` - Main workflow tool (v1.4.0)
+- `skills/taskwarrior_expert/scripts/taskp` - Project-aware wrapper
+- `skills/taskwarrior_expert/scripts/ponder` - Dashboard visualization (v1.4.0)
 
 **How to use them:**
 
 ```bash
-# Option 1: Direct path (always works)
-~/.gemini/skills/taskwarrior_expert/scripts/tw-flow initiative my-feature "task|tag|due"
+# Option 1: Direct path
+/project/skills/taskwarrior_expert/scripts/tw-flow status
 
-# Option 2: If scripts are in PATH (after configure-direct)
-tw-flow initiative my-feature "task|tag|due"
+# Option 2: If scripts are in PATH (after configure)
+tw-flow status
 ```
 
 **For AI Agents:** Always use `taskp` or `tw-flow`. NEVER invoke the raw `task` binary directly to maintain project isolation.

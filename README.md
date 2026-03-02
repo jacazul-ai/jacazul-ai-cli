@@ -16,17 +16,16 @@ This project provides a powerful, dual-mode environment for running AI-powered c
 Jacazul AI CLI uses a dynamic factory to forge prompts during initialization.
 
 ### Core Structure
-- **/agents/**: Generated persona files (Copilot/Opencode). These use **Context Delegation**.
+- **/agents/**: Client-specific persona instructions (Copilot/Opencode).
 - **/skills/**: Expert capability modules.
-  - `jacazul-gemini/`: Full unified context for Gemini CLI.
-  - `jacazul-partial/`: Core technical logic (UUID, Git, TW) for agent delegation.
+  - `jacazul-engine/`: Core technical logic (UUID, Git, TW) used for agent delegation.
   - `taskwarrior-expert/`, `python-expert/`, etc.
 - **/scripts/jacazul/**: The **Incubator**. Contains the `hatch.py` engine and the dynamic template system.
-  - `templates/`: Categorized fragments in `core/`, `front/`, `persona/`, and `protocols/` subdirectories using `.md` extension.
+  - `templates/`: Categorized fragments in `core/`, `front/`, `persona/`, and `protocols/` subdirectories.
 - **/build/**: Destination for tool-specific generated artifacts (git-ignored).
 
 ### Context Delegation (Lazy Loading)
-To optimize the context window, Copilot and Opencode agents are generated with identity and voice only, delegating core technical mandates to the `jacazul-partial` skill. Gemini CLI receives a single, unified `jacazul-gemini` skill containing the full context.
+To optimize the context window, Copilot and Opencode agents are generated with identity and voice only, delegating core technical mandates to the `jacazul-engine` skill. Gemini CLI receives its instructions directly via a dynamic Onboard Prompt, eliminating the need for a physical agent file.
 
 ## 🚀 Quick Start (COMPANION Mode)
 

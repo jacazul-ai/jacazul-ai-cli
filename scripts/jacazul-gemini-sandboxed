@@ -100,7 +100,7 @@ podman run -it --rm \
   -v "$TASKDATA:/home/jacazul/.task:z" \
   -v "$PROJECT_ROOT/templates/context:/home/jacazul/.gemini/context:z" \
   -v "$TEMPLATES_TASKRC:/home/jacazul/.taskrc:z" \
-  -v "$PROJECT_ROOT/templates/skills:/home/jacazul/.gemini/skills:z" \
-  -v "$PROJECT_ROOT/templates/agents:/home/jacazul/.gemini/agents:z" \
+  -v "$PROJECT_ROOT/skills:/home/jacazul/.gemini/skills:z" \
+  -v "$PROJECT_ROOT/agents:/home/jacazul/.gemini/agents:z" \
   -v "$HOST_GITCONFIG:/home/jacazul/.gitconfig:z" \
   "$IMAGE_NAME" "$@"

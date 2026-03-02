@@ -36,7 +36,7 @@ This project supports two primary interaction modes that dictate how the environ
 | **Taskwarrior Config** | `/root/.taskrc` |
 | **Taskwarrior Data** | `/root/.task` or `/project/.task` (depending on mount) |
 | **Python VENV** | Managed within the container image |
-| **Skills** | `/project/templates/skills` |
+| **Skills** | `/project/skills` |
 | **Templates** | `/project/templates` |
 
 ### 🚀 Bootstrap Dynamics

@@ -43,24 +43,11 @@ def hatch_prompt(client: str, persona_override: Optional[str] = None):
     try:
         if client == "gemini":
             # GEMINI: Unified Full Context
-            output_dir = os.path.join(root_dir, "skills", "jacazul-gemini")
-            os.makedirs(output_dir, exist_ok=True)
+            # We no longer generate SKILL.md for Gemini, we use the prompt directly.
+            # In the future, this can be used to update a local instruction file if needed.
+            pass
 
-            # Select Master Template based on anchored persona
-            # In the future, we can have gemini_full_cortana.tmpl etc.
-            # For now, we use the unified one which includes both.
-            rendered = loader.load("gemini_full.md").generate(**context)
-            with open(os.path.join(output_dir, "SKILL.md"), "wb") as f:
-                f.write(rendered)
-
-            if os.environ.get("DEBUG"):
-                print(
-                    f"✓ Hatched Gemini Full Context (Anchored: {anchored}): "
-                    f"{output_dir}/SKILL.md"
-                )
-
-        elif client in ["copilot", "opencode"]:
-            # AGENT: Client-Specific Fragment
+        elif client in ["copilot", "opencode"]:            # AGENT: Client-Specific Fragment
             agent_dir = os.path.join(root_dir, "agents")
             os.makedirs(agent_dir, exist_ok=True)
 
@@ -69,8 +56,8 @@ def hatch_prompt(client: str, persona_override: Optional[str] = None):
             with open(os.path.join(agent_dir, agent_file), "wb") as f:
                 f.write(rendered_agent)
 
-            # Generate Partial Skill
-            skill_dir = os.path.join(root_dir, "skills", "jacazul-partial")
+            # Generate Jacazul Engine Skill
+            skill_dir = os.path.join(root_dir, "skills", "jacazul-engine")
             os.makedirs(skill_dir, exist_ok=True)
             rendered_skill = loader.load(
                 "skill_partial.md"
@@ -83,7 +70,7 @@ def hatch_prompt(client: str, persona_override: Optional[str] = None):
                     f"✓ Hatched Agent ({client}, Anchored: {anchored}): "
                     f"{agent_dir}/{agent_file}"
                 )
-                print(f"✓ Hatched Partial Skill: {skill_dir}/SKILL.md")
+                print(f"✓ Hatched Engine Skill: {skill_dir}/SKILL.md")
 
     except Exception as e:
         print(f"❌ Failed to hatch prompt: {e}", file=sys.stderr)

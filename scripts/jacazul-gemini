@@ -21,7 +21,7 @@ export PROJECT_ID="$PROJECT_ID"
 export GEMINI_INSTRUCTIONS_DIR="$PROJECT_ROOT/templates/context/instructions"
 
 # Add workflow scripts to PATH
-export PATH="$PATH:$PROJECT_ROOT/templates/skills/taskwarrior_expert/scripts"
+export PATH="$PATH:$PROJECT_ROOT/skills/taskwarrior_expert/scripts"
 
 # Determine User Name for Prompt
 USER_NAME="${CONTEXT_GIT_USER:-$(whoami)}"

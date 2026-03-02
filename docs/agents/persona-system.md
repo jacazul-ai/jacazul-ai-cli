@@ -35,7 +35,7 @@ A global standard for feedback:
 
 ## 🛠 Technical Implementation
 
-- **Storage:** Personas are defined in `templates/agents/jacazul.agent.md`.
+- **Storage:** Personas are defined in the `scripts/jacazul/templates/persona/` directory and forged into client agents via `hatch.py`.
 - **Logic:** Language detection and handoff logic are part of the core agent instructions.
 - **Tools:** Both personas utilize the same `taskwarrior-expert` skill via `taskp` and `tw-flow` wrappers.
 

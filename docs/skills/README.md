@@ -23,7 +23,7 @@ ponder
 tw-flow initiative my-feature "EXECUTE|Build API|implementation|today"
 ```
 
-**Location:** `/project/templates/skills/taskwarrior_expert/`
+**Location:** `/project/skills/taskwarrior_expert/`
 
 ---
 
@@ -41,7 +41,7 @@ Skills planned for addition:
 
 ### Structure
 ```
-templates/skills/my-skill/
+skills/my-skill/
 ├── SKILL.md           # Skill documentation
 ├── HIERARCHY.md       # (Optional) Conventions
 ├── scripts/           # Helper scripts
@@ -58,7 +58,7 @@ templates/skills/my-skill/
 - Examples and usage guide
 
 ### Integration
-Place skill directory in `/project/templates/skills/` and reference in agent instructions.
+Place skill directory in `/project/skills/` and reference in agent instructions.
 
 ---
 

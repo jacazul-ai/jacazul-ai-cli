@@ -80,7 +80,7 @@ Both share the same NO BULLSHIT philosophy: genuine feedback only, no fluff.
 1. Check the relevant guide above
 2. Review examples in the documentation
 3. Try `onboard` command to see persona in action
-4. Consult skill-specific docs in `/project/templates/skills/`
+4. Consult skill-specific docs in `/project/skills/`
 
 ---
 

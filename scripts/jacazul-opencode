@@ -22,7 +22,7 @@ export CONTEXT_REAL_PATH="$(pwd)"
 export CONTEXT_SYSTEM_USER="$(whoami)"
 
 # Add workflow scripts to PATH
-export PATH="$PATH:$PROJECT_ROOT/templates/skills/taskwarrior_expert/scripts"
+export PATH="$PATH:$PROJECT_ROOT/skills/taskwarrior_expert/scripts"
 
 # If no arguments provided, just start opencode
 if [ $# -eq 0 ]; then

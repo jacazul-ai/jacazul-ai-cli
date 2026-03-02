@@ -98,7 +98,8 @@ tw-flow execute <uuid>
 ## 📁 Directory Structure
 
 - `scripts/`: Core CLI wrappers and bootstraps.
-- `templates/`: Skill definitions and agent instructions.
+- `skills/`: Fixed expert skill definitions.
+- `agents/`: Generated agent persona files.
 - `docs/`: Documentation and guides.
 - `~/bin/`: (After configure) Symbolic links to core tools.
 - `~/.jacazul-ai/`: Global configuration and Taskwarrior databases.

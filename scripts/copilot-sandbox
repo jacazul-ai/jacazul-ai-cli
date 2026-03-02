@@ -93,7 +93,7 @@ podman run -it --rm \
   -v "$SCRIPT_DIR/../templates/context/copilot-instructions.md:/home/node/.copilot/copilot-instructions.md:Z" \
   -v "$SCRIPT_DIR/../templates/context/instructions:/home/node/.github/instructions:Z" \
   -v "$TEMPLATES_TASKRC:/home/node/.taskrc:Z" \
-  -v "$SCRIPT_DIR/../templates/skills:/home/node/.copilot/skills:Z" \
-  -v "$SCRIPT_DIR/../templates/agents:/home/node/.copilot/agents:Z" \
+  -v "$SCRIPT_DIR/../skills:/home/node/.copilot/skills:Z" \
+  -v "$SCRIPT_DIR/../agents:/home/node/.copilot/agents:Z" \
   -v "$HOST_GITCONFIG:/home/node/.gitconfig:Z" \
   copilot "$@"

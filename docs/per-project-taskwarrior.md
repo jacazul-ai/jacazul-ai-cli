@@ -24,7 +24,7 @@ This architecture enables isolated Taskwarrior databases per project, providing 
 
 #### 1. **taskp** - Project-Aware Wrapper
 
-Location: `/project/templates/skills/taskwarrior_expert/scripts/taskp`
+Location: `/project/skills/taskwarrior_expert/scripts/taskp`
 
 Automatically detects the current project and uses the appropriate database.
 
@@ -143,7 +143,7 @@ TASKDATA=~/.task/specific_project task list
 ### Scenario 4: Creating an Initiative
 
 ```bash
-cd /project/templates/skills/taskwarrior_expert/scripts
+cd /project/skills/taskwarrior_expert/scripts
 
 ./tw-flow initiative new-feature \
   "DESIGN|Design API|research|today" \
@@ -249,6 +249,6 @@ ls -la ~/.task/PROJECT_ID/taskchampion.sqlite3
 
 - [Taskwarrior Documentation](https://taskwarrior.org/docs/)
 - [Taskwarrior 3.x Upgrade Guide](https://taskwarrior.org/docs/upgrade-3/)
-- [tw-flow Script](../templates/skills/taskwarrior_expert/scripts/tw-flow)
-- [taskp Wrapper](../templates/skills/taskwarrior_expert/scripts/taskp)
-- [ponder Dashboard](../templates/skills/taskwarrior_expert/scripts/ponder)
+- [tw-flow Script](../skills/taskwarrior_expert/scripts/tw-flow)
+- [taskp Wrapper](../skills/taskwarrior_expert/scripts/taskp)
+- [ponder Dashboard](../skills/taskwarrior_expert/scripts/ponder)

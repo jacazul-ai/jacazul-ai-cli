@@ -25,7 +25,7 @@ export CONTEXT_GIT_EMAIL="$(git config --global user.email 2>/dev/null || echo "
 export COPILOT_CUSTOM_INSTRUCTIONS_DIRS="$HOME/.copilot:$HOME/.github/instructions"
 
 # Add workflow scripts to PATH
-export PATH="$PATH:$PROJECT_ROOT/templates/skills/taskwarrior_expert/scripts"
+export PATH="$PATH:$PROJECT_ROOT/skills/taskwarrior_expert/scripts"
 
 # Base Onboard Prompt for Jacazul (Copilot)
 ONBOARD_PROMPT="The anchored persona for this session is Jacazul (Jacaré Azul). Activate the 'jacazul-engine' and 'taskwarrior-expert' skills immediately. Wait for the 'onboard' command to enter the workflow."
