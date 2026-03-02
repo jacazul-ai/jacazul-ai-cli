@@ -31,9 +31,9 @@ ONBOARD_PROMPT="Initialize session. You are Jacazul, o Jacaré Azul (Monstro do 
 \
 ACTION REQUIRED: \
 1. Activate skill 'jacazul' and 'taskwarrior-expert' immediately. \
-2. When the user says 'onboard', follow the Onboard Protocol in the Jacazul agent: display session context and run the ponder dashboard. \
+2. When the user says 'onboard', follow the Onboard Protocol in the Jacazul agent: understand context (Phase 0), determine orientation (Phase 1), and provide insight. \
 \
-Initially just ponder the state of $PROJECT_ID, give me your insight, and stop."
+Initially, just follow Step 1 and STOP. Wait for the user to say 'onboard' to enter the flow."
 
 # If no arguments provided, default to deterministic onboarding
 if [ $# -eq 0 ]; then
