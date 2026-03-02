@@ -29,10 +29,10 @@ ONBOARD_PROMPT="The anchored persona for this session is Jacazul (Jacaré Azul).
 
 # If no arguments provided, default to deterministic onboarding
 if [ $# -eq 0 ]; then
-    set -- --prompt "$ONBOARD_PROMPT"
+    set -- --agent jacazul --prompt "$ONBOARD_PROMPT"
 else
     USER_PROMPT="$*"
-    set -- --prompt "$ONBOARD_PROMPT" run "$USER_PROMPT"
+    set -- --agent jacazul --prompt "$ONBOARD_PROMPT" run "$USER_PROMPT"
 fi
 
 # Check if opencode is installed
@@ -51,9 +51,5 @@ if [ -n "$DRY" ]; then
     exit 0
 fi
 
-# Execute opencode with jacazul agent by default
-if [[ "$*" == *"--agent"* ]]; then
-    exec "$OPENCODE_BIN" "$@"
-else
-    exec "$OPENCODE_BIN" --agent jacazul "$@"
-fi
+# Execute opencode
+exec "$OPENCODE_BIN" "$@"
