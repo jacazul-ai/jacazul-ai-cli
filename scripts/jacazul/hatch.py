@@ -53,21 +53,11 @@ def hatch_prompt(client: str, persona_override: Optional[str] = None):
             with open(os.path.join(output_dir, "SKILL.md"), "wb") as f:
                 f.write(rendered)
 
-            # GEMINI AGENT (New injectable workflow)
-            agent_dir = os.path.join(root_dir, "agents")
-            os.makedirs(agent_dir, exist_ok=True)
-            rendered_agent = loader.load(
-                "front/front_agent_gemini.md"
-            ).generate(**context)
-            with open(os.path.join(agent_dir, "jacazul-gemini.md"), "wb") as f:
-                f.write(rendered_agent)
-
             if os.environ.get("DEBUG"):
                 print(
                     f"✓ Hatched Gemini Full Context (Anchored: {anchored}): "
                     f"{output_dir}/SKILL.md"
                 )
-                print(f"✓ Hatched Gemini Agent: {agent_dir}/jacazul-gemini.md")
 
         elif client in ["copilot", "opencode"]:
             # AGENT: Client-Specific Fragment
