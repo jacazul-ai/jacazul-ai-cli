@@ -1,3 +1,3 @@
-{% include "front_skill.md" %}
-{% include "language_protocol.md" %}
-{% include "logic.md" %}
+{% include "front/front_skill.md" %}
+{% include "protocols/language_protocol.md" %}
+{% include "core/logic.md" %}
