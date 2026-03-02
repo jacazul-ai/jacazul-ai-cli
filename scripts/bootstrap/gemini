@@ -39,13 +39,13 @@ jq '
 SKILLS_DIR="$GEMINI_DIR/skills"
 mkdir -p "$SKILLS_DIR"
 
-# 4.1 Link Jacazul Expert Skill (JIT Forge Artifact)
+# 4.1 Link Jacazul Engine Skill (JIT Forge Artifact)
 JACAZUL_SKILL_SRC="$PROJECT_ROOT/skills/jacazul-gemini"
-JACAZUL_SKILL_TARGET="$SKILLS_DIR/jacazul"
+JACAZUL_SKILL_TARGET="$SKILLS_DIR/jacazul-engine"
 if [ -d "$JACAZUL_SKILL_SRC" ]; then
     rm -rf "$JACAZUL_SKILL_TARGET"
     if [ -n "$DEBUG" ]; then
-        echo "🐊 Linking global Gemini skill: jacazul (JIT Forge)"
+        echo "🐊 Linking global Gemini skill: jacazul-engine (JIT Forge)"
     fi
     ln -sf "$JACAZUL_SKILL_SRC" "$JACAZUL_SKILL_TARGET"
 fi
@@ -78,17 +78,6 @@ for skill_dir in "$TEMPLATES_DIR/skills"/*; do
         ln -sf "$skill_dir" "$target"
     fi
 done
-
-# 4.3 Link Jacazul Agent (New Injectable Workflow)
-JACAZUL_AGENT_SRC="$PROJECT_ROOT/agents/jacazul-gemini.md"
-JACAZUL_AGENT_TARGET="$GEMINI_DIR/agents/jacazul"
-if [ -f "$JACAZUL_AGENT_SRC" ]; then
-    mkdir -p "$(dirname "$JACAZUL_AGENT_TARGET")"
-    if [ -n "$DEBUG" ]; then
-        echo "🐊 Linking Jacazul agent: $JACAZUL_AGENT_TARGET"
-    fi
-    ln -sf "$JACAZUL_AGENT_SRC" "$JACAZUL_AGENT_TARGET"
-fi
 
 # Log only in DEBUG mode
 if [ -n "$DEBUG" ]; then

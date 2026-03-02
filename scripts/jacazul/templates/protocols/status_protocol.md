@@ -18,6 +18,12 @@
 
 **RULE:** Status queries default to **tw-flow status** (focused). Only use **ponder** for full project view on onboard.
 
+## 🧭 Navigation Strategy (Hands-on vs Horizon)
+
+Always choose the right tool based on the context:
+- **tw-flow status (The "Waze" / Hands-on):** Tactical view. Use when working on a specific initiative to maintain focus on active tasks and immediate blockers.
+- **ponder (The "Horizon View"):** Strategic view. Use during onboarding or when the user needs to assess the entire project landscape and cross-initiative health.
+
 ## Response Format
 
 Use this structure:

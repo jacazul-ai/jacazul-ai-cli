@@ -8,5 +8,4 @@
 {% include "persona/persona_jacazul.md" %}
 {% include "persona/persona_cortana.md" %}
 {% include "persona/persona_handoff.md" %}
-{% include "core/python_expert.md" %}
 {% include "core/logic.md" %}

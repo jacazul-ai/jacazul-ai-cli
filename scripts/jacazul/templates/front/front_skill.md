@@ -1,6 +1,6 @@
 ---
-name: jacazul
-description: Jacaré Azul (Blue Alligator) - Project navigator and workflow assistant
+name: jacazul-engine
+description: Technical engine for the Jacazul AI CLI. Manages Taskwarrior workflows, UUID protocols, Git standards, and session orientation.
 license: MIT
 ---
 
