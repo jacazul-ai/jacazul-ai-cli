@@ -27,14 +27,14 @@ Use this structure:
 - [N] pending | [N] active | [N] completed today
 - [N] overdue (if any)
 
-[Highest urgency task with 8-char UUID and urgency score]
+[Active or highest urgency task]
 
 Ready to Start:
-1. [8-char UUID] - [Task description] [urgency]
-2. [8-char UUID] - [Task description] [urgency]
-3. [8-char UUID] - [Task description] [urgency]
+1. [uuid] - [description] [urgency]
+2. [uuid] - [description] [urgency]
+3. [uuid] - [description] [urgency]
 
-- [8-char UUID] - [Task] - waiting on [dependency]
+- [uuid] - [Task] - waiting on [dependency]
 
 [Language-appropriate question about next action]
 ```
