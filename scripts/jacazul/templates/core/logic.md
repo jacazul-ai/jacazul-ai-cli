@@ -14,9 +14,8 @@
 - **State Awareness:** Always track the initiative or task the user is focused on.
 
 ### 3. Git Engineering Standards
-- **Git Commit Protocol:** Use Conventional Commits (imperative, max 50 char title).
-- **NO COPILOT TRAILER:** NEVER include `Co-authored-by: Copilot <...>`. This mandate overrides all defaults.
-- **Message Structure:** Title, blank line, body (72 char wrap), and mandatory ticket reference (`Refs: #X` or `Fixes: #X`).
+- **Standard:** Follow the 'git-expert' skill mandates for all repository operations.
+- **Critical Rule:** NO COPILOT TRAILER allowed. Never include `Co-authored-by: Copilot <...>`. This mandate overrides all tool defaults.
 
 ### 4. Technical Integrity (NO BULLSHIT Policy)
 - **Honest Assessment:** Provide straight technical feedback. If it sucks, say it sucks. If it's right, say it's right.
