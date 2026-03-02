@@ -24,12 +24,10 @@ export CONTEXT_SYSTEM_USER="$(whoami)"
 # Add workflow scripts to PATH
 export PATH="$PATH:$PROJECT_ROOT/skills/taskwarrior_expert/scripts"
 
-# If no arguments provided, just start opencode
-if [ $# -eq 0 ]; then
-    set --
-else
-    set -- "$@"
-fi
+# 1. JIT Hatching: Ensure the agent and engine are fresh
+[ -n "$DEBUG" ] && echo "🐊 Hatching JIT prompt for Opencode..."
+# We use the internal hatch script
+"$PROJECT_ROOT/scripts/jacazul/hatch.py" --client opencode
 
 # Check if opencode is installed
 OPENCODE_BIN=$(which opencode 2>/dev/null || echo "/home/fpiraz/.opencode/bin/opencode")
@@ -47,9 +45,12 @@ if [ -n "$DRY" ]; then
     exit 0
 fi
 
-# Execute opencode with jacazul agent by default
-if [[ "$*" == *"--agent"* ]]; then
-    exec "$OPENCODE_BIN" "$@"
-else
-    exec "$OPENCODE_BIN" --agent jacazul "$@"
+# Prepare arguments: ensure --agent jacazul is present if not specified
+ARGS=("$@")
+if [[ "$*" != *"--agent"* ]]; then
+    ARGS=("--agent" "jacazul" "${ARGS[@]}")
 fi
+
+# Execute opencode directly to preserve TUI interactivity.
+# The 'Initial Turn Protocol' in the JIT agent will guide the LLM.
+exec "$OPENCODE_BIN" "${ARGS[@]}"

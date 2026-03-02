@@ -7,9 +7,9 @@ COPILOT_GLOBAL_DIR="$HOME/.copilot"
 TEMPLATES_DIR="$PROJECT_ROOT/templates"
 
 # 1. Garante que os diretórios globais existem
-# Se for symlink para diretório, remove para criar diretório real
 for d in "agents" "skills"; do
     target="$COPILOT_GLOBAL_DIR/$d"
+    # Se for symlink para diretório, remove para criar diretório real
     if [ -L "$target" ]; then
         if [ -n "$DEBUG" ]; then echo "🐊 Removing legacy symlink at $target"; fi
         rm "$target"
@@ -17,58 +17,35 @@ for d in "agents" "skills"; do
     mkdir -p "$target"
 done
 
-# 2. Link Global Agents (Surgical)
+# 2. Link Global Agents (Surgical & Clean)
+# Wipe existing agent links to ensure a fresh, consistent state
+find "$COPILOT_GLOBAL_DIR/agents" -maxdepth 1 -type l -delete
+
 AGENT_SRC="$PROJECT_ROOT/agents/jacazul-copilot.md"
 AGENT_TARGET="$COPILOT_GLOBAL_DIR/agents/jacazul.md"
 
 if [ -e "$AGENT_SRC" ]; then
     if [ -n "$DEBUG" ]; then
-        echo "🐊 Linking global Copilot agent: jacazul"
+        echo "🐊 Linking global Copilot agent: jacazul -> $AGENT_SRC"
     fi
     ln -sf "$AGENT_SRC" "$AGENT_TARGET"
 fi
 
-# 3. Link Global Skills (Surgical)
-# Link fixed skills from root-level /skills directory
+# 3. Link Global Skills (Surgical & Clean)
+# Wipe existing skills links to ensure a fresh, consistent state
+find "$COPILOT_GLOBAL_DIR/skills" -maxdepth 1 -type l -delete
+
+# Link all skills found in the project root /skills directory
 for skill_dir in "$PROJECT_ROOT/skills"/*; do
     [ -d "$skill_dir" ] || continue
     name=$(basename "$skill_dir")
     
     target="$COPILOT_GLOBAL_DIR/skills/$name"
-    # Always ensure the link points to the CURRENT PROJECT_ROOT
-    if [ -L "$target" ]; then
-        current_target=$(readlink -f "$target")
-        expected_target=$(readlink -f "$skill_dir")
-        if [ "$current_target" != "$expected_target" ]; then
-            if [ -n "$DEBUG" ]; then
-                echo "⚠️  Skill $name points to wrong location. Re-linking..."
-            fi
-            ln -sf "$skill_dir" "$target"
-        fi
-    else
-        if [ -n "$DEBUG" ]; then
-            echo "🐊 Linking global skill: $name"
-        fi
-        ln -sf "$skill_dir" "$target"
+    if [ -n "$DEBUG" ]; then
+        echo "🐊 Linking global skill: $name -> $skill_dir"
     fi
+    ln -sf "$skill_dir" "$target"
 done
-
-# 3.1 Link legacy skills from templates (if any left)
-if [ -d "$TEMPLATES_DIR/skills" ]; then
-    for skill_dir in "$TEMPLATES_DIR/skills"/*; do
-        [ -d "$skill_dir" ] || continue
-        name=$(basename "$skill_dir")
-
-        # Skip if already linked from root
-        [ -e "$COPILOT_GLOBAL_DIR/skills/$name" ] && continue
-
-        target="$COPILOT_GLOBAL_DIR/skills/$name"
-        if [ -n "$DEBUG" ]; then
-            echo "🐊 Linking legacy skill from templates: $name"
-        fi
-        ln -sf "$skill_dir" "$target"
-    done
-fi
 
 # 4. Link Instructions Template (Surgical)
 INSTRUCTIONS_SRC="$TEMPLATES_DIR/context/copilot-instructions.md"
