@@ -6,6 +6,8 @@ Welcome to the AI CLI Sandboxed documentation.
 
 ### Getting Started
 - [Quick Start Guide](getting-started.md) - Setup and first steps
+- [Verification Methodology](verification-methodology.md) - High-integrity execution flow
+- [Copilot CLI Behavior](copilot-cli-behavior.md) - Internal diagnostics and patterns
 
 ### Dual-Persona System
 - [Jacazul & Cortana Agents](agents/README.md) - Dual-persona workflow navigators
@@ -49,6 +51,8 @@ Welcome to the AI CLI Sandboxed documentation.
 docs/
  README.md (you are here)
  getting-started.md (sandbox quick start)
+ verification-methodology.md (5-step flow)
+ copilot-cli-behavior.md (internal diagnostics)
  agents/
   README.md (dual-persona overview)
   jacazul.md (🐊 Jacazul agent guide)

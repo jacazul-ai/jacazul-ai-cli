@@ -33,6 +33,14 @@ fi
 export JACAZUL_MODE="${JACAZUL_MODE:-UNHINGED}"
 
 # 4. Component Bootstraps (Dynamics)
+# 4.0 Health Check (Critical Binaries)
+TW_FLOW_BIN="$PROJECT_ROOT/skills/taskwarrior_expert/scripts/tw-flow"
+if [ ! -x "$TW_FLOW_BIN" ]; then
+    echo "❌ CRITICAL ERROR: tw-flow not found or not executable at $TW_FLOW_BIN" >&2
+    echo "   The workspace structure might be corrupted. Please run 'scripts/configure' to fix it." >&2
+    return 1 2>/dev/null || exit 1
+fi
+
 # 4.1 Python VENV (Foundation)
 BOOTSTRAP_PYTHON="$PROJECT_ROOT/scripts/bootstrap/python"
 [ -f "$BOOTSTRAP_PYTHON" ] && source "$BOOTSTRAP_PYTHON"

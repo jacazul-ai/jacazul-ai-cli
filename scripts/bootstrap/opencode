@@ -7,10 +7,14 @@ OPENCODE_GLOBAL_DIR="$HOME/.config/opencode"
 TEMPLATES_DIR="$PROJECT_ROOT/templates"
 
 # 1. Garante que os diretórios globais existem
-if [ ! -d "$OPENCODE_GLOBAL_DIR/agents" ] || [ ! -d "$OPENCODE_GLOBAL_DIR/skills" ]; then
-    echo "🐊 Initializing global Opencode directories at $OPENCODE_GLOBAL_DIR..."
-    mkdir -p "$OPENCODE_GLOBAL_DIR/agents" "$OPENCODE_GLOBAL_DIR/skills"
-fi
+for d in "agents" "skills"; do
+    target="$OPENCODE_GLOBAL_DIR/$d"
+    if [ -L "$target" ]; then
+        if [ -n "$DEBUG" ]; then echo "🐊 Removing legacy symlink at $target"; fi
+        rm "$target"
+    fi
+    mkdir -p "$target"
+done
 
 # 2. Link Global Agents (Surgical)
 AGENT_SRC="$PROJECT_ROOT/agents/jacazul-opencode.md"
@@ -24,15 +28,11 @@ if [ -e "$AGENT_SRC" ]; then
 fi
 
 # 3. Link Global Skills (Surgical)
-for skill_dir in "$PROJECT_ROOT/skills/jacazul-partial" "$TEMPLATES_DIR/skills"/*; do
+# Link fixed skills from root-level /skills directory
+for skill_dir in "$PROJECT_ROOT/skills"/*; do
     [ -d "$skill_dir" ] || continue
     name=$(basename "$skill_dir")
     
-    # Mapping for JIT forge artifacts
-    if [ "$name" = "jacazul-partial" ]; then
-        name="jacazul-engine"
-    fi
-
     target="$OPENCODE_GLOBAL_DIR/skills/$name"
     # Always ensure the link points to the CURRENT PROJECT_ROOT
     if [ -L "$target" ]; then
@@ -51,6 +51,23 @@ for skill_dir in "$PROJECT_ROOT/skills/jacazul-partial" "$TEMPLATES_DIR/skills"/
         ln -sf "$skill_dir" "$target"
     fi
 done
+
+# 3.1 Link legacy skills from templates (if any left)
+if [ -d "$TEMPLATES_DIR/skills" ]; then
+    for skill_dir in "$TEMPLATES_DIR/skills"/*; do
+        [ -d "$skill_dir" ] || continue
+        name=$(basename "$skill_dir")
+
+        # Skip if already linked from root
+        [ -e "$OPENCODE_GLOBAL_DIR/skills/$name" ] && continue
+
+        target="$OPENCODE_GLOBAL_DIR/skills/$name"
+        if [ -n "$DEBUG" ]; then
+            echo "🐊 Linking legacy skill from templates: $name"
+        fi
+        ln -sf "$skill_dir" "$target"
+    done
+fi
 
 # Log only in DEBUG mode
 if [ -n "$DEBUG" ]; then

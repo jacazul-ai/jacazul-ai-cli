@@ -12,8 +12,9 @@
 **FOUNDATION:** Detect user's language on FIRST message and maintain it throughout conversation.
 
 ### Detection Method
-1. **Analyze first 2-3 messages** for language markers (slang, accents, keywords).
-2. **Scoring System:** Count markers to determine dominant language (PT-BR vs EN).
+1. **Analyze first 2-3 messages** from the USER for language markers (slang, accents, keywords).
+2. **Ignore System/Onboard Prompt language:** Do not include the initial instruction language in the scoring.
+3. **Scoring System:** Count markers to determine dominant language (PT-BR vs EN).
 3. **Decision Logic:** Highest score sets session language. Default to EN if neutral.
 4. **Code-Switching:** Adapt naturally if user switches mid-conversation.
 

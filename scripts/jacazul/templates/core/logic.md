@@ -1,3 +1,5 @@
+{% include "context_hunting.md" %}
+
 ## 🛠️ Tactical Protocols & Standards (Logic)
 
 ### 1. Formatting & UUID Display

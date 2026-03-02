@@ -5,11 +5,10 @@ When user types **'onboard'**, initialize session with complete context display:
 **🚀 Session Initialized** 
 
 **REQUIRED ACTIONS:**
-1. **Understand Context (Phase 0):** Check for the active or hottest task and run `tw-flow context <uuid>` to understand inherited decisions and outcomes.
-2. **Check for session anchor (Phase 1):** Run `tw-flow focus`.
-   - If `focused_ini` is set: Run `tw-flow status`.
-   - If NO anchor: Run `ponder {{ project_id }}` (full project view).
-3. Use tw-flow status for status queries (initiative-focused view).
-4. Present insight and **STOP**
+1. **Check for session anchor (Phase 0):** Run `tw-flow focus`.
+2. **Decision Branch (Phase 1):**
+   - **IF ANCHORED:** Run `tw-flow status` followed by `tw-flow context <uuid>` of the focused task.
+   - **IF EMPTY:** Run `ponder {{ project_id }}` (full project view).
+3. Present tactical insight and **STOP**.
 
 **DO NOT auto-execute tasks - wait for user direction.**

@@ -31,17 +31,43 @@ The project adheres to a "Silent by Default" logging policy to maintain CLI usab
 ### 2. Context Preservation
 - **Mandate:** Closing a task without documentation is FORBIDDEN.
 - **Protocol:** The `tw-flow done` command requires an `OUTCOME:` annotation. Discarded tasks MUST include an automatic audit record.
+## 🧠 Session Stabilization & Context Engineering
+
+These directives ensure that the AI ecosystem remains functional and context-aware across different platforms and tool availability states.
+
+### 1. Multi-Agent Diagnostic Loop
+- **Protocol:** Technical challenges should follow a cross-agent verification loop. A diagnosis produced by one agent (e.g., Copilot/Haiku) MUST be re-interpreted, validated, and implemented by the session navigator (e.g., Gemini). This ensures that "things work the first time" by using multiple perspectives to identify the root cause before acting.
+
+### 2. Tool-Agnostic Resilience
+- **Directive:** Agents MUST be capable of operating in "limbo" states where high-level tools (create/edit) are unavailable.
+- **Fallback:** Use base system primitives (standard bash redirection: `cat >`, `touch`, `echo >>`) to achieve filesystem changes. Always verify the state change manually (`ls`, `cat`) after a workaround execution.
+
+### 3. Horizontal Skill Architecture
+- **Mandate:** Agents MUST activate required expert skills (`jacazul-engine`, `taskwarrior-expert`, `git-expert`, `python-expert`) directly and simultaneously. 
+- **Goal:** Avoid cascading dependencies where one skill activates another. Independence ensures that a failure in one subsystem does not blind the entire agent.
+
+### 4. The Keystone Pattern (Context Resolution)
+- **Philosophy:** Skills are not "optional tools"—they are the foundation that resolves instruction ambiguity. Activating a skill is equivalent to loading the project's Distribution (Distro).
+- **Protocol:** Agents MUST activate the four core required skills in the **first turn**, in parallel with tactical state discovery (e.g., `tw-flow focus`).
+- **Resolution:** Mandates defined within a loaded skill ALWAYS take precedence over generic system prompts when resolving operational conflicts. This ensures that the agent adopts the Jacazul identity and technical standards before the first response.
 
 ## 🧬 Interaction Standards
+- **Context Hunting Protocol:** Agents MUST NOT ask the user for session context that exists in the system. Upon activation, the agent MUST "hunt" for the mission state:
+  1. **Orientation (The Anchor):** Run `tw-flow focus`.
+  2. **Decision Branch:** IF anchored, run `tw-flow status` and `tw-flow context <uuid>`. IF empty, run `ponder` for a strategic overview.
 - **UUID Priority:** Tasks MUST be referenced by their 8-character UUID. Numeric Task IDs are transient and MUST NOT be shown to users.
 - **Persona Voice:** Responses MUST align with the active persona (Jacazul/Cortana) and the detected user language, while persistent data (tasks, commits) remains in English.
 - **Agent vs. Skill Distinction:** 
-  - **Copilot/Opencode:** Use the **Agent** pattern (`jacazul.agent.md`).
-  - **Gemini CLI:** Operates exclusively via the **Skill** pattern. The `jacazul` skill provides the persona instructions in this environment.
+  - **Copilot/Opencode:** Use the **Agent** pattern (`jacazul.md` in `~/.copilot/agents`).
+  - **Gemini CLI:** Operates via the **Skill** pattern or direct **Onboard Prompt** logic. The `jacazul-engine` skill provides the protocols in this environment.
 
 ## 🎓 Core Lessons Learned
 
+### Behaviour Enforcement
+System integrity is maintained by "vaccinating" tools. If an agent tries to bypass the workflow (e.g., calling raw `task` instead of `taskp`), the tool itself MUST intercept and provide tactical guidance. This turns a "rule violation" into a "learning prompt."
+
 ### Error as Prompt
+... (rest of the file) ...
 Workflow and control scripts MUST NOT simply fail. Their `stderr` output must act as a functional **Prompt** for the Agent.
 - **Mandate:** Errors must provide clear tactical guidance (e.g., "Stop and consult the user", "Intent mismatch: use X instead of Y").
 - **Goal:** Turn terminal failures into actionable instructions that maintain the Agent's productive flow and adherence to project standards.
