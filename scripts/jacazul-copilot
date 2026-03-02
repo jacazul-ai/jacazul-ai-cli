@@ -27,9 +27,15 @@ export COPILOT_CUSTOM_INSTRUCTIONS_DIRS="$HOME/.copilot:$HOME/.github/instructio
 # Add workflow scripts to PATH
 export PATH="$PATH:$PROJECT_ROOT/templates/skills/taskwarrior_expert/scripts"
 
-# If no arguments provided, default to 'onboard' prompt
+# Base Onboard Prompt for Jacazul (Copilot)
+ONBOARD_PROMPT="The anchored persona for this session is Jacazul (Jacaré Azul). Activate the 'jacazul-engine' and 'taskwarrior-expert' skills immediately. Wait for the 'onboard' command to enter the workflow."
+
+# If no arguments provided, default to deterministic onboarding
 if [ $# -eq 0 ]; then
-    set -- -i "onboard"
+    set -- -i "$ONBOARD_PROMPT"
+else
+    USER_PROMPT="$*"
+    set -- -i "$ONBOARD_PROMPT" "$USER_PROMPT"
 fi
 
 # Run GitHub Copilot CLI directly

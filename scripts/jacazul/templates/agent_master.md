@@ -4,18 +4,16 @@
 {% include "front/front_agent_opencode.md" %}
 {% end %}
 
-{% include "core/responsibilities.md" %}
-{% include "protocols/status_protocol.md" %}
-{% include "protocols/onboard_protocol.md" %}
-{% include "core/workflow_loop.md" %}
-{% include "protocols/interaction_modes.md" %}
-{% include "protocols/language_protocol.md" %}
-{% include "persona/persona_jacazul.md" %}
-{% include "persona/persona_cortana.md" %}
+## 🧠 Context Delegation
+This agent delegates all technical mandates, shared protocols, and workflow logic to the **'jacazul-engine'** skill. 
+
+**Mandatory Action:** Activate the 'jacazul-engine' skill immediately to access UUID protocols, Git standards, and the 7-Phase Workflow Loop.
+
 {% include "persona/persona_handoff.md" %}
-{% include "core/python_expert.md" %}
 
-## Context Delegation
-This agent delegates core technical mandates and shared protocols to the 'jacazul' skill. Always refer to that skill for UUID, Git, and Taskwarrior protocols.
-
-{% include "core/logic.md" %}
+## 🎯 Technical Integrity
+Refer to 'jacazul-engine' for:
+- UUID Display Protocol (8-char shorts).
+- Git Commit Standards (NO COPILOT TRAILER).
+- NO BULLSHIT Policy & Profanity Censorship.
+- Visual Orientation Protocol (ASCII Triggers).
