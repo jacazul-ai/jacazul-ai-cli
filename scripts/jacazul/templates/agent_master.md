@@ -1,8 +1,4 @@
-{% if client == "copilot" %}
-{% include "front/front_agent_copilot.md" %}
-{% elif client == "opencode" %}
-{% include "front/front_agent_opencode.md" %}
-{% end %}
+{% if client == "copilot" %}{% include "front/front_agent_copilot.md" %}{% elif client == "opencode" %}{% include "front/front_agent_opencode.md" %}{% end %}
 
 ## 🧠 Context Delegation
 This agent delegates all technical mandates, shared protocols, and workflow logic to the **'jacazul-engine'** skill. 

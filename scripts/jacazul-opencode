@@ -24,15 +24,11 @@ export CONTEXT_SYSTEM_USER="$(whoami)"
 # Add workflow scripts to PATH
 export PATH="$PATH:$PROJECT_ROOT/templates/skills/taskwarrior_expert/scripts"
 
-# Base Onboard Prompt for Jacazul (Opencode)
-ONBOARD_PROMPT="The anchored persona for this session is Jacazul (Jacaré Azul). Activate the 'jacazul-engine' and 'taskwarrior-expert' skills immediately. Wait for the 'onboard' command to enter the workflow."
-
-# If no arguments provided, default to deterministic onboarding
+# If no arguments provided, just start opencode
 if [ $# -eq 0 ]; then
-    set -- --agent jacazul --prompt "$ONBOARD_PROMPT"
+    set --
 else
-    USER_PROMPT="$*"
-    set -- --agent jacazul --prompt "$ONBOARD_PROMPT" run "$USER_PROMPT"
+    set -- "$@"
 fi
 
 # Check if opencode is installed
@@ -51,5 +47,9 @@ if [ -n "$DRY" ]; then
     exit 0
 fi
 
-# Execute opencode
-exec "$OPENCODE_BIN" "$@"
+# Execute opencode with jacazul agent by default
+if [[ "$*" == *"--agent"* ]]; then
+    exec "$OPENCODE_BIN" "$@"
+else
+    exec "$OPENCODE_BIN" --agent jacazul "$@"
+fi
