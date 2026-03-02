@@ -21,7 +21,8 @@ def hatch_prompt(client: str, persona_override: Optional[str] = None):
     anchored = persona_override or state.anchored_persona
 
     # 2. Setup Tornado Template Loader
-    loader = template.Loader(script_dir)
+    template_dir = os.path.join(script_dir, "templates")
+    loader = template.Loader(template_dir)
 
     # 3. Context
     context = {
@@ -48,7 +49,7 @@ def hatch_prompt(client: str, persona_override: Optional[str] = None):
             # Select Master Template based on anchored persona
             # In the future, we can have gemini_full_cortana.tmpl etc.
             # For now, we use the unified one which includes both.
-            rendered = loader.load("gemini_full.tmpl").generate(**context)
+            rendered = loader.load("gemini_full.md").generate(**context)
             with open(os.path.join(output_dir, "SKILL.md"), "wb") as f:
                 f.write(rendered)
             if os.environ.get("DEBUG"):
@@ -62,7 +63,7 @@ def hatch_prompt(client: str, persona_override: Optional[str] = None):
             agent_dir = os.path.join(root_dir, "agents")
             os.makedirs(agent_dir, exist_ok=True)
 
-            rendered_agent = loader.load("agent_master.tmpl").generate(**context)
+            rendered_agent = loader.load("agent_master.md").generate(**context)
             agent_file = f"{anchored}-{client}.md"
             with open(os.path.join(agent_dir, agent_file), "wb") as f:
                 f.write(rendered_agent)
@@ -71,7 +72,7 @@ def hatch_prompt(client: str, persona_override: Optional[str] = None):
             skill_dir = os.path.join(root_dir, "skills", "jacazul-partial")
             os.makedirs(skill_dir, exist_ok=True)
             rendered_skill = loader.load(
-                "skill_partial.tmpl"
+                "skill_partial.md"
             ).generate(**context)
             with open(os.path.join(skill_dir, "SKILL.md"), "wb") as f:
                 f.write(rendered_skill)

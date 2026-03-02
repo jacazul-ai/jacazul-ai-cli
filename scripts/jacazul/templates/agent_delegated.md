@@ -1,8 +1,8 @@
-{% include "front_agent.tmpl" %}
+{% include "front_agent.md" %}
 
 <agent_instructions>
-{% include "identity.tmpl" %}
-{% include "persona_jacazul.tmpl" %}
+{% include "identity.md" %}
+{% include "persona_jacazul.md" %}
 
 ## Context Delegation
 This agent delegates core technical mandates to the 'jacazul' skill. Always refer to that skill for UUID, Git, and Taskwarrior protocols.
