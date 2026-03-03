@@ -3,6 +3,7 @@ import os
 import shutil
 import tempfile
 import subprocess
+import unittest
 from typing import Tuple
 
 class JacazulTest(unittest.TestCase):

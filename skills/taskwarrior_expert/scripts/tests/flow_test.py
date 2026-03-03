@@ -1,4 +1,5 @@
 #!/home/fpiraz/.jacazul-ai/.venv/bin/python
+import re
 import orjson
 import os
 from .base import JacazulTest
@@ -116,3 +117,29 @@ class FlowTest(JacazulTest):
         
         out_all, _, _ = self.run_cmd(f"{self.ponder} --all test_project")
         self.assertIn("boring", out_all)
+
+    def test_recursive_context_inheritance(self):
+        """Context: Status must recursively collect ancestor annotations (A -> B -> C)."""
+        # Create 3-level hierarchy: A -> B -> C
+        self.run_cmd(f"{self.tw_flow} ini recursion_test 'Step A|r|today' 'Step B|i|today' 'Step C|t|today'")
+        out_exp, _, _ = self.run_cmd(f"{self.taskp} project:recursion_test export")
+        tasks = orjson.loads(out_exp)
+        ua = tasks[0]["uuid"]
+        ub = tasks[1]["uuid"]
+        uc = tasks[2]["uuid"]
+
+        # Annotate A (Grandparent) and B (Parent)
+        self.run_cmd(f"{self.tw_flow} note {ua} decision 'Root logic'")
+        self.run_cmd(f"{self.tw_flow} note {ub} outcome 'Intermediate valid'")
+
+        # Focus on C (Child) and check status
+        self.run_cmd(f"{self.tw_flow} focus task {uc}")
+        out, _, _ = self.run_cmd(f"{self.tw_flow} status recursion_test")
+
+        # Verify inherited context from both ancestors
+        self.assertIn("══ INHERITED CONTEXT ══", out)
+        self.assertIn("DECISION: Root logic", out)
+        self.assertIn("OUTCOME: Intermediate valid", out)
+        # Verify they are associated with the correct task UUIDs (short)
+        self.assertIn(f"Task ({ua[:8]})", out)
+        self.assertIn(f"Task ({ub[:8]})", out)

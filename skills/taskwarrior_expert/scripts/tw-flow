@@ -44,27 +44,45 @@ class FlowManager:
         return input_val
 
     def get_parent_context(self, uuid: str):
-        tasks = self.tw.export([uuid])
-        if not tasks:
-            return
-        deps = tasks[0].get("depends", [])
-        if deps:
-            found = False
+        def _collect(u: str, seen: set) -> List[Dict[str, Any]]:
+            if u in seen: return []
+            seen.add(u)
+            tasks = self.tw.export([u])
+            if not tasks: return []
+            t = tasks[0]
+            
+            results = []
+            # Recurse into dependencies first (climb up the tree)
+            deps = t.get("depends", [])
             for dep_uuid in deps:
-                dep_tasks = self.tw.export([dep_uuid])
-                if not dep_tasks:
-                    continue
-                dep = dep_tasks[0]
-                annots = [a["description"] for a in dep.get("annotations", []) 
+                results.extend(_collect(dep_uuid, seen))
+            
+            # Add current task to the list (after its dependencies for top-down order)
+            return results + [t]
+
+        # Start collection from parents of the target task
+        leaf_tasks = self.tw.export([uuid])
+        if not leaf_tasks: return
+        
+        # We don't want to collect context from the target task itself here
+        seen = {uuid}
+        all_parents = []
+        for dep_uuid in leaf_tasks[0].get("depends", []):
+            all_parents.extend(_collect(dep_uuid, seen))
+            
+        if all_parents:
+            header_shown = False
+            for p in all_parents:
+                annots = [a["description"] for a in p.get("annotations", []) 
                          if re.match(r'^(OUTCOME|DECISION|LESSON|HANDOFF):', a["description"])]
                 if annots:
-                    if not found:
+                    if not header_shown:
                         print("\n══ INHERITED CONTEXT ══")
-                        found = True
-                    print(f"Task ({dep_uuid[:8]}) [{dep['description']}]:")
+                        header_shown = True
+                    print(f"Task ({p['uuid'][:8]}) [{p['description']}]:")
                     for a in annots:
                         print(f"  - {a}")
-            if found:
+            if header_shown:
                 print("")
 
     def cmd_initiative(self, name: str, tasks: List[str]):
@@ -216,6 +234,8 @@ class FlowManager:
         prefixes = {
             "research": "RESEARCH", "r": "RESEARCH",
             "decision": "DECISION", "d": "DECISION",
+            "outcome": "OUTCOME", "o": "OUTCOME",
+            "handoff": "HANDOFF", "h": "HANDOFF",
             "blocked": "BLOCKED", "b": "BLOCKED",
             "lesson": "LESSON", "l": "LESSON",
             "ac": "AC", "a": "AC",

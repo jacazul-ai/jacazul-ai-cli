@@ -1,4 +1,5 @@
 #!/home/fpiraz/.jacazul-ai/.venv/bin/python
+import os
 import re
 from .base import JacazulTest
 
