@@ -183,6 +183,44 @@ class FlowTest(JacazulTest):
         self.assertIn("QUESTION: Why X?", out)
         self.assertIn("HYPOTHESIS: Maybe Y", out)
 
+    def test_reopen_completed_task(self):
+        """Workflow: Reopen must move a completed task back to pending."""
+        self.run_cmd(f"{self.tw_flow} outcome {self.u1} 'Done'")
+        self.run_cmd(f"{self.tw_flow} done {self.u1}")
+        
+        # Verify it's completed
+        out, _, _ = self.run_cmd(f"{self.taskp} {self.u1} export")
+        self.assertEqual(orjson.loads(out)[0]["status"], "completed")
+        
+        # Reopen
+        self.run_cmd(f"{self.tw_flow} reopen {self.u1}")
+        out, _, _ = self.run_cmd(f"{self.taskp} {self.u1} export")
+        self.assertEqual(orjson.loads(out)[0]["status"], "pending")
+
+    def test_amend_metadata_any_task(self):
+        """Metadata: Amend must update description/ticket without status errors."""
+        self.run_cmd(f"{self.tw_flow} outcome {self.u1} 'Done'")
+        self.run_cmd(f"{self.tw_flow} done {self.u1}")
+        
+        # Amend description and ticket
+        self.run_cmd(f"{self.tw_flow} amend {self.u1} description='Fixed Desc' ticket='#FIX-123'")
+        
+        out, _, _ = self.run_cmd(f"{self.taskp} {self.u1} export")
+        task = orjson.loads(out)[0]
+        self.assertEqual(task["description"], "Fixed Desc")
+        self.assertEqual(task["externalid"], "#FIX-123")
+
+    def test_completed_task_modification_blocks_with_instruction(self):
+        """Safety: Modifying completed task with standard commands must fail with ACTION prompt."""
+        self.run_cmd(f"{self.tw_flow} outcome {self.u1} 'Done'")
+        self.run_cmd(f"{self.tw_flow} done {self.u1}")
+        
+        # Try note on completed task
+        _, err, code = self.run_cmd(f"{self.tw_flow} note {self.u1} note 'Illegal'")
+        self.assertNotEqual(code, 0)
+        self.assertIn("ACTION: To fix metadata", err)
+        self.assertIn("ACTION: To perform more work", err)
+
     def test_note_invalid_type_instructional_error(self):
         """Error as Prompt: Invalid note type must provide instructional feedback."""
         _, err, code = self.run_cmd(f"{self.tw_flow} note {self.u1} invalid 'Message'")

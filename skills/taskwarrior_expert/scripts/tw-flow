@@ -23,6 +23,29 @@ class FlowManager:
     def success(self, msg: str):
         print(f"✓ {msg}")
 
+    def cmd_reopen(self, input_id: str):
+        uuid = self.resolve_uuid(input_id)
+        self.tw.run([uuid, "modify", "status:pending"])
+        self.success(f"Task {uuid[:8]} reopened and moved back to PENDING.")
+
+    def cmd_amend(self, input_id: str, updates: List[str]):
+        uuid = self.resolve_uuid(input_id)
+        args = [uuid, "modify"]
+        found = False
+        for update in updates:
+            if update.startswith("description="):
+                args.append(update.replace("description=", "", 1))
+                found = True
+            elif update.startswith("ticket="):
+                args.append(f"externalid:{update.replace('ticket=', '', 1)}")
+                found = True
+        
+        if not found:
+            self.error("No valid fields to amend. Use description=\"...\" or ticket=\"...\"")
+        
+        self.tw.run(args)
+        self.success(f"Task {uuid[:8]} metadata amended successfully.")
+
     def info(self, msg: str):
         print(f"ℹ {msg}")
 
@@ -42,6 +65,14 @@ class FlowManager:
                 if t["uuid"].startswith(input_val.lower()):
                     return t["uuid"]
         return input_val
+
+    def verify_not_completed(self, uuid: str):
+        tasks = self.tw.export([uuid])
+        if tasks and tasks[0].get("status") == "completed":
+            short = uuid[:8]
+            self.error(f"Task {short} is already COMPLETED.\n"
+                       f"   ACTION: To fix metadata (description/ticket), use 'tw-flow amend {short} ...'.\n"
+                       f"   ACTION: To perform more work, use 'tw-flow reopen {short}'.")
 
     def find_ticket(self, uuid: str, seen: Optional[set] = None) -> Optional[str]:
         if seen is None: seen = set()
@@ -207,6 +238,7 @@ class FlowManager:
 
     def cmd_execute(self, input_id: str):
         uuid = self.resolve_uuid(input_id)
+        self.verify_not_completed(uuid)
         self.get_parent_context(uuid)
         res = self.tw.run([uuid, "start"])
         if res.returncode == 0:
@@ -217,6 +249,7 @@ class FlowManager:
 
     def cmd_done(self, input_id: str, note: Optional[str] = None):
         uuid = self.resolve_uuid(input_id)
+        self.verify_not_completed(uuid)
         tasks = self.tw.export([uuid])
         if not tasks:
             self.error("Task not found")
@@ -242,17 +275,20 @@ class FlowManager:
 
     def cmd_outcome(self, input_id: str, msg: str):
         uuid = self.resolve_uuid(input_id)
+        self.verify_not_completed(uuid)
         self.tw.run([uuid, "annotate", f"OUTCOME: {msg}"])
         self.success(f"Recorded outcome for task {uuid[:8]}")
 
     def cmd_handoff(self, input_id: str, msg: str):
         uuid = self.resolve_uuid(input_id)
+        self.verify_not_completed(uuid)
         self.cmd_execute(uuid)
         self.tw.run([uuid, "annotate", f"HANDOFF: {msg}"])
         self.success(f"Handoff to task {uuid[:8]} with note")
 
     def cmd_note(self, input_id: str, note_type: str, msg: str):
         uuid = self.resolve_uuid(input_id)
+        self.verify_not_completed(uuid)
         prefixes = {
             "research": "RESEARCH", "r": "RESEARCH",
             "decision": "DECISION", "d": "DECISION",
@@ -275,6 +311,7 @@ class FlowManager:
 
     def cmd_ticket(self, input_id: str, ticket: str):
         uuid = self.resolve_uuid(input_id)
+        self.verify_not_completed(uuid)
         self.tw.run([uuid, "modify", f"externalid:{ticket}"])
         self.success(f"Task {uuid[:8]} linked to ticket: {ticket}")
 
@@ -388,6 +425,10 @@ def main():
         flow.cmd_outcome(args[0], " ".join(args[1:]))
     elif cmd == "handoff":
         flow.cmd_handoff(args[0], " ".join(args[1:]))
+    elif cmd == "reopen":
+        flow.cmd_reopen(args[0])
+    elif cmd == "amend":
+        flow.cmd_amend(args[0], args[1:])
     elif cmd == "note":
         flow.cmd_note(args[0], args[1], " ".join(args[2:]))
     elif cmd == "ticket":
@@ -458,7 +499,7 @@ def main():
         else:
             print("══ Current Session Focus ══\n" + orjson.dumps(flow.focus.load().to_dict(), option=orjson.OPT_INDENT_2).decode())
     elif cmd in ["help", "--help", "-h"]:
-        print("tw-flow USAGE:\n  ini <ini> <tasks...>\n  next [ini]\n  execute <id>\n  done <id> [note]\n  outcome <id> <msg>\n  note <id> <type> <msg>\n  ticket <id> <ticket>\n  inis | status [ini]\n  focus [ini|task|pop|interest|clear]\n  tree [ini]")
+        print("tw-flow USAGE:\n  ini <ini> <tasks...>\n  next [ini]\n  execute <id>\n  done <id> [note]\n  outcome <id> <msg>\n  reopen <id>\n  amend <id> [description=\"...\"] [ticket=\"...\"]\n  note <id> <type> <msg>\n  ticket <id> <ticket>\n  inis | status [ini]\n  focus [ini|task|pop|interest|clear]\n  tree [ini]")
     else:
         flow.error(f"Unknown command: {cmd}")
 
