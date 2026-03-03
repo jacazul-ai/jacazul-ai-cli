@@ -11,7 +11,7 @@ Complete guide for the taskwarrior-expert skill - a structured workflow system f
 ```
 
 **Available scripts:**
-- `skills/taskwarrior_expert/scripts/tw-flow` - Main workflow tool (v1.5.0)
+- `skills/taskwarrior_expert/scripts/tw-flow` - Main workflow tool (v1.6.0)
 - `skills/taskwarrior_expert/scripts/taskp` - Project-aware wrapper
 - `skills/taskwarrior_expert/scripts/ponder` - Dashboard visualization (v1.4.0)
 
@@ -107,7 +107,7 @@ tw-flow execute <uuid>
 ```bash
 tw-flow note <uuid> <type> <message>
 ```
-Types: `research` (r), `decision` (d), `blocked` (b), `lesson` (l), `ac` (a), `note` (n), `link`.
+Types: `research` (r), `decision` (d), `blocked` (b), `lesson` (l), `question` (q), `hypothesis` (y), `ac` (a), `note` (n), `link`.
 
 ---
 
@@ -153,9 +153,10 @@ Checks for newly unblocked tasks and updates initiative progress.
 ## 🛠 Advanced Commands (v1.4.0)
 
 ### tw-flow status
-Shows initiative status with a **split view**:
-- **PENDING:** Tasks remaining in the initiative.
+Shows initiative status with a **split view** (shows both PENDING and COMPLETED by default):
+- **PENDING:** Tasks remaining in the initiative. Includes ticket display if available.
 - **COMPLETED:** History of what has already been done.
+- **Flag `--pending`**: Use to hide completed tasks and show only pending ones.
 *Auto-detects active initiative if no argument provided.*
 
 ### tw-flow tree
@@ -171,6 +172,18 @@ Visualizes dependencies in an ASCII tree:
 Link a task to an external issue/ticket using the `externalid` UDA.
 ```bash
 tw-flow ticket <uuid> "#JAC-013"
+```
+
+### tw-flow amend (Metadata Fix)
+Update description or ticket for any task (pending or completed) without triggering workflow errors.
+```bash
+tw-flow amend <uuid> description="New desc" ticket="#JAC-456"
+```
+
+### tw-flow reopen
+Revert a completed task back to the `pending` state for additional work.
+```bash
+tw-flow reopen <uuid>
 ```
 
 ### tw-flow discard
@@ -211,9 +224,13 @@ The `tw-flow discard` command has been enhanced to maintain a perfect audit trai
 - **Auto-Outcome:** Automatically annotates the task with `OUTCOME: Task discarded and moved to archive.`
 
 ### 4. Prompt Marketing & Workflow Awareness
-The v1.5.0 update introduces low-friction alerts within `tw-flow status` and `tw-flow focus`.
-- **Behavior:** If a focused task has an `externalid` attached, a tactical alert is displayed.
-- **Example:** `🐊 ALERT: External ticket detected (#16). Git-expert will use this for automated commit referencing.`
+The update introduces low-friction alerts within `tw-flow status` and `tw-flow focus`.
+- **Behavior:** If a focused task has an `externalid` attached (directly or inherited from ancestors), a tactical alert is displayed.
+- **Example:** `🐊 ALERT: Inherited ticket detected (#16). Git-expert will use this for automated commit referencing.`
+
+### 5. Completed Task Protection
+Commands that modify task state (`execute`, `done`, `note`, `ticket`, `outcome`, `handoff`) are blocked for COMPLETED tasks.
+- **Guidance:** If a modification is attempted, the system provides an instructional error recommending `amend` for metadata fixes or `reopen` for additional work.
 
 ---
 
@@ -226,5 +243,5 @@ The v1.5.0 update introduces low-friction alerts within `tw-flow status` and `tw
 
 ---
 
-**Version:** 1.5.0  
-**Last Updated:** 2026-03-02
+**Version:** 1.6.0  
+**Last Updated:** 2026-03-03
