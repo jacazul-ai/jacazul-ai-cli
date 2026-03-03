@@ -173,17 +173,25 @@ class FlowManager:
             urgency -= 2.0
         self.success(f"Initiative created with {len(tasks)} tasks")
 
-    def cmd_status(self, filter_val: Optional[str] = None):
+    def cmd_status(self, filter_val: Optional[str] = None, pending_only: bool = False):
         state = self.focus.load()
         ini_name = filter_val or state.focused_ini
         if not ini_name:
             active = self.tw.export(["+ACTIVE"])
             ini_name = active[0].get("project") if active else "ALL ACTIVE"
-        filter_args = ["status:pending"] if ini_name == "ALL ACTIVE" else [f"project:{ini_name}"]
+        
+        filter_args = [f"project:{ini_name}"] if ini_name != "ALL ACTIVE" else []
+        if pending_only:
+            filter_args.append("status:pending")
+            
         tasks = self.tw.export(filter_args)
+        # Sort tasks: pending first, then by entry date
+        tasks.sort(key=lambda x: (0 if x["status"] == "pending" else 1, x["entry"]))
+        
         print(f"══ Initiative: {ini_name} ══")
         if ini_name == state.focused_ini:
             print("📌 ANCHORED SESSION")
+            
         if state.focused_task_uuid:
             print(f"\n🎯 FOCUS CONTEXT [{state.focused_task_uuid[:8]}]:")
             self.get_parent_context(state.focused_task_uuid)
@@ -197,17 +205,25 @@ class FlowManager:
                     print(f"🐊 \033[1;33mALERT:\033[0m {prefix} ticket detected ({ticket}). Git-expert will use this for automated commit referencing.")
                 for a in task.get("annotations", []):
                     print(f"  - {a['description']}")
+                    
         pending = [t for t in tasks if t["status"] == "pending"]
         completed = [t for t in tasks if t["status"] == "completed"]
+        
+        def format_task_line(t):
+            uuid_short = t['uuid'][:8]
+            mark = " - ACTIVE" if t.get("start") else (" - FOCUSED" if t["uuid"] == state.focused_task_uuid else "")
+            ticket = self.find_ticket(t["uuid"])
+            ticket_str = f" [{ticket}]" if ticket else ""
+            return f"[{uuid_short}{mark}]{ticket_str} {t['description']}"
+
         if pending:
             print("\nPENDING:")
             for t in pending:
-                mark = " - ACTIVE" if t.get("start") else (" - FOCUSED" if t["uuid"] == state.focused_task_uuid else "")
-                print(f"- [{t['uuid'][:8]}{mark}] {t['description']}")
+                print(f"- {format_task_line(t)}")
         if completed:
             print("\nCOMPLETED:")
             for t in completed:
-                print(f"  ✓ [{t['uuid'][:8]}] {t['description']}")
+                print(f"  ✓ {format_task_line(t)}")
         print(f"\nTotal: {len(pending)} pending, {len(completed)} completed.")
 
     def cmd_next(self, filter_val: str = "status:pending"):
@@ -414,7 +430,9 @@ def main():
     if cmd in ["initiative", "ini"]:
         flow.cmd_initiative(args[0], args[1:])
     elif cmd == "status":
-        flow.cmd_status(args[0] if args else None)
+        pending_only = "--pending" in args
+        filter_val = next((a for a in args if not a.startswith("-")), None)
+        flow.cmd_status(filter_val, pending_only)
     elif cmd == "next":
         flow.cmd_next(args[0] if args else "status:pending")
     elif cmd == "execute":
@@ -499,7 +517,7 @@ def main():
         else:
             print("══ Current Session Focus ══\n" + orjson.dumps(flow.focus.load().to_dict(), option=orjson.OPT_INDENT_2).decode())
     elif cmd in ["help", "--help", "-h"]:
-        print("tw-flow USAGE:\n  ini <ini> <tasks...>\n  next [ini]\n  execute <id>\n  done <id> [note]\n  outcome <id> <msg>\n  reopen <id>\n  amend <id> [description=\"...\"] [ticket=\"...\"]\n  note <id> <type> <msg>\n  ticket <id> <ticket>\n  inis | status [ini]\n  focus [ini|task|pop|interest|clear]\n  tree [ini]")
+        print("tw-flow USAGE:\n  ini <ini> <tasks...>\n  next [ini]\n  execute <id>\n  done <id> [note]\n  outcome <id> <msg>\n  reopen <id>\n  amend <id> [description=\"...\"] [ticket=\"...\"]\n  note <id> <type> <msg>\n  ticket <id> <ticket>\n  inis | status [ini] [--pending]\n  focus [ini|task|pop|interest|clear]\n  tree [ini]")
     else:
         flow.error(f"Unknown command: {cmd}")
 

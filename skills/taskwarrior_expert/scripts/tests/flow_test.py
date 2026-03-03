@@ -26,10 +26,34 @@ class FlowTest(JacazulTest):
         self.assertIn("test_ini", out)
 
     def test_status_split_view_content(self):
-        """Status command must show PENDING tasks and split-view layout."""
+        """Status command must show PENDING and COMPLETED tasks by default."""
+        self.run_cmd(f"{self.tw_flow} outcome {self.u1} 'Done'")
+        self.run_cmd(f"{self.tw_flow} done {self.u1}")
+        
         out, _, _ = self.run_cmd(f"{self.tw_flow} status test_ini")
         self.assertIn("PENDING:", out)
-        self.assertIn("Initiative: test_ini", out)
+        self.assertIn("COMPLETED:", out)
+        self.assertIn("Step 1", out)
+        self.assertIn("Step 2", out)
+
+    def test_status_pending_flag_filters_completed(self):
+        """Status: --pending flag must hide completed tasks."""
+        self.run_cmd(f"{self.tw_flow} outcome {self.u1} 'Done'")
+        self.run_cmd(f"{self.tw_flow} done {self.u1}")
+        
+        out, _, _ = self.run_cmd(f"{self.tw_flow} status test_ini --pending")
+        self.assertIn("PENDING:", out)
+        self.assertNotIn("COMPLETED:", out)
+        self.assertNotIn("Step 1", out)
+        self.assertIn("Step 2", out)
+
+    def test_status_shows_ticket_in_line(self):
+        """Status: Task lines must include direct or inherited tickets."""
+        self.run_cmd(f"{self.tw_flow} ticket {self.u1} '#TKT-123'")
+        out, _, _ = self.run_cmd(f"{self.tw_flow} status test_ini")
+        self.assertIn("[#TKT-123] Step 1", out)
+        # u2 inherits from u1
+        self.assertIn("[#TKT-123] Step 2", out)
 
     def test_next_task_readiness_logic(self):
         """Next command must correctly identify the first unblocked task."""
