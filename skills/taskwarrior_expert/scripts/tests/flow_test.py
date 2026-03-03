@@ -171,3 +171,14 @@ class FlowTest(JacazulTest):
 
         clean_out = re.sub(r'\x1b\[[0-9;]*[mK]', '', out)
         self.assertIn("ALERT: Inherited ticket detected (#PARENT-123)", clean_out)
+
+    def test_semantic_notes_inheritance(self):
+        """Context: Question and Hypothesis notes must be recorded and inherited."""
+        self.run_cmd(f"{self.tw_flow} note {self.u1} question 'Why X?'")
+        self.run_cmd(f"{self.tw_flow} note {self.u1} hypothesis 'Maybe Y'")
+        
+        self.run_cmd(f"{self.tw_flow} focus task {self.u2}")
+        out, _, _ = self.run_cmd(f"{self.tw_flow} status test_ini")
+        
+        self.assertIn("QUESTION: Why X?", out)
+        self.assertIn("HYPOTHESIS: Maybe Y", out)

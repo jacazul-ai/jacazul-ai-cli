@@ -90,7 +90,7 @@ class FlowManager:
             header_shown = False
             for p in all_parents:
                 annots = [a["description"] for a in p.get("annotations", []) 
-                         if re.match(r'^(OUTCOME|DECISION|LESSON|HANDOFF):', a["description"])]
+                         if re.match(r'^(OUTCOME|DECISION|LESSON|HANDOFF|QUESTION|HYPOTHESIS):', a["description"])]
                 if annots:
                     if not header_shown:
                         print("\n══ INHERITED CONTEXT ══")
@@ -260,6 +260,8 @@ class FlowManager:
             "handoff": "HANDOFF", "h": "HANDOFF",
             "blocked": "BLOCKED", "b": "BLOCKED",
             "lesson": "LESSON", "l": "LESSON",
+            "question": "QUESTION", "q": "QUESTION",
+            "hypothesis": "HYPOTHESIS", "y": "HYPOTHESIS",
             "ac": "AC", "a": "AC",
             "note": "NOTE", "n": "NOTE",
             "link": "LINK"
