@@ -41,13 +41,18 @@ def hatch_prompt(client: str, persona_override: Optional[str] = None):
     }
 
     try:
-        if client == "gemini":
-            # GEMINI: Unified Full Context
-            # We no longer generate SKILL.md for Gemini, we use the prompt directly.
-            # In the future, this can be used to update a local instruction file if needed.
-            pass
+        # Generate Jacazul Engine Skill (Shared by all clients via symlinks)
+        skill_dir = os.path.join(root_dir, "skills", "jacazul-engine")
+        os.makedirs(skill_dir, exist_ok=True)
+        rendered_skill = loader.load("gemini_full.md").generate(**context)
+        with open(os.path.join(skill_dir, "SKILL.md"), "wb") as f:
+            f.write(rendered_skill)
 
-        elif client in ["copilot", "opencode"]:            # AGENT: Client-Specific Fragment
+        if os.environ.get("DEBUG"):
+            print(f"✓ Hatched Engine Skill: {skill_dir}/SKILL.md")
+
+        if client in ["copilot", "opencode"]:
+            # AGENT: Client-Specific Fragment
             agent_dir = os.path.join(root_dir, "agents")
             os.makedirs(agent_dir, exist_ok=True)
 
@@ -56,21 +61,11 @@ def hatch_prompt(client: str, persona_override: Optional[str] = None):
             with open(os.path.join(agent_dir, agent_file), "wb") as f:
                 f.write(rendered_agent)
 
-            # Generate Jacazul Engine Skill
-            skill_dir = os.path.join(root_dir, "skills", "jacazul-engine")
-            os.makedirs(skill_dir, exist_ok=True)
-            rendered_skill = loader.load(
-                "skill_partial.md"
-            ).generate(**context)
-            with open(os.path.join(skill_dir, "SKILL.md"), "wb") as f:
-                f.write(rendered_skill)
-
             if os.environ.get("DEBUG"):
                 print(
                     f"✓ Hatched Agent ({client}, Anchored: {anchored}): "
                     f"{agent_dir}/{agent_file}"
                 )
-                print(f"✓ Hatched Engine Skill: {skill_dir}/SKILL.md")
 
     except Exception as e:
         print(f"❌ Failed to hatch prompt: {e}", file=sys.stderr)

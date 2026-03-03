@@ -16,24 +16,18 @@ else
     exit 1
 fi
 
-# Export context for Gemini CLI
+# Export all context variables
 export PROJECT_ID="$PROJECT_ID"
+export CONTEXT_REAL_PATH="$(pwd)"
+export CONTEXT_SYSTEM_USER="$(whoami)"
+export CONTEXT_GIT_USER="${CONTEXT_GIT_USER:-$(whoami)}"
 export GEMINI_INSTRUCTIONS_DIR="$PROJECT_ROOT/templates/context/instructions"
 
 # Add workflow scripts to PATH
 export PATH="$PATH:$PROJECT_ROOT/skills/taskwarrior_expert/scripts"
 
-# Determine User Name for Prompt
-USER_NAME="${CONTEXT_GIT_USER:-$(whoami)}"
-
-# Base Onboard Prompt for Jacazul
-ONBOARD_PROMPT="Initialize session. You are Jacazul, o Jacaré Azul (Monstro do Lago), running $JACAZUL_MODE in a direct shell environment. You are assisting user $USER_NAME. The current project context is id $PROJECT_ID. \
-\
-ACTION REQUIRED: \
-1. Activate skill 'jacazul-engine' and 'taskwarrior-expert' immediately. \
-2. When the user says 'onboard', follow the Onboard Protocol in the Jacazul agent: understand context (Phase 0), determine orientation (Phase 1), and provide insight. \
-\
-Initially, just follow Step 1 and STOP. Wait for the user to say 'onboard' to enter the flow."
+# Base Onboard Prompt for Jacazul (Gemini Edition)
+ONBOARD_PROMPT="The anchored persona for this session is Jacazul (Jacaré Azul), running $JACAZUL_MODE. Activate the 'jacazul-engine' and 'taskwarrior-expert' skills immediately, in parallel with tactical context discovery (tw-flow focus + ponder). This initializes the session OS before the first response. Respond in persona (signature: 🐊 Jacazul)."
 
 # If no arguments provided, default to deterministic onboarding
 if [ $# -eq 0 ]; then

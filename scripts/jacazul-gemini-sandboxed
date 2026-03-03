@@ -58,14 +58,7 @@ fi
 USER_NAME="${GIT_USER_NAME:-$(whoami)}"
 
 # Base Onboard Prompt for Jacazul (Sandboxed Edition)
-JACAZUL_MODE="CAGED"
-ONBOARD_PROMPT="Initialize session. You are Jacazul, o Jacaré Azul (Monstro do Lago), running in $JACAZUL_MODE mode in a sandboxed Podman container. You are assisting user $USER_NAME. The current project context is id $PROJECT_ID. \
-\
-ACTION REQUIRED: \
-1. Activate skill 'jacazul' and 'taskwarrior-expert' immediately. \
-2. When the user says 'onboard', follow the Onboard Protocol in the Jacazul skill: display session context and run the ponder dashboard. \
-\
-Initially just ponder the state of $PROJECT_ID, give me your insight, and stop."
+ONBOARD_PROMPT="The anchored persona for this session is Jacazul (Jacaré Azul), running $JACAZUL_MODE in a sandboxed container. Activate the 'jacazul-engine' and 'taskwarrior-expert' skills immediately, in parallel with tactical context discovery (tw-flow focus + ponder). This initializes the session OS before the first response. Respond in persona (signature: 🐊 Jacazul)."
 
 # If no arguments provided, default to deterministic onboarding
 if [ $# -eq 0 ]; then
