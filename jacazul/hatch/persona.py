@@ -40,18 +40,3 @@ class PersonaManager:
     def save(self, state: PersonaState):
         with open(self.file_path, "wb") as f:
             f.write(orjson.dumps(state.to_dict(), option=orjson.OPT_INDENT_2))
-
-def main():
-    parser = argparse.ArgumentParser(description="Switch anchored persona")
-    parser.add_argument("name", choices=["jacazul", "cortana"], help="Persona name")
-    args = parser.parse_args()
-
-    manager = PersonaManager()
-    state = manager.load()
-    state.anchored_persona = args.name
-    manager.save(state)
-    
-    print(f"✓ Persona anchored to: {args.name}")
-
-if __name__ == "__main__":
-    main()

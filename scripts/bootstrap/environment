@@ -34,9 +34,14 @@ export JACAZUL_MODE="${JACAZUL_MODE:-UNHINGED}"
 
 # 4. Component Bootstraps (Dynamics)
 # 4.0 Health Check (Critical Binaries)
-TW_FLOW_BIN="$PROJECT_ROOT/skills/taskwarrior_expert/scripts/tw-flow"
+TW_FLOW_BIN="$HOME/.jacazul-ai/.venv/bin/tw-flow"
 if [ ! -x "$TW_FLOW_BIN" ]; then
-    echo "❌ CRITICAL ERROR: tw-flow not found or not executable at $TW_FLOW_BIN" >&2
+    # Fallback to legacy path if venv not ready yet
+    TW_FLOW_BIN="$PROJECT_ROOT/skills/taskwarrior_expert/scripts/tw-flow"
+fi
+
+if [ ! -x "$TW_FLOW_BIN" ]; then
+    echo "❌ CRITICAL ERROR: tw-flow not found or not executable." >&2
     echo "   The workspace structure might be corrupted. Please run 'scripts/configure' to fix it." >&2
     return 1 2>/dev/null || exit 1
 fi

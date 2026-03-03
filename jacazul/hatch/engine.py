@@ -4,16 +4,18 @@ import sys
 import argparse
 from typing import Optional
 from tornado import template
-from persona_switch import PersonaManager
+from jacazul.hatch.persona import PersonaManager
 
-# 🐊 Jacazul JIT Prompt Forge - 'hatch.py' (v0.4.0)
+# 🐊 Jacazul JIT Prompt Forge - 'engine.py' (v0.5.0)
 # Orchestrates JIT prompts with Persona Anchoring.
 
 
 def hatch_prompt(client: str, persona_override: Optional[str] = None):
     # Paths
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    root_dir = os.path.dirname(os.path.dirname(script_dir))
+    # Now that we are in a package, we need to locate templates relative to this file
+    package_dir = os.path.dirname(os.path.abspath(__file__))
+    # The root_dir is 2 levels up from jacazul/hatch/engine.py
+    root_dir = os.path.dirname(os.path.dirname(package_dir))
 
     # 1. Determine Anchored Persona
     manager = PersonaManager()
@@ -21,7 +23,7 @@ def hatch_prompt(client: str, persona_override: Optional[str] = None):
     anchored = persona_override or state.anchored_persona
 
     # 2. Setup Tornado Template Loader
-    template_dir = os.path.join(script_dir, "templates")
+    template_dir = os.path.join(package_dir, "templates")
     loader = template.Loader(template_dir)
 
     # 3. Context
@@ -70,18 +72,3 @@ def hatch_prompt(client: str, persona_override: Optional[str] = None):
     except Exception as e:
         print(f"❌ Failed to hatch prompt: {e}", file=sys.stderr)
         sys.exit(1)
-
-
-def main():
-    parser = argparse.ArgumentParser(description="Jacazul Prompt Hatchery")
-    parser.add_argument(
-        "--client", required=True, choices=["gemini", "copilot", "opencode"]
-    )
-    parser.add_argument("--persona", help="Manual persona override")
-    args = parser.parse_args()
-
-    hatch_prompt(args.client, args.persona)
-
-
-if __name__ == "__main__":
-    main()

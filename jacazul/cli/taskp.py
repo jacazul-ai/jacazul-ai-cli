@@ -1,0 +1,73 @@
+#!/home/fpiraz/.jacazul-ai/.venv/bin/python
+import sys
+import os
+import re
+from typing import List
+from jacazul.taskwarrior.core import TaskWrapper
+
+# 🐊 taskp (v1.5.0)
+# Python port of the project-aware Taskwarrior wrapper.
+
+def resolve_args(tw: TaskWrapper, args: List[str]) -> List[str]:
+    """Resolve IDs/UUIDs in arguments, prioritizing UUIDs."""
+    if not args:
+        return []
+    
+    # Only resolve the first few arguments that might be IDs/UUIDs
+    # (e.g., 'taskp <uuid> done' or 'taskp <uuid> modify ...')
+    resolved = []
+    tasks = None
+    
+    for arg in args:
+        # Check if arg looks like a UUID (8+ hex chars or full UUID)
+        is_uuid_format = re.match(r'^[0-9a-fA-F]{8,36}$', arg) or \
+                         re.match(r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$', arg)
+        
+        if is_uuid_format:
+            if tasks is None:
+                tasks = tw.export()
+            
+            # Find matching UUID
+            found_uuid = None
+            for t in tasks:
+                if t["uuid"].startswith(arg.lower()):
+                    found_uuid = t["uuid"]
+                    break
+            
+            if found_uuid:
+                resolved.append(found_uuid)
+                continue
+        
+        resolved.append(arg)
+    return resolved
+
+def main():
+    args = sys.argv[1:]
+    tw = TaskWrapper()
+    
+    # Resolve and prioritize UUIDs
+    args = resolve_args(tw, args)
+    
+    # VACCINATION: Prevent direct 'done' command or manual '+DISCARDED' tag
+    # BYPASS: Check if called internally (environment variable)
+    is_internal = os.environ.get("TW_FLOW_INTERNAL") == "true"
+    
+    if not is_internal:
+        for arg in args:
+            if arg == "done":
+                print("ERROR: Direct 'done' command via taskp is restricted to enforce proper workflow.", file=sys.stderr)
+                print("Don't sweat it! Please use 'tw-flow done <uuid>' instead to capture OUTCOME.", file=sys.stderr)
+                sys.exit(1)
+            elif arg == "+DISCARDED":
+                print("ERROR: Manual '+DISCARDED' tag via taskp is restricted.", file=sys.stderr)
+                print("Please use 'tw-flow discard <uuid>' instead to properly archive tasks.", file=sys.stderr)
+                sys.exit(1)
+
+    # Special handling for 'info' to increase verbosity
+    verbose = "affected,header,foot,label,columns,subtotal,stats,history,project,context,annotations" if "info" in args else "new-id"
+    
+    res = tw.run(args, capture=False, verbose=verbose)
+    sys.exit(res.returncode)
+
+if __name__ == "__main__":
+    main()

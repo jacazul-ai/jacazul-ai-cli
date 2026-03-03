@@ -12,11 +12,14 @@ class JacazulTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         # Base paths for tools
-        cls.script_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-        cls.taskp = os.path.join(cls.script_dir, "taskp")
-        cls.tw_flow = os.path.join(cls.script_dir, "tw-flow")
-        cls.ponder = os.path.join(cls.script_dir, "ponder")
-        cls.project_root = os.path.abspath(os.path.join(cls.script_dir, "../../.."))
+        # The script_dir is now jacazul/cli/ relative to project root
+        cls.test_dir_path = os.path.dirname(__file__)
+        cls.project_root = os.path.abspath(os.path.join(cls.test_dir_path, "../../../.."))
+        cls.cli_dir = os.path.join(cls.project_root, "jacazul/cli")
+        
+        cls.taskp = os.path.join(cls.cli_dir, "taskp.py")
+        cls.tw_flow = os.path.join(cls.cli_dir, "flow.py")
+        cls.ponder = os.path.join(cls.cli_dir, "ponder.py")
 
     def setUp(self):
         # Create a unique temporary directory for Taskwarrior data
@@ -28,8 +31,8 @@ class JacazulTest(unittest.TestCase):
         self.env = os.environ.copy()
         self.env["TASKDATA"] = self.taskdata
         self.env["PROJECT_ID"] = "test_project"
-        # Ensure PYTHONPATH includes the script directory for tw_expert import
-        self.env["PYTHONPATH"] = f"{self.script_dir}:{self.env.get('PYTHONPATH', '')}"
+        # Ensure PYTHONPATH includes the project root for jacazul.* imports
+        self.env["PYTHONPATH"] = f"{self.project_root}:{self.env.get('PYTHONPATH', '')}"
         # Prevent Jacazul scripts from looking at real user config
         self.env["TASKRC"] = os.path.join(self.test_dir, ".taskrc")
         

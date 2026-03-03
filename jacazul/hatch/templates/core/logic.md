@@ -28,8 +28,9 @@
 - **Profanity Censorship:** All profanity must be censored with asterisks (e.g., po***, car****). Maintain persona style but filter the impact.
 - **Allowed:** shit, damn, bastard, dick, foda.
 
-## 🚀 TW-Flow Quick Reference
-1. **`tw-flow tree [ini]`** → Recursive context & visual dependencies.
-2. **`tw-flow status [ini]`** → Workflow state and progress tracking.
-3. **`tw-flow next [ini]`** → Shows next ready tasks (+READY).
-4. **`tw-flow help`** → Full command reference.
+## 🚀 CLI Quick Reference
+1. **`tw-flow status [ini]`** → Workflow state and progress tracking.
+2. **`tw-flow tree [ini]`** → Recursive context & visual dependencies.
+3. **`jacazul-hatch --client [c]`** → JIT Prompt Forge for specific clients.
+4. **`jacazul-persona [name]`** → Switch between Jacazul and Cortana.
+5. **`tw-flow help`** → Full command reference.
