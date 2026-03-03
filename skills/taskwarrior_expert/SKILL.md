@@ -8,7 +8,7 @@ license: MIT
 
 # Taskwarrior Integration Protocol
 
-## 🏗️ Per-Project Database Architecture (v1.4.0)
+## 🏗️ Per-Project Database Architecture (v1.6.0)
 
 Taskwarrior uses **isolated databases per project** for isolation and performance.
 
@@ -22,10 +22,12 @@ PROJECT_ID="${PARENT_DIR}_${CURRENT_DIR}"
 Each project has its own database at `~/.jacazul-ai/.task/$PROJECT_ID/`.
 
 ### Project-Aware Tools
-Three main tools automatically detect and use the correct project database:
-1. **taskp**: Project-aware wrapper (auto-detects via PROJECT_ID).
+Main tools automatically detect and use the correct project database:
+1. **taskp**: Project-aware wrapper.
 2. **tw-flow**: Workflow management with TASKDATA support.
 3. **ponder**: Dashboard with per-project views.
+4. **jacazul-hatch**: JIT Prompt Forge engine.
+5. **jacazul-persona**: Persona switching manager.
 
 All tools set `TASKDATA=~/.jacazul-ai/.task/$PROJECT_ID` automatically.
 
