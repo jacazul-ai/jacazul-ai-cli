@@ -12,9 +12,9 @@ class JacazulTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         # Base paths for tools
-        # The script_dir is now jacazul/cli/ relative to project root
+        # The project_root is the parent of the root 'tests' directory
         cls.test_dir_path = os.path.dirname(__file__)
-        cls.project_root = os.path.abspath(os.path.join(cls.test_dir_path, "../../../.."))
+        cls.project_root = os.path.abspath(os.path.join(cls.test_dir_path, ".."))
         cls.cli_dir = os.path.join(cls.project_root, "jacazul/cli")
         
         cls.taskp = os.path.join(cls.cli_dir, "taskp.py")

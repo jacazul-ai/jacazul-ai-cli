@@ -3,8 +3,8 @@ import unittest
 import os
 import shutil
 import tempfile
-from hatch import hatch_prompt
-from persona_switch import PersonaManager, PersonaState
+from jacazul.hatch.engine import hatch_prompt
+from jacazul.hatch.persona import PersonaManager, PersonaState
 
 class TestHatchEngine(unittest.TestCase):
     def setUp(self):

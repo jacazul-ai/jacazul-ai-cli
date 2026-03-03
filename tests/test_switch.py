@@ -4,7 +4,7 @@ import os
 import shutil
 import tempfile
 import orjson
-from persona_switch import PersonaManager, PersonaState
+from jacazul.hatch.persona import PersonaManager, PersonaState
 
 class TestPersonaSwitch(unittest.TestCase):
     def setUp(self):
