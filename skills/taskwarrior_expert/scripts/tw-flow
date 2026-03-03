@@ -268,7 +268,8 @@ class FlowManager:
         }
         prefix = prefixes.get(note_type.lower())
         if not prefix:
-            self.error(f"Invalid note type: {note_type}")
+            allowed = ", ".join(sorted(set(p for p in prefixes.values())))
+            self.error(f"Invalid note type: '{note_type}'.\n   ACTION: Use one of the allowed semantic types: {allowed}")
         self.tw.run([uuid, "annotate", f"{prefix}: {msg}"])
         self.success(f"Added {prefix} note to task {uuid[:8]}")
 

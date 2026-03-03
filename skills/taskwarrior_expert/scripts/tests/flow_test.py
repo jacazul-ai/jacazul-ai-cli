@@ -182,3 +182,11 @@ class FlowTest(JacazulTest):
         
         self.assertIn("QUESTION: Why X?", out)
         self.assertIn("HYPOTHESIS: Maybe Y", out)
+
+    def test_note_invalid_type_instructional_error(self):
+        """Error as Prompt: Invalid note type must provide instructional feedback."""
+        _, err, code = self.run_cmd(f"{self.tw_flow} note {self.u1} invalid 'Message'")
+        self.assertNotEqual(code, 0)
+        self.assertIn("ACTION: Use one of the allowed semantic types", err)
+        self.assertIn("QUESTION", err)
+        self.assertIn("HYPOTHESIS", err)
