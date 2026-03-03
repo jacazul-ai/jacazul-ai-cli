@@ -18,6 +18,10 @@ uda.project_weight.type=numeric
 uda.project_weight.label=Weight
 uda.project_weight.default=0
 
+# UDA: External ID (Ticket)
+uda.externalid.type=string
+uda.externalid.label=Ticket
+
 # Report: Ranked Projects
 report.ranked.description=Tasks sorted by Project Weight
 report.ranked.columns=id,project,project_weight,description,urgency

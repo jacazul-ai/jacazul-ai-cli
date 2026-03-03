@@ -142,7 +142,10 @@ class FlowManager:
             self.get_parent_context(state.focused_task_uuid)
             ft_tasks = self.tw.export([state.focused_task_uuid])
             if ft_tasks:
-                for a in ft_tasks[0].get("annotations", []):
+                task = ft_tasks[0]
+                if task.get("externalid"):
+                    print(f"🐊 \033[1;33mALERT:\033[0m External ticket detected ({task['externalid']}). Git-expert will use this for automated commit referencing.")
+                for a in task.get("annotations", []):
                     print(f"  - {a['description']}")
         pending = [t for t in tasks if t["status"] == "pending"]
         completed = [t for t in tasks if t["status"] == "completed"]
@@ -247,6 +250,11 @@ class FlowManager:
             self.error(f"Invalid note type: {note_type}")
         self.tw.run([uuid, "annotate", f"{prefix}: {msg}"])
         self.success(f"Added {prefix} note to task {uuid[:8]}")
+
+    def cmd_ticket(self, input_id: str, ticket: str):
+        uuid = self.resolve_uuid(input_id)
+        self.tw.run([uuid, "modify", f"externalid:{ticket}"])
+        self.success(f"Task {uuid[:8]} linked to ticket: {ticket}")
 
     def cmd_context(self, input_id: str):
         uuid = self.resolve_uuid(input_id)
@@ -360,6 +368,8 @@ def main():
         flow.cmd_handoff(args[0], " ".join(args[1:]))
     elif cmd == "note":
         flow.cmd_note(args[0], args[1], " ".join(args[2:]))
+    elif cmd == "ticket":
+        flow.cmd_ticket(args[0], args[1])
     elif cmd == "context":
         flow.cmd_context(args[0])
     elif cmd in ["inis", "initiatives"]:
@@ -426,7 +436,7 @@ def main():
         else:
             print("══ Current Session Focus ══\n" + orjson.dumps(flow.focus.load().to_dict(), option=orjson.OPT_INDENT_2).decode())
     elif cmd in ["help", "--help", "-h"]:
-        print("tw-flow USAGE:\n  ini <ini> <tasks...>\n  next [ini]\n  execute <id>\n  done <id> [note]\n  outcome <id> <msg>\n  note <id> <type> <msg>\n  inis | status [ini]\n  focus [ini|task|pop|interest|clear]\n  tree [ini]")
+        print("tw-flow USAGE:\n  ini <ini> <tasks...>\n  next [ini]\n  execute <id>\n  done <id> [note]\n  outcome <id> <msg>\n  note <id> <type> <msg>\n  ticket <id> <ticket>\n  inis | status [ini]\n  focus [ini|task|pop|interest|clear]\n  tree [ini]")
     else:
         flow.error(f"Unknown command: {cmd}")
 

@@ -143,3 +143,21 @@ class FlowTest(JacazulTest):
         # Verify they are associated with the correct task UUIDs (short)
         self.assertIn(f"Task ({ua[:8]})", out)
         self.assertIn(f"Task ({ub[:8]})", out)
+
+    def test_ticket_command_uda_persistence(self):
+        """UDA Integration: Ticket command must persist the externalid attribute."""
+        self.run_cmd(f"{self.tw_flow} ticket {self.u1} '#JAC-123'")
+        out, _, _ = self.run_cmd(f"{self.taskp} {self.u1} export")
+        task = orjson.loads(out or "[]")[0]
+        self.assertEqual(task.get("externalid"), "#JAC-123")
+
+    def test_prompt_marketing_alert_display(self):
+        """Workflow Awareness: Status must display an alert when a ticket is detected."""
+        self.run_cmd(f"{self.tw_flow} ticket {self.u1} '#TKT-789'")
+        self.run_cmd(f"{self.tw_flow} focus task {self.u1}")
+        out, _, _ = self.run_cmd(f"{self.tw_flow} status test_ini")
+        
+        # Strip ANSI escape codes and normalize whitespace for robust matching
+        clean_out = re.sub(r'\x1b\[[0-9;]*[mK]', '', out)
+        self.assertIn("ALERT: External ticket detected (#TKT-789)", clean_out)
+        self.assertIn("Git-expert will use this for automated commit referencing", clean_out)

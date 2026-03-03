@@ -16,7 +16,7 @@ class JacazulTest(unittest.TestCase):
         cls.taskp = os.path.join(cls.script_dir, "taskp")
         cls.tw_flow = os.path.join(cls.script_dir, "tw-flow")
         cls.ponder = os.path.join(cls.script_dir, "ponder")
-        cls.project_root = os.path.abspath(os.path.join(cls.script_dir, "../../../.."))
+        cls.project_root = os.path.abspath(os.path.join(cls.script_dir, "../../.."))
 
     def setUp(self):
         # Create a unique temporary directory for Taskwarrior data
@@ -35,7 +35,10 @@ class JacazulTest(unittest.TestCase):
         
         # Create a dummy .taskrc to avoid Taskwarrior complaints
         with open(self.env["TASKRC"], "w") as f:
-            f.write(f"data.location={self.taskdata}\nconfirmation=no\n")
+            f.write(f"data.location={self.taskdata}\n")
+            f.write("confirmation=no\n")
+            f.write("uda.externalid.type=string\n")
+            f.write("uda.externalid.label=Ticket\n")
 
     def tearDown(self):
         # Forcefully remove temporary test data

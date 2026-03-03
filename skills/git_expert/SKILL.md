@@ -34,6 +34,11 @@ Use standard prefixes:
 - `docs:` (documentation changes)
 - `style:` (formatting, missing semi-colons, etc.)
 
+### 4. Branch-Aware Commitment Strategy
+- **Master Branch (The Sacred Line):** High-precision mode. NEVER auto-commit without explicit verification of every change. Always explain the "what" and "why" before proposing or executing a commit.
+- **Feature Branches (The Workshop):** Higher autonomy allowed for intermediate work. You can propose or even execute frequent commits to maintain momentum, as long as you're in a dedicated workspace (e.g., `feature/*`, `fix/*`).
+- **Detection:** Always check the current branch (`git branch --show-current`) before deciding the commitment policy.
+
 ## 📋 Operational Standards
 
 1. **Pre-Commit Verification:** Before committing, you MUST:

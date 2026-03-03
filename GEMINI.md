@@ -60,6 +60,9 @@ These directives ensure that the AI ecosystem remains functional and context-awa
 - **Agent vs. Skill Distinction:** 
   - **Copilot/Opencode:** Use the **Agent** pattern (`jacazul.md` in `~/.copilot/agents`).
   - **Gemini CLI:** Operates via the **Skill** pattern or direct **Onboard Prompt** logic. The `jacazul-engine` skill provides the protocols in this environment.
+- **Prompt Marketing & Workflow Awareness:** 
+  - **Concept:** Low-friction, high-value alerts within scripts (`tw-flow focus`, `onboard`) that notify the user of specific task attributes (e.g., "ALERT: External ticket detected, git-expert will use it for automated commit referencing.").
+  - **Goal:** To maintain alignment between the developer's focus and the project's technical requirements (like Git/Ticket integration) without interrupting the productive flow.
 
 ## 🎓 Core Lessons Learned
 
@@ -78,4 +81,4 @@ Validation is the only path to finality. No logic change should occur without a 
 - **Goal:** Prove the existence of the problem and verify that the solution actually addresses the root cause.
 
 ---
-**Last Updated:** 2026-02-27
+**Last Updated:** 2026-03-02

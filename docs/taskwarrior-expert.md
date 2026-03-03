@@ -11,7 +11,7 @@ Complete guide for the taskwarrior-expert skill - a structured workflow system f
 ```
 
 **Available scripts:**
-- `skills/taskwarrior_expert/scripts/tw-flow` - Main workflow tool (v1.4.0)
+- `skills/taskwarrior_expert/scripts/tw-flow` - Main workflow tool (v1.5.0)
 - `skills/taskwarrior_expert/scripts/taskp` - Project-aware wrapper
 - `skills/taskwarrior_expert/scripts/ponder` - Dashboard visualization (v1.4.0)
 
@@ -167,6 +167,12 @@ Visualizes dependencies in an ASCII tree:
    └── 🔒 (0e7ab763) | Testing (Blocked)
 ```
 
+### tw-flow ticket (UDA Integration)
+Link a task to an external issue/ticket using the `externalid` UDA.
+```bash
+tw-flow ticket <uuid> "#JAC-013"
+```
+
 ### tw-flow discard
 Soft delete a task by moving it to an `_archive` project and marking it done.
 
@@ -204,6 +210,11 @@ The `tw-flow discard` command has been enhanced to maintain a perfect audit trai
 - **Auto-Tag:** Adds the `+DISCARDED` tag.
 - **Auto-Outcome:** Automatically annotates the task with `OUTCOME: Task discarded and moved to archive.`
 
+### 4. Prompt Marketing & Workflow Awareness
+The v1.5.0 update introduces low-friction alerts within `tw-flow status` and `tw-flow focus`.
+- **Behavior:** If a focused task has an `externalid` attached, a tactical alert is displayed.
+- **Example:** `🐊 ALERT: External ticket detected (#16). Git-expert will use this for automated commit referencing.`
+
 ---
 
 ## 💡 Best Practices
@@ -215,5 +226,5 @@ The `tw-flow discard` command has been enhanced to maintain a perfect audit trai
 
 ---
 
-**Version:** 1.4.0  
-**Last Updated:** 2026-02-21
+**Version:** 1.5.0  
+**Last Updated:** 2026-03-02

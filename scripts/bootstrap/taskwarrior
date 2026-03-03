@@ -13,10 +13,25 @@ if [ -n "$PROJECT_ID" ]; then
         if [ ! -f "$TASKRC" ]; then
             echo "🐊 Initializing Unhinged Taskwarrior config at $TASKRC..."
             mkdir -p "$JACAZUL_HOME"
-            cp templates/taskwarrior/unhinged/.taskrc "$TASKRC"
-            # Explicitly override data.location to avoid confusion, 
-            # though TASKDATA env var takes precedence.
+            cp "$PROJECT_ROOT/templates/taskwarrior/unhinged/.taskrc" "$TASKRC"
+            # Explicitly override data.location to avoid confusion
             sed -i "s|data.location=.*|data.location=$JACAZUL_HOME/.task|" "$TASKRC"
+        else
+            # Surgical sync of UDAs from project template to global config
+            TEMPLATE_RC="$PROJECT_ROOT/templates/taskwarrior/unhinged/.taskrc"
+            if [ -f "$TEMPLATE_RC" ]; then
+                grep "^uda\." "$TEMPLATE_RC" | while read -r line; do
+                    key=$(echo "$line" | cut -d'=' -f1)
+                    if ! grep -q "^$key=" "$TASKRC"; then
+                        if [ -n "$DEBUG" ]; then echo "🐊 Injecting missing UDA from project: $line"; fi
+                        echo "$line" >> "$TASKRC"
+                    fi
+                done
+            fi
+            # Always ensure data.location is correct in the existing config
+            if ! grep -q "data.location=$JACAZUL_HOME/.task" "$TASKRC"; then
+                 sed -i "s|data.location=.*|data.location=$JACAZUL_HOME/.task|" "$TASKRC"
+            fi
         fi
     else
         export TASKDATA="$HOME/.task/$PROJECT_ID"
