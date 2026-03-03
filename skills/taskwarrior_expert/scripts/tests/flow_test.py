@@ -161,3 +161,13 @@ class FlowTest(JacazulTest):
         clean_out = re.sub(r'\x1b\[[0-9;]*[mK]', '', out)
         self.assertIn("ALERT: External ticket detected (#TKT-789)", clean_out)
         self.assertIn("Git-expert will use this for automated commit referencing", clean_out)
+
+    def test_hierarchical_ticket_inheritance(self):
+        """Workflow Awareness: Child tasks must inherit tickets from ancestors if not directly set."""
+        # u2 depends on u1. Set ticket on u1 only.
+        self.run_cmd(f"{self.tw_flow} ticket {self.u1} '#PARENT-123'")
+        self.run_cmd(f"{self.tw_flow} focus task {self.u2}")
+        out, _, _ = self.run_cmd(f"{self.tw_flow} status test_ini")
+
+        clean_out = re.sub(r'\x1b\[[0-9;]*[mK]', '', out)
+        self.assertIn("ALERT: Inherited ticket detected (#PARENT-123)", clean_out)

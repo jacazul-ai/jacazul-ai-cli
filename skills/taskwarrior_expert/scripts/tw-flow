@@ -43,6 +43,22 @@ class FlowManager:
                     return t["uuid"]
         return input_val
 
+    def find_ticket(self, uuid: str, seen: Optional[set] = None) -> Optional[str]:
+        if seen is None: seen = set()
+        if uuid in seen: return None
+        seen.add(uuid)
+        tasks = self.tw.export([uuid])
+        if not tasks: return None
+        task = tasks[0]
+        if task.get("externalid"):
+            return task["externalid"]
+        deps = task.get("depends", [])
+        for dep_uuid in deps:
+            ticket = self.find_ticket(dep_uuid, seen)
+            if ticket:
+                return ticket
+        return None
+
     def get_parent_context(self, uuid: str):
         def _collect(u: str, seen: set) -> List[Dict[str, Any]]:
             if u in seen: return []
@@ -143,8 +159,11 @@ class FlowManager:
             ft_tasks = self.tw.export([state.focused_task_uuid])
             if ft_tasks:
                 task = ft_tasks[0]
-                if task.get("externalid"):
-                    print(f"🐊 \033[1;33mALERT:\033[0m External ticket detected ({task['externalid']}). Git-expert will use this for automated commit referencing.")
+                ticket = self.find_ticket(task["uuid"])
+                if ticket:
+                    is_inherited = ticket != task.get("externalid")
+                    prefix = "Inherited" if is_inherited else "External"
+                    print(f"🐊 \033[1;33mALERT:\033[0m {prefix} ticket detected ({ticket}). Git-expert will use this for automated commit referencing.")
                 for a in task.get("annotations", []):
                     print(f"  - {a['description']}")
         pending = [t for t in tasks if t["status"] == "pending"]
