@@ -20,9 +20,15 @@ NC = "\033[0m"
 
 
 class Dashboard:
-    def __init__(self, project_root: str = "copilot", show_all: bool = False):
+    def __init__(
+        self,
+        project_root: str = "copilot",
+        show_all: bool = False,
+        hide_tip: bool = False,
+    ):
         self.project_root = project_root
         self.show_all = show_all
+        self.hide_tip = hide_tip
         self.tw = TaskWrapper()
         self.focus = FocusManager()
         self.state = self.focus.load()
@@ -130,10 +136,12 @@ class Dashboard:
         for t in readout_tasks[:15]:
             self.render_task_line(t)
 
-        print(
-            f"\n💡 {CYAN}PRO-TIP:{NC} Use '{NEON_GREEN}tw-flow ponder{NC}' "
-            "for a more integrated workflow experience!"
-        )
+        if not self.hide_tip:
+            print(
+                f"\n⚠️  {RED}WARN:{NC} You are using the standalone 'ponder' "
+                "command. Prefer using '{NEON_GREEN}tw-flow ponder{NC}' "
+                "for full workflow integration."
+            )
 
     def render_task_line(self, t: Dict[str, Any]):
         uuid = t["uuid"]

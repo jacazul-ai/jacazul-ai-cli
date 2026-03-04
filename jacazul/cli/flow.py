@@ -464,7 +464,7 @@ class FlowManager:
         project_root = next(
             (a for a in args if not a.startswith("-")), "copilot"
         )
-        db = Dashboard(project_root, show_all)
+        db = Dashboard(project_root, show_all, hide_tip=True)
         db.render()
 
     def cmd_active(self):
