@@ -1,0 +1,106 @@
+#!/usr/bin/env python
+import subprocess
+import sys
+
+# 🐊 Jacazul py-check (v1.1.0)
+# Standard Python validation with "Error as Prompt" feedback and auto-beautify.
+
+
+def run_beautifier(target):
+    print(f"🐊 Beautifying {target} via 'ruff format'...")
+    subprocess.run(["ruff", "format", target], capture_output=True, text=True)
+
+
+def run_ruff(target):
+    print("🐊 Running ruff logic check...")
+    # Attempt auto-fix for fixable rules
+    subprocess.run(
+        ["ruff", "check", "--fix", target], capture_output=True, text=True
+    )
+
+    # Final check
+    res = subprocess.run(
+        ["ruff", "check", target], capture_output=True, text=True
+    )
+    if res.returncode != 0:
+        print(res.stdout)
+        print(res.stderr)
+        return False
+    return True
+
+
+def run_pycodestyle(target):
+    print("🐊 Running pycodestyle final validation...")
+    # Use --first to avoid flooding the agent with redundant errors
+    res = subprocess.run(
+        ["pycodestyle", "--first", target], capture_output=True, text=True
+    )
+    if res.returncode == 0:
+        return True
+
+    # Error as Prompt Mapping
+    output = res.stdout.strip()
+    print(output)
+
+    mapping = {
+        "E302": (
+            "Missing blank lines between functions. Fix: Add 2 blank lines."
+        ),
+        "E501": "Line too long. Fix: Wrap line at 79 characters.",
+        "W291": (
+            "Trailing whitespace. Fix: Remove extra spaces at end of line."
+        ),
+        "E401": (
+            "Multiple imports on one line. Fix: Split into individual lines."
+        ),
+        "E305": (
+            "Expected 2 blank lines after class/function. "
+            "Fix: Add 2 blank lines."
+        ),
+        "E306": (
+            "Expected 1 blank line before a nested definition. "
+            "Fix: Add 1 blank line."
+        ),
+    }
+
+    found_prompts = []
+    for code, prompt in mapping.items():
+        if code in output:
+            found_prompts.append(f"💡 PROMPT [{code}]: {prompt}")
+
+    if found_prompts:
+        print("\n" + "\n".join(found_prompts), file=sys.stderr)
+    else:
+        print(
+            "\n💡 PROMPT: Linter violation detected. "
+            "Fix the PEP 8 issue identified above.",
+            file=sys.stderr,
+        )
+
+    return False
+
+
+def main():
+    target = sys.argv[1] if len(sys.argv) > 1 else "."
+
+    # Phase 1: Auto-Beautify and Auto-Fix
+    run_beautifier(target)
+
+    # Phase 2: Logic Check
+    ruff_ok = run_ruff(target)
+
+    # Phase 3: Final Style Validation
+    pycode_ok = run_pycodestyle(target)
+
+    if not ruff_ok or not pycode_ok:
+        print(
+            "\n❌ Python validation failed. Follow the prompts above to fix.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
+    print("\n✅ Python validation passed. Logic and Style are clean!")
+
+
+if __name__ == "__main__":
+    main()

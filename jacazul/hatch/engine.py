@@ -1,7 +1,6 @@
 #!/home/fpiraz/.jacazul-ai/.venv/bin/python
 import os
 import sys
-import argparse
 from typing import Optional
 from tornado import template
 from jacazul.hatch.persona import PersonaManager
@@ -12,7 +11,8 @@ from jacazul.hatch.persona import PersonaManager
 
 def hatch_prompt(client: str, persona_override: Optional[str] = None):
     # Paths
-    # Now that we are in a package, we need to locate templates relative to this file
+    # Now that we are in a package, we need to locate
+    # templates relative to this file
     package_dir = os.path.dirname(os.path.abspath(__file__))
     # The root_dir is 2 levels up from jacazul/hatch/engine.py
     root_dir = os.path.dirname(os.path.dirname(package_dir))
@@ -37,9 +37,10 @@ def hatch_prompt(client: str, persona_override: Optional[str] = None):
         "persona_name": anchored.capitalize(),
         "persona_id": anchored,
         "persona_role": (
-            "Tactical AI Companion" if anchored == "cortana"
+            "Tactical AI Companion"
+            if anchored == "cortana"
             else "Project navigator and context assistant"
-        )
+        ),
     }
 
     try:

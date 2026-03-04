@@ -4,6 +4,7 @@ from jacazul.hatch.engine import hatch_prompt
 # 🐊 jacazul-hatch CLI Entry Point
 # Bridges the CLI to the hatch engine logic.
 
+
 def main():
     parser = argparse.ArgumentParser(description="Jacazul Prompt Hatchery")
     parser.add_argument(
@@ -13,6 +14,7 @@ def main():
     args = parser.parse_args()
 
     hatch_prompt(args.client, args.persona)
+
 
 if __name__ == "__main__":
     main()

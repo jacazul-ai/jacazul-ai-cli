@@ -17,6 +17,7 @@ taskp = "jacazul.cli.taskp:main"
 ponder = "jacazul.cli.ponder:main"
 jacazul-hatch = "jacazul.cli.hatch:main"
 jacazul-persona = "jacazul.cli.persona:main"
+py-check = "jacazul.cli.pycheck:main"
 
 [build-system]
 requires = ["hatchling"]
@@ -24,3 +25,10 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["jacazul"]
+
+[tool.ruff]
+line-length = 79
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
