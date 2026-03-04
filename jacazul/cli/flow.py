@@ -457,6 +457,16 @@ class FlowManager:
                 f"Pending: {len(p) - a} | Active: {a} | Blocked: {b}\n"
             )
 
+    def cmd_ponder(self, args: List[str]):
+        from jacazul.cli.ponder import Dashboard
+
+        show_all = "--all" in args
+        project_root = next(
+            (a for a in args if not a.startswith("-")), "copilot"
+        )
+        db = Dashboard(project_root, show_all)
+        db.render()
+
     def cmd_active(self):
         self.info("Currently active tasks:")
         print("")
@@ -586,6 +596,8 @@ def main():
         pending_only = "--pending" in args
         filter_val = next((a for a in args if not a.startswith("-")), None)
         flow.cmd_status(filter_val, pending_only)
+    elif cmd == "ponder":
+        flow.cmd_ponder(args)
     elif cmd == "next":
         flow.cmd_next(args[0] if args else "status:pending")
     elif cmd == "execute":
@@ -719,6 +731,7 @@ def main():
             "  note <id> <type> <msg>\n"
             "  ticket <id> <ticket>\n"
             "  inis | status [ini] [--pending]\n"
+            "  ponder [project_root] [--all]\n"
             "  focus [ini|task|pop|interest|clear]\n"
             "  tree [ini]"
         )

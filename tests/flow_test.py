@@ -55,6 +55,12 @@ class FlowTest(JacazulTest):
         # u2 inherits from u1
         self.assertIn("[#TKT-123] Step 2", out)
 
+    def test_tw_flow_ponder_subcommand(self):
+        """Integration: 'tw-flow ponder' must render the dashboard."""
+        out, _, _ = self.run_cmd(f"{self.tw_flow} ponder")
+        self.assertIn("[INITIATIVE LANDSCAPE]", out)
+        self.assertIn("[TACTICAL READOUT]", out)
+
     def test_next_task_readiness_logic(self):
         """Next command must correctly identify the first unblocked task."""
         out, _, _ = self.run_cmd(f"{self.tw_flow} next test_ini")
