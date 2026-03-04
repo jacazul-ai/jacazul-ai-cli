@@ -42,9 +42,9 @@ The taskwarrior-expert skill transforms Taskwarrior into a powerful workflow eng
 
 ### 1. Check Current State
 ```bash
-ponder
+tw-flow ponder
 ```
-Shows initiative landscape, active tasks, and tactical readout.
+*Pro-tip: You can also use the standalone `ponder` command, but `tw-flow ponder` is recommended for better workflow integration.*
 
 ### 2. Create an Initiative
 ```bash

@@ -129,7 +129,11 @@ class Dashboard:
 
         for t in readout_tasks[:15]:
             self.render_task_line(t)
-        print("")
+
+        print(
+            f"\n💡 {CYAN}PRO-TIP:{NC} Use '{NEON_GREEN}tw-flow ponder{NC}' "
+            "for a more integrated workflow experience!"
+        )
 
     def render_task_line(self, t: Dict[str, Any]):
         uuid = t["uuid"]

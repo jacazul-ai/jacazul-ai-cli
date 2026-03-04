@@ -31,6 +31,8 @@
 ## 🚀 CLI Quick Reference
 1. **`tw-flow status [ini]`** → Workflow state and progress tracking.
 2. **`tw-flow tree [ini]`** → Recursive context & visual dependencies.
-3. **`jacazul-hatch --client [c]`** → JIT Prompt Forge for specific clients.
-4. **`jacazul-persona [name]`** → Switch between Jacazul and Cortana.
-5. **`tw-flow help`** → Full command reference.
+3. **`tw-flow ponder [root] [--all]`** → Integrated tactical dashboard.
+   - *Pro-tip: Prefer this over the standalone 'ponder' command.*
+4. **`jacazul-hatch --client [c]`** → JIT Prompt Forge manual trigger.
+5. **`jacazul-persona [name]`** → Switch between Jacazul and Cortana.
+6. **`tw-flow help`** → Full command reference.
