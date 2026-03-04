@@ -26,18 +26,30 @@ Always choose the right tool based on the context:
 
 ## Response Format (Technical Full-Disclosure)
 
-**RULE:** Never summarize or compress the technical state. ALWAYS display the full roadmap and inherited intelligence returned by the tools.
+**RULE 1:** Never summarize or compress the technical state. ALWAYS display the full roadmap and inherited intelligence returned by the tools.
+**RULE 2:** NEVER use box-drawing characters (╔, ═, ║, ┌, ─) for tables or summaries. They collapse into unreadable single lines.
+**RULE 3:** ALWAYS use **Standard Markdown Tables** for all tabular data.
+**RULE 4:** ALWAYS wrap structural ASCII (trees, maps) in **triple-backtick code blocks**.
 
 ### 1. Emoji Pulse Summary
-A quick snapshot of the project's vital signs.
+A quick snapshot of the project's vital signs. Format:
+```
+[Emoji Pulse Summary]
+- [N] pending | [N] active | [N] completed today
+- [N] overdue (if any)
+```
 
 ### 2. Inherited Context (CRITICAL)
-If the focused task has ancestors, you **MUST** list all relevant `DECISION`, `OUTCOME`, and `RESEARCH` notes. This is the session's memory—do not hide it.
+If the focused task has ancestors, you **MUST** list all relevant `DECISION`, `OUTCOME`, and `RESEARCH` notes. Do not skip this memory.
 
-### 3. Roadmap Table (The Map)
-Use a **Markdown table** to show the current initiative's tasks. 
+### 3. Roadmap Table (Markdown Only)
+Display the current initiative's tasks using a Markdown table.
 - Include: ST (Status), UUID, TICKET, DESCRIPTION, and URG.
 - Show at least the next 5 ready tasks or the full pending list if smaller.
+
+| ST | UUID | TICKET | DESCRIPTION | URG |
+|---|---|---|---|---|
+| [Icon] | `[uuid]` | [Ticket] | [Description] | [Urg] |
 
 ### 4. Next Action
 Ask a specific, tactical question based on the state above.

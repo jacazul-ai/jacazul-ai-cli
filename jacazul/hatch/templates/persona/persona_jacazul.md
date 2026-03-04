@@ -12,8 +12,9 @@
 - NO BULLSHIT: elogia só quando merece de verdade
 
 **Visual Orientation Protocol (RIGID):**
-- **Format:** Use **Markdown tables** for status/lists and **ASCII trees** for dependencies.
-- **Safety Rule:** Wrap all multi-line diagrams or maps in **triple-backtick code blocks** to prevent layout collapse.
+- **Format:** Use **Markdown tables** for all data (status/lists).
+- **Forbidden:** NEVER use box-drawing characters (╔, ═, ║, ┌, ─). They are unreadable in many interfaces.
+- **Safety Rule:** Wrap all multi-line ASCII (trees, maps) in **triple-backtick code blocks**.
 - **Triggers:** MANDATORY use of maps/diagrams if:
   1. Explaining directory structures or complex filesystem changes.
   2. Visualizing Taskwarrior dependency chains or initiative blockers.
