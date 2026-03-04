@@ -1,12 +1,12 @@
-# Interaction Modes: UNHINGED vs CAGED
+# Environment Modes: COMPANION vs UNHINGED
 
-This project supports two primary interaction modes that dictate how the environment is bootstrapped and where data is stored.
+This project supports two primary interaction modes that dictate how the environment is bootstrapped and how much autonomy the AI agent has.
 
-## 🔓 UNHINGED Mode (Native/Direct)
+## 🛡️ COMPANION Mode (Safety Default)
 
-**Purpose:** Direct execution on the host system (Fedora/Debian/Ubuntu) without containerization. Designed for speed and seamless integration with the user's host environment.
+**Purpose:** Interactive partnership. This is the default mode for all sessions. It ensures that the AI agent acts as a co-pilot, requiring user consent for significant system changes.
 
-### 📍 Key Locations
+### 📍 Key Locations (UNHINGED/Native Baseline)
 
 | Component | Path |
 | :--- | :--- |
@@ -14,43 +14,38 @@ This project supports two primary interaction modes that dictate how the environ
 | **Taskwarrior Config** | `~/.jacazul-ai/.taskrc` |
 | **Taskwarrior Data** | `~/.jacazul-ai/.task/$PROJECT_ID` |
 | **Python VENV** | `~/.jacazul-ai/.venv` |
-| **Skills Symlink** | `~/.copilot/skills` (points to project templates) |
-| **Templates Symlink** | `~/.copilot/templates` (points to project templates) |
 
-### 🚀 Bootstrap Dynamics
-- **Script:** `scripts/bootstrap/environment`
-- **Behavior:** Dynamically detects the host OS, initializes the persistent Python venv using `uv`, and ensures Taskwarrior is configured with per-project isolation.
-- **Entry Points:** `copilot-direct`, `jacazul-gemini`, `jacazul-copilot`, `jacazul-opencode`.
+### 🧠 Behavior & Autonomy
+- **Autonomy:** Propose-and-Wait.
+- **Rules:**
+  - **System Changes:** Requires explicit user approval for `chmod`, `rm`, `scripts/configure`, or editing bootstrap files.
+  - **Git Commits:** Must present a draft and wait for an "OK" before committing to the `master` branch.
+  - **Task Closure:** Must ask before running `tw-flow done`.
+
+---
+
+## 🔓 UNHINGED Mode (Active High-Autonomy)
+
+**Purpose:** Rapid execution and automated environment stabilization. Designed for experienced users who trust the AI to "clean the swamp" without constant micro-management.
+
+### 🧠 Behavior & Autonomy
+- **Autonomy:** Execute-and-Report.
+- **Rules:**
+  - **Direct Action:** Authorized to fix environmental issues, create directories, and update internal configurations autonomously.
+  - **Workflow Momentum:** May close tasks or execute commits once the technical approach is clear.
+  - **Transparency:** All actions must be reported immediately after execution.
 
 ---
 
 ## 🔒 CAGED Mode (Containerized)
 
-**Purpose:** Fully isolated execution inside a Podman/Docker container. Designed for maximum reproducibility and a clean host system.
-
-### 📍 Key Locations
-
-| Component | Path |
-| :--- | :--- |
-| **Project Root** | `/project` (inside container) |
-| **Taskwarrior Config** | `/root/.taskrc` |
-| **Taskwarrior Data** | `/root/.task` or `/project/.task` (depending on mount) |
-| **Python VENV** | Managed within the container image |
-| **Skills** | `/project/skills` |
-| **Templates** | `/project/templates` |
+**Purpose:** Fully isolated execution inside a Podman/Docker container. 
 
 ### 🚀 Bootstrap Dynamics
-- **Script:** Managed via `Dockerfile.copilot` and `scripts/bootstrap/` within the container.
-- **Behavior:** Relies on the container's isolated filesystem. Data persistence is typically handled via volume mounts.
-- **Entry Point:** Standard `copilot` command within the container.
+- **Script:** `scripts/bootstrap/environment`
+- **Default Baseline:** If `JACAZUL_MODE` is unset, the system defaults to **COMPANION**.
+- **Switching:** Set the `JACAZUL_MODE` environment variable to `UNHINGED` to enable high-autonomy mode.
 
 ---
 
-## 🔄 Switching Modes
-
-- To use **UNHINGED** mode: Use the `scripts/configure-direct` setup and run commands like `copilot-direct`.
-- To use **CAGED** mode: Build and run the container using `Dockerfile.copilot` or `Dockerfile.gemini`.
-
----
-
-**Last Updated:** 2026-02-27
+**Last Updated:** 2026-03-04

@@ -4,6 +4,7 @@
 {% include "protocols/onboard_protocol.md" %}
 {% include "core/workflow_loop.md" %}
 {% include "protocols/interaction_modes.md" %}
+{% include "protocols/environment_modes.md" %}
 {% include "protocols/language_protocol.md" %}
 {% include "persona/persona_jacazul.md" %}
 {% include "persona/persona_cortana.md" %}
