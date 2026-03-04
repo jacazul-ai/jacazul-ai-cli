@@ -11,21 +11,29 @@ This project provides a powerful, dual-mode environment for running AI-powered c
 - **Structured 7-Phase Workflow** - Robust task management with interaction modes.
 - **Context Delegation** - Intelligent Lazy Loading to minimize context window bloat.
 
-## 🏗️ Project Architecture (JIT Forge)
+## 🏗️ Project Architecture (Python Standard Package)
 
-Jacazul AI CLI uses a dynamic factory to forge prompts during initialization.
+Jacazul AI CLI is structured as a standard Python package for maximum robustness and professional distribution.
 
 ### Core Structure
-- **/agents/**: Client-specific persona instructions (Copilot/Opencode).
-- **/skills/**: Expert capability modules.
-  - `jacazul-engine/`: Core technical logic (UUID, Git, TW) used for agent delegation.
-  - `taskwarrior-expert/`, `python-expert/`, etc.
-- **/scripts/jacazul/**: The **Incubator**. Contains the `hatch.py` engine and the dynamic template system.
-  - `templates/`: Categorized fragments in `core/`, `front/`, `persona/`, and `protocols/` subdirectories.
-- **/build/**: Destination for tool-specific generated artifacts (git-ignored).
+- **`jacazul/`**: Root Python package (Flat Layout).
+  - `hatch/`: The **Incubator**. Contains the Prompt Forge engine and dynamic templates.
+  - `taskwarrior/`: Specialized logic for per-project Taskwarrior databases.
+  - `cli/`: Entry point implementations for all CLI tools.
+- **`skills/`**: Expert capability modules (Markdown-based instructions).
+  - `jacazul-engine/`: Core protocols (UUID, Language, Handoff).
+  - `taskwarrior-expert/`, `python-expert/`, `git-expert/`.
+- **`tests/`**: Consolidated smoke test suite.
+- **`pyproject.toml`**: Centralized dependency and entry point configuration.
 
-### Context Delegation (Lazy Loading)
-To optimize the context window, Copilot and Opencode agents are generated with identity and voice only, delegating core technical mandates to the `jacazul-engine` skill. Gemini CLI receives its instructions directly via a dynamic Onboard Prompt, eliminating the need for a physical agent file.
+### CLI Tools (Entry Points)
+The following commands are automatically installed into the environment:
+- `tw-flow`: Main workflow manager (inis, execute, done, outcome, ticket, amend, reopen).
+- `taskp`: Project-aware Taskwarrior wrapper.
+- `ponder`: Tactical project dashboard.
+- `jacazul-hatch`: JIT Prompt Forge manual trigger.
+- `jacazul-persona`: Persona switching (Jacazul <-> Cortana).
+- `py-check`: PEP 8 quality gate and auto-beautifier.
 
 ## 🚀 Quick Start (COMPANION Mode)
 
@@ -33,6 +41,7 @@ To optimize the context window, Copilot and Opencode agents are generated with i
 ```bash
 make configure
 ```
+*This initializes the virtual environment and installs the Jacazul package in editable mode.*
 
 ### 2. Run your preferred CLI
 ```bash
@@ -46,7 +55,7 @@ jacazul-copilot     # Copilot CLI (Native)
 # Check current state
 ponder
 
-# Create an initiative
+# Create an initiative (ini)
 tw-flow ini my-feature \
   "DESIGN|Design system|research|today" \
   "EXECUTE|Build logic|implementation|tomorrow"

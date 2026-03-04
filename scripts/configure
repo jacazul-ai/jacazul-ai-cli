@@ -14,6 +14,23 @@ else
 fi
 
 # -----------------------------------------------------------------------------
+# 0.2 Install Python Package (Entry Points)
+# -----------------------------------------------------------------------------
+VENV_BIN="$HOME/.jacazul-ai/.venv/bin"
+if [ ! -d "$VENV_BIN" ]; then
+    echo "🐊 Initializing Python virtual environment..."
+    ./scripts/init-venv.sh
+fi
+
+if [ -x "/usr/bin/uv" ]; then
+    echo "🐊 Installing Jacazul package via 'uv'..."
+    VIRTUAL_ENV="$HOME/.jacazul-ai/.venv" /usr/bin/uv pip install -e .
+else
+    echo "🐊 Installing Jacazul package via 'pip'..."
+    "$VENV_BIN/pip" install -e .
+fi
+
+# -----------------------------------------------------------------------------
 # 1. Setup Sandbox Directory (SELinux & Permissions)
 # -----------------------------------------------------------------------------
 SANDBOX_DIR="$PROJECT_ROOT/sandbox/copilot/.copilot"

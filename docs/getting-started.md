@@ -80,9 +80,9 @@ ponder
 ```
 
 ### 2. Plan (tw-flow)
-Break down your goals into actionable tasks.
+Break down your goals into actionable tasks using an **initiative (ini)**.
 ```bash
-tw-flow plan my-feature \
+tw-flow ini my-feature \
   "DESIGN|Schema review|research|today" \
   "EXECUTE|Implementation|implementation|tomorrow"
 ```
@@ -97,12 +97,14 @@ tw-flow execute <uuid>
 
 ## 📁 Directory Structure
 
-- `scripts/`: Core CLI wrappers and bootstraps.
-- `skills/`: Fixed expert skill definitions.
-- `agents/`: Generated agent persona files.
+- `jacazul/`: Core Python package (gen, taskwarrior, cli).
+- `scripts/`: Bootstraps and maintenance scripts.
+- `skills/`: Expert skill definitions (instructions).
+- `agents/`: Generated client-specific agents.
+- `tests/`: Consolidated test suite.
 - `docs/`: Documentation and guides.
-- `~/bin/`: (After configure) Symbolic links to core tools.
-- `~/.jacazul-ai/`: Global configuration and Taskwarrior databases.
+- `~/.jacazul-ai/`: (After configure) Persistent venv, configuration, and databases.
+- `~/bin/`: (After configure) Symbolic links to main wrappers.
 
 ---
 
