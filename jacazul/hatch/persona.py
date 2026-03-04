@@ -1,4 +1,4 @@
-#!/home/fpiraz/.jacazul-ai/.venv/bin/python
+#!/usr/bin/env python
 import os
 import orjson
 from dataclasses import dataclass, asdict

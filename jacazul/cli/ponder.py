@@ -1,4 +1,5 @@
-#!/home/fpiraz/.jacazul-ai/.venv/bin/python
+#!/usr/bin/env python
+import os
 import sys
 import re
 from datetime import datetime
@@ -22,7 +23,7 @@ NC = "\033[0m"
 class Dashboard:
     def __init__(
         self,
-        project_root: str = "copilot",
+        project_root: str = "jacazul",
         show_all: bool = False,
         hide_tip: bool = False,
     ):
@@ -182,7 +183,11 @@ class Dashboard:
 
 def main():
     show_all = "--all" in sys.argv
-    project_root = "copilot"
+    # Default fallback: PROJECT_ID or "jacazul_ai"
+    project_id = os.environ.get("PROJECT_ID", "jacazul_ai")
+    default_root = project_id.split("_")[0]
+
+    project_root = default_root
     for arg in sys.argv[1:]:
         if not arg.startswith("-"):
             project_root = arg

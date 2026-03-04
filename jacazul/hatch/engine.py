@@ -1,4 +1,4 @@
-#!/home/fpiraz/.jacazul-ai/.venv/bin/python
+#!/usr/bin/env python
 import os
 import sys
 from typing import Optional

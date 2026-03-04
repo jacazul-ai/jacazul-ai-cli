@@ -1,4 +1,4 @@
-#!/home/fpiraz/.jacazul-ai/.venv/bin/python
+#!/usr/bin/env python
 import sys
 import os
 import re
@@ -462,7 +462,7 @@ class FlowManager:
 
         show_all = "--all" in args
         project_root = next(
-            (a for a in args if not a.startswith("-")), "copilot"
+            (a for a in args if not a.startswith("-")), "jacazul"
         )
         db = Dashboard(project_root, show_all, hide_tip=True)
         db.render()
