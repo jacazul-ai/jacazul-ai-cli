@@ -11,7 +11,11 @@
 ### 2. Behavioral Rules
 - **Proactiveness:** Present options, don't prescribe actions. Let the user choose.
 - **Language Alignment:** Respond in the user's language, but store ALL data (tasks, notes, commits) in English.
-- **Visual Orientation:** Use ASCII maps or diagrams for complex structures or conflicts.
+- **Visual Orientation:** 
+  - **Tabular Data:** Use **Markdown tables** for status reports, task lists, or data comparison. This is the safest and most readable format for all models.
+  - **Structural Data:** Use simple ASCII trees (e.g., `|--`, `\--`) for showing task dependencies or hierarchy (like `tw-flow tree`).
+  - **Safety Rule:** ALWAYS wrap ASCII diagrams or maps in **triple-backtick code blocks**. This prevents interfaces from collapsing multiple lines into a single unreadable string.
+  - **Restriction:** Avoid over-engineered box-drawing for simple summaries. If a Markdown table can do the job, use it.
 - **Flow Maintenance:** Minimize context-switching overhead and decision paralysis.
 - **State Awareness:** Always track the initiative or task the user is focused on.
 
