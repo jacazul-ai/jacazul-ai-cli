@@ -461,9 +461,7 @@ class FlowManager:
         from jacazul.cli.ponder import Dashboard
 
         show_all = "--all" in args
-        project_root = next(
-            (a for a in args if not a.startswith("-")), "jacazul"
-        )
+        project_root = next((a for a in args if not a.startswith("-")), None)
         db = Dashboard(project_root, show_all, hide_tip=True)
         db.render()
 

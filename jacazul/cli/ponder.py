@@ -3,7 +3,7 @@ import os
 import sys
 import re
 from datetime import datetime
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from jacazul.taskwarrior.core import TaskWrapper, FocusManager
 
 # 🐊 ponder (v1.5.0)
@@ -23,7 +23,7 @@ NC = "\033[0m"
 class Dashboard:
     def __init__(
         self,
-        project_root: str = "jacazul",
+        project_root: Optional[str] = None,
         show_all: bool = False,
         hide_tip: bool = False,
     ):
@@ -33,10 +33,15 @@ class Dashboard:
         self.tw = TaskWrapper()
         self.focus = FocusManager()
         self.state = self.focus.load()
+        # Friendly name for header
+        self.project_id = os.environ.get("PROJECT_ID", "standalone")
 
     def is_interesting(self, ini: str) -> bool:
         if self.show_all:
             return True
+        # If a specific root was requested as filter, respect it
+        if self.project_root and not ini.startswith(self.project_root):
+            return False
         if not self.state.inis_of_interest:
             return True
         if ini == self.state.focused_ini:
@@ -49,7 +54,10 @@ class Dashboard:
         # Filter: project must be a string and not None
         all_tasks = [t for t in all_tasks if isinstance(t.get("project"), str)]
 
-        print(f"{CYAN}══ TACTICAL VIEW: {self.project_root} ══{NC}")
+        header = self.project_id
+        if self.project_root:
+            header += f" (Filter: {self.project_root})"
+        print(f"{CYAN}══ TACTICAL VIEW: {header} ══{NC}")
 
         # 1. Pulse Summary
         pending_count = len(all_tasks)
@@ -59,14 +67,17 @@ class Dashboard:
             [t for t in all_tasks if t.get("due") and t["due"] < now_str]
         )
 
-        # Completed today
+        # Completed today (respect optional filter)
         comp_today = self.tw.export(["status:completed", "end:today"])
         comp_count = len(
             [
                 t
                 for t in comp_today
                 if isinstance(t.get("project"), str)
-                and t["project"].startswith(self.project_root)
+                and (
+                    not self.project_root
+                    or t["project"].startswith(self.project_root)
+                )
             ]
         )
 
@@ -97,12 +108,8 @@ class Dashboard:
             elif p_active > 0:
                 icon = f"{NEON_GREEN}⚡{NC}"
 
-            display_name = p.replace(f"{self.project_root}:", "")
-            if display_name == self.project_root:
-                display_name = "[root]"
-
             print(
-                f"  {icon} {display_name:<35} | "
+                f"  {icon} {p:<35} | "
                 f"Active: {p_active:<2} | "
                 f"Ready: {p_ready:<2} | "
                 f"Total: {p_total:<2}"
@@ -171,23 +178,15 @@ class Dashboard:
             # Remove the mode prefix from description for cleaner view
             desc = re.sub(r"\[[A-Z-]+\]\s*", "", desc)
 
-        initiative = project.replace(f"{self.project_root}:", "")
-        if initiative == self.project_root:
-            initiative = "[root]"
-
         print(
             f"  {color}{status_icon:<2}{NC} | {uuid[:8]} | {mode:<10} | "
-            f"{initiative[:25]:<25} | {desc[:50]:<50} | [{urgency:.1f}]"
+            f"{project[:25]:<25} | {desc[:50]:<50} | [{urgency:.1f}]"
         )
 
 
 def main():
     show_all = "--all" in sys.argv
-    # Default fallback: PROJECT_ID or "jacazul_ai"
-    project_id = os.environ.get("PROJECT_ID", "jacazul_ai")
-    default_root = project_id.split("_")[0]
-
-    project_root = default_root
+    project_root = None
     for arg in sys.argv[1:]:
         if not arg.startswith("-"):
             project_root = arg
