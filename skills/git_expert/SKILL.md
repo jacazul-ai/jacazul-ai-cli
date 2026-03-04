@@ -39,6 +39,14 @@ Use standard prefixes:
 - **Feature Branches (The Workshop):** Higher autonomy allowed for intermediate work. You can propose or even execute frequent commits to maintain momentum, as long as you're in a dedicated workspace (e.g., `feature/*`, `fix/*`).
 - **Detection:** Always check the current branch (`git branch --show-current`) before deciding the commitment policy.
 
+### 5. Ticket Integration Protocol (Conventional Commits)
+- **Detection:** Before every commit, you MUST run `tw-flow status` to detect if the current task has an active ticket (`externalid`).
+- **Referencing:**
+  - **Default Format:** Use GitHub-style references (`#123`) in the commit footer.
+  - **Ongoing Work:** Use `Refs: #X` for intermediate commits.
+  - **Completion:** Use `Fixes: #X` only when the commit completes the entire initiative/ticket.
+- **Structure:** The ticket reference MUST be the last line of the commit message, preceded by a blank line.
+
 ## 📋 Operational Standards
 
 1. **Pre-Commit Verification:** Before committing, you MUST:

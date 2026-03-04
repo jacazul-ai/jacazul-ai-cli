@@ -61,6 +61,19 @@ class FlowTest(JacazulTest):
         self.assertIn("[INITIATIVE LANDSCAPE]", out)
         self.assertIn("[TACTICAL READOUT]", out)
 
+    def test_tw_flow_commit_draft_generation(self):
+        """Standardization: 'tw-flow commit' must generate a conventional draft with ticket."""
+        self.run_cmd(f"{self.tw_flow} ticket {self.u1} '#JAC-789'")
+        self.run_cmd(f"{self.tw_flow} focus task {self.u1}")
+        out, _, _ = self.run_cmd(f"{self.tw_flow} commit")
+        self.assertIn("══ DRAFT CONVENTIONAL COMMIT ══", out)
+        self.assertIn("feat: step 1", out)
+        self.assertIn("Refs: #JAC-789", out)
+        
+        # Test fix flag
+        out, _, _ = self.run_cmd(f"{self.tw_flow} commit --fix")
+        self.assertIn("Fixes: #JAC-789", out)
+
     def test_next_task_readiness_logic(self):
         """Next command must correctly identify the first unblocked task."""
         out, _, _ = self.run_cmd(f"{self.tw_flow} next test_ini")
@@ -100,7 +113,7 @@ class FlowTest(JacazulTest):
     def test_ponder_dashboard_mode_highlighting(self):
         """Ponder: Tactical dashboard must highlight interaction modes."""
         self.run_cmd(f"{self.tw_flow} ini mode_test 'GUIDE|Instructions|r|today'")
-        out, _, _ = self.run_cmd(f"{self.ponder} test_project")
+        out, _, _ = self.run_cmd(f"{self.ponder}")
         self.assertIn("GUIDE", out)
 
     def test_handoff_protocol_execution(self):
@@ -141,11 +154,11 @@ class FlowTest(JacazulTest):
         self.run_cmd(f"{self.tw_flow} ini boring 'Hidden Task|r|today'")
         self.run_cmd(f"{self.tw_flow} focus interest add test_ini")
         
-        out, _, _ = self.run_cmd(f"{self.ponder} test_project")
+        out, _, _ = self.run_cmd(f"{self.ponder}")
         self.assertIn("test_ini", out)
         self.assertNotIn("boring", out)
         
-        out_all, _, _ = self.run_cmd(f"{self.ponder} --all test_project")
+        out_all, _, _ = self.run_cmd(f"{self.ponder} --all")
         self.assertIn("boring", out_all)
 
     def test_recursive_context_inheritance(self):

@@ -428,6 +428,51 @@ class FlowManager:
         self.tw.run([uuid, "modify", f"externalid:{ticket}"])
         self.success(f"Task {uuid[:8]} linked to ticket: {ticket}")
 
+    def cmd_commit(self, is_fix: bool = False):
+        state = self.focus.load()
+        uuid = state.focused_task_uuid
+        if not uuid:
+            active = self.tw.export(["+ACTIVE"])
+            if active:
+                uuid = active[0]["uuid"]
+
+        if not uuid:
+            self.error("No active or focused task found to generate commit.")
+            return
+
+        tasks = self.tw.export([uuid])
+        if not tasks:
+            self.error("Task not found.")
+            return
+
+        task = tasks[0]
+        desc = task["description"]
+        ticket = self.find_ticket(uuid)
+
+        # Determine prefix from interaction mode
+        prefix = "feat"
+        if "[DESIGN]" in desc or "[PLAN]" in desc:
+            prefix = "docs"
+        elif "[DEBUG]" in desc or "[BUG]" in desc:
+            prefix = "fix"
+        elif "[TEST]" in desc:
+            prefix = "test"
+        elif "[REFINE]" in desc or "[REFACTOR]" in desc:
+            prefix = "refactor"
+
+        # Clean description (remove mode and initiative name if present)
+        clean_desc = re.sub(r"\[[A-Z-]+\]\s*", "", desc).lower()
+
+        print("\n══ DRAFT CONVENTIONAL COMMIT ══")
+        print(f"{prefix}: {clean_desc}")
+        print("\n[Body: explain what and why...]")
+
+        if ticket:
+            ref_type = "Fixes" if is_fix else "Refs"
+            print(f"\n{ref_type}: {ticket}")
+        print("═══════════════════════════════")
+        self.info("Copy the draft above and use 'git commit -m \"...\"'")
+
     def cmd_context(self, input_id: str):
         uuid = self.resolve_uuid(input_id)
         self.info(f"Full context for task {uuid[:8]}:")
@@ -614,6 +659,8 @@ def main():
         flow.cmd_note(args[0], args[1], " ".join(args[2:]))
     elif cmd == "ticket":
         flow.cmd_ticket(args[0], args[1])
+    elif cmd == "commit":
+        flow.cmd_commit(is_fix="--fix" in args)
     elif cmd == "context":
         flow.cmd_context(args[0])
     elif cmd in ["inis", "initiatives"]:
@@ -728,6 +775,7 @@ def main():
             '  amend <id> [description="..."] [ticket="..."]\n'
             "  note <id> <type> <msg>\n"
             "  ticket <id> <ticket>\n"
+            "  commit [--fix]\n"
             "  inis | status [ini] [--pending]\n"
             "  ponder [project_root] [--all]\n"
             "  focus [ini|task|pop|interest|clear]\n"
