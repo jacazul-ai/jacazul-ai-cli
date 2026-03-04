@@ -3,11 +3,11 @@
 # Sets TASKDATA based on JACAZUL_MODE and PROJECT_ID
 
 if [ -n "$PROJECT_ID" ]; then
+    export JACAZUL_HOME="$HOME/.jacazul-ai"
+    export TASKDATA="$JACAZUL_HOME/.task/$PROJECT_ID"
+
     if [ "$JACAZUL_MODE" = "UNHINGED" ]; then
-        export JACAZUL_HOME="$HOME/.jacazul-ai"
         export TASKRC="$JACAZUL_HOME/.taskrc"
-        # In unhinged mode, we use a global task base but isolated per project
-        export TASKDATA="$JACAZUL_HOME/.task/$PROJECT_ID"
         
         # Ensure the .taskrc is in place
         if [ ! -f "$TASKRC" ]; then
@@ -33,8 +33,6 @@ if [ -n "$PROJECT_ID" ]; then
                  sed -i "s|data.location=.*|data.location=$JACAZUL_HOME/.task|" "$TASKRC"
             fi
         fi
-    else
-        export TASKDATA="$HOME/.task/$PROJECT_ID"
     fi
 
     # Create task data directory if missing

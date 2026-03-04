@@ -170,7 +170,7 @@ Example: `/home/user/ai_cli_sandboxed/` → `PROJECT_ID=user_ai_cli_sandboxed`
 Set automatically by `taskp`, `tw-flow`, and `ponder` based on `PROJECT_ID`:
 
 ```bash
-export TASKDATA="$HOME/.task/$PROJECT_ID"
+export TASKDATA="$HOME/.jacazul-ai/.task/$PROJECT_ID"
 ```
 
 ## Compatibility

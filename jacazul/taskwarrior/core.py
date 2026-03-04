@@ -36,10 +36,8 @@ class Environment:
             return os.environ["TASKDATA"]
 
         project_id = Environment.get_project_id().split(":")[0]
-        if Environment.get_mode() == "UNHINGED":
-            home = Environment.get_jacazul_home()
-            return os.path.join(home, ".task", project_id)
-        return os.path.join(os.path.expanduser("~/.task"), project_id)
+        home = Environment.get_jacazul_home()
+        return os.path.join(home, ".task", project_id)
 
     @staticmethod
     def get_real_task_bin() -> str:

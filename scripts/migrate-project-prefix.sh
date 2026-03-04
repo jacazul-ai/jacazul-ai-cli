@@ -4,7 +4,7 @@ set -e
 PROJECT_ID="${1:-$PROJECT_ID}"
 [ -z "$PROJECT_ID" ] && { echo "ERROR: PROJECT_ID required"; exit 1; }
 
-TASKDATA="$HOME/.task/$PROJECT_ID"
+TASKDATA="$HOME/.jacazul-ai/.task/$PROJECT_ID"
 echo "🔍 Scanning $PROJECT_ID..."
 
 TASKS=$(TASKDATA="$TASKDATA" task export | jq -r --arg pid "$PROJECT_ID:" '
