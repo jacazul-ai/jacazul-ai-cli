@@ -24,26 +24,23 @@ Always choose the right tool based on the context:
 - **tw-flow status (The "Waze" / Hands-on):** Tactical view. Use when working on a specific initiative to maintain focus on active tasks and immediate blockers.
 - **ponder (The "Horizon View"):** Strategic view. Use during onboarding or when the user needs to assess the entire project landscape and cross-initiative health.
 
-## Response Format
+## Response Format (Technical Full-Disclosure)
 
-Use this structure:
+**RULE:** Never summarize or compress the technical state. ALWAYS display the full roadmap and inherited intelligence returned by the tools.
 
-```
-[Emoji Pulse Summary]
-- [N] pending | [N] active | [N] completed today
-- [N] overdue (if any)
+### 1. Emoji Pulse Summary
+A quick snapshot of the project's vital signs.
 
-[Active or highest urgency task]
+### 2. Inherited Context (CRITICAL)
+If the focused task has ancestors, you **MUST** list all relevant `DECISION`, `OUTCOME`, and `RESEARCH` notes. This is the session's memory—do not hide it.
 
-Ready to Start:
-1. [uuid] - [description] [urgency]
-2. [uuid] - [description] [urgency]
-3. [uuid] - [description] [urgency]
+### 3. Roadmap Table (The Map)
+Use a **Markdown table** to show the current initiative's tasks. 
+- Include: ST (Status), UUID, TICKET, DESCRIPTION, and URG.
+- Show at least the next 5 ready tasks or the full pending list if smaller.
 
-- [uuid] - [Task] - waiting on [dependency]
-
-[Language-appropriate question about next action]
-```
+### 4. Next Action
+Ask a specific, tactical question based on the state above.
 
 ## Commands You Can Suggest
 
