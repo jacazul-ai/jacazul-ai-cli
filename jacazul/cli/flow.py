@@ -225,7 +225,10 @@ class FlowManager:
         self.success(f"Initiative created with {len(tasks)} tasks")
 
     def cmd_status(
-        self, filter_val: Optional[str] = None, pending_only: bool = False
+        self,
+        filter_val: Optional[str] = None,
+        pending_only: bool = False,
+        use_table: bool = False,
     ):
         state = self.focus.load()
         ini_name = filter_val or state.focused_ini
@@ -270,6 +273,14 @@ class FlowManager:
         pending = [t for t in tasks if t["status"] == "pending"]
         completed = [t for t in tasks if t["status"] == "completed"]
 
+        if use_table:
+            self.render_status_table(pending, completed, state)
+        else:
+            self.render_status_list(pending, completed, state)
+
+        print(f"\nTotal: {len(pending)} pending, {len(completed)} completed.")
+
+    def render_status_list(self, pending, completed, state):
         def format_task_line(t):
             uuid_short = t["uuid"][:8]
             mark = (
@@ -293,7 +304,28 @@ class FlowManager:
             print("\nCOMPLETED:")
             for t in completed:
                 print(f"  ✓ {format_task_line(t)}")
-        print(f"\nTotal: {len(pending)} pending, {len(completed)} completed.")
+
+    def render_status_table(self, pending, completed, state):
+        print("\n| ST | UUID | TICKET | DESCRIPTION |")
+        print("|---|---|---|---|")
+
+        def format_table_row(t, icon):
+            uuid_short = t["uuid"][:8]
+            ticket = self.find_ticket(t["uuid"]) or "-"
+            desc = t["description"]
+            # Highlight focused task in description
+            if t["uuid"] == state.focused_task_uuid:
+                desc = f"**{desc}**"
+            return f"| {icon} | `{uuid_short}` | {ticket} | {desc} |"
+
+        for t in pending:
+            icon = "⚡" if t.get("start") else "○"
+            if t["uuid"] == state.focused_task_uuid:
+                icon = "🎯"
+            print(format_table_row(t, icon))
+
+        for t in completed:
+            print(format_table_row(t, "✓"))
 
     def cmd_next(self, filter_val: str = "status:pending"):
         self.info("Next tasks ready to work:")
@@ -506,8 +538,11 @@ class FlowManager:
         from jacazul.cli.ponder import Dashboard
 
         show_all = "--all" in args
+        use_table = "--table" in args
         project_root = next((a for a in args if not a.startswith("-")), None)
-        db = Dashboard(project_root, show_all, hide_tip=True)
+        db = Dashboard(
+            project_root, show_all, hide_tip=True, use_table=use_table
+        )
         db.render()
 
     def cmd_active(self):
@@ -637,8 +672,9 @@ def main():
         flow.cmd_initiative(args[0], args[1:])
     elif cmd == "status":
         pending_only = "--pending" in args
+        use_table = "--table" in args
         filter_val = next((a for a in args if not a.startswith("-")), None)
-        flow.cmd_status(filter_val, pending_only)
+        flow.cmd_status(filter_val, pending_only, use_table)
     elif cmd == "ponder":
         flow.cmd_ponder(args)
     elif cmd == "next":
@@ -776,7 +812,7 @@ def main():
             "  note <id> <type> <msg>\n"
             "  ticket <id> <ticket>\n"
             "  commit [--fix]\n"
-            "  inis | status [ini] [--pending]\n"
+            "  inis | status [ini] [--pending] [--table]\n"
             "  ponder [project_root] [--all]\n"
             "  focus [ini|task|pop|interest|clear]\n"
             "  tree [ini]"

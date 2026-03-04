@@ -3,7 +3,7 @@ import os
 import sys
 import re
 from datetime import datetime
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 from jacazul.taskwarrior.core import TaskWrapper, FocusManager
 
 # 🐊 ponder (v1.5.0)
@@ -26,10 +26,12 @@ class Dashboard:
         project_root: Optional[str] = None,
         show_all: bool = False,
         hide_tip: bool = False,
+        use_table: bool = False,
     ):
         self.project_root = project_root
         self.show_all = show_all
         self.hide_tip = hide_tip
+        self.use_table = use_table
         self.tw = TaskWrapper()
         self.focus = FocusManager()
         self.state = self.focus.load()
@@ -117,14 +119,6 @@ class Dashboard:
         print("")
 
         # 3. Tactical Readout
-        print(f"{YELLOW}[TACTICAL READOUT]{NC}")
-        print(
-            "  ST | UUID     | MODE       | INITIATIVE                | "
-            "DESCRIPTION                                        | URG"
-        )
-        print("  " + "-" * 120)
-
-        # Sort: Active first (sort_status 2), then by urgency
         readout_tasks = [
             t
             for t in all_tasks
@@ -141,13 +135,60 @@ class Dashboard:
             key=lambda x: (x["sort_status"], x.get("urgency", 0)), reverse=True
         )
 
-        for t in readout_tasks[:15]:
-            self.render_task_line(t)
+        if self.use_table:
+            self.render_tactical_table(readout_tasks[:15])
+        else:
+            self.render_tactical_list(readout_tasks[:15])
 
         if not self.hide_tip:
             print(
                 "\nWARN: You are using the standalone 'ponder' command. "
                 "Prefer using 'tw-flow ponder' for full workflow integration."
+            )
+
+    def render_tactical_list(self, tasks: List[Dict[str, Any]]):
+        print(f"{YELLOW}[TACTICAL READOUT]{NC}")
+        print(
+            "  ST | UUID     | MODE       | INITIATIVE                | "
+            "DESCRIPTION                                        | URG"
+        )
+        print("  " + "-" * 120)
+        for t in tasks:
+            self.render_task_line(t)
+
+    def render_tactical_table(self, tasks: List[Dict[str, Any]]):
+        print(f"\n{YELLOW}[TACTICAL READOUT]{NC}")
+        print("| ST | UUID | MODE | INITIATIVE | DESCRIPTION | URG |")
+        print("|---|---|---|---|---|---|")
+        for t in tasks:
+            uuid = t["uuid"]
+            desc = t["description"]
+            urgency = t.get("urgency", 0)
+            start = t.get("start")
+            due = t.get("due")
+            project = t.get("project", "[none]")
+
+            status_icon = "○"
+            if uuid == self.state.focused_task_uuid:
+                status_icon = "🎯"
+            elif start:
+                status_icon = "⚡"
+            elif due and due < datetime.now().strftime("%Y%m%dT%H%M%SZ"):
+                status_icon = "!!"
+
+            mode = "--------"
+            match = re.search(r"\[([A-Z-]+)\]", desc)
+            if match:
+                mode = match.group(1)
+                desc = re.sub(r"\[[A-Z-]+\]\s*", "", desc)
+
+            # Highlight focused task
+            if uuid == self.state.focused_task_uuid:
+                desc = f"**{desc}**"
+
+            print(
+                f"| {status_icon} | `{uuid[:8]}` | {mode} | "
+                f"{project[:25]:<25} | {desc[:50]:<50} | {urgency:.1f} |"
             )
 
     def render_task_line(self, t: Dict[str, Any]):
@@ -186,13 +227,14 @@ class Dashboard:
 
 def main():
     show_all = "--all" in sys.argv
+    use_table = "--table" in sys.argv
     project_root = None
     for arg in sys.argv[1:]:
         if not arg.startswith("-"):
             project_root = arg
             break
 
-    db = Dashboard(project_root, show_all)
+    db = Dashboard(project_root, show_all, use_table=use_table)
     db.render()
 
 

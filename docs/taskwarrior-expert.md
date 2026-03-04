@@ -11,9 +11,9 @@ Complete guide for the taskwarrior-expert skill - a structured workflow system f
 ```
 
 **Available scripts:**
-- `skills/taskwarrior_expert/scripts/tw-flow` - Main workflow tool (v1.6.0)
+- `skills/taskwarrior_expert/scripts/tw-flow` - Main workflow tool (v1.7.0)
 - `skills/taskwarrior_expert/scripts/taskp` - Project-aware wrapper
-- `skills/taskwarrior_expert/scripts/ponder` - Dashboard visualization (v1.4.0)
+- `skills/taskwarrior_expert/scripts/ponder` - Dashboard visualization (v1.6.0)
 
 **How to use them:**
 
@@ -157,6 +157,7 @@ Shows initiative status with a **split view** (shows both PENDING and COMPLETED 
 - **PENDING:** Tasks remaining in the initiative. Includes ticket display if available.
 - **COMPLETED:** History of what has already been done.
 - **Flag `--pending`**: Use to hide completed tasks and show only pending ones.
+- **Flag `--table`**: Output status as a Markdown table (ideal for AI interfaces).
 *Auto-detects active initiative if no argument provided.*
 
 ### tw-flow tree
@@ -198,7 +199,9 @@ Manage session continuity by "locking" attention on specific initiatives or task
 - `tw-flow focus clear`: Resets all session anchors.
 
 ### ponder --all
-Bypass interest filters to see the full global project status without clearing your session focus.
+Bypass interest filters to see the full global project status.
+- **Flag `--table`**: Output the tactical readout as a Markdown table.
+*Note: A warning is shown when using standalone `ponder` instead of `tw-flow ponder`.*
 
 ---
 
@@ -243,5 +246,5 @@ Commands that modify task state (`execute`, `done`, `note`, `ticket`, `outcome`,
 
 ---
 
-**Version:** 1.6.0  
+**Version:** 1.7.0  
 **Last Updated:** 2026-03-03
