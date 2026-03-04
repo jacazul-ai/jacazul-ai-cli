@@ -138,9 +138,8 @@ class Dashboard:
 
         if not self.hide_tip:
             print(
-                f"\n⚠️  {RED}WARN:{NC} You are using the standalone 'ponder' "
-                "command. Prefer using '{NEON_GREEN}tw-flow ponder{NC}' "
-                "for full workflow integration."
+                "\nWARN: You are using the standalone 'ponder' command. "
+                "Prefer using 'tw-flow ponder' for full workflow integration."
             )
 
     def render_task_line(self, t: Dict[str, Any]):
