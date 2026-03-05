@@ -2,6 +2,10 @@
 
 This document defines the foundational engineering standards, architectural patterns, and operational philosophies for the Jacazul AI CLI project.
 
+## 🛠 Core Skills (Persistent Activation)
+@skills/jacazul-engine/SKILL.md
+@skills/taskwarrior_expert/SKILL.md
+
 ## 🏛 Architectural Boundaries
 
 ### Structure vs. Dynamics (Setup vs. Runtime)

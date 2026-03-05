@@ -14,12 +14,21 @@ The CLI operates under a set of non-negotiable mandates defined in its system pr
 
 All tool executions are governed by a Policy Engine that evaluates permissions based on a priority hierarchy:
 
-1.  **Admin Tier:** Top-level overrides.
-2.  **User Tier:** User-defined preferences.
-3.  **Workspace Tier:** Project-specific rules.
-4.  **Default Tier:** The baseline safety protocol.
+1.  **Admin Tier (Tier 5):** Top-level overrides (Priority: `5.xxx`).
+2.  **User Tier (Tier 4):** User-defined preferences (`~/.gemini/policies/*.toml`, Priority: `4.xxx`).
+3.  **Workspace Tier (Tier 3):** Project-specific rules (`$WORKSPACE_ROOT/.gemini/policies/*.toml`, Priority: `3.xxx`).
+4.  **Extension Tier (Tier 2):** Policies defined by extensions (Priority: `2.xxx`).
+5.  **Default Tier (Tier 1):** The baseline safety protocol (Priority: `1.xxx`).
 
-The engine can `allow`, `deny`, or `ask_user` for each tool execution, ensuring a "Security First" environment.
+### 🎓 Lessons Learned (Policy Spike)
+-   **Workspace Trust:** Workspace policies (Tier 3) are often ignored by default unless the directory is explicitly trusted via `/permissions trust`.
+-   **Tier Precedence:** User-level policies (Tier 4) are the most reliable way to enforce silent automation across different projects without triggering "Trusted Folder" warnings.
+-   **Decision Flow:** The engine matches rules from highest priority down. The first match wins. Use `allow` for silent execution, `ask_user` for confirmation (default), and `deny` to block.
+
+### 🛠️ Jacazul Standard Policy (`jacazul.toml`)
+To enable a seamless "Navigator" experience, the following tools should be set to `allow` in the User Tier:
+- `activate_skill`: Essential for loading project-specific expertise without interruption.
+- `run_shell_command` (Filtered): Allow specific non-destructive commands like `tw-flow status`, `tw-flow focus`, and `ponder`.
 
 ## ⚙️ 3. The Planning Lifecycle
 
