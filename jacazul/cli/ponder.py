@@ -6,18 +6,8 @@ from datetime import datetime
 from typing import Dict, Any, Optional, List
 from jacazul.taskwarrior.core import TaskWrapper, FocusManager
 
-# 🐊 ponder (v1.5.0)
+# 🐊 ponder (v1.5.1)
 # Python port of the tactical Taskwarrior dashboard.
-
-# Colors
-CYAN = "\033[0;36m"
-GREEN = "\033[0;32m"
-NEON_GREEN = "\033[1;32m"
-YELLOW = "\033[1;33m"
-BLUE = "\033[0;34m"
-RED = "\033[0;31m"
-BLOODY_RED = "\033[1;31m"
-NC = "\033[0m"
 
 
 class Dashboard:
@@ -59,7 +49,7 @@ class Dashboard:
         header = self.project_id
         if self.project_root:
             header += f" (Filter: {self.project_root})"
-        print(f"{CYAN}══ TACTICAL VIEW: {header} ══{NC}")
+        print(f"══ TACTICAL VIEW: {header} ══")
 
         # 1. Pulse Summary
         pending_count = len(all_tasks)
@@ -84,14 +74,14 @@ class Dashboard:
         )
 
         print(
-            f"Pulse: Pending ({CYAN}{pending_count}{NC}) | "
-            f"Active ({NEON_GREEN}{active_count}{NC}) | "
-            f"Overdue ({BLOODY_RED}{overdue_count}{NC}) | "
-            f"Done Today ({GREEN}{comp_count}{NC})\n"
+            f"Pulse: Pending ({pending_count}) | "
+            f"Active ({active_count}) | "
+            f"Overdue ({overdue_count}) | "
+            f"Done Today ({comp_count})\n"
         )
 
         # 2. Initiative Landscape
-        print(f"{YELLOW}[INITIATIVE LANDSCAPE]{NC}")
+        print("[INITIATIVE LANDSCAPE]")
         projects = sorted(list(set(t["project"] for t in all_tasks)))
         for p in projects:
             if "_archive" in p or "_trash" in p:
@@ -108,7 +98,7 @@ class Dashboard:
             if p == self.state.focused_ini:
                 icon = "📌"
             elif p_active > 0:
-                icon = f"{NEON_GREEN}⚡{NC}"
+                icon = "⚡"
 
             print(
                 f"  {icon} {p:<35} | "
@@ -147,7 +137,7 @@ class Dashboard:
             )
 
     def render_tactical_list(self, tasks: List[Dict[str, Any]]):
-        print(f"{YELLOW}[TACTICAL READOUT]{NC}")
+        print("[TACTICAL READOUT]")
         print(
             "  ST | UUID     | MODE       | INITIATIVE                | "
             "DESCRIPTION                                        | URG"
@@ -157,7 +147,7 @@ class Dashboard:
             self.render_task_line(t)
 
     def render_tactical_table(self, tasks: List[Dict[str, Any]]):
-        print(f"\n{YELLOW}[TACTICAL READOUT]{NC}")
+        print(f"\n[TACTICAL READOUT]")
         print("| ST | UUID | MODE | INITIATIVE | DESCRIPTION | URG |")
         print("|---|---|---|---|---|---|")
         for t in tasks:
@@ -200,16 +190,12 @@ class Dashboard:
         project = t.get("project", "[none]")
 
         status_icon = "○"
-        color = NC
         if uuid == self.state.focused_task_uuid:
             status_icon = "🎯"
-            color = CYAN
         elif start:
             status_icon = "⚡"
-            color = NEON_GREEN
         elif due and due < datetime.now().strftime("%Y%m%dT%H%M%SZ"):
             status_icon = "!!"
-            color = BLOODY_RED
 
         mode = "--------"
         # Match interaction modes like [EXECUTE], [PLAN], etc.
@@ -220,7 +206,7 @@ class Dashboard:
             desc = re.sub(r"\[[A-Z-]+\]\s*", "", desc)
 
         print(
-            f"  {color}{status_icon:<2}{NC} | {uuid[:8]} | {mode:<10} | "
+            f"  {status_icon:<2} | {uuid[:8]} | {mode:<10} | "
             f"{project[:25]:<25} | {desc[:50]:<50} | [{urgency:.1f}]"
         )
 

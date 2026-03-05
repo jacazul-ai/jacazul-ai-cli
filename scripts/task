@@ -4,7 +4,7 @@
 # STOP immediately and consult with the user. Direct Taskwarrior interaction is prohibited.
 # Use 'tw-flow' or 'taskp' ONLY to maintain project isolation and data integrity.
 
-echo -e "\033[0;31mERROR: Direct usage of 'task' is restricted in this environment.\033[0m" >&2
+echo "ERROR: Direct usage of 'task' is restricted in this environment." >&2
 echo "" >&2
 echo "Don't sweat it! Please use one of the official wrappers instead:" >&2
 echo "  - 'taskp'   : Project-aware Taskwarrior wrapper (preserves isolation)." >&2

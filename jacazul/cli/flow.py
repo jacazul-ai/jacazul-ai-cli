@@ -263,7 +263,7 @@ class FlowManager:
                     is_inherited = ticket != task.get("externalid")
                     prefix = "Inherited" if is_inherited else "External"
                     print(
-                        f"🐊 \033[1;33mALERT:\033[0m {prefix} ticket detected "
+                        f"🐊 ALERT: {prefix} ticket detected "
                         f"({ticket}). Git-expert will use this for "
                         "automated commit referencing."
                     )
