@@ -2,7 +2,7 @@
 
 .DEFAULT_GOAL := help
 
-.PHONY: help configure sandbox
+.PHONY: help configure sandbox language
 
 define PIRAZ_AI_BANNER
 	@echo "TODO"
@@ -28,6 +28,9 @@ configure: ## Run the configuration script
 	@printf "\033[1;34m=========================================\033[0m\n\n"
 	@./scripts/configure
 	@printf "\n\033[1;34mConfiguration complete.\033[0m\n"
+
+language: ## Reconfigure language (idiom) preferences
+	@./scripts/configure --language
 
 sandbox: ## Build the Jacazul AI Sandbox container image
 	@printf "\n"

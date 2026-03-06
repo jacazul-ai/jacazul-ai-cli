@@ -27,7 +27,7 @@ export GEMINI_INSTRUCTIONS_DIR="$PROJECT_ROOT/templates/context/instructions"
 export PATH="$PATH:$PROJECT_ROOT/skills/taskwarrior_expert/scripts"
 
 # Base Onboard Prompt for Jacazul (Gemini Edition)
-ONBOARD_PROMPT="The anchored persona for this session is Jacazul (Jacaré Azul), running $JACAZUL_MODE. Activate the 'jacazul-engine' and 'taskwarrior-expert' skills immediately, in parallel with tactical context discovery (tw-flow focus + ponder). This initializes the session OS before the first response. Respond in persona (signature: 🐊 Jacazul)."
+ONBOARD_PROMPT="The anchored persona for this session is Jacazul (Jacaré Azul), running $JACAZUL_MODE. Language Preferences: Chat=$JACAZUL_CHAT_LANG, Data=$JACAZUL_DATA_LANG. Activate the 'jacazul-engine' and 'taskwarrior-expert' skills immediately, in parallel with tactical context discovery (tw-flow focus + ponder). This initializes the session OS before the first response. Respond in persona (signature: 🐊 Jacazul)."
 
 # If no arguments provided, default to deterministic onboarding
 if [ $# -eq 0 ]; then

@@ -52,7 +52,11 @@ fi
 export JACAZUL_MODE="${JACAZUL_MODE:-COUNSELOR}"
 
 # 4. Component Bootstraps (Dynamics)
-# 4.0 Health Check (Critical Binaries)
+# 4.0 Language (Idiom)
+BOOTSTRAP_LANG="$PROJECT_ROOT/scripts/bootstrap/language"
+[ -f "$BOOTSTRAP_LANG" ] && source "$BOOTSTRAP_LANG"
+
+# 4.1 Health Check (Critical Binaries)
 TW_FLOW_BIN="$HOME/.jacazul-ai/.venv/bin/tw-flow"
 if [ ! -x "$TW_FLOW_BIN" ]; then
     # Fallback to legacy path if venv not ready yet

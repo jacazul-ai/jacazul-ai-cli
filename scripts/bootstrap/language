@@ -1,0 +1,28 @@
+#!/bin/bash
+# 🐊 Jacazul Language Bootstrap
+# Loads and injects Chat and Data idiom preferences.
+
+LANG_JSON="$HOME/.jacazul-ai/language.json"
+
+# Default values
+export JACAZUL_CHAT_LANG="pt-br"
+export JACAZUL_DATA_LANG="en"
+
+if [ -f "$LANG_JSON" ]; then
+    if command -v jq &> /dev/null; then
+        JACAZUL_CHAT_LANG=$(jq -r '.chat' "$LANG_JSON")
+        JACAZUL_DATA_LANG=$(jq -r '.data' "$LANG_JSON")
+    else
+        # Fallback if jq is missing (simple grep/sed)
+        JACAZUL_CHAT_LANG=$(grep -o '"chat": *"[^"]*"' "$LANG_JSON" | cut -d'"' -f4)
+        JACAZUL_DATA_LANG=$(grep -o '"data": *"[^"]*"' "$LANG_JSON" | cut -d'"' -f4)
+    fi
+    
+    export JACAZUL_CHAT_LANG="${JACAZUL_CHAT_LANG:-pt-br}"
+    export JACAZUL_DATA_LANG="${JACAZUL_DATA_LANG:-en}"
+fi
+
+# Log status in DEBUG mode
+if [ -n "$DEBUG" ]; then
+    echo "🌐 Jacazul Language: Chat=$JACAZUL_CHAT_LANG | Data=$JACAZUL_DATA_LANG"
+fi

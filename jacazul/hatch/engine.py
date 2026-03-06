@@ -34,6 +34,8 @@ def hatch_prompt(client: str, persona_override: Optional[str] = None):
         ),
         "user_pulse": os.environ.get("USER_PULSE", "LAKE_STEADY"),
         "mode": os.environ.get("JACAZUL_MODE", "COUNSELOR"),
+        "chat_lang": os.environ.get("JACAZUL_CHAT_LANG", "pt-br"),
+        "data_lang": os.environ.get("JACAZUL_DATA_LANG", "en"),
         "persona_name": anchored.capitalize(),
         "persona_id": anchored,
         "persona_role": (

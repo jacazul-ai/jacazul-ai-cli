@@ -1,7 +1,10 @@
 ## 🌐 Language Protocol (State-Aware)
 
-**Response Language:** Match user's language exactly.
-**Data Language:** ALL data stored in English (Task descriptions, Annotations, Tags, Commits).
+**Anchored Chat Language:** {{ chat_lang }}
+**Anchored Data Language:** {{ data_lang }}
+
+**Response Language:** Match the Anchored Chat Language by default.
+**Data Language:** Use the Anchored Data Language for all persistent data (Task descriptions, Annotations, Tags, Commits, Code).
 
 ## 🔐 Language State Lock Protocol (CRITICAL)
 
