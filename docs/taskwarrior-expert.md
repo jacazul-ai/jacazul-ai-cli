@@ -237,6 +237,29 @@ Commands that modify task state (`execute`, `done`, `note`, `ticket`, `outcome`,
 
 ---
 
+---
+
+## 🔄 Taskwarrior Version Parity (v1.8.0)
+
+To ensure data integrity between different host operating systems (e.g., Debian 12 with TW 2.6.2 and Fedora 43 with TW 3.4.1), the system implements an automatic version parity and migration logic.
+
+### 1. Host Version Detection
+The `scripts/bootstrap/environment` script automatically detects the host's Taskwarrior version or package manager (dnf/apt) to determine the target environment.
+- **Taskwarrior 3 (Host):** Triggers `ai-sandbox-fedora` image selection (Fedora 43 based).
+- **Taskwarrior 2 (Host):** Triggers `ai-sandbox` image selection (Ubuntu/Debian based).
+
+### 2. Automatic SQLite Migration
+When running in a Taskwarrior 3 environment (e.g., Fedora 43 container), the `scripts/bootstrap/taskwarrior` script detects legacy 2.x data (`.data` files) and performs an automatic migration to SQLite.
+- **Backup:** A full backup of `.data` files is created at `~/.jacazul-ai/.task-backups/migration-TIMESTAMP/` before any changes.
+- **Import:** Executes `task import-v2 rc.hooks=0` to convert the database to the new **Taskchampion** (SQLite) format.
+- **Validation:** The migration is per-project (using `TASKDATA` isolation), ensuring that each initiative is converted safely and independently.
+
+### 3. Cross-Version Commands
+- **task import-v2**: Used ONLY in Taskwarrior 3 environments to import legacy data.
+- **tw-flow status**: Automatically detects and handles both legacy and SQLite databases depending on the available binary version.
+
+---
+
 ## 💡 Best Practices
 
 1. **Use UUIDs:** Always refer to tasks by their 8-character UUID.

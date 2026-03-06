@@ -41,6 +41,31 @@ if [ -n "$PROJECT_ID" ]; then
         mkdir -p "$TASKDATA"
     fi
 
+    # Taskwarrior 2.x to 3.x Migration (Taskchampion)
+    TW_VERSION=$(task --version | head -n 1 | cut -d'.' -f1)
+    if [ "$TW_VERSION" -eq 3 ]; then
+        # Check if legacy data exists but SQLite doesn't
+        if [ -f "$TASKDATA/pending.data" ] && [ ! -f "$TASKDATA/taskchampion.sqlite3" ]; then
+            echo "⚠️  Detected Taskwarrior 2.x data in version 3 environment."
+            echo "🐊 Migrating database to SQLite (task import-v2)..."
+            # Backup first just in case
+            BACKUP_DIR="$JACAZUL_HOME/.task-backups/migration-$(date +%Y%m%d-%H%M%S)"
+            mkdir -p "$BACKUP_DIR"
+            cp "$TASKDATA/"*.data "$BACKUP_DIR/"
+            
+            # Perform import
+            # rc.hooks=0 to avoid triggering hooks during import
+            task import-v2 rc.hooks=0
+            if [ $? -eq 0 ]; then
+                echo "✅ Migration successful."
+                # Keep legacy files as backup for now, or move them?
+                # User said "check if current TASKDATA was converted", so we do it.
+            else
+                echo "❌ Migration failed! Please check logs."
+            fi
+        fi
+    fi
+
     # Emit logs only in DEBUG mode
     if [ -n "$DEBUG" ]; then
         echo "🐊 Task Data: $TASKDATA"

@@ -36,6 +36,13 @@ if [ -f "$BOOTSTRAP_ENV" ]; then
     source "$BOOTSTRAP_ENV"
 fi
 
+# 0.1 Dynamic Image Selection
+IMAGE_NAME="ai-sandbox"
+if [ "$JACAZUL_TASK_VERSION" -eq 3 ]; then
+    IMAGE_NAME="ai-sandbox-fedora"
+    if [ -n "$DEBUG" ]; then echo "🐊 Host has Taskwarrior 3. Using Fedora 43 base."; fi
+fi
+
 # Set JACAZUL_MODE to CAGED for this script
 export JACAZUL_MODE="CAGED"
 
@@ -137,4 +144,4 @@ podman run -it --rm \
   -v "$SCRIPT_DIR/../agents:/home/jacazul/.copilot/agents:z" \
   -v "$HOST_GITCONFIG:/home/jacazul/.gitconfig:z" \
   -v "$HOST_VENV_DIR:/project/sandbox/venv:z" \
-  ai-sandbox "${AGENT_ARGS[@]}" "$@"
+  "$IMAGE_NAME" "${AGENT_ARGS[@]}" "$@"

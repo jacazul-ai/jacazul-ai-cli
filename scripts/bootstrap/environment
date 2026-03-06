@@ -18,7 +18,26 @@ if [ -z "$JACAZUL_REAL_TASK" ]; then
     export JACAZUL_REAL_TASK
 fi
 
-# 2.1 Administrative Alias
+# 2.1 Taskwarrior/OS Detection
+if [ -z "$JACAZUL_TASK_VERSION" ]; then
+    if [ -n "$JACAZUL_REAL_TASK" ]; then
+        JACAZUL_TASK_VERSION=$("$JACAZUL_REAL_TASK" --version | head -n 1 | cut -d'.' -f1)
+    else
+        # Task missing - Detect by package manager
+        if command -v dnf &> /dev/null; then
+            # Fedora/RedHat - Likely Task 3
+            JACAZUL_TASK_VERSION="3"
+            export JACAZUL_HOST_OS="fedora"
+        elif command -v apt-get &> /dev/null; then
+            # Debian/Ubuntu - Likely Task 2
+            JACAZUL_TASK_VERSION="2"
+            export JACAZUL_HOST_OS="debian"
+        fi
+    fi
+    export JACAZUL_TASK_VERSION
+fi
+
+# 2.2 Administrative Alias
 # Provides a session-specific bypass to the real binary for project maintenance.
 alias rtask="$JACAZUL_REAL_TASK"
 

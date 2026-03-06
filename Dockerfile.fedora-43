@@ -1,0 +1,53 @@
+FROM fedora:43
+
+ENV TERM=xterm-256color
+ENV COLORTERM=truecolor
+ENV COPILOT_CUSTOM_INSTRUCTIONS_DIRS=/home/jacazul/.github/instructions
+
+# Install system dependencies (Fedora/DNF style)
+RUN dnf -y update && dnf -y install \
+    git \
+    make \
+    curl \
+    unzip \
+    ca-certificates \
+    wget \
+    jq \
+    ripgrep \
+    procps-ng \
+    fzf \
+    htop \
+    sudo \
+    task \
+    bc \
+    nodejs \
+    npm \
+    python3 \
+    python3-pip \
+    && dnf clean all
+
+# Install GitHub Copilot CLI
+RUN npm install -g @github/copilot
+
+# Install Go (Official Binary)
+COPY --from=golang:latest /usr/local/go /usr/local/go
+
+# Copy uv (fast Python package manager)
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+
+ENV PATH=$PATH:/usr/local/go/bin:/home/jacazul/go/bin
+
+# Create jacazul user
+RUN useradd -m -s /bin/bash jacazul && \
+    chown -R jacazul:jacazul /home/jacazul && \
+    echo "jacazul ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/jacazul && \
+    chmod 0440 /etc/sudoers.d/jacazul
+
+# Copy entrypoint script
+COPY scripts/docker-entrypoint.sh /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh
+
+USER jacazul
+WORKDIR /project
+
+ENTRYPOINT ["/docker-entrypoint.sh"]
