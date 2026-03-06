@@ -1,8 +1,8 @@
-# Environment Modes: COMPANION vs UNHINGED
+# Environment Modes: COUNSELOR vs UNHINGED
 
 This project supports two primary interaction modes that dictate how the environment is bootstrapped and how much autonomy the AI agent has.
 
-## 🛡️ COMPANION Mode (Safety Default)
+## 🛡️ COUNSELOR Mode (Safety Default)
 
 **Purpose:** Interactive partnership. This is the default mode for all sessions. It ensures that the AI agent acts as a co-pilot, requiring user consent for significant system changes.
 
@@ -43,7 +43,7 @@ This project supports two primary interaction modes that dictate how the environ
 
 ### 🚀 Bootstrap Dynamics
 - **Script:** `scripts/bootstrap/environment`
-- **Default Baseline:** If `JACAZUL_MODE` is unset, the system defaults to **COMPANION**.
+- **Default Baseline:** If `JACAZUL_MODE` is unset, the system defaults to **COUNSELOR**.
 - **Switching:** Set the `JACAZUL_MODE` environment variable to `UNHINGED` to enable high-autonomy mode.
 
 ---

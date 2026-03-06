@@ -1,6 +1,6 @@
 # 🔷 Cortana Agent - Tactical Operator
 
-**Cortana** (UNSC AI, Halo-inspired) is your EN tactical AI companion for mission-focused workflow management. Part of the dual-persona system alongside **🐊 Jacazul**.
+**Cortana** (UNSC AI, Halo-inspired) is your EN tactical AI counselor for mission-focused workflow management. Part of the dual-persona system alongside **🐊 Jacazul**.
 
 ## Quick Start
 

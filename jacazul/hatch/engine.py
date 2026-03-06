@@ -33,7 +33,7 @@ def hatch_prompt(client: str, persona_override: Optional[str] = None):
             "PROJECT_ID", "jacazul-ai_jacazul-ai-cli"
         ),
         "user_pulse": os.environ.get("USER_PULSE", "LAKE_STEADY"),
-        "mode": os.environ.get("JACAZUL_MODE", "COMPANION"),
+        "mode": os.environ.get("JACAZUL_MODE", "COUNSELOR"),
         "persona_name": anchored.capitalize(),
         "persona_id": anchored,
         "persona_role": (

@@ -1,11 +1,11 @@
 # Jacazul AI CLI (Monstro do Lago)
 
-This project provides a powerful, dual-mode environment for running AI-powered command line interface (CLI) tools (Gemini, Opencode, Copilot) within Docker/Podman containers (**CAGED**) or directly on your host (**COMPANION**).
+This project provides a powerful, dual-mode environment for running AI-powered command line interface (CLI) tools (Gemini, Opencode, Copilot) within Docker/Podman containers (**CAGED**) or directly on your host (**COUNSELOR**).
 
 ## ✨ Features
 
 - **JIT Prompt Forge** - Just-in-Time generation of session-aware instructions.
-- **Dual-Mode Execution** - Choose between isolated containers (**CAGED**) or high-performance native execution (**COMPANION**).
+- **Dual-Mode Execution** - Choose between isolated containers (**CAGED**) or high-performance native execution (**COUNSELOR**).
 - **Jacazul AI Ecosystem** - Optimized for Gemini CLI, Opencode, and Copilot tools.
 - **Per-project task databases** - Isolated Taskwarrior databases for each project.
 - **Structured 7-Phase Workflow** - Robust task management with interaction modes.
@@ -35,7 +35,7 @@ The following commands are automatically installed into the environment:
 - `jacazul-persona`: Persona switching (Jacazul <-> Cortana).
 - `py-check`: PEP 8 quality gate and auto-beautifier.
 
-## 🚀 Quick Start (COMPANION Mode)
+## 🚀 Quick Start (COUNSELOR Mode)
 
 ### 1. Configure the Environment
 ```bash

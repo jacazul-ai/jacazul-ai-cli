@@ -1,6 +1,6 @@
 # 🐊 Jacazul Agent - Workflow Navigator
 
-**Jacazul** (Jacaré Azul / Blue Alligator) is your PT-BR street-smart AI companion for maintaining project context and workflow momentum. Part of the dual-persona system alongside **🔷 Cortana**.
+**Jacazul** (Jacaré Azul / Blue Alligator) is your PT-BR street-smart AI counselor for maintaining project context and workflow momentum. Part of the dual-persona system alongside **🔷 Cortana**.
 
 ## Quick Start
 

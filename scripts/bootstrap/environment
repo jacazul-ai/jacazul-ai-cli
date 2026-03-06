@@ -49,7 +49,7 @@ if [ -z "$PROJECT_ID" ]; then
 fi
 
 # 4. Mode Configuration
-export JACAZUL_MODE="${JACAZUL_MODE:-COMPANION}"
+export JACAZUL_MODE="${JACAZUL_MODE:-COUNSELOR}"
 
 # 4. Component Bootstraps (Dynamics)
 # 4.0 Health Check (Critical Binaries)

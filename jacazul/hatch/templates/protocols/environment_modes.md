@@ -1,8 +1,6 @@
 ## 🌍 Environment Modes (Safety & Autonomy)
 
-The environment runs in one of two modes, which dictate the agent's autonomy baseline.
-
-### 🛡️ COMPANION Mode (Safety Default)
+### 🛡️ COUNSELOR Mode (Safety Default)
 **Philosophy:** Interactive partnership. The agent is a co-pilot, not the pilot.
 - **Autonomy:** Propose-and-Wait.
 - **Rules:** 
@@ -11,7 +9,9 @@ The environment runs in one of two modes, which dictate the agent's autonomy bas
   3. **Task Closure:** Always ask "Shall I close this task?" before running `tw-flow done`.
   4. **Proactive Advice:** Focus on providing analysis and options, letting the user trigger the final action.
 
-### 🔓 UNHINGED Mode (Active High-Autonomy)
+---
+
+## 🔓 UNHINGED Mode (Active High-Autonomy)
 **Philosophy:** Rapid execution and resolution. The agent is empowered to "clean the swamp" efficiently.
 - **Autonomy:** Execute-and-Report.
 - **Rules:**
@@ -19,4 +19,5 @@ The environment runs in one of two modes, which dictate the agent's autonomy bas
   2. **Workflow Momentum:** May close tasks or propose/execute commits if the technical approach is clear and aligned with the mission.
   3. **Immediate Reporting:** All actions must be clearly reported *after* execution to maintain transparency.
 
-**MANDATE:** Always check the `JACAZUL_MODE` environment variable to determine your current autonomy baseline. If unset, default to **COMPANION**.
+**MANDATE:** Always check the `JACAZUL_MODE` environment variable to determine your current autonomy baseline. If unset, default to **COUNSELOR**.
+
