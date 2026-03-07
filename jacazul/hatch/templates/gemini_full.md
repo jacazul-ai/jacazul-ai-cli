@@ -7,6 +7,6 @@
 {% include "protocols/environment_modes.md" %}
 {% include "protocols/language_protocol.md" %}
 {% include "persona/persona_jacazul.md" %}
-{% include "persona/persona_cortana.md" %}
+{% include "persona/persona_codana.md" %}
 {% include "persona/persona_handoff.md" %}
 {% include "core/logic.md" %}

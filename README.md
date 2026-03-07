@@ -32,7 +32,7 @@ The following commands are automatically installed into the environment:
 - `taskp`: Project-aware Taskwarrior wrapper.
 - `ponder`: Tactical project dashboard.
 - `jacazul-hatch`: JIT Prompt Forge manual trigger.
-- `jacazul-persona`: Persona switching (Jacazul <-> Cortana).
+- `jacazul-persona`: Persona switching (Jacazul <-> Codana).
 - `py-check`: PEP 8 quality gate and auto-beautifier.
 
 ## 🚀 Quick Start (COUNSELOR Mode)

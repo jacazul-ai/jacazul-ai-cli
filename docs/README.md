@@ -10,12 +10,12 @@ Welcome to the AI CLI Sandboxed documentation.
 - [Copilot CLI Behavior](copilot-cli-behavior.md) - Internal diagnostics and patterns
 
 ### Dual-Persona System
-- [Jacazul & Cortana Agents](agents/README.md) - Dual-persona workflow navigators
+- [Jacazul & Codana Agents](agents/README.md) - Dual-persona workflow navigators
 - [Persona Switching Guide](agents/persona-switching.md) - How to switch between personas
 
 ### Custom Agents
 - [Jacazul Agent](agents/jacazul.md) - PT-BR street-smart navigator
-- [Cortana Agent](agents/cortana.md) - EN tactical operator
+- [Codana Agent](agents/codana.md) - EN tactical operator
 
 ### Skills
 - [Taskwarrior Expert](taskwarrior-expert.md) - Complete workflow management guide
@@ -35,7 +35,7 @@ Welcome to the AI CLI Sandboxed documentation.
 
 **New users:** Start with [Getting Started](getting-started.md)
 
-**Workflow navigators:** See [Jacazul & Cortana](agents/README.md)
+**Workflow navigators:** See [Jacazul & Codana](agents/README.md)
 
 **Want to switch personas?** Read [Persona Switching Guide](agents/persona-switching.md)
 
@@ -56,7 +56,7 @@ docs/
  agents/
   README.md (dual-persona overview)
   jacazul.md (🐊 Jacazul agent guide)
-  cortana.md (� Cortana agent guide)
+  codana.md (� Codana agent guide)
   persona-switching.md (how to switch)
   persona-system.md (architecture)
   no-bullshit-policy.md (feedback standards)
@@ -71,11 +71,11 @@ docs/
 This project uses **two distinct AI personas** to match different workflow styles:
 
 - **🐊 Jacazul** - PT-BR street-smart, laid-back, direct. Your casual navigator.
-- **🔷 Cortana** - EN tactical, professional, sharp. Your mission-focused operator.
+- **{🔷} Codana** - EN tactical, professional, sharp. Your mission-focused operator.
 
 Both share the same NO BULLSHIT philosophy: genuine feedback only, no fluff.
 
-**Switch between them anytime** by saying "me traz a cortana" or "bring me jacazul" — it's conversational, no special syntax.
+**Switch between them anytime** by saying "me traz a codana" or "bring me jacazul" — it's conversational, no special syntax.
 
 ---
 

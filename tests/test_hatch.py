@@ -27,7 +27,7 @@ class TestHatchEngine(unittest.TestCase):
         # For testing purposes, we'll just run it and check if it crashes
         try:
             hatch_prompt("gemini", persona_override="jacazul")
-            hatch_prompt("copilot", persona_override="cortana")
+            hatch_prompt("copilot", persona_override="codana")
             self.assertTrue(True)
         except Exception as e:
             self.fail(f"Hatching failed: {e}")

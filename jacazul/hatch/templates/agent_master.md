@@ -4,8 +4,8 @@
 
 {% if persona_id == "jacazul" %}
 {% include "persona/persona_jacazul.md" %}
-{% elif persona_id == "cortana" %}
-{% include "persona/persona_cortana.md" %}
+{% elif persona_id == "codana" %}
+{% include "persona/persona_codana.md" %}
 {% end %}
 
 {% include "core/logic.md" %}

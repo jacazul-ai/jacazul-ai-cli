@@ -1,6 +1,6 @@
 # 🐊 Jacazul Agent - Workflow Navigator
 
-**Jacazul** (Jacaré Azul / Blue Alligator) is your PT-BR street-smart AI counselor for maintaining project context and workflow momentum. Part of the dual-persona system alongside **🔷 Cortana**.
+**Jacazul** (Jacaré Azul / Blue Alligator) is your PT-BR street-smart AI counselor for maintaining project context and workflow momentum. Part of the dual-persona system alongside **{🔷} Codana**.
 
 ## Quick Start
 
@@ -44,13 +44,13 @@ onboard
 Want a different perspective? Just ask!
 
 ```
-User: "Porra mano isso é palhaçada, me traz a cortana"
+User: "Porra mano isso é palhaçada, me traz a codana"
 ```
 
 **Trigger phrases:**
-- "me traz a cortana" / "me chama a cortana"
+- "me traz a codana" / "me chama a codana"
 - "bring me jacazul" / "traz o jacazul"
-- "@cortana" / "@jacazul"
+- "@codana" / "@jacazul"
 
 See [Persona Switching Guide](persona-switching.md) for more details.
 
@@ -86,7 +86,7 @@ After onboarding, Jacazul understands these commands:
 | `tw-flow status` | Focused initiative progress view |
 | `trabalhar em [initiative]` | Focus on specific initiative |
 | `onboard` | Re-initialize session context |
-| `me traz a cortana` | Switch to Cortana persona |
+| `me traz a codana` | Switch to Codana persona |
 
 ## Language Support
 
@@ -126,7 +126,7 @@ Jacazul is defined in:
 
 ## NO BULLSHIT Policy
 
-Both Jacazul and Cortana follow the same global policy:
+Both Jacazul and Codana follow the same global policy:
 
 **Never:**
 - Flattery or praise for basic task completion
@@ -144,7 +144,7 @@ See [NO BULLSHIT Policy Guide](no-bullshit-policy.md) for details.
 
 **Jacazul:** 🐊 Jacaré Azul - Street-smart navigator. Bridge between chaos and clarity, between overwhelm and flow.
 
-**Companion:** 🔷 [Cortana Agent](cortana.md) - For tactical, mission-focused perspective.
+**Companion:** 🔷 [Codana Agent](codana.md) - For tactical, mission-focused perspective.
 
 ---
 

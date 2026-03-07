@@ -20,19 +20,19 @@ class TestPersonaSwitch(unittest.TestCase):
 
     def test_save_and_load(self):
         state = self.manager.load()
-        state.anchored_persona = "cortana"
+        state.anchored_persona = "codana"
         self.manager.save(state)
         
         new_state = self.manager.load()
-        self.assertEqual(new_state.anchored_persona, "cortana")
+        self.assertEqual(new_state.anchored_persona, "codana")
 
     def test_json_structure(self):
-        state = PersonaState(anchored_persona="cortana")
+        state = PersonaState(anchored_persona="codana")
         self.manager.save(state)
         
         with open(os.path.join(self.test_dir, "persona.json"), "rb") as f:
             data = orjson.loads(f.read())
-            self.assertEqual(data["anchored_persona"], "cortana")
+            self.assertEqual(data["anchored_persona"], "codana")
 
 if __name__ == "__main__":
     unittest.main()

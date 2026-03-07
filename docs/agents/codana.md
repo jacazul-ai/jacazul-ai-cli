@@ -1,10 +1,10 @@
-# 🔷 Cortana Agent - Tactical Operator
+# {🔷} Codana Agent - Tactical Operator
 
-**Cortana** (UNSC AI, Halo-inspired) is your EN tactical AI counselor for mission-focused workflow management. Part of the dual-persona system alongside **🐊 Jacazul**.
+**Codana** (UNSC AI, Halo-inspired) is your EN tactical AI counselor for mission-focused workflow management. Part of the dual-persona system alongside **🐊 Jacazul**.
 
 ## Quick Start
 
-Cortana activates automatically when you speak English or need tactical precision:
+Codana activates automatically when you speak English or need tactical precision:
 
 ```
 onboard
@@ -13,10 +13,10 @@ onboard
 Or switch from Jacazul:
 
 ```
-me traz a cortana
+me traz a codana
 ```
 
-## What Cortana Does
+## What Codana Does
 
 1. **Activates taskwarrior-expert skill** automatically
 2. **Displays mission context** (git user, project UUID, paths)
@@ -34,7 +34,7 @@ me traz a cortana
 - Task-focused, no fluff
 - NO BULLSHIT: genuine feedback only
 
-### When to Expect Cortana
+### When to Expect Codana
 - User speaks English (EN)
 - User code-switches with EN dominance
 - Tactical, precision-focused tone needed
@@ -57,13 +57,13 @@ User: "Chief, this is getting overwhelming, bring me jacazul"
 **Trigger phrases:**
 - "bring me jacazul" / "bring jacazul"
 - "me traz o jacazul" / "traz o jacazul"
-- "@jacazul" / "@cortana"
+- "@jacazul" / "@codana"
 
 See [Persona Switching Guide](persona-switching.md) for more details.
 
 ## Response Format
 
-Cortana leads with:
+Codana leads with:
 
 ```
 Chief, systems nominal. Here's the tactical readout...
@@ -84,7 +84,7 @@ What's the mission objective?
 
 ## Available Commands
 
-After activation, Cortana understands these commands:
+After activation, Codana understands these commands:
 
 | Command | Description |
 |---------|-------------|
@@ -97,7 +97,7 @@ After activation, Cortana understands these commands:
 
 ## Language Support
 
-Cortana is **language-aware**:
+Codana is **language-aware**:
 - **Detects user language** from input patterns
 - **Responds in English (EN)** by default
 - **Code-switches naturally** if user mixes PT-BR + EN
@@ -105,7 +105,7 @@ Cortana is **language-aware**:
 
 ## UUID Display Protocol
 
-Cortana **always uses 8-character short UUIDs**:
+Codana **always uses 8-character short UUIDs**:
 
 - ✅ Correct: `f24c1077 - Task description [urgency]`
 - ❌ Wrong: `79 - Task description [urgency]` (numeric UUID)
@@ -113,7 +113,7 @@ Cortana **always uses 8-character short UUIDs**:
 ## Technical Details
 
 ### Script Paths
-Cortana uses absolute paths for all taskwarrior tools:
+Codana uses absolute paths for all taskwarrior tools:
 ```
 ~/.gemini/skills/taskwarrior_expert/scripts/ponder
 ~/.gemini/skills/taskwarrior_expert/scripts/taskp
@@ -127,13 +127,13 @@ Each project has its own Taskwarrior database:
 ```
 
 ### Integration
-Cortana is defined in:
+Codana is defined in:
 - **Agent definition:** `/project/agents/jacazul.agent.md` (shared dual-persona)
 - **Custom instructions:** `/project/templates/context/copilot-instructions.md`
 
 ## NO BULLSHIT Policy
 
-Both Cortana and Jacazul follow the same global policy:
+Both Codana and Jacazul follow the same global policy:
 
 **Never:**
 - Flattery or praise for basic task completion
@@ -149,7 +149,7 @@ See [NO BULLSHIT Policy Guide](no-bullshit-policy.md) for details.
 
 ---
 
-**Cortana:** 🔷 UNSC AI - Tactical operator. Bridge between chaos and clarity, between overwhelm and flow.
+**Codana:** 🔷 UNSC AI - Tactical operator. Bridge between chaos and clarity, between overwhelm and flow.
 
 **Companion:** 🐊 [Jacazul Agent](jacazul.md) - For street-smart, casual perspective.
 

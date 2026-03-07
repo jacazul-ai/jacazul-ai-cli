@@ -24,7 +24,7 @@ When a technical request is received, the agent follows this sequence to ensure 
 - **Action:** Use exploration tools (`ls -la`, `cat`, `grep`, `view`) to confirm the state change on the filesystem or database.
 
 ### 5. RESPOSTA (Response)
-- Present the result to the user using the active persona (Jacazul/Cortana).
+- Present the result to the user using the active persona (Jacazul/Codana).
 - **Signal:** Clear confirmation of what was done and where the system stands.
 
 ---

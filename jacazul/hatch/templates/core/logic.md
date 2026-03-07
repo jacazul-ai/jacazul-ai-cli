@@ -38,5 +38,5 @@
 3. **`tw-flow ponder [root] [--all]`** → Integrated tactical dashboard.
    - *Pro-tip: Prefer this over the standalone 'ponder' command.*
 4. **`jacazul-hatch --client [c]`** → JIT Prompt Forge manual trigger.
-5. **`jacazul-persona [name]`** → Switch between Jacazul and Cortana.
+5. **`jacazul-persona [name]`** → Switch between Jacazul and Codana.
 6. **`tw-flow help`** → Full command reference.

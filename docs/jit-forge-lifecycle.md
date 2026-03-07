@@ -9,7 +9,7 @@ Every session begins with the **Hatch** process. Unlike traditional static promp
 1.  **Trigger:** Running a CLI wrapper (e.g., `jacazul-gemini`) executes the `scripts/bootstrap/hatch` script.
 2.  **Engine:** The `scripts/jacazul/hatch.py` engine is invoked.
 3.  **Templating:** The engine reads categorized fragments (`.md`) from specialized subdirectories in `scripts/jacazul/templates/` (`core/`, `front/`, `persona/`, `protocols/`) and assembles them into a unified `SKILL.md` (for Gemini) or individual agent files (for Copilot/Opencode).
-4.  **Persona Anchoring:** The engine consults `persona.json` to determine which identity (Jacazul or Cortana) should be marked as **ANCHORED**.
+4.  **Persona Anchoring:** The engine consults `persona.json` to determine which identity (Jacazul or Codana) should be marked as **ANCHORED**.
 
 ## 🚀 2. The Initialization (Wake Up)
 

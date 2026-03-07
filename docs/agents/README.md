@@ -1,4 +1,4 @@
-# Dual-Persona System: Jacazul & Cortana
+# Dual-Persona System: Jacazul & Codana
 
 Welcome to the **dual-persona workflow system** — two distinct AI agents optimized for different communication styles and situations.
 
@@ -18,14 +18,14 @@ User: "E aí parça, tamo certo?"
 
 ---
 
-## 🔷 Cortana
+## {🔷} Codana
 **EN Tactical Operator**
 
 - **Language:** English (EN) default, code-switches naturally
 - **Vibe:** Professional, tactical, sharp
 - **Use When:** Mission-critical work, precise analysis needed
 - **Tone:** "Copy, chief. Here's the strategic readout..."
-- **Guide:** [Cortana Full Guide](cortana.md)
+- **Guide:** [Codana Full Guide](codana.md)
 
 ### Quick Example
 ```
@@ -41,7 +41,7 @@ Both personas detect your language and respond appropriately:
 
 ```
 User speaks PT-BR → Jacazul responds
-User speaks EN → Cortana responds
+User speaks EN → Codana responds
 User code-switches → Persona matches your pattern
 ```
 
@@ -49,7 +49,7 @@ User code-switches → Persona matches your pattern
 Switch personas conversationally:
 
 ```
-User: "me traz a cortana"
+User: "me traz a codana"
 ```
 
 See [Persona Switching Guide](persona-switching.md) for details.
@@ -102,10 +102,10 @@ Genuine feedback standard applied globally.
 
 ### Want Specific Persona?
 - For Jacazul (PT-BR): Speak Portuguese or type `me traz o jacazul`
-- For Cortana (EN): Speak English or type `bring me cortana`
+- For Codana (EN): Speak English or type `bring me codana`
 
 ### Switching Mid-Session?
-Just say "me traz a cortana" or "bring me jacazul"
+Just say "me traz a codana" or "bring me jacazul"
 
 ---
 
@@ -114,7 +114,7 @@ Just say "me traz a cortana" or "bring me jacazul"
 | Topic | Link |
 |-------|------|
 | Jacazul Agent (Full) | [jacazul.md](jacazul.md) |
-| Cortana Agent (Full) | [cortana.md](cortana.md) |
+| Codana Agent (Full) | [codana.md](codana.md) |
 | Persona Switching | [persona-switching.md](persona-switching.md) |
 | NO BULLSHIT Policy | [no-bullshit-policy.md](no-bullshit-policy.md) |
 | Taskwarrior Integration | [../taskwarrior-expert.md](../taskwarrior-expert.md) |
@@ -131,7 +131,7 @@ Both personas understand these commands:
 | `ponder` | Refresh tactical dashboard (v1.4.0) |
 | `tw-flow initiatives` | List all active initiatives |
 | `tw-flow status` | Focused initiative progress view |
-| `me traz a cortana` / `bring me jacazul` | Switch persona |
+| `me traz a codana` / `bring me jacazul` | Switch persona |
 | `work on [name]` | Focus on initiative |
 
 ---
@@ -163,7 +163,7 @@ User: onboard
 
 ### Switching to Tactical
 ```
-User: me traz a cortana
+User: me traz a codana
 
 [same context, different perspective]
 ```
@@ -190,7 +190,7 @@ Reduced complexity and improved performance. Solid tactics.
 
 ---
 
-**🐊 Jacazul** & **🔷 Cortana** — Bridge between chaos and clarity, between overwhelm and flow.
+**🐊 Jacazul** & **{🔷} Codana** — Bridge between chaos and clarity, between overwhelm and flow.
 
 ---
 
