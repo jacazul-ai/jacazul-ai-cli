@@ -449,6 +449,7 @@ class FlowManager:
             line.split()[-1]
             for line in res.stdout.splitlines()
             if line.strip().endswith(".py")
+            and os.path.exists(line.split()[-1])
         ]
 
         if modified_py and os.environ.get("JACAZUL_TESTING") != "true":
