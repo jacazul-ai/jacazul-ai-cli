@@ -60,3 +60,4 @@ class JacazulTest(unittest.TestCase):
             check=check
         )
         return res.stdout.strip(), res.stderr.strip(), res.returncode
+import os,sys

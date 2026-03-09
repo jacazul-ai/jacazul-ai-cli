@@ -3,6 +3,7 @@ import sys
 import os
 import re
 import orjson
+import subprocess
 from typing import List, Optional, Dict, Any
 from jacazul.taskwarrior.core import TaskWrapper, FocusManager, FocusState
 
@@ -375,6 +376,53 @@ class FlowManager:
         tasks = self.tw.export([uuid])
         if not tasks:
             self.error("Task not found")
+
+        # 🐊 Python Quality Gate (Vaccinated Tool)
+        # Check for modified or untracked .py files in the current context
+        res = subprocess.run(
+            ["git", "status", "--porcelain", "-uall"],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        modified_py = [
+            line.split()[-1]
+            for line in res.stdout.splitlines()
+            if line.strip().endswith(".py")
+        ]
+
+        if modified_py:
+            self.info(
+                "Python files detected. Running Quality Gate (py-check)..."
+            )
+            pycheck_bin = os.path.join(
+                os.path.expanduser("~/.jacazul-ai"),
+                "skills/python_expert/scripts/py-check",
+            )
+            # Fallback to local path if not in home
+            if not os.path.exists(pycheck_bin):
+                pycheck_bin = os.path.join(
+                    os.path.dirname(
+                        os.path.dirname(
+                            os.path.dirname(os.path.abspath(__file__))
+                        )
+                    ),
+                    "skills/python_expert/scripts/py-check",
+                )
+
+            check_res = subprocess.run(
+                [pycheck_bin] + modified_py,
+                capture_output=False,  # Allow it to print its own beauty
+                text=True,
+                check=False,
+            )
+            if check_res.returncode != 0:
+                self.error(
+                    "Python validation failed. Task completion BLOCKED.\n"
+                    "   ACTION: Fix the PEP 8 violations reported above "
+                    "before running 'done'."
+                )
+
         if not any(
             "OUTCOME:" in a["description"]
             for a in tasks[0].get("annotations", [])

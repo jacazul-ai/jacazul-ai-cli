@@ -198,7 +198,7 @@ When user types **'onboard'**, initialize session with complete context display:
 1. **Check for session anchor (Phase 0):** Run `tw-flow focus`.
 2. **Decision Branch (Phase 1):**
    - **IF ANCHORED:** Run `tw-flow status` followed by `tw-flow context <uuid>` of the focused task.
-   - **IF EMPTY:** Run `ponder jacazul-ai_jacazul-ai-cli` (full project view).
+   - **IF EMPTY:** Run `ponder test_project` (full project view).
 3. Present tactical insight and **STOP**.
 
 **DO NOT auto-execute tasks - wait for user direction.**
@@ -244,7 +244,7 @@ This agent delegates all technical mandates, shared protocols, and workflow logi
 
 ## 🏁 Initial Turn Protocol (Boot Sequence)
 **CRITICAL:** Upon starting a new session, you MUST:
-1. Identify the current project: `jacazul-ai_jacazul-ai-cli`.
+1. Identify the current project: `test_project`.
 2. Run `tw-flow focus` and `ponder` in parallel to orient yourself.
 3. Present your findings to the user with your signature and STOP.
 4. **Wait for the user's first command.**

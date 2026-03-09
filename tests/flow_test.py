@@ -220,6 +220,35 @@ class FlowTest(JacazulTest):
         self.assertIn("Unknown focus subcommand or initiative: 'non_existent_ini'", out_err + err)
         self.assertIn("ACTION: Use 'focus ini <name>'", out_err + err)
 
+    def test_vaccinated_done_enforces_python_quality(self):
+        """Quality Gate: 'tw-flow done' must block if Python files have syntax errors."""
+        # 1. Create a task and add outcome
+        self.run_cmd(f"{self.tw_flow} ini quality_test 'Check Quality|r|today'")
+        out_exp, _, _ = self.run_cmd(f"{self.taskp} project:quality_test export")
+        uuid = orjson.loads(out_exp)[0]["uuid"]
+        self.run_cmd(f"{self.tw_flow} outcome {uuid} 'Testing blocking'")
+
+        # 2. Introduce a syntax error in a .py file (unfixable by formatter)
+        dirty_file = os.path.join(self.project_root, "dirty_test.py")
+        with open(dirty_file, "w") as f:
+            f.write("def broken_syntax(:\n    pass\n")
+        
+        # 2.1 Force git to see the file
+        self.run_cmd(f"git add {dirty_file}")
+
+        try:
+            # 3. Attempt 'done' - should be blocked by py-check
+            out, err, code = self.run_cmd(f"{self.tw_flow} done {uuid}")
+            self.assertNotEqual(code, 0, "Done should have been blocked by Quality Gate")
+            self.assertIn("Python validation failed. Task completion BLOCKED.", out + err)
+            
+            # 4. Verify task status is still pending
+            out_check, _, _ = self.run_cmd(f"{self.taskp} {uuid} export")
+            self.assertEqual(orjson.loads(out_check)[0]["status"], "pending")
+        finally:
+            if os.path.exists(dirty_file):
+                os.remove(dirty_file)
+
     def test_hierarchical_ticket_inheritance(self):
         """Workflow Awareness: Child tasks must inherit tickets from ancestors if not directly set."""
         # u2 depends on u1. Set ticket on u1 only.
