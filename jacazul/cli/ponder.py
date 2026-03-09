@@ -6,7 +6,7 @@ from datetime import datetime
 from typing import Dict, Any, Optional, List
 from jacazul.taskwarrior.core import TaskWrapper, FocusManager
 
-# 🐊 ponder (v1.5.1)
+# 🐊 ponder (v1.5.2)
 # Python port of the tactical Taskwarrior dashboard.
 
 
@@ -147,7 +147,7 @@ class Dashboard:
             self.render_task_line(t)
 
     def render_tactical_table(self, tasks: List[Dict[str, Any]]):
-        print(f"\n[TACTICAL READOUT]")
+        print("\n[TACTICAL READOUT]")
         print("| ST | UUID | MODE | INITIATIVE | DESCRIPTION | URG |")
         print("|---|---|---|---|---|---|")
         for t in tasks:
@@ -215,9 +215,14 @@ def main():
     show_all = "--all" in sys.argv
     use_table = "--table" in sys.argv
     project_root = None
+    project_id = os.environ.get("PROJECT_ID")
+
     for arg in sys.argv[1:]:
         if not arg.startswith("-"):
-            project_root = arg
+            # If the filter matches the project ID, ignore it as a filter
+            # as it is likely passed by onboarding scripts.
+            if arg != project_id:
+                project_root = arg
             break
 
     db = Dashboard(project_root, show_all, use_table=use_table)

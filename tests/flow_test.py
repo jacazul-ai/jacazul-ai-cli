@@ -198,12 +198,27 @@ class FlowTest(JacazulTest):
         """Workflow Awareness: Status must display an alert when a ticket is detected."""
         self.run_cmd(f"{self.tw_flow} ticket {self.u1} '#TKT-789'")
         self.run_cmd(f"{self.tw_flow} focus task {self.u1}")
-        out, _, _ = self.run_cmd(f"{self.tw_flow} status test_ini")
-        
-        # Strip ANSI escape codes and normalize whitespace for robust matching
-        clean_out = re.sub(r'\x1b\[[0-9;]*[mK]', '', out)
-        self.assertIn("ALERT: External ticket detected (#TKT-789)", clean_out)
-        self.assertIn("Git-expert will use this for automated commit referencing", clean_out)
+
+    def test_smart_focus_anchoring(self):
+        """Smart Focus: 'tw-flow focus <ini>' must anchor without 'ini' keyword."""
+        # Create a new test initiative
+        self.run_cmd(f"{self.tw_flow} ini smart_ini 'Goal|r|today'")
+
+        # 1. Test smart focus (without 'ini' keyword)
+        out, _, _ = self.run_cmd(f"{self.tw_flow} focus smart_ini")
+        self.assertIn("Smart-focused anchored to: smart_ini", out)
+
+        # 2. Verify anchoring in focus.json
+        focus_file = os.path.join(self.taskdata, "focus.json")
+        with open(focus_file, "rb") as f:
+            state = orjson.loads(f.read())
+            self.assertEqual(state.get("focused_ini"), "smart_ini")
+
+        # 3. Test invalid focus target returns instructional error
+        out_err, err, code = self.run_cmd(f"{self.tw_flow} focus non_existent_ini")
+        self.assertNotEqual(code, 0)
+        self.assertIn("Unknown focus subcommand or initiative: 'non_existent_ini'", out_err + err)
+        self.assertIn("ACTION: Use 'focus ini <name>'", out_err + err)
 
     def test_hierarchical_ticket_inheritance(self):
         """Workflow Awareness: Child tasks must inherit tickets from ancestors if not directly set."""

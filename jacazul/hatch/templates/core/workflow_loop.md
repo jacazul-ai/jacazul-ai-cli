@@ -35,7 +35,7 @@ tw-flow note <uuid> decision "Using library Y."
 
 ### Phase 5: Review (Verify)
 **CRITICAL:** Never close a task silently.
-1.  **Linting & Quality**: Ensure all code passes the project's quality gates (e.g., `py-check` for Python).
+1.  **Linting & Quality**: Ensure all code passes the project's quality gates.
 2.  **Summary**: Summarize the work performed.
 3.  **Demonstration**: Show the result (code, file, output, tests).
 4.  **Consent**: Ask: "Shall I close this?"

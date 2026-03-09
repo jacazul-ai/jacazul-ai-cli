@@ -31,7 +31,11 @@ fi
 
 # 2. Activate the venv
 # shellcheck source=/dev/null
-source "$VENV_DIR/bin/activate"
+
+# 2.1 Enforce Sentinel Precedence
+# Ensure the project's scripts directory is at the front of the PATH
+# so our 'python' sentinel wrapper is used instead of the raw binary.
+export PATH="$PROJECT_ROOT/scripts:$PATH"
 
 # 3. Sync dependencies if requirements.txt exists and we are in DEBUG or first run
 if [ -f "$REQUIREMENTS_FILE" ]; then

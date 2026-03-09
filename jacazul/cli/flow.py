@@ -792,6 +792,28 @@ def main():
         elif sub == "clear":
             flow.focus.save(FocusState(task_track=[], inis_of_interest=[]))
             flow.success("Focus and task track cleared.")
+        elif sub:
+            # Smart Focus: Check if 'sub' is a valid initiative name
+            tasks = flow.tw.export([f"project:{sub}", "limit:1"])
+            if tasks:
+                name = tasks[0]["project"]
+                flow.focus.update_ini(name)
+                pending = flow.tw.export(
+                    [f"project:{name}", "status:pending", "limit:1"]
+                )
+                if pending:
+                    flow.focus.push_task(pending[0]["uuid"], name)
+                    flow.success(
+                        f"Smart-focused anchored to: {name} "
+                        f"(Task: {pending[0]['uuid'][:8]})"
+                    )
+                else:
+                    flow.success(f"Smart-focused anchored to: {name}")
+            else:
+                flow.error(
+                    f"Unknown focus subcommand or initiative: '{sub}'.\n"
+                    "   ACTION: Use 'focus ini <name>' or 'focus task <uuid>'."
+                )
         else:
             print(
                 "══ Current Session Focus ══\n"

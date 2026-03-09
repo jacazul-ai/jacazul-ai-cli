@@ -1,0 +1,49 @@
+#!/bin/bash
+# 🐊 Jacazul - Python Policy Sentinel (Expert Gatekeeper)
+# This wrapper encapsulates the venv and enforces PEP 8 / Expert Skill usage.
+
+VENV_DIR="$HOME/.jacazul-ai/.venv"
+VENV_PYTHON="$VENV_DIR/bin/python3"
+
+# 1. Determine the Real Python binary to use
+if [ -x "$VENV_PYTHON" ]; then
+    REAL_PYTHON="$VENV_PYTHON"
+    # Encapsulate venv environment
+    export VIRTUAL_ENV="$VENV_DIR"
+    export PATH="$VENV_DIR/bin:$PATH"
+else
+    # Fallback to system python if venv is missing
+    REAL_PYTHON=$(which -a python3 | grep -v "scripts/python" | head -n 1)
+    [ -z "$REAL_PYTHON" ] && REAL_PYTHON="/usr/bin/python3"
+fi
+
+BYPASS=false
+CLEAN_ARGS=()
+
+for arg in "$@"; do
+    if [[ "$arg" == "--skill-activated" ]]; then
+        BYPASS=true
+    else
+        CLEAN_ARGS+=("$arg")
+    fi
+done
+
+# 2. Trigger Prompt as Ad if not bypassed
+if [[ "$BYPASS" == "false" ]]; then
+    echo "═══════════════════════════════════════════════════" >&2
+    echo "🐊 JACAZUL PYTHON POLICY ALERT" >&2
+    echo "═══════════════════════════════════════════════════" >&2
+    echo "Chief, did you edit a .py file? If so, did you run 'py-check'?" >&2
+    echo "Are you utilizing the 'python-expert' skill for this task?" >&2
+    echo "Does this change deserve a new test case? (Hint: Usually, YES)." >&2
+    echo "" >&2
+    echo "MANDATORY: All Python code MUST be PEP 8 compliant. Consult the skill." >&2
+    echo "Precision is survival. Don't ship sloppy code." >&2
+    echo "" >&2
+    echo "PROTIP: Use --skill-activated to silence this sentinel." >&2
+    echo "═══════════════════════════════════════════════════" >&2
+    echo "" >&2
+fi
+
+# 3. Execute with encapsulated environment
+exec "$REAL_PYTHON" "${CLEAN_ARGS[@]}"

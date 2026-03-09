@@ -47,7 +47,7 @@ These directives ensure that the AI ecosystem remains functional and context-awa
 - **Fallback:** Use base system primitives (standard bash redirection: `cat >`, `touch`, `echo >>`) to achieve filesystem changes. Always verify the state change manually (`ls`, `cat`) after a workaround execution.
 
 ### 3. Horizontal Skill Architecture
-- **Mandate:** Agents MUST activate required expert skills (`jacazul-engine`, `taskwarrior-expert`, `git-expert`, `python-expert`) directly and simultaneously. 
+- **Mandate:** Agents MUST activate required expert skills (`jacazul-engine`, `taskwarrior-expert`, `git-expert`) directly and simultaneously. 
 - **Goal:** Avoid cascading dependencies where one skill activates another. Independence ensures that a failure in one subsystem does not blind the entire agent.
 
 ### 4. The Keystone Pattern (Context Resolution)

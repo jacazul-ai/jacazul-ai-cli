@@ -42,8 +42,14 @@ if [ -n "$PROJECT_ID" ]; then
     fi
 
     # Taskwarrior 2.x to 3.x Migration (Taskchampion)
-    TW_VERSION=$(task --version | head -n 1 | cut -d'.' -f1)
-    if [ "$TW_VERSION" -eq 3 ]; then
+    # Use real binary to avoid our own scripts/task obfuscator
+    REAL_TASK=$(which -a task | grep -v "scripts/task" | head -n 1)
+    [ -z "$REAL_TASK" ] && REAL_TASK="/usr/bin/task"
+    
+    TW_VERSION=$("$REAL_TASK" --version | head -n 1 | cut -d'.' -f1)
+    
+    # Check if TW_VERSION is a valid integer before comparison
+    if [[ "$TW_VERSION" =~ ^[0-9]+$ ]] && [ "$TW_VERSION" -eq 3 ]; then
         # Check if legacy data exists but SQLite doesn't
         if [ -f "$TASKDATA/pending.data" ] && [ ! -f "$TASKDATA/taskchampion.sqlite3" ]; then
             echo "⚠️  Detected Taskwarrior 2.x data in version 3 environment."
@@ -55,7 +61,7 @@ if [ -n "$PROJECT_ID" ]; then
             
             # Perform import
             # rc.hooks=0 to avoid triggering hooks during import
-            task import-v2 rc.hooks=0
+            "$REAL_TASK" import-v2 rc.hooks=0
             if [ $? -eq 0 ]; then
                 echo "✅ Migration successful."
                 # Keep legacy files as backup for now, or move them?
