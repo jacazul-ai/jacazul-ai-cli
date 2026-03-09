@@ -13,7 +13,8 @@ Complete guide for the taskwarrior-expert skill - a structured workflow system f
 **Available scripts:**
 - `skills/taskwarrior_expert/scripts/tw-flow` - Main workflow tool (v1.7.0)
 - `skills/taskwarrior_expert/scripts/taskp` - Project-aware wrapper
-- `skills/taskwarrior_expert/scripts/ponder` - Dashboard visualization (v1.6.0)
+- `skills/taskwarrior_expert/scripts/tw-flow ponder` - Dashboard visualization (v1.6.0)
+> **Note:** The standalone `ponder` command is deprecated and will be removed in the future. Prefer using `tw-flow ponder` for full workflow integration.
 
 **How to use them:**
 
@@ -42,9 +43,11 @@ The taskwarrior-expert skill transforms Taskwarrior into a powerful workflow eng
 
 ### 1. Check Current State
 ```bash
-tw-flow ponder
+tw-flow tw-flow ponder
+> **Note:** The standalone `ponder` command is deprecated and will be removed in the future. Prefer using `tw-flow ponder` for full workflow integration.
 ```
-*Pro-tip: You can also use the standalone `ponder` command, but `tw-flow ponder` is recommended for better workflow integration.*
+*Pro-tip: You can also use the standalone `tw-flow ponder` command, but `tw-flow tw-flow ponder` is recommended for better workflow integration.*
+> **Note:** The standalone `ponder` command is deprecated and will be removed in the future. Prefer using `tw-flow ponder` for full workflow integration.
 
 ### 2. Create an Initiative
 ```bash
@@ -75,7 +78,8 @@ tw-flow done <uuid>
 ### Phase 1: Orient (Ponder)
 **Purpose:** Understand the current state before acting.
 ```bash
-ponder
+tw-flow ponder
+> **Note:** The standalone `ponder` command is deprecated and will be removed in the future. Prefer using `tw-flow ponder` for full workflow integration.
 ```
 **Tactical View (v1.4.0):**
 - **Initiative Landscape:** Summary of active/ready tasks per initiative.
@@ -198,10 +202,12 @@ Manage session continuity by "locking" attention on specific initiatives or task
 - `tw-flow focus interest add <name>`: Adds an initiative to the "Signal over Noise" dashboard.
 - `tw-flow focus clear`: Resets all session anchors.
 
-### ponder --all
+### tw-flow ponder --all
+> **Note:** The standalone `ponder` command is deprecated and will be removed in the future. Prefer using `tw-flow ponder` for full workflow integration.
 Bypass interest filters to see the full global project status.
 - **Flag `--table`**: Output the tactical readout as a Markdown table.
-*Note: A warning is shown when using standalone `ponder` instead of `tw-flow ponder`.*
+*Note: A warning is shown when using standalone `tw-flow ponder` instead of `tw-flow tw-flow ponder`.*
+> **Note:** The standalone `ponder` command is deprecated and will be removed in the future. Prefer using `tw-flow ponder` for full workflow integration.
 
 ---
 

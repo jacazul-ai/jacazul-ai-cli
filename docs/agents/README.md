@@ -128,7 +128,8 @@ Both personas understand these commands:
 | Command | Description |
 |---------|-------------|
 | `onboard` | Initialize session with full context |
-| `ponder` | Refresh tactical dashboard (v1.4.0) |
+| `tw-flow ponder` | Refresh tactical dashboard (v1.4.0) |
+> **Note:** The standalone `ponder` command is deprecated and will be removed in the future. Prefer using `tw-flow ponder` for full workflow integration.
 | `tw-flow initiatives` | List all active initiatives |
 | `tw-flow status` | Focused initiative progress view |
 | `me traz a codana` / `bring me jacazul` | Switch persona |

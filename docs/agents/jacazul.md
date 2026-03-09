@@ -14,7 +14,8 @@ onboard
 
 1. **Activates taskwarrior-expert skill** automatically
 2. **Displays environment context** (git user, project UUID, paths)
-3. **Shows project dashboard** via `ponder`
+3. **Shows project dashboard** via `tw-flow ponder`
+> **Note:** The standalone `ponder` command is deprecated and will be removed in the future. Prefer using `tw-flow ponder` for full workflow integration.
 4. **Presents actionable status** (pending, active, overdue tasks)
 5. **Waits for your direction** — no auto-execution
 
@@ -81,7 +82,8 @@ After onboarding, Jacazul understands these commands:
 
 | Command | Description |
 |---------|-------------|
-| `ponder` | Refresh tactical dashboard (v1.4.0) |
+| `tw-flow ponder` | Refresh tactical dashboard (v1.4.0) |
+> **Note:** The standalone `ponder` command is deprecated and will be removed in the future. Prefer using `tw-flow ponder` for full workflow integration.
 | `tw-flow initiatives` | List all active initiatives |
 | `tw-flow status` | Focused initiative progress view |
 | `trabalhar em [initiative]` | Focus on specific initiative |
@@ -108,7 +110,8 @@ Jacazul **always uses 8-character short UUIDs**:
 ### Script Paths
 Jacazul uses absolute paths for all taskwarrior tools:
 ```
-~/.gemini/skills/taskwarrior_expert/scripts/ponder
+~/.gemini/skills/taskwarrior_expert/scripts/tw-flow ponder
+> **Note:** The standalone `ponder` command is deprecated and will be removed in the future. Prefer using `tw-flow ponder` for full workflow integration.
 ~/.gemini/skills/taskwarrior_expert/scripts/taskp
 ~/.gemini/skills/taskwarrior_expert/scripts/tw-flow
 ```

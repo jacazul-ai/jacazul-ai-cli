@@ -32,7 +32,8 @@ The agent MUST understand what happened before touching the present.
 The agent determines where the user is standing.
 -   It runs `tw-flow focus` to check for an anchored initiative.
 -   **If Anchored:** It runs `tw-flow status` (The "Waze" view - tactical and focused).
--   **If NO Anchor:** It runs `ponder` (The "Map" view - global and strategic).
+-   **If NO Anchor:** It runs `tw-flow ponder` (The "Map" view - global and strategic).
+> **Note:** The standalone `ponder` command is deprecated and will be removed in the future. Prefer using `tw-flow ponder` for full workflow integration.
 
 ### Step C: The Insight & Stop
 -   The agent synthesizes the Context (Phase 0) and Status (Phase 1) into a concise tactical summary.

@@ -62,14 +62,17 @@ Automatically sets `TASKDATA` based on `PROJECT_ID` before executing commands.
 ./tw-flow execute <uuid>
 ```
 
-#### 3. **ponder** - Dashboard with TASKDATA Support
+#### 3. **tw-flow ponder** - Dashboard with TASKDATA Support
+> **Note:** The standalone `ponder` command is deprecated and will be removed in the future. Prefer using `tw-flow ponder` for full workflow integration.
 
 Automatically uses project-specific database when `PROJECT_ID` is set.
 
 **Usage:**
 ```bash
-./ponder jacazul-ai_jacazul-ai-cli           # Show project overview
-./ponder jacazul-ai_jacazul-ai-cli:feature   # Show specific plan
+./tw-flow ponder jacazul-ai_jacazul-ai-cli           # Show project overview
+> **Note:** The standalone `ponder` command is deprecated and will be removed in the future. Prefer using `tw-flow ponder` for full workflow integration.
+./tw-flow ponder jacazul-ai_jacazul-ai-cli:feature   # Show specific plan
+> **Note:** The standalone `ponder` command is deprecated and will be removed in the future. Prefer using `tw-flow ponder` for full workflow integration.
 ```
 
 ## Migration Process
@@ -167,7 +170,8 @@ Example: `/home/user/ai_cli_sandboxed/` → `PROJECT_ID=user_ai_cli_sandboxed`
 
 ### TASKDATA
 
-Set automatically by `taskp`, `tw-flow`, and `ponder` based on `PROJECT_ID`:
+Set automatically by `taskp`, `tw-flow`, and `tw-flow ponder` based on `PROJECT_ID`:
+> **Note:** The standalone `ponder` command is deprecated and will be removed in the future. Prefer using `tw-flow ponder` for full workflow integration.
 
 ```bash
 export TASKDATA="$HOME/.jacazul-ai/.task/$PROJECT_ID"
@@ -251,4 +255,5 @@ ls -la ~/.task/PROJECT_ID/taskchampion.sqlite3
 - [Taskwarrior 3.x Upgrade Guide](https://taskwarrior.org/docs/upgrade-3/)
 - [tw-flow Script](../skills/taskwarrior_expert/scripts/tw-flow)
 - [taskp Wrapper](../skills/taskwarrior_expert/scripts/taskp)
-- [ponder Dashboard](../skills/taskwarrior_expert/scripts/ponder)
+- [tw-flow ponder Dashboard](../skills/taskwarrior_expert/scripts/tw-flow ponder)
+> **Note:** The standalone `ponder` command is deprecated and will be removed in the future. Prefer using `tw-flow ponder` for full workflow integration.

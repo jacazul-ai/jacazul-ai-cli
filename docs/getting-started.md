@@ -76,7 +76,8 @@ Jacazul is built on top of **Taskwarrior**. Use the expert tools to manage your 
 ### 1. Orient (Ponder)
 See the state of your project.
 ```bash
-ponder
+tw-flow ponder
+> **Note:** The standalone `ponder` command is deprecated and will be removed in the future. Prefer using `tw-flow ponder` for full workflow integration.
 ```
 
 ### 2. Plan (tw-flow)

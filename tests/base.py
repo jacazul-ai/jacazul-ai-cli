@@ -48,16 +48,18 @@ class JacazulTest(unittest.TestCase):
         if os.path.exists(self.test_dir):
             shutil.rmtree(self.test_dir)
 
-    def run_cmd(self, cmd: str, check: bool = False) -> Tuple[str, str, int]:
+    def run_cmd(self, cmd: str, env: dict = None, check: bool = False) -> Tuple[str, str, int]:
         """Run a command within the isolated test environment."""
-        # Ensure the command uses our wrappers if they aren't absolute paths
+        run_env = self.env.copy()
+        if env:
+            run_env.update(env)
+            
         res = subprocess.run(
             cmd,
             shell=True,
-            env=self.env,
+            env=run_env,
             capture_output=True,
             text=True,
             check=check
         )
         return res.stdout.strip(), res.stderr.strip(), res.returncode
-import os,sys

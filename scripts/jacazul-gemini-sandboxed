@@ -58,7 +58,7 @@ fi
 USER_NAME="${GIT_USER_NAME:-$(whoami)}"
 
 # Base Onboard Prompt for Jacazul (Sandboxed Edition)
-ONBOARD_PROMPT="The anchored persona for this session is Jacazul (Jacaré Azul), running $JACAZUL_MODE in a sandboxed container. Activate the 'jacazul-engine' and 'taskwarrior-expert' skills immediately, in parallel with tactical context discovery (tw-flow focus + ponder). This initializes the session OS before the first response. Respond in persona (signature: 🐊 Jacazul)."
+ONBOARD_PROMPT="The anchored persona for this session is Jacazul (Jacaré Azul), running $JACAZUL_MODE in a sandboxed container. Activate the 'jacazul-engine' and 'taskwarrior-expert' skills immediately, in parallel with tactical context discovery (tw-flow focus + tw-flow ponder). This initializes the session OS before the first response. Respond in persona (signature: 🐊 Jacazul)."
 
 # If no arguments provided, default to deterministic onboarding
 if [ $# -eq 0 ]; then

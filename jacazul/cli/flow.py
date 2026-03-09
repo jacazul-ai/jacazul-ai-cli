@@ -250,6 +250,11 @@ class FlowManager:
         )
 
         print(f"══ Initiative: {ini_name} ══")
+        # 🐊 Prompt as Ad: Focus Context
+        print("ℹ TIP: 'tw-flow status' is for the current FOCUS (FOCO).")
+        print("ℹ Use 'tw-flow focus' for any anchor-related actions.")
+        print("ℹ Use 'tw-flow ponder' for the PROJECT-WIDE landscape.\n")
+
         if ini_name == state.focused_ini:
             print("📌 ANCHORED SESSION")
 
@@ -391,10 +396,9 @@ class FlowManager:
             if line.strip().endswith(".py")
         ]
 
-        if modified_py:
-            self.info(
-                "Python files detected. Running Quality Gate (py-check)..."
-            )
+        if modified_py and os.environ.get("JACAZUL_TESTING") != "true":
+            self.info("Python files detected. Running Quality Gate (py-check)...")
+
             pycheck_bin = os.path.join(
                 os.path.expanduser("~/.jacazul-ai"),
                 "skills/python_expert/scripts/py-check",

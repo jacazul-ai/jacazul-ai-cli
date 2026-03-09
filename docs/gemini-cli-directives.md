@@ -28,7 +28,8 @@ All tool executions are governed by a Policy Engine that evaluates permissions b
 ### 🛠️ Jacazul Standard Policy (`jacazul.toml`)
 To enable a seamless "Navigator" experience, the following tools should be set to `allow` in the User Tier:
 - `activate_skill`: Essential for loading project-specific expertise without interruption.
-- `run_shell_command` (Filtered): Allow all commands starting with `tw-flow ` and `ponder` to enable silent workflow management and status tracking.
+- `run_shell_command` (Filtered): Allow all commands starting with `tw-flow ` and `tw-flow ponder` to enable silent workflow management and status tracking.
+> **Note:** The standalone `ponder` command is deprecated and will be removed in the future. Prefer using `tw-flow ponder` for full workflow integration.
 
 ## ⚙️ 3. The Planning Lifecycle
 

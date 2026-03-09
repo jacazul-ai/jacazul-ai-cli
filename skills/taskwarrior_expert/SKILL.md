@@ -25,7 +25,8 @@ Each project has its own database at `~/.jacazul-ai/.task/$PROJECT_ID/`.
 Main tools automatically detect and use the correct project database:
 1. **taskp**: Project-aware wrapper.
 2. **tw-flow**: Workflow management with TASKDATA support.
-3. **ponder**: Dashboard with per-project views.
+3. **tw-flow ponder**: Dashboard with per-project views.
+   - *Note: The standalone "ponder" command is deprecated and will be removed in a future release.*
 4. **jacazul-hatch**: JIT Prompt Forge engine.
 5. **jacazul-persona**: Persona switching manager.
 
@@ -67,7 +68,8 @@ Modes define the **Agent's Behavior** for a given task. Prefix tasks with the mo
 
 ## 🛠️ Core Tools Reference
 
-- **`ponder`**: High-fidelity project dashboard.
+- **`tw-flow ponder`**: High-fidelity project dashboard.
+   - *Note: The standalone "ponder" command is deprecated and will be removed in a future release.*
 - **`tw-flow`**: Standardized task management with context propagation.
 - **`taskp`**: **CRITICAL** Project-Aware Taskwarrior Wrapper. Always use `taskp` instead of raw `task`.
 
@@ -90,6 +92,7 @@ tw-flow done <uuid>
 
 ### 3. Check Status
 ```bash
-ponder          # Horizon View (Global)
+tw-flow ponder          # Horizon View (Global)
+   - *Note: The standalone "ponder" command is deprecated and will be removed in a future release.*
 tw-flow status  # Hands-on View (Focused)
 ```

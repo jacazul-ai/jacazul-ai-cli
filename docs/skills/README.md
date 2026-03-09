@@ -12,14 +12,16 @@ Index of skills available in the AI CLI Sandboxed environment.
 Structured workflow management system with 7-phase workflow and interaction modes.
 
 **Key Features:**
-- Dashboard visualization with `ponder`
+- Dashboard visualization with `tw-flow ponder`
+> **Note:** The standalone `ponder` command is deprecated and will be removed in the future. Prefer using `tw-flow ponder` for full workflow integration.
 - Task management with `tw-flow`
 - Session continuity and handoffs
 - 18 comprehensive tests
 
 **Quick Start:**
 ```bash
-ponder
+tw-flow ponder
+> **Note:** The standalone `ponder` command is deprecated and will be removed in the future. Prefer using `tw-flow ponder` for full workflow integration.
 tw-flow initiative my-feature "EXECUTE|Build API|implementation|today"
 ```
 

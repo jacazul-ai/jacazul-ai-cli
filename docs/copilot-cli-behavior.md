@@ -36,7 +36,8 @@ The Copilot CLI environment may dynamically change available tools (e.g., `<tool
 | Term | Meaning |
 | :--- | :--- |
 | **onboard** | Gateway to the 7-phase workflow (initialized context). |
-| **ponder** | ASCII Tactical Dashboard for initiative overview. |
+| **tw-flow ponder** | ASCII Tactical Dashboard for initiative overview. |
+> **Note:** The standalone `ponder` command is deprecated and will be removed in the future. Prefer using `tw-flow ponder` for full workflow integration.
 | **taskp** | The primary **Project-Aware Wrapper** for Taskwarrior. |
 | **rtask** | **Administrative Bypass** to the real binary (Manual Use Only). |
 

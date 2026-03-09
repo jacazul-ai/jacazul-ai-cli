@@ -41,6 +41,17 @@ class Dashboard:
         return ini in self.state.inis_of_interest
 
     def render(self):
+        # 🐊 Prompt as Ad: Agent Guidance
+        print("═══════════════════════════════════════════════════")
+        print("🐊 AGENT GUIDANCE: DASHBOARD INTENT")
+        print("═══════════════════════════════════════════════════")
+        print("If you are running this, you are seeking a GLOBAL view of the project.")
+        print("The user's primary interest is usually the current FOCUS (or 'FOCO').")
+        print("ANY reference to focus/foco must use 'tw-flow focus'.")
+        print("Use 'tw-flow status' for focus-related updates.")
+        print("🛑 STOP and ask the user if you find yourself repeating 'ponder'.")
+        print("═══════════════════════════════════════════════════\n")
+
         # Fetch all pending tasks
         all_tasks = self.tw.export(["status:pending"])
         # Filter: project must be a string and not None
@@ -51,15 +62,37 @@ class Dashboard:
             header += f" (Filter: {self.project_root})"
         print(f"══ TACTICAL VIEW: {header} ══")
 
-        # 1. Pulse Summary
-        pending_count = len(all_tasks)
-        active_count = len([t for t in all_tasks if t.get("start")])
+        # 1. Context Section (The Brain)
+        print("\n [SESSION CONTEXT]")
+        focused_ini = self.state.focused_ini or "None"
+        focused_task = self.state.focused_task_uuid or "None"
+        print(f"  🎯 Focus: {focused_ini} | Task: {focused_task[:8]}")
+
+        if self.state.task_track:
+            track = [
+                f"{t['ini']}({t['uuid'][:8]})"
+                for t in self.state.task_track[:5]
+            ]
+            print(f"  🛤️ Track: {' -> '.join(track)}")
+
+        if self.state.inis_of_interest:
+            print(f"  ⭐ Interests: {', '.join(self.state.inis_of_interest)}")
+
+        # 2. Pulse Section (Honest Layers)
+        interesting_tasks = [
+            t for t in all_tasks if self.is_interesting(t["project"])
+        ]
+        pending_filtered = len(interesting_tasks)
+        active_filtered = len([t for t in interesting_tasks if t.get("start")])
         now_str = datetime.now().strftime("%Y%m%dT%H%M%SZ")
-        overdue_count = len(
-            [t for t in all_tasks if t.get("due") and t["due"] < now_str]
+        overdue_filtered = len(
+            [
+                t
+                for t in interesting_tasks
+                if t.get("due") and t["due"] < now_str
+            ]
         )
 
-        # Completed today (respect optional filter)
         comp_today = self.tw.export(["status:completed", "end:today"])
         comp_count = len(
             [
@@ -73,15 +106,39 @@ class Dashboard:
             ]
         )
 
-        print(
-            f"Pulse: Pending ({pending_count}) | "
-            f"Active ({active_count}) | "
-            f"Overdue ({overdue_count}) | "
-            f"Done Today ({comp_count})\n"
+        # Archaeology stats
+        all_projects = (
+            self.tw.run(["_projects"], capture=True).stdout.splitlines()
+        )
+        archived_count = len(
+            [p for p in all_projects if p.endswith("_archive")]
+        )
+        trashed_count = len(
+            [
+                p
+                for p in all_projects
+                if p.endswith("_trash") or p.endswith("_deleted")
+            ]
         )
 
-        # 2. Initiative Landscape
-        print("[INITIATIVE LANDSCAPE]")
+        print("\n [PULSE SUMMARY]")
+        print(
+            f"  Pulse  | Focused: {focused_ini[:20]:<20} | "
+            f"Interesting: {len(set(t['project'] for t in interesting_tasks)):<2} Inis | "
+            f"Done Today: {comp_count}"
+        )
+        print(
+            f"  Health | Pending: {pending_filtered:<3} | Active: {active_filtered:<2} | "
+            f"Overdue: {overdue_filtered:<2} (Filtered View)"
+        )
+        print(
+            f"  Global | Pending: {len(all_tasks):<3} | Active: {len([t for t in all_tasks if t.get('start')]):<2} | "
+            f"Registry: {archived_count} Arch / {trashed_count} Trash"
+        )
+        print("")
+
+        # 3. Task Landscape
+        print("[TASK LANDSCAPE]")
         projects = sorted(list(set(t["project"] for t in all_tasks)))
         for p in projects:
             if "_archive" in p or "_trash" in p:

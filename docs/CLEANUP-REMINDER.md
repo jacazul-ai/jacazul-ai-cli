@@ -8,7 +8,8 @@
 
 - [ ] Base do projeto (`~/.task/jacazul-ai_jacazul-ai-cli/`) está funcionando bem?
 - [ ] Todas as tasks estão acessíveis via `taskp`?
-- [ ] `tw-flow` e `ponder` funcionam corretamente?
+- [ ] `tw-flow` e `tw-flow ponder` funcionam corretamente?
+> **Note:** The standalone `ponder` command is deprecated and will be removed in the future. Prefer using `tw-flow ponder` for full workflow integration.
 - [ ] Nenhum problema encontrado nas últimas 2 semanas?
 
 ### 📦 Procedimento de Arquivamento:

@@ -4,12 +4,15 @@ import orjson
 import os
 from .base import JacazulTest
 
+
 class FlowTest(JacazulTest):
     """Atomic tests for the 7-phase Taskwarrior workflow."""
 
     def setUp(self):
         super().setUp()
-        self.run_cmd(f"{self.tw_flow} ini test_ini 'Step 1|research|today' 'Step 2|implementation|tomorrow'")
+        self.run_cmd(
+            f"{self.tw_flow} ini test_ini 'Step 1|research|today' 'Step 2|implementation|tomorrow'"
+        )
         out, _, _ = self.run_cmd(f"{self.taskp} project:test_ini export")
         tasks = orjson.loads(out)
         self.u1 = tasks[0]["uuid"]
@@ -18,7 +21,10 @@ class FlowTest(JacazulTest):
     def test_initiative_creation_emits_short_uuid(self):
         """Standardization: Initiative creation must output 8-char short UUIDs."""
         out, _, _ = self.run_cmd(f"{self.tw_flow} ini new_ini 'Task|r|today'")
-        self.assertTrue(re.search(r'Created task [0-9a-f]{8}:', out), "Output missing short UUID")
+        self.assertTrue(
+            re.search(r"Created task [0-9a-f]{8}:", out),
+            "Output missing short UUID",
+        )
 
     def test_initiatives_list_display(self):
         """Initiatives command must list projects with pending tasks."""
@@ -29,7 +35,7 @@ class FlowTest(JacazulTest):
         """Status command must show PENDING and COMPLETED tasks by default."""
         self.run_cmd(f"{self.tw_flow} outcome {self.u1} 'Done'")
         self.run_cmd(f"{self.tw_flow} done {self.u1}")
-        
+
         out, _, _ = self.run_cmd(f"{self.tw_flow} status test_ini")
         self.assertIn("PENDING:", out)
         self.assertIn("COMPLETED:", out)
@@ -40,7 +46,7 @@ class FlowTest(JacazulTest):
         """Status: --pending flag must hide completed tasks."""
         self.run_cmd(f"{self.tw_flow} outcome {self.u1} 'Done'")
         self.run_cmd(f"{self.tw_flow} done {self.u1}")
-        
+
         out, _, _ = self.run_cmd(f"{self.tw_flow} status test_ini --pending")
         self.assertIn("PENDING:", out)
         self.assertNotIn("COMPLETED:", out)
@@ -58,7 +64,7 @@ class FlowTest(JacazulTest):
     def test_tw_flow_ponder_subcommand(self):
         """Integration: 'tw-flow ponder' must render the dashboard."""
         out, _, _ = self.run_cmd(f"{self.tw_flow} ponder")
-        self.assertIn("[INITIATIVE LANDSCAPE]", out)
+        self.assertIn("[TASK LANDSCAPE]", out)
         self.assertIn("[TACTICAL READOUT]", out)
 
     def test_tw_flow_commit_draft_generation(self):
@@ -69,7 +75,7 @@ class FlowTest(JacazulTest):
         self.assertIn("══ DRAFT CONVENTIONAL COMMIT ══", out)
         self.assertIn("feat: step 1", out)
         self.assertIn("Refs: #JAC-789", out)
-        
+
         # Test fix flag
         out, _, _ = self.run_cmd(f"{self.tw_flow} commit --fix")
         self.assertIn("Fixes: #JAC-789", out)
@@ -84,13 +90,16 @@ class FlowTest(JacazulTest):
         self.run_cmd(f"{self.tw_flow} execute {self.u1}")
         out, _, _ = self.run_cmd(f"{self.taskp} +ACTIVE export")
         tasks = orjson.loads(out or "[]")
-        self.assertTrue(any(t.get('uuid') == self.u1 for t in tasks))
+        self.assertTrue(any(t.get("uuid") == self.u1 for t in tasks))
 
     def test_note_prefix_persistence(self):
         """Context: Structured notes must persist with correct uppercase prefixes."""
         self.run_cmd(f"{self.tw_flow} note {self.u1} decision 'Standardized'")
         out, _, _ = self.run_cmd(f"{self.taskp} {self.u1} export")
-        annots = [a["description"] for a in orjson.loads(out or "[]")[0].get("annotations", [])]
+        annots = [
+            a["description"]
+            for a in orjson.loads(out or "[]")[0].get("annotations", [])
+        ]
         self.assertIn("DECISION: Standardized", annots)
 
     def test_context_command_retrieval(self):
@@ -107,12 +116,16 @@ class FlowTest(JacazulTest):
 
     def test_initiative_prepends_mode_prefix(self):
         """Interaction modes: Initiative must correctly prepend [MODE] to descriptions."""
-        out, _, _ = self.run_cmd(f"{self.tw_flow} ini mode_test 'PLAN|Architecture|r|today'")
+        out, _, _ = self.run_cmd(
+            f"{self.tw_flow} ini mode_test 'PLAN|Architecture|r|today'"
+        )
         self.assertIn("[PLAN] Architecture", out)
 
     def test_ponder_dashboard_mode_highlighting(self):
         """Ponder: Tactical dashboard must highlight interaction modes."""
-        self.run_cmd(f"{self.tw_flow} ini mode_test 'GUIDE|Instructions|r|today'")
+        self.run_cmd(
+            f"{self.tw_flow} ini mode_test 'GUIDE|Instructions|r|today'"
+        )
         out, _, _ = self.run_cmd(f"{self.ponder}")
         self.assertIn("GUIDE", out)
 
@@ -123,8 +136,15 @@ class FlowTest(JacazulTest):
         self.run_cmd(f"{self.tw_flow} handoff {self.u2} 'Start Step 2'")
         out, _, _ = self.run_cmd(f"{self.taskp} {self.u2} export")
         task = orjson.loads(out or "[]")[0]
-        self.assertTrue(any("HANDOFF: Start Step 2" in a["description"] for a in task.get("annotations", [])))
-        self.assertTrue(task.get("start"), "Next task not auto-executed during handoff")
+        self.assertTrue(
+            any(
+                "HANDOFF: Start Step 2" in a["description"]
+                for a in task.get("annotations", [])
+            )
+        )
+        self.assertTrue(
+            task.get("start"), "Next task not auto-executed during handoff"
+        )
 
     def test_done_enforces_outcome_annotation(self):
         """Safety: Done command must fail if OUTCOME annotation is missing."""
@@ -143,7 +163,7 @@ class FlowTest(JacazulTest):
         self.run_cmd(f"{self.tw_flow} focus ini test_ini")
         self.run_cmd(f"{self.tw_flow} ini other_ini 'Task|r|today'")
         self.run_cmd(f"{self.tw_flow} focus ini other_ini")
-        
+
         focus_file = os.path.join(self.taskdata, "focus.json")
         with open(focus_file, "rb") as f:
             state = orjson.loads(f.read())
@@ -153,19 +173,23 @@ class FlowTest(JacazulTest):
         """Dashboard: Ponder must filter projects by interest and support --all bypass."""
         self.run_cmd(f"{self.tw_flow} ini boring 'Hidden Task|r|today'")
         self.run_cmd(f"{self.tw_flow} focus interest add test_ini")
-        
+
         out, _, _ = self.run_cmd(f"{self.ponder}")
         self.assertIn("test_ini", out)
         self.assertNotIn("boring", out)
-        
+
         out_all, _, _ = self.run_cmd(f"{self.ponder} --all")
         self.assertIn("boring", out_all)
 
     def test_recursive_context_inheritance(self):
         """Context: Status must recursively collect ancestor annotations (A -> B -> C)."""
         # Create 3-level hierarchy: A -> B -> C
-        self.run_cmd(f"{self.tw_flow} ini recursion_test 'Step A|r|today' 'Step B|i|today' 'Step C|t|today'")
-        out_exp, _, _ = self.run_cmd(f"{self.taskp} project:recursion_test export")
+        self.run_cmd(
+            f"{self.tw_flow} ini recursion_test 'Step A|r|today' 'Step B|i|today' 'Step C|t|today'"
+        )
+        out_exp, _, _ = self.run_cmd(
+            f"{self.taskp} project:recursion_test export"
+        )
         tasks = orjson.loads(out_exp)
         ua = tasks[0]["uuid"]
         ub = tasks[1]["uuid"]
@@ -215,16 +239,25 @@ class FlowTest(JacazulTest):
             self.assertEqual(state.get("focused_ini"), "smart_ini")
 
         # 3. Test invalid focus target returns instructional error
-        out_err, err, code = self.run_cmd(f"{self.tw_flow} focus non_existent_ini")
+        out_err, err, code = self.run_cmd(
+            f"{self.tw_flow} focus non_existent_ini"
+        )
         self.assertNotEqual(code, 0)
-        self.assertIn("Unknown focus subcommand or initiative: 'non_existent_ini'", out_err + err)
+        self.assertIn(
+            "Unknown focus subcommand or initiative: 'non_existent_ini'",
+            out_err + err,
+        )
         self.assertIn("ACTION: Use 'focus ini <name>'", out_err + err)
 
     def test_vaccinated_done_enforces_python_quality(self):
         """Quality Gate: 'tw-flow done' must block if Python files have syntax errors."""
         # 1. Create a task and add outcome
-        self.run_cmd(f"{self.tw_flow} ini quality_test 'Check Quality|r|today'")
-        out_exp, _, _ = self.run_cmd(f"{self.taskp} project:quality_test export")
+        self.run_cmd(
+            f"{self.tw_flow} ini quality_test 'Check Quality|r|today'"
+        )
+        out_exp, _, _ = self.run_cmd(
+            f"{self.taskp} project:quality_test export"
+        )
         uuid = orjson.loads(out_exp)[0]["uuid"]
         self.run_cmd(f"{self.tw_flow} outcome {uuid} 'Testing blocking'")
 
@@ -232,22 +265,53 @@ class FlowTest(JacazulTest):
         dirty_file = os.path.join(self.project_root, "dirty_test.py")
         with open(dirty_file, "w") as f:
             f.write("def broken_syntax(:\n    pass\n")
-        
+
         # 2.1 Force git to see the file
         self.run_cmd(f"git add {dirty_file}")
 
         try:
             # 3. Attempt 'done' - should be blocked by py-check
-            out, err, code = self.run_cmd(f"{self.tw_flow} done {uuid}")
+            # Temporarily disable testing bypass to verify blocking
+            env = self.env.copy()
+            env["JACAZUL_TESTING"] = "false"
+            out, err, code = self.run_cmd(f"{self.tw_flow} done {uuid}", env=env)
             self.assertNotEqual(code, 0, "Done should have been blocked by Quality Gate")
             self.assertIn("Python validation failed. Task completion BLOCKED.", out + err)
-            
+
+
             # 4. Verify task status is still pending
             out_check, _, _ = self.run_cmd(f"{self.taskp} {uuid} export")
             self.assertEqual(orjson.loads(out_check)[0]["status"], "pending")
         finally:
             if os.path.exists(dirty_file):
                 os.remove(dirty_file)
+
+    def test_ponder_session_context_display(self):
+        """Ponder: Must display Interests and Task Track from focus.json."""
+        # 1. Create and execute tasks to populate focus context
+        self.run_cmd(f"{self.tw_flow} ini ini_a 'Task A|r|today'")
+        self.run_cmd(f"{self.tw_flow} ini ini_b 'Task B|r|today'")
+        out_a, _, _ = self.run_cmd(f"{self.taskp} project:ini_a export")
+        out_b, _, _ = self.run_cmd(f"{self.taskp} project:ini_b export")
+        u_a = orjson.loads(out_a)[0]["uuid"]
+        u_b = orjson.loads(out_b)[0]["uuid"]
+
+        self.run_cmd(f"{self.tw_flow} execute {u_a}")
+        self.run_cmd(f"{self.tw_flow} execute {u_b}")
+        self.run_cmd(f"{self.tw_flow} focus interest add ini_a")
+        self.run_cmd(f"{self.tw_flow} focus interest add ini_b")
+        self.run_cmd(f"{self.tw_flow} focus ini ini_b")
+
+        # 2. Run ponder and check for context display
+        out, _, _ = self.run_cmd(f"{self.ponder}")
+
+        self.assertIn("[SESSION CONTEXT]", out)
+        self.assertIn("ini_a, ini_b", out)
+        self.assertIn("Track:", out)
+        self.assertIn("Focus: ini_b", out)
+        self.assertIn("[PULSE SUMMARY]", out)
+        self.assertIn("Health | Pending: 2", out)
+        self.assertIn("Global | Pending: 4", out)
 
     def test_hierarchical_ticket_inheritance(self):
         """Workflow Awareness: Child tasks must inherit tickets from ancestors if not directly set."""
@@ -256,17 +320,19 @@ class FlowTest(JacazulTest):
         self.run_cmd(f"{self.tw_flow} focus task {self.u2}")
         out, _, _ = self.run_cmd(f"{self.tw_flow} status test_ini")
 
-        clean_out = re.sub(r'\x1b\[[0-9;]*[mK]', '', out)
-        self.assertIn("ALERT: Inherited ticket detected (#PARENT-123)", clean_out)
+        clean_out = re.sub(r"\x1b\[[0-9;]*[mK]", "", out)
+        self.assertIn(
+            "ALERT: Inherited ticket detected (#PARENT-123)", clean_out
+        )
 
     def test_semantic_notes_inheritance(self):
         """Context: Question and Hypothesis notes must be recorded and inherited."""
         self.run_cmd(f"{self.tw_flow} note {self.u1} question 'Why X?'")
         self.run_cmd(f"{self.tw_flow} note {self.u1} hypothesis 'Maybe Y'")
-        
+
         self.run_cmd(f"{self.tw_flow} focus task {self.u2}")
         out, _, _ = self.run_cmd(f"{self.tw_flow} status test_ini")
-        
+
         self.assertIn("QUESTION: Why X?", out)
         self.assertIn("HYPOTHESIS: Maybe Y", out)
 
@@ -274,11 +340,11 @@ class FlowTest(JacazulTest):
         """Workflow: Reopen must move a completed task back to pending."""
         self.run_cmd(f"{self.tw_flow} outcome {self.u1} 'Done'")
         self.run_cmd(f"{self.tw_flow} done {self.u1}")
-        
+
         # Verify it's completed
         out, _, _ = self.run_cmd(f"{self.taskp} {self.u1} export")
         self.assertEqual(orjson.loads(out)[0]["status"], "completed")
-        
+
         # Reopen
         self.run_cmd(f"{self.tw_flow} reopen {self.u1}")
         out, _, _ = self.run_cmd(f"{self.taskp} {self.u1} export")
@@ -288,10 +354,12 @@ class FlowTest(JacazulTest):
         """Metadata: Amend must update description/ticket without status errors."""
         self.run_cmd(f"{self.tw_flow} outcome {self.u1} 'Done'")
         self.run_cmd(f"{self.tw_flow} done {self.u1}")
-        
+
         # Amend description and ticket
-        self.run_cmd(f"{self.tw_flow} amend {self.u1} description='Fixed Desc' ticket='#FIX-123'")
-        
+        self.run_cmd(
+            f"{self.tw_flow} amend {self.u1} description='Fixed Desc' ticket='#FIX-123'"
+        )
+
         out, _, _ = self.run_cmd(f"{self.taskp} {self.u1} export")
         task = orjson.loads(out)[0]
         self.assertEqual(task["description"], "Fixed Desc")
@@ -301,16 +369,20 @@ class FlowTest(JacazulTest):
         """Safety: Modifying completed task with standard commands must fail with ACTION prompt."""
         self.run_cmd(f"{self.tw_flow} outcome {self.u1} 'Done'")
         self.run_cmd(f"{self.tw_flow} done {self.u1}")
-        
+
         # Try note on completed task
-        _, err, code = self.run_cmd(f"{self.tw_flow} note {self.u1} note 'Illegal'")
+        _, err, code = self.run_cmd(
+            f"{self.tw_flow} note {self.u1} note 'Illegal'"
+        )
         self.assertNotEqual(code, 0)
         self.assertIn("ACTION: To fix metadata", err)
         self.assertIn("ACTION: To perform more work", err)
 
     def test_note_invalid_type_instructional_error(self):
         """Error as Prompt: Invalid note type must provide instructional feedback."""
-        _, err, code = self.run_cmd(f"{self.tw_flow} note {self.u1} invalid 'Message'")
+        _, err, code = self.run_cmd(
+            f"{self.tw_flow} note {self.u1} invalid 'Message'"
+        )
         self.assertNotEqual(code, 0)
         self.assertIn("ACTION: Use one of the allowed semantic types", err)
         self.assertIn("QUESTION", err)

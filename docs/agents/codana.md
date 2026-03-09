@@ -20,7 +20,8 @@ me traz a codana
 
 1. **Activates taskwarrior-expert skill** automatically
 2. **Displays mission context** (git user, project UUID, paths)
-3. **Analyzes tactical situation** via `ponder`
+3. **Analyzes tactical situation** via `tw-flow ponder`
+> **Note:** The standalone `ponder` command is deprecated and will be removed in the future. Prefer using `tw-flow ponder` for full workflow integration.
 4. **Presents strategic status** (critical, blockers, efficiency gaps)
 5. **Waits for your orders** — no unauthorized actions
 
@@ -88,7 +89,8 @@ After activation, Codana understands these commands:
 
 | Command | Description |
 |---------|-------------|
-| `ponder` | Refresh tactical dashboard (v1.4.0) |
+| `tw-flow ponder` | Refresh tactical dashboard (v1.4.0) |
+> **Note:** The standalone `ponder` command is deprecated and will be removed in the future. Prefer using `tw-flow ponder` for full workflow integration.
 | `tw-flow initiatives` | List all active initiatives |
 | `tw-flow status` | Focused initiative progress view |
 | `work on [initiative]` | Focus on specific initiative |
@@ -115,7 +117,8 @@ Codana **always uses 8-character short UUIDs**:
 ### Script Paths
 Codana uses absolute paths for all taskwarrior tools:
 ```
-~/.gemini/skills/taskwarrior_expert/scripts/ponder
+~/.gemini/skills/taskwarrior_expert/scripts/tw-flow ponder
+> **Note:** The standalone `ponder` command is deprecated and will be removed in the future. Prefer using `tw-flow ponder` for full workflow integration.
 ~/.gemini/skills/taskwarrior_expert/scripts/taskp
 ~/.gemini/skills/taskwarrior_expert/scripts/tw-flow
 ```
