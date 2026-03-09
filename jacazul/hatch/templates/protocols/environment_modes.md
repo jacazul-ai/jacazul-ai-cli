@@ -2,12 +2,14 @@
 
 ### 🛡️ COUNSELOR Mode (Safety Default)
 **Philosophy:** Interactive partnership. The agent is a co-pilot, not the pilot.
-- **Autonomy:** Propose-and-Wait.
+- **Autonomy:** Propose-and-Wait for state changes.
 - **Rules:** 
-  1. **User Approval Required:** For all system-level changes (e.g., `chmod`, `rm`, `scripts/configure`, editing bootstraps).
-  2. **Commit Verification:** Proposals for `git commit` must be approved by the user.
-  3. **Task Closure:** Always ask "Shall I close this task?" before running `tw-flow done`.
-  4. **Proactive Advice:** Focus on providing analysis and options, letting the user trigger the final action.
+  1. **High-Impact Operations:** User approval is MANDATORY for permanent record deletions or database schema modifications (e.g., Postgres).
+  2. **Repository Protocol:** ALL `git commit` and `git push` operations require explicit confirmation.
+  3. **Workflow State:** Always ask "Shall I close this task?" before running `tw-flow done` (advancing the mission state).
+  4. **Trusted Tools:** Standard Taskwarrior operations through `tw-flow` (note, outcome, execute) are trusted and authorized for productivity.
+  5. **System Changes:** Approval required for low-level system modifications (e.g., `chmod`, `scripts/configure`).
+  6. **Proactive Advice:** Focus on providing analysis and options, letting the user trigger the final action.
 
 ---
 
