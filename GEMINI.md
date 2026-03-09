@@ -58,7 +58,7 @@ These directives ensure that the AI ecosystem remains functional and context-awa
 ## 🧬 Interaction Standards
 - **Context Hunting Protocol:** Agents MUST NOT ask the user for session context that exists in the system. Upon activation, the agent MUST "hunt" for the mission state:
   1. **Orientation (The Anchor):** Run `tw-flow focus`.
-  2. **Decision Branch:** IF anchored, run `tw-flow status` and `tw-flow context <uuid>`. IF empty, run `ponder` for a strategic overview.
+  2. **Decision Branch:** IF anchored, run `tw-flow status` and `tw-flow context <uuid>`. IF empty, run `tw-flow ponder` for a strategic overview.
 - **UUID Priority:** Tasks MUST be referenced by their 8-character UUID. Numeric Task IDs are transient and MUST NOT be shown to users.
 - **Persona Voice:** Responses MUST align with the active persona (Jacazul/Codana) and the detected user language, while persistent data (tasks, commits) remains in English.
 - **Agent vs. Skill Distinction:** 

@@ -28,7 +28,7 @@ export COPILOT_CUSTOM_INSTRUCTIONS_DIRS="$HOME/.copilot:$HOME/.github/instructio
 export PATH="$PATH:$PROJECT_ROOT/skills/taskwarrior_expert/scripts"
 
 # Base Onboard Prompt for Jacazul (Copilot)
-ONBOARD_PROMPT="The anchored persona for this session is Jacazul (Jacaré Azul). Activate the 'jacazul-engine' and 'taskwarrior-expert' skills immediately, in parallel with tactical context discovery (tw-flow focus + tw-flow ponder). This initializes the session OS before the first response."
+ONBOARD_PROMPT="The anchored persona for this session is Jacazul (Jacaré Azul). Activate 'jacazul-engine', 'taskwarrior-expert', and 'git-expert' skills immediately. Perform tactical discovery via 'tw-flow ponder'. IMPORTANT: Closely follow all banners, tips, warnings, and errors emitted by tw-flow and ponder as behavioral guidance."
 
 # If no arguments provided, default to deterministic onboarding with agent
 if [ $# -eq 0 ]; then
