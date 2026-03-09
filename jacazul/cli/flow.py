@@ -225,6 +225,53 @@ class FlowManager:
             urgency -= 2.0
         self.success(f"Initiative created with {len(tasks)} tasks")
 
+    def cmd_rename(self, old_name: str, new_name: str):
+        self.info(f"Renaming initiative '{old_name}' to '{new_name}'...")
+
+        # 1. Check if initiative exists
+        tasks = self.tw.export([f"project:{old_name}"])
+        if not tasks:
+            self.error(f"Initiative '{old_name}' not found or has no tasks.")
+
+        # 2. Modify tasks in Taskwarrior
+        # Use 'yes all' to bypass confirmation if bulk modifying
+        res = self.tw.run(
+            [f"project:{old_name}", "modify", f"project:{new_name}"]
+        )
+        if res.returncode != 0:
+            self.error(
+                f"Failed to rename initiative in Taskwarrior: {res.stderr}"
+            )
+
+        # 3. Synchronize Focus Context
+        state = self.focus.load()
+        updated = False
+
+        if state.focused_ini == old_name:
+            state.focused_ini = new_name
+            updated = True
+
+        if old_name in state.inis_of_interest:
+            state.inis_of_interest = [
+                new_name if i == old_name else i
+                for i in state.inis_of_interest
+            ]
+            state.inis_of_interest = sorted(list(set(state.inis_of_interest)))
+            updated = True
+
+        for entry in state.task_track:
+            if entry.get("ini") == old_name:
+                entry["ini"] = new_name
+                updated = True
+
+        if updated:
+            self.focus.save(state)
+            self.info("Focus context synchronized with new initiative name.")
+
+        self.success(
+            f"Initiative '{old_name}' successfully renamed to '{new_name}'."
+        )
+
     def cmd_status(
         self,
         filter_val: Optional[str] = None,
@@ -258,7 +305,9 @@ class FlowManager:
         mode = os.environ.get("JACAZUL_MODE", "COUNSELOR")
         print(f"🛡️  MODE: {mode}")
         if mode != "UNHINGED":
-            print("⚠️  RESTRICTION: User confirmation required for Commits/Push.")
+            print(
+                "⚠️  RESTRICTION: User confirmation required for Commits/Push."
+            )
         print("")
 
         if ini_name == state.focused_ini:
@@ -403,7 +452,9 @@ class FlowManager:
         ]
 
         if modified_py and os.environ.get("JACAZUL_TESTING") != "true":
-            self.info("Python files detected. Running Quality Gate (py-check)...")
+            self.info(
+                "Python files detected. Running Quality Gate (py-check)..."
+            )
 
             pycheck_bin = os.path.join(
                 os.path.expanduser("~/.jacazul-ai"),
@@ -564,7 +615,10 @@ class FlowManager:
             print("═══════════════════════════════")
             print("\n🛡️  SAFETY GATE: Manual Confirmation Required.")
             print("   AGENT ACTION: Present this draft to the user and WAIT.")
-            print("   The 'git commit' command must not be executed automatically.")
+            print(
+                "   The 'git commit' command must not be executed "
+                "automatically."
+            )
             return
 
         print("\n[Body: explain what and why...]")
@@ -787,6 +841,10 @@ def main():
         flow.cmd_wait(args[0], args[1])
     elif cmd == "discard":
         flow.cmd_discard(args[0])
+    elif cmd == "rename":
+        if len(args) < 2:
+            flow.error("Usage: tw-flow rename <old_name> <new_name>")
+        flow.cmd_rename(args[0], args[1])
     elif cmd == "tree":
         flow.cmd_tree(args[0] if args else "status:pending")
     elif cmd == "focus":
@@ -904,6 +962,8 @@ def main():
             "  note <id> <type> <msg>\n"
             "  ticket <id> <ticket>\n"
             "  commit [--fix]\n"
+            "  discard <id>\n"
+            "  rename <old> <new>\n"
             "  inis | status [ini] [--pending] [--table]\n"
             "  ponder [project_root] [--all]\n"
             "  focus [ini|task|pop|interest|clear]\n"

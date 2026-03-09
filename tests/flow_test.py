@@ -286,6 +286,29 @@ class FlowTest(JacazulTest):
             if os.path.exists(dirty_file):
                 os.remove(dirty_file)
 
+    def test_initiative_rename_synchronization(self):
+        """Standardization: 'tw-flow rename' must sync Taskwarrior and Focus context."""
+        # 1. Setup an initiative, interest it, and focus it
+        self.run_cmd(f"{self.tw_flow} ini old_ini 'Task|r|today'")
+        self.run_cmd(f"{self.tw_flow} focus interest add old_ini")
+        self.run_cmd(f"{self.tw_flow} focus old_ini")
+
+        # 2. Rename it
+        self.run_cmd(f"{self.tw_flow} rename old_ini new_ini")
+
+        # 3. Verify Taskwarrior update
+        out_tasks, _, _ = self.run_cmd(f"{self.taskp} project:new_ini export")
+        self.assertEqual(len(orjson.loads(out_tasks)), 1)
+
+        # 4. Verify Focus update
+        focus_file = os.path.join(self.taskdata, "focus.json")
+        with open(focus_file, "rb") as f:
+            state = orjson.loads(f.read())
+            self.assertEqual(state.get("focused_ini"), "new_ini")
+            # Interests should also be updated
+            self.assertIn("new_ini", state.get("inis_of_interest", []))
+            self.assertNotIn("old_ini", state.get("inis_of_interest", []))
+
     def test_ponder_session_context_display(self):
         """Ponder: Must display Interests and Task Track from focus.json."""
         # 1. Create and execute tasks to populate focus context
