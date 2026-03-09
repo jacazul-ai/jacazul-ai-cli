@@ -255,6 +255,12 @@ class FlowManager:
         print("ℹ Use 'tw-flow focus' for any anchor-related actions.")
         print("ℹ Use 'tw-flow ponder' for the PROJECT-WIDE landscape.\n")
 
+        mode = os.environ.get("JACAZUL_MODE", "COUNSELOR")
+        print(f"🛡️  MODE: {mode}")
+        if mode != "UNHINGED":
+            print("⚠️  RESTRICTION: User confirmation required for Commits/Push.")
+        print("")
+
         if ini_name == state.focused_ini:
             print("📌 ANCHORED SESSION")
 
@@ -547,8 +553,20 @@ class FlowManager:
         # Clean description (remove mode and initiative name if present)
         clean_desc = re.sub(r"\[[A-Z-]+\]\s*", "", desc).lower()
 
+        mode = os.environ.get("JACAZUL_MODE", "COUNSELOR")
         print("\n══ DRAFT CONVENTIONAL COMMIT ══")
         print(f"{prefix}: {clean_desc}")
+
+        if mode != "UNHINGED":
+            if ticket:
+                ref_type = "Fixes" if is_fix else "Refs"
+                print(f"\n{ref_type}: {ticket}")
+            print("═══════════════════════════════")
+            print("\n🛡️  SAFETY GATE: Manual Confirmation Required.")
+            print("   AGENT ACTION: Present this draft to the user and WAIT.")
+            print("   The 'git commit' command must not be executed automatically.")
+            return
+
         print("\n[Body: explain what and why...]")
 
         if ticket:
