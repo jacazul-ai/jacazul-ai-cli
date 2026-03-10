@@ -640,24 +640,67 @@ class FlowManager:
         )
         self.tw.run([uuid, "info"], capture=False, verbose=verbose)
 
-    def cmd_initiatives(self):
-        self.info("Initiatives with pending tasks:")
+    def cmd_initiatives(
+        self, show_all: bool = False, show_closed: bool = False
+    ):
+        self.info("Project Initiatives Landscape:")
         print("")
-        tasks = self.tw.export(["status:pending"])
-        inis = sorted(
-            list(set(t["project"] for t in tasks if t.get("project")))
-        )
-        if not inis:
-            self.success("No active initiatives!")
-            return
+
+        # Fetch all relevant tasks
+        filter_args = [] if show_all or show_closed else ["status:pending"]
+        all_tasks = self.tw.export(filter_args)
+
+        # Group tasks by project
+        projects = {}
+        for t in all_tasks:
+            ini = t.get("project")
+            if not ini or "_archive" in ini or "_trash" in ini:
+                continue
+            if ini not in projects:
+                projects[ini] = {
+                    "pending": 0,
+                    "active": 0,
+                    "completed": 0,
+                    "blocked": 0,
+                }
+
+            if t["status"] == "pending":
+                projects[ini]["pending"] += 1
+                if t.get("start"):
+                    projects[ini]["active"] += 1
+                if t.get("tags") and "BLOCKED" in t["tags"]:
+                    projects[ini]["blocked"] += 1
+            elif t["status"] == "completed":
+                projects[ini]["completed"] += 1
+
+        # Determine which projects to show
+        inis = sorted(projects.keys())
+        displayed = 0
+
         for ini in inis:
-            p = [t for t in tasks if t.get("project") == ini]
-            a = len([t for t in p if t.get("start")])
-            b = len([t for t in p if t.get("tags") and "BLOCKED" in t["tags"]])
-            print(
-                f"● {ini}\n  "
-                f"Pending: {len(p) - a} | Active: {a} | Blocked: {b}\n"
-            )
+            p = projects[ini]
+            is_open = p["pending"] > 0
+
+            if show_all:
+                should_show = True
+            elif show_closed:
+                should_show = not is_open
+            else:
+                should_show = is_open
+
+            if should_show:
+                icon = "●" if is_open else "✓"
+                status_label = "ACTIVE" if is_open else "ZEROED"
+                print(f"{icon} {ini} [{status_label}]")
+                print(
+                    f"  Pending: {p['pending']} | Active: {p['active']} | "
+                    f"Completed: {p['completed']} | Blocked: {p['blocked']}\n"
+                )
+
+                displayed += 1
+
+        if displayed == 0:
+            self.success("No initiatives match the filter!")
 
     def cmd_ponder(self, args: List[str]):
         from jacazul.cli.ponder import Dashboard
@@ -825,7 +868,9 @@ def main():
     elif cmd == "context":
         flow.cmd_context(args[0])
     elif cmd in ["inis", "initiatives"]:
-        flow.cmd_initiatives()
+        show_all = "--all" in args
+        show_closed = "--closed" in args
+        flow.cmd_initiatives(show_all, show_closed)
     elif cmd == "active":
         flow.cmd_active()
     elif cmd == "blocked":
@@ -965,7 +1010,7 @@ def main():
             "  commit [--fix]\n"
             "  discard <id>\n"
             "  rename <old> <new>\n"
-            "  inis | status [ini] [--pending] [--table]\n"
+            "  inis [--all|--closed] | status [ini] [--pending] [--table]\n"
             "  ponder [project_root] [--all]\n"
             "  focus [ini|task|pop|interest|clear]\n"
             "  tree [ini]"

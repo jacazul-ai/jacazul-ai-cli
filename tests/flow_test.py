@@ -29,7 +29,33 @@ class FlowTest(JacazulTest):
     def test_initiatives_list_display(self):
         """Initiatives command must list projects with pending tasks."""
         out, _, _ = self.run_cmd(f"{self.tw_flow} inis")
-        self.assertIn("test_ini", out)
+        self.assertIn("test_ini [ACTIVE]", out)
+
+    def test_initiatives_filtering_all_and_closed(self):
+        """Integration: 'tw-flow inis' must support --all and --closed flags."""
+        # 1. Setup: one active ini and one completed ini
+        self.run_cmd(f"{self.tw_flow} ini ini_active 'Task 1|r|today'")
+        self.run_cmd(f"{self.tw_flow} ini ini_closed 'Task 2|r|today'")
+
+        out_exp, _, _ = self.run_cmd(f"{self.taskp} project:ini_closed export")
+        uuid = orjson.loads(out_exp)[0]["uuid"]
+        self.run_cmd(f"{self.tw_flow} outcome {uuid} 'Done'")
+        self.run_cmd(f"{self.tw_flow} done {uuid}")
+
+        # 2. Test default (only active)
+        out, _, _ = self.run_cmd(f"{self.tw_flow} inis")
+        self.assertIn("ini_active [ACTIVE]", out)
+        self.assertNotIn("ini_closed", out)
+
+        # 3. Test --closed only
+        out_closed, _, _ = self.run_cmd(f"{self.tw_flow} inis --closed")
+        self.assertIn("ini_closed [ZEROED]", out_closed)
+        self.assertNotIn("ini_active", out_closed)
+
+        # 4. Test --all
+        out_all, _, _ = self.run_cmd(f"{self.tw_flow} inis --all")
+        self.assertIn("ini_active [ACTIVE]", out_all)
+        self.assertIn("ini_closed [ZEROED]", out_all)
 
     def test_status_split_view_content(self):
         """Status command must show PENDING and COMPLETED tasks by default."""
