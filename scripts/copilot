@@ -1,12 +1,13 @@
 #!/bin/bash
 [ -n "$DEBUG" ] && set -x
 
-# Get the absolute path to the script's directory
+# Get the absolute path to the script's directory and project root
 SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
-TEMPLATES_TASKRC="$SCRIPT_DIR/../templates/.taskrc"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+TEMPLATES_TASKRC="$PROJECT_ROOT/templates/.taskrc"
 
-# Define host directories
-HOST_SANDBOX=$COPILOT_SANDBOXED_HOME/sandbox/copilot
+# Define host directories (relative to project root)
+HOST_SANDBOX="$PROJECT_ROOT/sandbox/copilot"
 HOST_SANDBOX_CONFIG_DIR="$HOST_SANDBOX/.config"
 HOST_SANDBOX_COPILOT_DIR="$HOST_SANDBOX/.copilot"
 HOST_SANDBOX_NPM_DIR="$HOST_SANDBOX/.npm"

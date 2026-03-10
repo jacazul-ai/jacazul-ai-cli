@@ -26,8 +26,8 @@ export PATH="$PATH:$PROJECT_ROOT/skills/taskwarrior_expert/scripts"
 
 # 1. JIT Hatching: Ensure the agent and engine are fresh
 [ -n "$DEBUG" ] && echo "🐊 Hatching JIT prompt for Opencode..."
-# We use the internal hatch script
-"$PROJECT_ROOT/scripts/jacazul/hatch.py" --client opencode
+# Use the jacazul-hatch binary installed in the venv
+jacazul-hatch --client opencode
 
 # Check if opencode is installed
 OPENCODE_BIN=$(which opencode 2>/dev/null || echo "/home/fpiraz/.opencode/bin/opencode")

@@ -38,8 +38,12 @@ else
     set -- --agent jacazul -i "$ONBOARD_PROMPT" "$USER_PROMPT"
 fi
 
+# Find the real copilot binary (bypass our local scripts/copilot wrapper)
+REAL_COPILOT=$(which -a copilot | grep -v "$PROJECT_ROOT/scripts/copilot" | head -n 1)
+[ -z "$REAL_COPILOT" ] && REAL_COPILOT="gh copilot" # Fallback to gh extension if standalone not found
+
 # Run GitHub Copilot CLI directly
-[ -n "$DEBUG" ] && echo "🐊 jacazul-copilot: Starting for project [$PROJECT_ID]"
+[ -n "$DEBUG" ] && echo "🐊 jacazul-copilot: Starting direct execution via [$REAL_COPILOT]"
 
 # DRY RUN: Exit before execution if DRY is set
 if [ -n "$DRY" ]; then
@@ -47,5 +51,5 @@ if [ -n "$DRY" ]; then
     exit 0
 fi
 
-# Execute copilot
-exec copilot "$@"
+# Execute real copilot
+exec $REAL_COPILOT "$@"
