@@ -11,7 +11,8 @@ class FlowTest(JacazulTest):
     def setUp(self):
         super().setUp()
         self.run_cmd(
-            f"{self.tw_flow} ini test_ini 'Step 1|research|today' 'Step 2|implementation|tomorrow'"
+            f"{self.tw_flow} ini test_ini "
+            "'Step 1|research|today' 'Step 2|implementation|tomorrow'"
         )
         out, _, _ = self.run_cmd(f"{self.taskp} project:test_ini export")
         tasks = orjson.loads(out)
@@ -298,12 +299,16 @@ class FlowTest(JacazulTest):
         try:
             # 3. Attempt 'done' - should be blocked by py-check
             # Temporarily disable testing bypass to verify blocking
-            env = self.env.copy()
-            env["JACAZUL_TESTING"] = "false"
-            out, err, code = self.run_cmd(f"{self.tw_flow} done {uuid}", env=env)
-            self.assertNotEqual(code, 0, "Done should have been blocked by Quality Gate")
-            self.assertIn("Python validation failed. Task completion BLOCKED.", out + err)
-
+            # We use env var injection directly in the command string for maximum enforcement
+            out, err, code = self.run_cmd(
+                f"JACAZUL_TESTING=false {self.tw_flow} done {uuid}"
+            )
+            self.assertNotEqual(
+                code, 0, "Done should have been blocked by Quality Gate"
+            )
+            self.assertIn(
+                "Python validation failed. Task completion BLOCKED.", out + err
+            )
 
             # 4. Verify task status is still pending
             out_check, _, _ = self.run_cmd(f"{self.taskp} {uuid} export")
