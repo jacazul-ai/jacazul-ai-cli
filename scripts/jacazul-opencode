@@ -24,12 +24,7 @@ export CONTEXT_SYSTEM_USER="$(whoami)"
 # Add workflow scripts to PATH
 export PATH="$PATH:$PROJECT_ROOT/skills/taskwarrior_expert/scripts"
 
-# 1. JIT Hatching: Ensure the agent and engine are fresh
-[ -n "$DEBUG" ] && echo "🐊 Hatching JIT prompt for Opencode..."
-# Use the jacazul-hatch binary installed in the venv
-jacazul-hatch --client opencode
-
-# Check if opencode is installed
+# 1. Verification: Opencode installation
 OPENCODE_BIN=$(which opencode 2>/dev/null || echo "/home/fpiraz/.opencode/bin/opencode")
 
 if [ ! -x "$OPENCODE_BIN" ]; then

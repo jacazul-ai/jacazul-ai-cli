@@ -116,41 +116,43 @@ export COPILOT_SANDBOXED_HOME="\$PROJECT_ROOT"
 EOF
 
 # -----------------------------------------------------------------------------
-# 3. Setup jacazul-gemini link in ~/bin
+# 3. Setup CLI links in ~/bin
 # -----------------------------------------------------------------------------
-GEMINI_LINK="$HOME/bin/jacazul-gemini"
-if [ ! -L "$GEMINI_LINK" ] && [ ! -f "$GEMINI_LINK" ]; then
-    echo "Creating symbolic link for jacazul-gemini at $GEMINI_LINK..."
-    ln -s "$PROJECT_ROOT/scripts/jacazul-gemini" "$GEMINI_LINK"
-    echo "✅ Link created: $GEMINI_LINK"
-else
-    echo "ℹ️  $GEMINI_LINK already exists. Skipping link creation."
-fi
+CLI_LINKS=(
+    "jacazul-gemini:scripts/jacazul-gemini"
+    "jacazul-opencode:scripts/jacazul-opencode"
+    "jacazul-copilot:scripts/jacazul-copilot"
+    "python:scripts/python"
+    "tw-flow:$HOME/.jacazul-ai/.venv/bin/tw-flow"
+    "taskp:$HOME/.jacazul-ai/.venv/bin/taskp"
+    "ponder:$HOME/.jacazul-ai/.venv/bin/ponder"
+    "jacazul-hatch:$HOME/.jacazul-ai/.venv/bin/jacazul-hatch"
+    "jacazul-persona:$HOME/.jacazul-ai/.venv/bin/jacazul-persona"
+    "py-check:$HOME/.jacazul-ai/.venv/bin/py-check"
+)
 
-# -----------------------------------------------------------------------------
-# 4. Setup jacazul-opencode link in ~/bin
-# -----------------------------------------------------------------------------
-OPENCODE_LINK="$HOME/bin/jacazul-opencode"
-if [ ! -L "$OPENCODE_LINK" ] && [ ! -f "$OPENCODE_LINK" ]; then
-    echo "Creating symbolic link for jacazul-opencode at $OPENCODE_LINK..."
-    ln -s "$PROJECT_ROOT/scripts/jacazul-opencode" "$OPENCODE_LINK"
-    echo "✅ Link created: $OPENCODE_LINK"
-else
-    echo "ℹ️  $OPENCODE_LINK already exists. Skipping link creation."
-fi
-
-# -----------------------------------------------------------------------------
-# 5. Setup jacazul-copilot link in ~/bin
-# -----------------------------------------------------------------------------
-COPILOT_LINK="$HOME/bin/jacazul-copilot"
-if [ ! -L "$COPILOT_LINK" ] && [ ! -f "$COPILOT_LINK" ]; then
-    echo "Creating symbolic link for jacazul-copilot at $COPILOT_LINK..."
-    ln -s "$PROJECT_ROOT/scripts/jacazul-copilot" "$COPILOT_LINK"
-    echo "✅ Link created: $COPILOT_LINK"
-else
-    echo "ℹ️  $COPILOT_LINK already exists. Skipping link creation."
-fi
+for entry in "${CLI_LINKS[@]}"; do
+    LINK_NAME="${entry%%:*}"
+    LINK_TARGET="${entry#*:}"
     
+    # Resolve relative paths against PROJECT_ROOT
+    if [[ "$LINK_TARGET" != /* ]]; then
+        LINK_TARGET="$PROJECT_ROOT/$LINK_TARGET"
+    fi
+    
+    LINK_PATH="$HOME/bin/$LINK_NAME"
+    if [ ! -L "$LINK_PATH" ] && [ ! -f "$LINK_PATH" ]; then
+        echo "Creating symbolic link for $LINK_NAME at $LINK_PATH..."
+        ln -s "$LINK_TARGET" "$LINK_PATH"
+        echo "✅ Link created: $LINK_PATH"
+    else
+        echo "ℹ️  $LINK_PATH already exists. Skipping link creation."
+    fi
+done
+
 echo ""
-echo "Setup complete! You can now run: copilot_sandboxed, jacazul-gemini, jacazul-opencode or jacazul-copilot"
+echo "Setup complete! The following tools are available in ~/bin:"
+for entry in "${CLI_LINKS[@]}"; do
+    echo "  - ${entry%%:*}"
+done
         

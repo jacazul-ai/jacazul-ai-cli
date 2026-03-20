@@ -30,11 +30,12 @@ if [ "$RECREATE_VENV" = true ]; then
 fi
 
 # 2. Activate the venv
-# shellcheck source=/dev/null
-
 # 2.1 Enforce Sentinel Precedence
 # Ensure the project's scripts directory is at the front of the PATH
 # so our 'python' sentinel wrapper is used instead of the raw binary.
+# Also ensure the venv's bin is in the PATH for entry points.
+export PATH="$PROJECT_ROOT/scripts:$VENV_DIR/bin:$PATH"
+export VIRTUAL_ENV="$VENV_DIR"
 
 # 3. Sync dependencies if requirements.txt exists and we are in DEBUG or first run
 if [ -f "$REQUIREMENTS_FILE" ]; then
