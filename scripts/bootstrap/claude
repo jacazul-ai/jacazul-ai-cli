@@ -1,0 +1,48 @@
+#!/bin/bash
+# 🐊 Jacazul - Bootstrap for Claude CLI Settings
+# Manages symlinking of project skills to ~/.claude/skills.
+
+# Localiza o diretório raiz do projeto
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+
+CLAUDE_DIR="${1:-$HOME/.claude}"
+SKILLS_DIR="$CLAUDE_DIR/skills"
+
+# 1. Garante que o diretório de skills existe
+if [ ! -d "$SKILLS_DIR" ]; then
+    if [ -n "$DEBUG" ]; then
+        echo "🐊 Creating Claude skills directory at $SKILLS_DIR..."
+    fi
+    mkdir -p "$SKILLS_DIR"
+fi
+
+# 2. Link Global Skills (Surgical)
+# Link all skill directories from the project root to ~/.claude/skills
+for skill_dir in "$PROJECT_ROOT/skills"/*; do
+    [ -d "$skill_dir" ] || continue
+    name=$(basename "$skill_dir")
+
+    target="$SKILLS_DIR/$name"
+    # Always ensure the link points to the CURRENT PROJECT_ROOT
+    if [ -L "$target" ]; then
+        current_target=$(readlink -f "$target")
+        expected_target=$(readlink -f "$skill_dir")
+        if [ "$current_target" != "$expected_target" ]; then
+            if [ -n "$DEBUG" ]; then
+                echo "⚠️  Claude skill $name points to wrong location. Re-linking..."
+            fi
+            ln -sf "$skill_dir" "$target"
+        fi
+    else
+        if [ -n "$DEBUG" ]; then
+            echo "🐊 Linking global Claude skill: $name"
+        fi
+        ln -sf "$skill_dir" "$target"
+    fi
+done
+
+# Log only in DEBUG mode
+if [ -n "$DEBUG" ]; then
+    echo "✅ Jacazul: Claude configuration verified."
+fi

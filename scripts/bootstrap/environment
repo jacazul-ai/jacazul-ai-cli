@@ -85,6 +85,10 @@ BOOTSTRAP_TW="$PROJECT_ROOT/scripts/bootstrap/taskwarrior"
 BOOTSTRAP_GEMINI="$PROJECT_ROOT/scripts/bootstrap/gemini"
 [ -f "$BOOTSTRAP_GEMINI" ] && source "$BOOTSTRAP_GEMINI" "$HOME/.gemini"
 
+# 4.5 Claude
+BOOTSTRAP_CLAUDE="$PROJECT_ROOT/scripts/bootstrap/claude"
+[ -f "$BOOTSTRAP_CLAUDE" ] && source "$BOOTSTRAP_CLAUDE" "$HOME/.claude"
+
 # 5. Finalize Initialization
 export JACAZUL_ENV_INITIALIZED=true
 

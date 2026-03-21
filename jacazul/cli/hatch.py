@@ -8,7 +8,9 @@ from jacazul.hatch.engine import hatch_prompt
 def main():
     parser = argparse.ArgumentParser(description="Jacazul Prompt Hatchery")
     parser.add_argument(
-        "--client", required=True, choices=["gemini", "copilot", "opencode"]
+        "--client",
+        required=True,
+        choices=["gemini", "copilot", "opencode", "claude"],
     )
     parser.add_argument("--persona", help="Manual persona override")
     args = parser.parse_args()

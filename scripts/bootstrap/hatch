@@ -11,6 +11,7 @@ if [ -x "$HATCH_BIN" ]; then
     "$HATCH_BIN" --client gemini
     "$HATCH_BIN" --client copilot
     "$HATCH_BIN" --client opencode
+    "$HATCH_BIN" --client claude
 else
     echo "⚠️  Hatch entry point not found at $HATCH_BIN. Falling back to direct script..."
     HATCH_ENGINE="$PROJECT_ROOT/jacazul/cli/hatch.py"
@@ -18,6 +19,7 @@ else
         "$HATCH_ENGINE" --client gemini
         "$HATCH_ENGINE" --client copilot
         "$HATCH_ENGINE" --client opencode
+        "$HATCH_ENGINE" --client claude
     else
         echo "❌ Hatch engine not found."
     fi

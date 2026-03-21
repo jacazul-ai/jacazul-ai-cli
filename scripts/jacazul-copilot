@@ -30,12 +30,28 @@ export PATH="$PATH:$PROJECT_ROOT/skills/taskwarrior_expert/scripts"
 # Base Onboard Prompt for Jacazul (Copilot)
 ONBOARD_PROMPT="The anchored persona for this session is Jacazul (Jacaré Azul). Activate 'jacazul-engine', 'taskwarrior-expert', and 'git-expert' skills immediately. Perform tactical discovery via 'tw-flow ponder'. IMPORTANT: Closely follow all banners, tips, warnings, and errors emitted by tw-flow and ponder as behavioral guidance."
 
-# If no arguments provided, default to deterministic onboarding with agent
-if [ $# -eq 0 ]; then
-    set -- --agent jacazul -i "$ONBOARD_PROMPT"
+# Parse arguments for --resume
+RESUME=false
+CLEAN_ARGS=()
+for arg in "$@"; do
+    if [[ "$arg" == "--resume" ]]; then
+        RESUME=true
+    else
+        CLEAN_ARGS+=("$arg")
+    fi
+done
+
+# If resume is true, don't use the onboard prompt
+if [ "$RESUME" = true ]; then
+    set -- "${CLEAN_ARGS[@]}"
 else
-    USER_PROMPT="$*"
-    set -- --agent jacazul -i "$ONBOARD_PROMPT" "$USER_PROMPT"
+    # If no arguments provided, default to deterministic onboarding with agent
+    if [ $# -eq 0 ]; then
+        set -- --agent jacazul -i "$ONBOARD_PROMPT"
+    else
+        USER_PROMPT="$*"
+        set -- --agent jacazul -i "$ONBOARD_PROMPT" "$USER_PROMPT"
+    fi
 fi
 
 # Find the real copilot binary (bypass our local scripts/copilot wrapper)
@@ -48,6 +64,7 @@ REAL_COPILOT=$(which -a copilot | grep -v "$PROJECT_ROOT/scripts/copilot" | head
 # DRY RUN: Exit before execution if DRY is set
 if [ -n "$DRY" ]; then
     echo "✅ Dry run complete. Copilot bootstrap verified for project [$PROJECT_ID]."
+    echo "🐊 Arguments for copilot: $@"
     exit 0
 fi
 

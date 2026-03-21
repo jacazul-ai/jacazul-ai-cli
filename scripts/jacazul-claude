@@ -1,5 +1,5 @@
 #!/bin/bash
-# jacazul-gemini: Gemini CLI unhinged (direct execution)
+# jacazul-claude: Claude CLI unhinged (direct execution)
 
 # Get the absolute path to the script's directory
 SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
@@ -21,12 +21,11 @@ export PROJECT_ID="$PROJECT_ID"
 export CONTEXT_REAL_PATH="$(pwd)"
 export CONTEXT_SYSTEM_USER="$(whoami)"
 export CONTEXT_GIT_USER="${CONTEXT_GIT_USER:-$(whoami)}"
-export GEMINI_INSTRUCTIONS_DIR="$PROJECT_ROOT/templates/context/instructions"
 
 # Add workflow scripts to PATH
 export PATH="$PATH:$PROJECT_ROOT/skills/taskwarrior_expert/scripts"
 
-# Base Onboard Prompt for Jacazul (Gemini Edition)
+# Base Onboard Prompt for Jacazul (Claude Edition)
 ONBOARD_PROMPT="The anchored persona for this session is Jacazul (Jacaré Azul), running in $JACAZUL_MODE. Language Preferences: Chat=$JACAZUL_CHAT_LANG, Data=$JACAZUL_DATA_LANG. Activate 'jacazul-engine', 'taskwarrior-expert', and 'git-expert' skills immediately. Perform tactical discovery via 'tw-flow ponder'. IMPORTANT: Closely follow all banners, tips, warnings, and errors emitted by tw-flow and ponder as behavioral guidance. Respond in persona (signature: 🐊 Jacazul)."
 
 # Parse arguments for --resume
@@ -40,32 +39,33 @@ for arg in "$@"; do
     fi
 done
 
-# If resume is true, don't use the onboard prompt
-if [ "$RESUME" = true ]; then
-    set -- "${CLEAN_ARGS[@]}"
-else
-    # If no arguments provided, default to deterministic onboarding
-    if [ $# -eq 0 ]; then
-        set -- -i "$ONBOARD_PROMPT"
-    else
-        USER_PROMPT="$*"
-        set -- -i "$ONBOARD_PROMPT" "$USER_PROMPT"
-    fi
+# Check if claude is installed
+CLAUDE_BIN="$HOME/.local/bin/claude"
+if [ ! -x "$CLAUDE_BIN" ]; then
+    CLAUDE_BIN=$(which claude 2>/dev/null)
 fi
 
-# Check if gemini is installed
-if ! command -v gemini &> /dev/null; then
-    echo "❌ gemini command not found in PATH." >&2
+if [ -z "$CLAUDE_BIN" ] || [ ! -x "$CLAUDE_BIN" ]; then
+    echo "❌ claude command not found in PATH or ~/.local/bin/." >&2
     exit 1
 fi
 
-[ -n "$DEBUG" ] && echo "🐊 jacazul-gemini: Starting for project [$PROJECT_ID]"
+[ -n "$DEBUG" ] && echo "🐊 jacazul-claude: Starting for project [$PROJECT_ID]"
 
 # DRY RUN: Exit before execution if DRY is set
 if [ -n "$DRY" ]; then
-    echo "✅ Dry run complete. Gemini bootstrap verified for project [$PROJECT_ID]."
-    echo "🐊 Arguments for gemini: $@"
+    echo "✅ Dry run complete. Claude bootstrap verified for project [$PROJECT_ID]."
+    if [ "$RESUME" = true ]; then
+        echo "🐊 Arguments for claude: ${CLEAN_ARGS[@]}"
+    else
+        echo "🐊 Arguments for claude: --append-system-prompt \"[ONBOARD_PROMPT]\" ${CLEAN_ARGS[@]}"
+    fi
     exit 0
 fi
 
-exec gemini "$@"
+# Execute claude
+if [ "$RESUME" = true ]; then
+    exec "$CLAUDE_BIN" "${CLEAN_ARGS[@]}"
+else
+    exec "$CLAUDE_BIN" --append-system-prompt "$ONBOARD_PROMPT" "${CLEAN_ARGS[@]}"
+fi

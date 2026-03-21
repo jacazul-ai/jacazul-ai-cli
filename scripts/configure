@@ -122,6 +122,7 @@ CLI_LINKS=(
     "jacazul-gemini:scripts/jacazul-gemini"
     "jacazul-opencode:scripts/jacazul-opencode"
     "jacazul-copilot:scripts/jacazul-copilot"
+    "jacazul-claude:scripts/jacazul-claude"
     "python:scripts/python"
     "tw-flow:$HOME/.jacazul-ai/.venv/bin/tw-flow"
     "taskp:$HOME/.jacazul-ai/.venv/bin/taskp"
