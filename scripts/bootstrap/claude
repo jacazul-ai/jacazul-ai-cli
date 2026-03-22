@@ -1,15 +1,44 @@
 #!/bin/bash
 # 🐊 Jacazul - Bootstrap for Claude CLI Settings
-# Manages symlinking of project skills to ~/.claude/skills.
+# Manages settings.json and symlinking of project skills to ~/.claude/skills.
 
-# Localiza o diretório raiz do projeto
+# Locate the project root directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
 CLAUDE_DIR="${1:-$HOME/.claude}"
+SETTINGS_FILE="$CLAUDE_DIR/settings.json"
+TEMPLATE_SETTINGS="$PROJECT_ROOT/templates/claude/settings.json"
 SKILLS_DIR="$CLAUDE_DIR/skills"
 
-# 1. Garante que o diretório de skills existe
+# 1. Ensure the Claude directory exists
+if [ ! -d "$CLAUDE_DIR" ]; then
+    echo "🐊 Creating Claude directory at $CLAUDE_DIR..."
+    mkdir -p "$CLAUDE_DIR"
+fi
+
+# 2. Ensure settings.json exists (use template if available)
+if [ ! -f "$SETTINGS_FILE" ]; then
+    if [ -f "$TEMPLATE_SETTINGS" ]; then
+        echo "🐊 Initializing Claude settings.json from template..."
+        cp "$TEMPLATE_SETTINGS" "$SETTINGS_FILE"
+    else
+        echo "{}" > "$SETTINGS_FILE"
+    fi
+fi
+
+# 3. Surgical update with jq
+# Preserves existing config and only ensures required fields are present
+if [ -f "$TEMPLATE_SETTINGS" ] && command -v jq &> /dev/null; then
+    TMP_FILE=$(mktemp)
+    jq -s '.[0] * .[1]' "$SETTINGS_FILE" "$TEMPLATE_SETTINGS" > "$TMP_FILE" && mv "$TMP_FILE" "$SETTINGS_FILE"
+fi
+
+if [ -n "$DEBUG" ]; then
+    echo "✅ Jacazul: Claude settings.json verified (SessionStart hook active)."
+fi
+
+# 4. Ensure the skills directory exists
 if [ ! -d "$SKILLS_DIR" ]; then
     if [ -n "$DEBUG" ]; then
         echo "🐊 Creating Claude skills directory at $SKILLS_DIR..."

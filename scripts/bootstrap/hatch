@@ -7,7 +7,7 @@ PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 HATCH_BIN="$HOME/.jacazul-ai/.venv/bin/jacazul-hatch"
 
 if [ -x "$HATCH_BIN" ]; then
-    # Hatch all clients to ensure total pântano alignment
+    # Hatch all clients to ensure total swamp alignment
     "$HATCH_BIN" --client gemini
     "$HATCH_BIN" --client copilot
     "$HATCH_BIN" --client opencode

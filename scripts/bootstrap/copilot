@@ -6,10 +6,10 @@ PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 COPILOT_GLOBAL_DIR="$HOME/.copilot"
 TEMPLATES_DIR="$PROJECT_ROOT/templates"
 
-# 1. Garante que os diretórios globais existem
+# 1. Ensure global directories exist
 for d in "agents" "skills"; do
     target="$COPILOT_GLOBAL_DIR/$d"
-    # Se for symlink para diretório, remove para criar diretório real
+    # If it's a symlink to a directory, remove it to create a real directory
     if [ -L "$target" ]; then
         if [ -n "$DEBUG" ]; then echo "🐊 Removing legacy symlink at $target"; fi
         rm "$target"

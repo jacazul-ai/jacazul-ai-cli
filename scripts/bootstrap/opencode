@@ -6,7 +6,7 @@ PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 OPENCODE_GLOBAL_DIR="$HOME/.config/opencode"
 TEMPLATES_DIR="$PROJECT_ROOT/templates"
 
-# 1. Garante que os diretórios globais existem
+# 1. Ensure global directories exist
 for d in "agents" "skills"; do
     target="$OPENCODE_GLOBAL_DIR/$d"
     if [ -L "$target" ]; then
