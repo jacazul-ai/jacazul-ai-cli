@@ -114,7 +114,10 @@ class GitHubBroker:
         return None
 
     def _run_gh(
-        self, args: list, repo: Optional[str] = None
+        self,
+        args: list,
+        repo: Optional[str] = None,
+        use_repo_flag: bool = True,
     ) -> subprocess.CompletedProcess:
         """Runs a gh command with the best resolved token injected."""
 
@@ -129,7 +132,8 @@ class GitHubBroker:
             # Try to infer from current git environment
             target_org, target_proj = self._infer_context()
             if target_org and target_proj:
-                repo = f"{target_org}/{target_proj}"
+                if use_repo_flag:
+                    repo = f"{target_org}/{target_proj}"
 
         token = self._get_token(org=target_org, project=target_proj)
 
@@ -138,7 +142,7 @@ class GitHubBroker:
             env["GH_TOKEN"] = token
 
         cmd = ["gh"] + args
-        if repo:
+        if repo and use_repo_flag:
             cmd += ["--repo", repo]
 
         return subprocess.run(cmd, capture_output=True, text=True, env=env)
@@ -235,6 +239,52 @@ class GitHubBroker:
             )
             return None
 
+    def list_labels(self, repo: Optional[str] = None):
+        """Lists available labels in the repository."""
+        result = self._run_gh(["label", "list"], repo=repo)
+        if result.returncode == 0:
+            print(result.stdout)
+        else:
+            print(
+                f"❌ Failed to list labels: {result.stderr}", file=sys.stderr
+            )
+
+    def list_milestones(self, repo: Optional[str] = None):
+        """Lists available milestones in the repository."""
+        # Infer context if not provided
+        if not repo:
+            org, proj = self._infer_context()
+            if org and proj:
+                repo = f"{org}/{proj}"
+
+        if not repo:
+            print(
+                "❌ Error: Could not infer repository context.",
+                file=sys.stderr,
+            )
+            return
+
+        # Use api with the full path. gh api doesn't support --repo flag
+        endpoint = f"repos/{repo}/milestones"
+        result = self._run_gh(
+            ["api", endpoint], repo=None, use_repo_flag=False
+        )
+        if result.returncode == 0:
+            import json
+
+            milestones = json.loads(result.stdout)
+            if not milestones:
+                print(f"ℹ️ No milestones found in {repo}.")
+                return
+            print(f"🐊 Milestones for {repo}:")
+            for ms in milestones:
+                print(f"  - [{ms['number']}] {ms['title']} ({ms['state']})")
+        else:
+            print(
+                f"❌ Failed to list milestones: {result.stderr}",
+                file=sys.stderr,
+            )
+
     def edit_issue(
         self,
         issue_id: str,
@@ -299,6 +349,10 @@ if __name__ == "__main__":
             broker.sync_issue(
                 sys.argv[2], sys.argv[3] if len(sys.argv) > 3 else None
             )
+        elif cmd == "labels":
+            broker.list_labels(sys.argv[2] if len(sys.argv) > 2 else None)
+        elif cmd == "milestones":
+            broker.list_milestones(sys.argv[2] if len(sys.argv) > 2 else None)
         elif cmd == "open":
             # Syntax: broker.py open <title> [body] [repo] [assignee]
             # [labels...]
