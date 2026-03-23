@@ -48,6 +48,10 @@ python3 jacazul/cli/broker.py sync <issue_id>
 # Open a new issue
 python3 jacazul/cli/broker.py open "Title" "Body description"
 
+# Edit an existing issue
+# Syntax: edit <id> [title] [body] [repo] [assignee] [add_labels...]
+python3 jacazul/cli/broker.py edit <issue_id> "-" "-" "-" "piraz" "enhancement"
+
 # Close an issue
 python3 jacazul/cli/broker.py close <issue_id> "Closing comment"
 ```

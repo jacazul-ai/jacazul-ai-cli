@@ -210,11 +210,18 @@ class GitHubBroker:
         title: str,
         body: Optional[str] = None,
         repo: Optional[str] = None,
+        assignee: Optional[str] = None,
+        labels: Optional[list] = None,
     ):
         """Opens a new GitHub issue."""
         args = ["issue", "create", "--title", title]
         if body:
             args += ["--body", body]
+        if assignee:
+            args += ["--assignee", assignee]
+        if labels:
+            for label in labels:
+                args += ["--label", label]
 
         result = self._run_gh(args, repo=repo)
         if result.returncode == 0:
@@ -227,6 +234,40 @@ class GitHubBroker:
                 f"❌ Failed to create issue: {result.stderr}", file=sys.stderr
             )
             return None
+
+    def edit_issue(
+        self,
+        issue_id: str,
+        title: Optional[str] = None,
+        body: Optional[str] = None,
+        repo: Optional[str] = None,
+        assignee: Optional[str] = None,
+        add_labels: Optional[list] = None,
+        remove_labels: Optional[list] = None,
+    ):
+        """Edits an existing GitHub issue."""
+        clean_id = issue_id.lstrip("#")
+        args = ["issue", "edit", clean_id]
+        if title:
+            args += ["--title", title]
+        if body:
+            args += ["--body", body]
+        if assignee:
+            args += ["--assignee", assignee]
+        if add_labels:
+            for label in add_labels:
+                args += ["--add-label", label]
+        if remove_labels:
+            for label in remove_labels:
+                args += ["--remove-label", label]
+
+        result = self._run_gh(args, repo=repo)
+        if result.returncode == 0:
+            print(f"✅ Issue #{clean_id} updated.")
+        else:
+            print(
+                f"❌ Failed to update issue: {result.stderr}", file=sys.stderr
+            )
 
     def close_issue(
         self,
@@ -259,15 +300,54 @@ if __name__ == "__main__":
                 sys.argv[2], sys.argv[3] if len(sys.argv) > 3 else None
             )
         elif cmd == "open":
-            # Syntax: broker.py open <title> [body] [repo]
+            # Syntax: broker.py open <title> [body] [repo] [assignee]
+            # [labels...]
             title = sys.argv[2]
             body = (
                 sys.argv[3]
                 if len(sys.argv) > 3 and sys.argv[3] != "-"
                 else None
             )
-            repo = sys.argv[4] if len(sys.argv) > 4 else None
-            broker.open_issue(title, body, repo)
+            repo = (
+                sys.argv[4]
+                if len(sys.argv) > 4 and sys.argv[4] != "-"
+                else None
+            )
+            assignee = (
+                sys.argv[5]
+                if len(sys.argv) > 5 and sys.argv[5] != "-"
+                else None
+            )
+            labels = sys.argv[6:] if len(sys.argv) > 6 else None
+            broker.open_issue(title, body, repo, assignee, labels)
+        elif cmd == "edit":
+            # Syntax: broker.py edit <id> [title] [body] [repo] [assignee]
+            # [add_labels...]
+            issue_id = sys.argv[2]
+            title = (
+                sys.argv[3]
+                if len(sys.argv) > 3 and sys.argv[3] != "-"
+                else None
+            )
+            body = (
+                sys.argv[4]
+                if len(sys.argv) > 4 and sys.argv[4] != "-"
+                else None
+            )
+            repo = (
+                sys.argv[5]
+                if len(sys.argv) > 5 and sys.argv[5] != "-"
+                else None
+            )
+            assignee = (
+                sys.argv[6]
+                if len(sys.argv) > 6 and sys.argv[6] != "-"
+                else None
+            )
+            add_labels = sys.argv[7:] if len(sys.argv) > 7 else None
+            broker.edit_issue(
+                issue_id, title, body, repo, assignee, add_labels
+            )
         elif cmd == "close":
             # Syntax: broker.py close <id> [repo] [comment]
             issue_id = sys.argv[2]
