@@ -34,18 +34,33 @@ The following commands are automatically installed into the environment:
 - `jacazul-hatch`: JIT Prompt Forge manual trigger.
 - `jacazul-persona`: Persona switching (Jacazul <-> Codana).
 - `py-check`: PEP 8 quality gate and auto-beautifier.
+- `jacazul-claude`: Claude CLI (Native) integration.
 
 ## 🚀 Quick Start (COUNSELOR Mode)
 
-### 1. Configure the Environment
+### 1. Pre-requisites
+Jacazul requires the following tools installed on your host:
+- **Python 3.13+**
+- **Go (Golang)** - Required for security and platform tools (IdZoid).
+- **Taskwarrior** (2.6+ or 3.x)
+- **GitHub CLI (gh)** - Required for GitHub integration.
+
+### 2. Configure the Environment
 ```bash
 make configure
 ```
-*This initializes the virtual environment and installs the Jacazul package in editable mode.*
+*This initializes the virtual environment, installs the Jacazul package, and sets up the security vault.*
 
-### 2. Run your preferred CLI
+### 3. Connect to GitHub (The Broker)
+```bash
+make github
+```
+*This verifies the GitHub CLI and blindas your Personal Access Token (PAT) in the vault.*
+
+### 4. Run your preferred CLI
 ```bash
 jacazul-gemini      # Gemini CLI (Native)
+jacazul-claude      # Claude CLI (Native)
 jacazul-opencode    # Opencode CLI (Native)
 jacazul-copilot     # Copilot CLI (Native)
 ```

@@ -76,6 +76,37 @@ else
 fi
 
 # -----------------------------------------------------------------------------
+# 0.3 Check Dependencies (Go & Cryptozoid)
+# -----------------------------------------------------------------------------
+if ! command -v go &> /dev/null; then
+    echo "❌ ERROR: 'go' is not installed. It is REQUIRED for security and platform tools."
+    echo "   Action: Please install Go (https://go.dev/doc/install) and try again."
+    exit 1
+fi
+
+CRYPTOZOID_BIN="$HOME/go/bin/cryptozoid"
+if ! command -v cryptozoid &> /dev/null && [ ! -f "$CRYPTOZOID_BIN" ]; then
+    echo "🐊 'cryptozoid' (IdZoid) not found. Installing..."
+    go install github.com/idzoid/cryptozoid/cmd/cryptozoid@latest
+fi
+
+# Ensure cryptozoid is in PATH for the rest of the script
+export PATH="$HOME/go/bin:$PATH"
+
+# -----------------------------------------------------------------------------
+# 0.4 Initialize Jacazul Vault (IdZoid Security)
+# -----------------------------------------------------------------------------
+VAULT_NAME="jacazul-vault"
+VAULT_DIR="$HOME/.jacazul-ai"
+if [ ! -f "$VAULT_DIR/${VAULT_NAME}_private.pem" ]; then
+    echo "🐊 Initializing Jacazul Vault (EC P256)..."
+    mkdir -p "$VAULT_DIR"
+    # Use the absolute path to the bin if not in PATH yet
+    "$CRYPTOZOID_BIN" ec generate -n "$VAULT_NAME" -p "$VAULT_DIR"
+    echo "✅ Vault initialized at $VAULT_DIR"
+fi
+
+# -----------------------------------------------------------------------------
 # 1. Setup Sandbox Directory (SELinux & Permissions)
 # -----------------------------------------------------------------------------
 SANDBOX_DIR="$PROJECT_ROOT/sandbox/copilot/.copilot"
@@ -129,6 +160,7 @@ CLI_LINKS=(
     "ponder:$HOME/.jacazul-ai/.venv/bin/ponder"
     "jacazul-hatch:$HOME/.jacazul-ai/.venv/bin/jacazul-hatch"
     "jacazul-persona:$HOME/.jacazul-ai/.venv/bin/jacazul-persona"
+    "jacazul-github:$HOME/.jacazul-ai/.venv/bin/jacazul-github"
     "py-check:$HOME/.jacazul-ai/.venv/bin/py-check"
 )
 

@@ -17,8 +17,8 @@ taskp = "jacazul.cli.taskp:main"
 ponder = "jacazul.cli.ponder:main"
 jacazul-hatch = "jacazul.cli.hatch:main"
 jacazul-persona = "jacazul.cli.persona:main"
+jacazul-github = "jacazul.cli.github:main"
 py-check = "jacazul.cli.pycheck:main"
-
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"

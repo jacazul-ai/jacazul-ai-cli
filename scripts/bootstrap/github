@@ -1,0 +1,43 @@
+#!/bin/bash
+# 🐊 Jacazul Bootstrap - GitHub Orientation
+# This script handles GitHub CLI check and guides the user through authentication.
+
+PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+
+echo "==================================="
+echo "GitHub CLI Orientation"
+echo "==================================="
+
+# 1. Check for gh CLI
+if ! command -v gh &> /dev/null; then
+    echo "❌ ERROR: 'gh' (GitHub CLI) is not installed."
+    echo "   Action: Please install it using your package manager."
+    echo "   Fedora: sudo dnf install gh"
+    echo "   Debian/Ubuntu: sudo apt install gh"
+    exit 1
+fi
+
+echo "✅ GitHub CLI (gh) detected."
+
+# 2. Check Authentication Status
+echo "🐊 Checking authentication status..."
+gh auth status
+
+if [ $? -eq 0 ]; then
+    echo ""
+    echo "✅ You are already logged into GitHub."
+    echo "   Jacazul can now use the Broker to manage your issues and PRs."
+else
+    echo ""
+    echo "⚠️  You are NOT logged into GitHub CLI."
+    echo "   Action: Run the following command to authenticate:"
+    echo ""
+    echo "   gh auth login"
+    echo ""
+    echo "   Pro-tip: Choose 'GitHub.com', 'HTTPS', and 'Web browser' for the easiest flow."
+fi
+
+echo ""
+echo "Need custom tokens for specific Orgs/Projects?"
+echo "Run 'jacazul-github --help' (Coming soon!)"
+echo "==================================="

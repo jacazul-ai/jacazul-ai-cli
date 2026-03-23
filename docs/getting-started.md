@@ -16,16 +16,28 @@ Jacazul AI CLI is a powerful workflow automation system that runs directly on yo
 
 The fastest way to get started is by configuring your local environment to use the Jacazul wrappers.
 
-### 1. Run Configuration
+### 1. Pre-requisites
+Ensure you have the following installed:
+- **Python 3.13+**
+- **Go (Golang)** - Required for IdZoid security tools.
+- **Taskwarrior**
+- **GitHub CLI (gh)**
 
-This will create symbolic links in `~/bin` and prepare your local environment.
+### 2. Run Configuration
+This will create symbolic links in `~/bin`, prepare your local environment, and initialize the security vault.
 
 ```bash
 make configure
 ```
 
-### 2. Update your PATH
+### 3. Setup GitHub Integration
+Blindas your GitHub token in the encrypted vault to enable automated issue and PR management.
 
+```bash
+make github
+```
+
+### 4. Update your PATH
 Ensure `~/bin` is in your shell path:
 
 ```bash
@@ -33,13 +45,15 @@ echo 'export PATH="$HOME/bin:$PATH"' >> ~/.bashrc
 source ~/.bashrc
 ```
 
-### 3. Start the Agent
-
+### 5. Start the Agent
 Now you can call the Jacazul agents from anywhere:
 
 ```bash
 # Start Jacazul for Gemini CLI
 jacazul-gemini
+
+# Start Jacazul for Claude CLI
+jacazul-claude
 
 # Start Jacazul for GitHub Copilot CLI
 jacazul-copilot

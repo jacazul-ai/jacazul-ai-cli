@@ -32,6 +32,9 @@ configure: ## Run the configuration script
 language: ## Reconfigure language (idiom) preferences
 	@./scripts/configure --language
 
+github: ## Configure GitHub integration and encrypted token
+	@./scripts/bootstrap/github
+
 sandbox: ## Build the Jacazul AI Sandbox container image
 	@printf "\n"
 	@printf "\033[1;34m=========================================\033[0m\n"
