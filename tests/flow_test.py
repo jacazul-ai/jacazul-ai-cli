@@ -22,8 +22,7 @@ class FlowTest(JacazulTest):
         self.u2 = tasks[1]["uuid"]
 
     def test_initiative_creation_emits_short_uuid(self):
-        """Standardization: Initiative creation must output 8-char UUIDs.
-        """
+        """Standardization: Initiative creation must output 8-char UUIDs."""
         out, _, _ = self.run_cmd(f"{self.tw_flow} ini new_ini 'Task|r|today'")
         self.assertTrue(
             re.search(r"Created task [0-9a-f]{8}:", out),
@@ -41,9 +40,7 @@ class FlowTest(JacazulTest):
         self.run_cmd(f"{self.tw_flow} ini ini_active 'Task 1|r|today'")
         self.run_cmd(f"{self.tw_flow} ini ini_closed 'Task 2|r|today'")
 
-        out_exp, _, _ = self.run_cmd(
-            f"{self.taskp} project:ini_closed export"
-        )
+        out_exp, _, _ = self.run_cmd(f"{self.taskp} project:ini_closed export")
         uuid = orjson.loads(out_exp)[0]["uuid"]
         self.run_cmd(f"{self.tw_flow} outcome {uuid} 'Done'")
         self.run_cmd(f"{self.tw_flow} done {uuid}")
@@ -71,20 +68,18 @@ class FlowTest(JacazulTest):
         out, _, _ = self.run_cmd(f"{self.tw_flow} status test_ini")
         self.assertIn("PENDING:", out)
         self.assertIn("COMPLETED:", out)
-        self.assertIn( "Step 1", out)
-        self.assertIn( "Step 2", out)
+        self.assertIn("Step 1", out)
+        self.assertIn("Step 2", out)
 
     def test_status_pending_flag_filters_completed(self):
         """Status: --pending flag must hide completed tasks."""
         self.run_cmd(f"{self.tw_flow} outcome {self.u1} 'Done'")
         self.run_cmd(f"{self.tw_flow} done {self.u1}")
 
-        out, _, _ = self.run_cmd(
-            f"{self.tw_flow} status test_ini --pending"
-        )
+        out, _, _ = self.run_cmd(f"{self.tw_flow} status test_ini --pending")
         self.assertIn("PENDING:", out)
         self.assertNotIn("COMPLETED:", out)
-        self.assertIn( "Step 2", out)
+        self.assertIn("Step 2", out)
 
     def test_status_shows_ticket_in_line(self):
         """Status: Task lines must include direct or inherited tickets."""
@@ -115,7 +110,7 @@ class FlowTest(JacazulTest):
     def test_next_task_readiness_logic(self):
         """Next command must correctly identify the first unblocked task."""
         out, _, _ = self.run_cmd(f"{self.tw_flow} next test_ini")
-        self.assertIn( "Step 1", out)
+        self.assertIn("Step 1", out)
 
     def test_execute_marks_task_active(self):
         """Execution logic: Task must be marked ACTIVE in the database."""
@@ -144,7 +139,7 @@ class FlowTest(JacazulTest):
         """Filters: Active filter must only show tasks in ACTIVE state."""
         self.run_cmd(f"{self.tw_flow} execute {self.u1}")
         out, _, _ = self.run_cmd(f"{self.tw_flow} active")
-        self.assertIn( "Step 1", out)
+        self.assertIn("Step 1", out)
 
     def test_initiative_prepends_mode_prefix(self):
         """Interaction modes: Initiative must correctly prepend [MODE]."""
@@ -155,9 +150,7 @@ class FlowTest(JacazulTest):
 
     def test_ponder_dashboard_mode_highlighting(self):
         """Ponder: Tactical dashboard must highlight interaction modes."""
-        self.run_cmd(
-            f"{self.tw_flow} ini mtest 'GUIDE|Docs|r|today'"
-        )
+        self.run_cmd(f"{self.tw_flow} ini mtest 'GUIDE|Docs|r|today'")
         out, _, _ = self.run_cmd(f"{self.ponder}")
         self.assertIn("GUIDE", out)
 
@@ -174,9 +167,7 @@ class FlowTest(JacazulTest):
                 for a in task.get("annotations", [])
             )
         )
-        self.assertTrue(
-            task.get("start"), "Next task not auto-executed"
-        )
+        self.assertTrue(task.get("start"), "Next task not auto-executed")
 
     def test_done_enforces_outcome_annotation(self):
         """Safety: Done command must fail if OUTCOME is missing."""
@@ -217,11 +208,12 @@ class FlowTest(JacazulTest):
         """Context: Status must recursively collect annotations."""
         # Create 3-level hierarchy: A -> B -> C
         self.run_cmd(
-            f"{self.tw_flow} ini rtest 'Step A|research|today' 'Step B|implementation|today' 'Step C|testing|today'"
+            f"{self.tw_flow} ini rtest"
+            " 'Step A|research|today'"
+            " 'Step B|implementation|today'"
+            " 'Step C|testing|today'"
         )
-        out_exp, _, _ = self.run_cmd(
-            f"{self.taskp} project:rtest export"
-        )
+        out_exp, _, _ = self.run_cmd(f"{self.taskp} project:rtest export")
         tasks = orjson.loads(out_exp)
         ua = tasks[0]["uuid"]
         ub = tasks[1]["uuid"]

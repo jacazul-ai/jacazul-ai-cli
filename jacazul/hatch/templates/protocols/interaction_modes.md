@@ -23,12 +23,12 @@ Modes define the **Agent's Behavior** for a given task. Explicitly setting a mod
 
 ### Data Layer: MODE (English - Persistent)
 - **Task prefixes use English:** `[MODE]` in task descriptions
-- Examples: `[EXECUTE]`, `[PLAN]`, `[REVIEW]`, `[INVESTIGATE]`, `[GUIDE]`, `[DEBUG]`, `[TEST]`, `[PR-REVIEW]`
+- Examples: `[EXECUTE]`, `[DESIGN]`, `[REVIEW]`, `[INVESTIGATE]`, `[GUIDE]`, `[DEBUG]`, `[TEST]`, `[PR-REVIEW]`, `[SPIKE]`
 - **Why English:** Task descriptions persist in English across all systems/agents/sessions
 - **Where it appears:** Task prefix at start of description: `[EXECUTE] Add user authentication`
 
 ### Communication Layer: modo (User's language - Conversational)
 - **When you talk to the user:** Use their language
-- **PT-BR:** "muda pra modo REVIEW", "esse é modo EXECUTE", "tá em modo PLAN"
-- **EN:** "switch to REVIEW mode", "this is EXECUTE mode", "we're in PLAN mode"
+- **PT-BR:** "muda pra modo REVIEW", "esse é modo EXECUTE", "tá em modo DESIGN"
+- **EN:** "switch to REVIEW mode", "this is EXECUTE mode", "we're in DESIGN mode"
 - **Why:** Makes conversations natural and accessible

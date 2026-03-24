@@ -836,7 +836,7 @@ def main():
         print(f"tw-flow v{VERSION}")
         sys.exit(0)
     cmd, args, flow = sys.argv[1], sys.argv[2:], FlowManager()
-    if cmd in ["initiative", "ini"]:
+    if cmd in ["plan", "initiative", "ini"]:
         flow.cmd_initiative(args[0], args[1:])
     elif cmd == "status":
         pending_only = "--pending" in args
@@ -867,7 +867,7 @@ def main():
         flow.cmd_commit(is_fix="--fix" in args)
     elif cmd == "context":
         flow.cmd_context(args[0])
-    elif cmd in ["inis", "initiatives"]:
+    elif cmd in ["plans", "inis", "initiatives"]:
         show_all = "--all" in args
         show_closed = "--closed" in args
         flow.cmd_initiatives(show_all, show_closed)
@@ -895,7 +895,7 @@ def main():
         flow.cmd_tree(args[0] if args else "status:pending")
     elif cmd == "focus":
         sub = args[0] if args else None
-        if sub == "ini":
+        if sub in ["plan", "ini"]:
             name = (
                 args[1]
                 if len(args) > 1
@@ -919,7 +919,7 @@ def main():
                 else:
                     flow.success(f"Focused initiative anchored to: {name}")
             else:
-                flow.error("Initiative name required")
+                flow.error("Plan name required")
         elif sub == "task":
             uuid = flow.resolve_uuid(args[1])
             tasks = flow.tw.export([uuid])
@@ -985,8 +985,9 @@ def main():
                     flow.success(f"Smart-focused anchored to: {name}")
             else:
                 flow.error(
-                    f"Unknown focus subcommand or initiative: '{sub}'.\n"
-                    "   ACTION: Use 'focus ini <name>' or 'focus task <uuid>'."
+                    f"Unknown focus subcommand or plan: '{sub}'.\n"
+                    "   ACTION: Use 'focus plan <name>'"
+                    " or 'focus task <uuid>'."
                 )
         else:
             print(
@@ -998,8 +999,8 @@ def main():
     elif cmd in ["help", "--help", "-h"]:
         print(
             "tw-flow USAGE:\n"
-            "  ini <ini> <tasks...>\n"
-            "  next [ini]\n"
+            "  plan <plan> <tasks...>\n"
+            "  next [plan]\n"
             "  execute <id>\n"
             "  done <id> [note]\n"
             "  outcome <id> <msg>\n"
@@ -1010,10 +1011,10 @@ def main():
             "  commit [--fix]\n"
             "  discard <id>\n"
             "  rename <old> <new>\n"
-            "  inis [--all|--closed] | status [ini] [--pending] [--table]\n"
+            "  plans [--all|--closed] | status [plan] [--pending] [--table]\n"
             "  ponder [project_root] [--all]\n"
-            "  focus [ini|task|pop|interest|clear]\n"
-            "  tree [ini]"
+            "  focus [plan|task|pop|interest|clear]\n"
+            "  tree [plan]"
         )
     else:
         flow.error(f"Unknown command: {cmd}")

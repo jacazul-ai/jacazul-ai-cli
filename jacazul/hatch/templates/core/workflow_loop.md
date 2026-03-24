@@ -11,12 +11,11 @@ Before acting, understand the state of the world. Follow the **Onboard Protocol*
 - If anchored: Run `tw-flow status`.
 - If NO anchor: Run `tw-flow ponder {{ project_id }}`.
 
-### Phase 2: Create Initiative
+### Phase 2: Create Plan
 Break down a goal into a dependency chain.
 ```bash
-tw-flow initiative feature-x 
-  "DESIGN|Design API schema|research|today" 
-  "PLAN|Break down endpoints|implementation|tomorrow" 
+tw-flow plan feature-x
+  "DESIGN|Design API schema|research|today"
   "EXECUTE|Implement logic|implementation|tomorrow"
 ```
 

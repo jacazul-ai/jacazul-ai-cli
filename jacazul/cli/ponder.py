@@ -45,11 +45,13 @@ class Dashboard:
         print("═══════════════════════════════════════════════════")
         print("🐊 AGENT GUIDANCE: DASHBOARD INTENT")
         print("═══════════════════════════════════════════════════")
-        print("If you are running this, you are seeking a GLOBAL view of the project.")
-        print("The user's primary interest is usually the current FOCUS (or 'FOCO').")
+        print("Running this? You are seeking a GLOBAL view of the project.")
+        print("Primary interest is usually the current FOCUS (or 'FOCO').")
         print("ANY reference to focus/foco must use 'tw-flow focus'.")
         print("Use 'tw-flow status' for focus-related updates.")
-        print("🛑 STOP and ask the user if you find yourself repeating 'ponder'.")
+        print(
+            "🛑 STOP and ask the user if you find yourself repeating 'ponder'."
+        )
         print("═══════════════════════════════════════════════════\n")
 
         # Fetch all pending tasks
@@ -107,9 +109,9 @@ class Dashboard:
         )
 
         # Archaeology stats
-        all_projects = (
-            self.tw.run(["_projects"], capture=True).stdout.splitlines()
-        )
+        all_projects = self.tw.run(
+            ["_projects"], capture=True
+        ).stdout.splitlines()
         archived_count = len(
             [p for p in all_projects if p.endswith("_archive")]
         )
@@ -124,15 +126,17 @@ class Dashboard:
         print("\n [PULSE SUMMARY]")
         print(
             f"  Pulse  | Focused: {focused_ini[:20]:<20} | "
-            f"Interesting: {len(set(t['project'] for t in interesting_tasks)):<2} Inis | "
+            f"Plans: {len(set(t['project'] for t in interesting_tasks)):<2} | "
             f"Done Today: {comp_count}"
         )
         print(
-            f"  Health | Pending: {pending_filtered:<3} | Active: {active_filtered:<2} | "
-            f"Overdue: {overdue_filtered:<2} (Filtered View)"
+            f"  Health | Pending: {pending_filtered:<3} | "
+            f"Active: {active_filtered:<2} | "
+            f"Overdue: {overdue_filtered:<2} (Filtered)"
         )
         print(
-            f"  Global | Pending: {len(all_tasks):<3} | Active: {len([t for t in all_tasks if t.get('start')]):<2} | "
+            f"  Global | Pending: {len(all_tasks):<3} | "
+            f"Active: {len([t for t in all_tasks if t.get('start')]):<2} | "
             f"Registry: {archived_count} Arch / {trashed_count} Trash"
         )
         print("")

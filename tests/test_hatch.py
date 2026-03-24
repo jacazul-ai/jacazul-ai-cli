@@ -4,17 +4,19 @@ import os
 import shutil
 import tempfile
 from jacazul.hatch.engine import hatch_prompt
-from jacazul.hatch.persona import PersonaManager, PersonaState
+from jacazul.hatch.persona import PersonaManager
+
 
 class TestHatchEngine(unittest.TestCase):
     def setUp(self):
         self.test_root = tempfile.mkdtemp()
-        self.script_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        self.script_dir = os.path.dirname(
+            os.path.dirname(os.path.abspath(__file__))
+        )
         # We need to mock the PROJECT_ROOT logic in hatch.py or set environment
         os.environ["PROJECT_ID"] = "test_project"
-        
-        # Link templates to test dir for Tornado loader
-        # Actually, hatch.py uses script_dir for loader, so we just check outputs
+
+        # hatch.py uses script_dir for loader, so we just check outputs
         self.manager = PersonaManager(data_dir=self.test_root)
 
     def tearDown(self):
@@ -31,6 +33,7 @@ class TestHatchEngine(unittest.TestCase):
             self.assertTrue(True)
         except Exception as e:
             self.fail(f"Hatching failed: {e}")
+
 
 if __name__ == "__main__":
     unittest.main()

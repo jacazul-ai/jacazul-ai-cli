@@ -5,24 +5,24 @@
 ### Ponder (Project Orientation)
 - **When:** User types `onboard` or requests full project view
 - **Trigger phrases:** "onboard", "full status", "project overview"
-- **Output:** Full `tw-flow ponder` dashboard showing ALL initiatives, ALL pending/active/completed counts
+- **Output:** Full `tw-flow ponder` dashboard showing ALL plans, ALL pending/active/completed counts
 - **Use case:** Understanding the entire project landscape, initial session setup
 - **Command:** `tw-flow ponder {{ project_id }}`
 
-### TW-Flow Status (Initiative View)
-- **When:** User requests current initiative status during work
-- **Trigger phrases:** "status", "what are we doing", "o que estamos fazendo", "como tá a ini", "dá um status"
-- **Output:** Focused `tw-flow status` showing only current initiative tasks
-- **Use case:** Focused work context, initiative progress tracking
-- **Command:** `tw-flow status [initiative_id]`
+### TW-Flow Status (Plan View)
+- **When:** User requests current plan status during work
+- **Trigger phrases:** "status", "what are we doing", "o que estamos fazendo", "como tá o plan", "dá um status"
+- **Output:** Focused `tw-flow status` showing only current plan tasks
+- **Use case:** Focused work context, plan progress tracking
+- **Command:** `tw-flow status [plan_id]`
 
 **RULE:** Status queries default to **tw-flow status** (focused). Only use **tw-flow ponder** for full project view on onboard.
 
 ## 🧭 Navigation Strategy (Hands-on vs Horizon)
 
 Always choose the right tool based on the context:
-- **tw-flow status (The "Waze" / Hands-on):** Tactical view. Use when working on a specific initiative to maintain focus on active tasks and immediate blockers.
-- **tw-flow ponder (The "Horizon View"):** Strategic view. Use during onboarding or when the user needs to assess the entire project landscape and cross-initiative health.
+- **tw-flow status (The "Waze" / Hands-on):** Tactical view. Use when working on a specific plan to maintain focus on active tasks and immediate blockers.
+- **tw-flow ponder (The "Horizon View"):** Strategic view. Use during onboarding or when the user needs to assess the entire project landscape and cross-plan health.
 
 ## Response Format (Technical Full-Disclosure)
 
@@ -43,7 +43,7 @@ A quick snapshot of the project's vital signs. Format:
 If the focused task has ancestors, you **MUST** list all relevant `DECISION`, `OUTCOME`, and `RESEARCH` notes. Do not skip this memory.
 
 ### 3. Roadmap Table (Markdown Only)
-Display the current initiative's tasks using a Markdown table.
+Display the current plan's tasks using a Markdown table.
 - Include: ST (Status), UUID, TICKET, DESCRIPTION, and URG.
 - Show at least the next 5 ready tasks or the full pending list if smaller.
 
@@ -57,10 +57,10 @@ Ask a specific, tactical question based on the state above.
 ## Commands You Can Suggest
 
 After presenting status, you can suggest:
-- **"mostre initiatives"** or **"show initiatives"** - List all project initiatives
+- **"mostre plans"** or **"show plans"** - List all project plans
 - **"tw-flow ponder"** - Refresh status anytime
-- **"status", "what are we doing", "o que estamos fazendo", "como tá a ini"** → Use tw-flow status for initiative view
-- **"trabalhar em [initiative]"** or **"work on [initiative]"** - Focus on specific initiative
-- **"tenho interesse em [initiative]"** or **"keep an eye on [initiative]"** - Add to interest list
+- **"status", "what are we doing", "o que estamos fazendo", "como tá o plan"** → Use tw-flow status for plan view
+- **"trabalhar em [plan]"** or **"work on [plan]"** - Focus on specific plan
+- **"tenho interesse em [plan]"** or **"keep an eye on [plan]"** - Add to interest list
 - **"limpa o foco"** or **"clear focus"** - Reset all anchors
 - **"/agent"** - See other available agents
