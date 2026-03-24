@@ -84,5 +84,16 @@ Validation is the only path to finality. No logic change should occur without a 
 - **Mandate:** Bug fixes and new features MUST start with an empirical reproduction test case (smoke test or script) that fails in the current environment.
 - **Goal:** Prove the existence of the problem and verify that the solution actually addresses the root cause.
 
+## 🧪 Platform Testing (GitHub Broker)
+
+- **Test Mandate:** All experimental, POC, or non-production GitHub Broker operations MUST target the dedicated sandbox repository: `jacazul-ai/jacazul-ai-sandbox`.
+- **Integrity:** Never create test issues, labels, or milestones in the main `jacazul-ai-cli` repository.
+
+## 🐊 GitHub Broker Protocol (The Protocol)
+
+- **Mandate:** Agents MUST NOT handle raw GitHub tokens or ask the user for credentials.
+- **Authority:** The `jacazul-broker` binary (global) or `jacazul.cli.broker` (Python) is the SOLE authority for GitHub interactions.
+- **Security:** Credential resolution is hierarchical (Project > Org > User) and handled via `cryptozoid` and `vault.json`.
+- **Sync:** Use `jacazul-broker sync #ID` to synchronize GitHub Issue states with Taskwarrior local tasks.
 ---
-**Last Updated:** 2026-03-02
+**Last Updated:** 2026-03-23

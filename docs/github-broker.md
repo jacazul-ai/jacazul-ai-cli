@@ -1,6 +1,6 @@
 # GitHub Broker & Hierarchical Vault
 
-The GitHub Broker ("The Caboco") provides a bidirectional bridge between Taskwarrior tasks and GitHub Issues/PRs, secured by IdZoid's `cryptozoid` encryption.
+The GitHub Broker ("The Protocol") provides a bidirectional bridge between Taskwarrior tasks and GitHub Issues/PRs, secured by IdZoid's `cryptozoid` encryption.
 
 ## 🔐 Hierarchical Vault (vault.json)
 
@@ -31,7 +31,7 @@ jacazul-github auth --org jacazul-ai --project jacazul-ai-cli
 jacazul-github auth --classic
 ```
 
-## 🚀 GitHub Broker (The Caboco)
+## 🚀 GitHub Broker (The Protocol)
 
 The Broker is the engine that performs the actual synchronization.
 
@@ -43,10 +43,11 @@ The Broker is the engine that performs the actual synchronization.
 ### CLI Commands (Direct Use):
 ```bash
 # Sync local tasks with GitHub status
-python3 jacazul/cli/broker.py sync <issue_id>
+jacazul-broker sync <issue_id>
 
 # Open a new issue
-python3 jacazul/cli/broker.py open "Title" "Body description"
+jacazul-broker open "Title" "Body description"
+```
 
 # Edit an existing issue
 # Syntax: edit <id> [title] [body] [repo] [assignee] [add_labels...]

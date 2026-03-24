@@ -161,6 +161,7 @@ CLI_LINKS=(
     "jacazul-hatch:$HOME/.jacazul-ai/.venv/bin/jacazul-hatch"
     "jacazul-persona:$HOME/.jacazul-ai/.venv/bin/jacazul-persona"
     "jacazul-github:$HOME/.jacazul-ai/.venv/bin/jacazul-github"
+    "jacazul-broker:$HOME/.jacazul-ai/.venv/bin/jacazul-broker"
     "py-check:$HOME/.jacazul-ai/.venv/bin/py-check"
 )
 

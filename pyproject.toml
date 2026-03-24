@@ -18,6 +18,7 @@ ponder = "jacazul.cli.ponder:main"
 jacazul-hatch = "jacazul.cli.hatch:main"
 jacazul-persona = "jacazul.cli.persona:main"
 jacazul-github = "jacazul.cli.github:main"
+jacazul-broker = "jacazul.cli.broker:main"
 py-check = "jacazul.cli.pycheck:main"
 [build-system]
 requires = ["hatchling"]

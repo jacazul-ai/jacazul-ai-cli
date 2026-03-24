@@ -45,6 +45,17 @@ if [ -f "$REQUIREMENTS_FILE" ]; then
     fi
 fi
 
+# 4. Install Jacazul local package (editable)
+# This ensures all entry points (tw-flow, jacazul-broker, etc.) are available in the venv.
+if [ -f "$PROJECT_ROOT/pyproject.toml" ]; then
+    if [ -n "$DEBUG" ]; then
+        echo "🐊 Installing Jacazul package in editable mode..."
+        uv pip install -e "$PROJECT_ROOT"
+    else
+        uv pip install -e "$PROJECT_ROOT" &>/dev/null
+    fi
+fi
+
 # Log status in DEBUG mode
 if [ -n "$DEBUG" ]; then
     echo "✅ Jacazul: Python environment ready ($VENV_DIR)."

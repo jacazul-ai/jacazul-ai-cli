@@ -8,7 +8,7 @@ import time
 from typing import Optional, Any, Tuple
 from jacazul.taskwarrior.core import TaskWrapper
 
-# 🐊 Jacazul GitHub Broker (The Caboco)
+# 🐊 Jacazul GitHub Broker (The Protocol)
 # Handles synchronization between Taskwarrior and GitHub via IdZoid security.
 
 
@@ -455,7 +455,7 @@ class GitHubBroker:
             )
 
 
-if __name__ == "__main__":
+def main():
     # Quick CLI for testing the broker directly
     broker = GitHubBroker()
     if len(sys.argv) > 1:
@@ -528,4 +528,11 @@ if __name__ == "__main__":
             comment = sys.argv[4] if len(sys.argv) > 4 else None
             broker.close_issue(issue_id, repo, comment)
     else:
-        print("Usage: broker.py <sync|close> <issue_id> [repo] [comment]")
+        print(
+            "Usage: jacazul-broker "
+            "<sync|labels|milestones|open|edit|close> ..."
+        )
+
+
+if __name__ == "__main__":
+    main()
