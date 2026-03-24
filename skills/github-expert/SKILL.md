@@ -8,10 +8,10 @@ license: MIT
 
 ## Your Responsibilities
 
-1. **Broker Integration:** Always use the `GitHubBroker` (jacazul/cli/broker.py) for all GitHub interactions.
-2. **Context Resolution:** Infer repository context (Org/Repo) from the local `git remote` before acting.
-3. **Issue Synchronization:** Use `sync_issue` to bridge Taskwarrior states with GitHub Issue states.
-4. **Credential Safety:** Never handle raw tokens. Trust the Broker to resolve credentials via `cryptozoid` and `vault.json`.
+1. **Broker Integration:** Always use the global `jacazul-broker` binary or the `GitHubBroker` Python class for all GitHub interactions.
+2. **The Protocol:** Follow "The Protocol" for secure GitHub access. Agents MUST NOT handle raw tokens.
+3. **Context Resolution:** Infer repository context (Org/Repo) from the local `git remote` before acting.
+4. **Issue Synchronization:** Use `sync_issue` to bridge Taskwarrior states with GitHub Issue states.
 
 ## Commands You Can Suggest
 

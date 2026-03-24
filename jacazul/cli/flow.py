@@ -6,6 +6,7 @@ import orjson
 import subprocess
 from typing import List, Optional, Dict, Any
 from jacazul.taskwarrior.core import TaskWrapper, FocusManager, FocusState
+from jacazul.cli.broker import GitHubBroker
 
 # 🐊 tw-flow (v1.6.0)
 # Python port of the Taskwarrior Flow manager.
@@ -17,6 +18,7 @@ class FlowManager:
     def __init__(self):
         self.tw = TaskWrapper()
         self.focus = FocusManager()
+        self.broker = GitHubBroker()
 
     def error(self, msg: str):
         print(f"ERROR: {msg}", file=sys.stderr)
@@ -160,12 +162,12 @@ class FlowManager:
             if header_shown:
                 print("")
 
-    def cmd_initiative(self, name: str, tasks: List[str]):
+    def cmd_plan(self, name: str, tasks: List[str]):
         if not name:
-            self.error("Initiative name required")
+            self.error("Plan name required")
         if not tasks:
             self.error("At least one task required")
-        self.info(f"Creating initiative: {name}")
+        self.info(f"Creating plan: {name}")
         urgency, prev_uuid = 9.0, None
         for spec in tasks:
             parts = spec.split("|")
@@ -173,7 +175,7 @@ class FlowManager:
             if len(parts) >= 1:
                 if parts[0] in [
                     "DESIGN",
-                    "PLAN",
+                    "SPIKE",
                     "INVESTIGATE",
                     "GUIDE",
                     "EXECUTE",
@@ -223,15 +225,15 @@ class FlowManager:
                     f"Failed to create task: {final_desc}\n{res.stderr}"
                 )
             urgency -= 2.0
-        self.success(f"Initiative created with {len(tasks)} tasks")
+        self.success(f"Plan created with {len(tasks)} tasks")
 
     def cmd_rename(self, old_name: str, new_name: str):
-        self.info(f"Renaming initiative '{old_name}' to '{new_name}'...")
+        self.info(f"Renaming plan '{old_name}' to '{new_name}'...")
 
-        # 1. Check if initiative exists
+        # 1. Check if plan exists
         tasks = self.tw.export([f"project:{old_name}"])
         if not tasks:
-            self.error(f"Initiative '{old_name}' not found or has no tasks.")
+            self.error(f"Plan '{old_name}' not found or has no tasks.")
 
         # 2. Modify tasks in Taskwarrior
         # Use 'yes all' to bypass confirmation if bulk modifying
@@ -239,37 +241,40 @@ class FlowManager:
             [f"project:{old_name}", "modify", f"project:{new_name}"]
         )
         if res.returncode != 0:
-            self.error(
-                f"Failed to rename initiative in Taskwarrior: {res.stderr}"
-            )
+            self.error(f"Failed to rename plan in Taskwarrior: {res.stderr}")
 
         # 3. Synchronize Focus Context
         state = self.focus.load()
         updated = False
 
-        if state.focused_ini == old_name:
-            state.focused_ini = new_name
+        if state.focused_plan == old_name:
+            state.focused_plan = new_name
             updated = True
 
-        if old_name in state.inis_of_interest:
-            state.inis_of_interest = [
+        if old_name in state.plans_of_interest:
+            state.plans_of_interest = [
                 new_name if i == old_name else i
-                for i in state.inis_of_interest
+                for i in state.plans_of_interest
             ]
-            state.inis_of_interest = sorted(list(set(state.inis_of_interest)))
+            state.plans_of_interest = sorted(
+                list(set(state.plans_of_interest))
+            )
             updated = True
 
         for entry in state.task_track:
-            if entry.get("ini") == old_name:
-                entry["ini"] = new_name
+            if entry.get("plan") == old_name:
+                entry["plan"] = new_name
+                updated = True
+            elif entry.get("ini") == old_name:
+                entry["plan"] = new_name
                 updated = True
 
         if updated:
             self.focus.save(state)
-            self.info("Focus context synchronized with new initiative name.")
+            self.info("Focus context synchronized with new plan name.")
 
         self.success(
-            f"Initiative '{old_name}' successfully renamed to '{new_name}'."
+            f"Plan '{old_name}' successfully renamed to '{new_name}'."
         )
 
     def cmd_status(
@@ -279,13 +284,13 @@ class FlowManager:
         use_table: bool = False,
     ):
         state = self.focus.load()
-        ini_name = filter_val or state.focused_ini
-        if not ini_name:
+        plan_name = filter_val or state.focused_plan
+        if not plan_name:
             active = self.tw.export(["+ACTIVE"])
-            ini_name = active[0].get("project") if active else "ALL ACTIVE"
+            plan_name = active[0].get("project") if active else "ALL ACTIVE"
 
         filter_args = (
-            [f"project:{ini_name}"] if ini_name != "ALL ACTIVE" else []
+            [f"project:{plan_name}"] if plan_name != "ALL ACTIVE" else []
         )
         if pending_only:
             filter_args.append("status:pending")
@@ -296,7 +301,7 @@ class FlowManager:
             key=lambda x: (0 if x["status"] == "pending" else 1, x["entry"])
         )
 
-        print(f"══ Initiative: {ini_name} ══")
+        print(f"══ Plan: {plan_name} ══")
         # 🐊 Prompt as Ad: Focus Context
         print("ℹ TIP: 'tw-flow status' is for the current FOCUS (FOCO).")
         print("ℹ Use 'tw-flow focus' for any anchor-related actions.")
@@ -310,7 +315,7 @@ class FlowManager:
             )
         print("")
 
-        if ini_name == state.focused_ini:
+        if plan_name == state.focused_plan:
             print("📌 ANCHORED SESSION")
 
         if state.focused_task_uuid:
@@ -500,6 +505,14 @@ class FlowManager:
         res = self.tw.run([uuid, "done"])
         if res.returncode == 0:
             self.success(f"Task {uuid[:8]} completed!")
+
+            # GitHub Protocol Sync
+            ticket = self.find_ticket(uuid)
+            if ticket and ticket.startswith("#"):
+                print("")
+                self.info(f"The Protocol: Synchronizing ticket {ticket}...")
+                self.broker.sync_issue(ticket)
+
             # Check if any tasks were unblocked
             print("")
             self.info("Checking for newly unblocked tasks...")
@@ -567,6 +580,15 @@ class FlowManager:
     def cmd_ticket(self, input_id: str, ticket: str):
         uuid = self.resolve_uuid(input_id)
         self.verify_not_completed(uuid)
+
+        # Validate ticket if it looks like a GitHub issue
+        if ticket.startswith("#"):
+            self.info(f"The Protocol: Validating ticket {ticket}...")
+            # We use sync_issue here because it provides a good summary
+            # and checks existence. If it fails, we still allow the link
+            # but warn the user.
+            self.broker.sync_issue(ticket)
+
         self.tw.run([uuid, "modify", f"externalid:{ticket}"])
         self.success(f"Task {uuid[:8]} linked to ticket: {ticket}")
 
@@ -593,7 +615,7 @@ class FlowManager:
 
         # Determine prefix from interaction mode
         prefix = "feat"
-        if "[DESIGN]" in desc or "[PLAN]" in desc:
+        if "[DESIGN]" in desc or "[SPIKE]" in desc:
             prefix = "docs"
         elif "[DEBUG]" in desc or "[BUG]" in desc:
             prefix = "fix"
@@ -640,10 +662,8 @@ class FlowManager:
         )
         self.tw.run([uuid, "info"], capture=False, verbose=verbose)
 
-    def cmd_initiatives(
-        self, show_all: bool = False, show_closed: bool = False
-    ):
-        self.info("Project Initiatives Landscape:")
+    def cmd_plans(self, show_all: bool = False, show_closed: bool = False):
+        self.info("Project Plans Landscape:")
         print("")
 
         # Fetch all relevant tasks
@@ -653,11 +673,11 @@ class FlowManager:
         # Group tasks by project
         projects = {}
         for t in all_tasks:
-            ini = t.get("project")
-            if not ini or "_archive" in ini or "_trash" in ini:
+            plan = t.get("project")
+            if not plan or "_archive" in plan or "_trash" in plan:
                 continue
-            if ini not in projects:
-                projects[ini] = {
+            if plan not in projects:
+                projects[plan] = {
                     "pending": 0,
                     "active": 0,
                     "completed": 0,
@@ -665,20 +685,20 @@ class FlowManager:
                 }
 
             if t["status"] == "pending":
-                projects[ini]["pending"] += 1
+                projects[plan]["pending"] += 1
                 if t.get("start"):
-                    projects[ini]["active"] += 1
+                    projects[plan]["active"] += 1
                 if t.get("tags") and "BLOCKED" in t["tags"]:
-                    projects[ini]["blocked"] += 1
+                    projects[plan]["blocked"] += 1
             elif t["status"] == "completed":
-                projects[ini]["completed"] += 1
+                projects[plan]["completed"] += 1
 
         # Determine which projects to show
-        inis = sorted(projects.keys())
+        plans = sorted(projects.keys())
         displayed = 0
 
-        for ini in inis:
-            p = projects[ini]
+        for plan in plans:
+            p = projects[plan]
             is_open = p["pending"] > 0
 
             if show_all:
@@ -691,7 +711,7 @@ class FlowManager:
             if should_show:
                 icon = "●" if is_open else "✓"
                 status_label = "ACTIVE" if is_open else "ZEROED"
-                print(f"{icon} {ini} [{status_label}]")
+                print(f"{icon} {plan} [{status_label}]")
                 print(
                     f"  Pending: {p['pending']} | Active: {p['active']} | "
                     f"Completed: {p['completed']} | Blocked: {p['blocked']}\n"
@@ -700,7 +720,7 @@ class FlowManager:
                 displayed += 1
 
         if displayed == 0:
-            self.success("No initiatives match the filter!")
+            self.success("No plans match the filter!")
 
     def cmd_ponder(self, args: List[str]):
         from jacazul.cli.ponder import Dashboard
@@ -778,12 +798,12 @@ class FlowManager:
         self.success(f"Task {uuid[:8]} moved to archive and marked done.")
 
     def cmd_tree(self, filter_val: str = "status:pending"):
-        ini = (
+        plan = (
             filter_val
             if "project:" in filter_val or "status:" in filter_val
             else f"project:{filter_val}"
         )
-        print(f"══ Initiative: {filter_val} ══")
+        print(f"══ Plan: {filter_val} ══")
 
         def render(uuid, indent="", last=True):
             tasks = self.tw.export([uuid])
@@ -824,7 +844,7 @@ class FlowManager:
 
         roots = [
             t["uuid"]
-            for t in self.tw.export([ini])
+            for t in self.tw.export([plan])
             if not t.get("depends") and "_archive" not in t.get("project", "")
         ]
         for uuid in roots:
@@ -837,7 +857,7 @@ def main():
         sys.exit(0)
     cmd, args, flow = sys.argv[1], sys.argv[2:], FlowManager()
     if cmd in ["plan", "initiative", "ini"]:
-        flow.cmd_initiative(args[0], args[1:])
+        flow.cmd_plan(args[0], args[1:])
     elif cmd == "status":
         pending_only = "--pending" in args
         use_table = "--table" in args
@@ -870,7 +890,7 @@ def main():
     elif cmd in ["plans", "inis", "initiatives"]:
         show_all = "--all" in args
         show_closed = "--closed" in args
-        flow.cmd_initiatives(show_all, show_closed)
+        flow.cmd_plans(show_all, show_closed)
     elif cmd == "active":
         flow.cmd_active()
     elif cmd == "blocked":
@@ -906,18 +926,18 @@ def main():
                 )
             )
             if name:
-                flow.focus.update_ini(name)
+                flow.focus.update_plan(name)
                 tasks = flow.tw.export(
                     [f"project:{name}", "status:pending", "limit:1"]
                 )
                 if tasks:
                     flow.focus.push_task(tasks[0]["uuid"], name)
                     flow.success(
-                        f"Focused initiative anchored to: {name} "
+                        f"Focused plan anchored to: {name} "
                         f"(Task pushed to heap: {tasks[0]['uuid'][:8]})"
                     )
                 else:
-                    flow.success(f"Focused initiative anchored to: {name}")
+                    flow.success(f"Focused plan anchored to: {name}")
             else:
                 flow.error("Plan name required")
         elif sub == "task":
@@ -941,37 +961,37 @@ def main():
             )
             state = flow.focus.load()
             if action == "add" and name:
-                state.inis_of_interest = sorted(
-                    list(set(state.inis_of_interest + [name]))
+                state.plans_of_interest = sorted(
+                    list(set(state.plans_of_interest + [name]))
                 )
                 flow.focus.save(state)
                 flow.success(f"Added '{name}' to interests.")
             elif action == "remove" and name:
-                state.inis_of_interest = [
-                    i for i in state.inis_of_interest if i != name
+                state.plans_of_interest = [
+                    i for i in state.plans_of_interest if i != name
                 ]
                 flow.focus.save(state)
                 flow.success(f"Removed '{name}' from interests.")
             elif action == "list":
                 print(
-                    "══ Initiatives of Interest ══\n"
+                    "══ Plans of Interest ══\n"
                     + (
-                        "\n".join(state.inis_of_interest)
-                        if state.inis_of_interest
+                        "\n".join(state.plans_of_interest)
+                        if state.plans_of_interest
                         else "(empty)"
                     )
                 )
             else:
                 flow.error("Usage: focus interest [add|remove|list] <name>")
         elif sub == "clear":
-            flow.focus.save(FocusState(task_track=[], inis_of_interest=[]))
+            flow.focus.save(FocusState(task_track=[], plans_of_interest=[]))
             flow.success("Focus and task track cleared.")
         elif sub:
-            # Smart Focus: Check if 'sub' is a valid initiative name
+            # Smart Focus: Check if 'sub' is a valid plan name
             tasks = flow.tw.export([f"project:{sub}", "limit:1"])
             if tasks:
                 name = tasks[0]["project"]
-                flow.focus.update_ini(name)
+                flow.focus.update_plan(name)
                 pending = flow.tw.export(
                     [f"project:{name}", "status:pending", "limit:1"]
                 )

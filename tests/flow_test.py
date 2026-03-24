@@ -261,7 +261,7 @@ class FlowTest(JacazulTest):
         focus_file = os.path.join(self.taskdata, "focus.json")
         with open(focus_file, "rb") as f:
             state = orjson.loads(f.read())
-            self.assertEqual(state.get("focused_ini"), "smart_ini")
+            self.assertEqual(state.get("focused_plan"), "smart_ini")
 
         # 3. Test invalid focus target returns error
         out_err, err, code = self.run_cmd(
@@ -323,7 +323,7 @@ class FlowTest(JacazulTest):
         focus_file = os.path.join(self.taskdata, "focus.json")
         with open(focus_file, "rb") as f:
             state = orjson.loads(f.read())
-            self.assertEqual(state.get("focused_ini"), "new_ini")
+            self.assertEqual(state.get("focused_plan"), "new_ini")
 
     def test_ponder_session_context_display(self):
         """Ponder: Must display Interests and Task Track from focus.json."""

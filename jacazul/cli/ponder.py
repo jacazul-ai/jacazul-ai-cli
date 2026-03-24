@@ -28,17 +28,17 @@ class Dashboard:
         # Friendly name for header
         self.project_id = os.environ.get("PROJECT_ID", "standalone")
 
-    def is_interesting(self, ini: str) -> bool:
+    def is_interesting(self, plan: str) -> bool:
         if self.show_all:
             return True
         # If a specific root was requested as filter, respect it
-        if self.project_root and not ini.startswith(self.project_root):
+        if self.project_root and not plan.startswith(self.project_root):
             return False
-        if not self.state.inis_of_interest:
+        if not self.state.plans_of_interest:
             return True
-        if ini == self.state.focused_ini:
+        if plan == self.state.focused_plan:
             return True
-        return ini in self.state.inis_of_interest
+        return plan in self.state.plans_of_interest
 
     def render(self):
         # 🐊 Prompt as Ad: Agent Guidance
@@ -66,19 +66,19 @@ class Dashboard:
 
         # 1. Context Section (The Brain)
         print("\n [SESSION CONTEXT]")
-        focused_ini = self.state.focused_ini or "None"
+        focused_plan = self.state.focused_plan or "None"
         focused_task = self.state.focused_task_uuid or "None"
-        print(f"  🎯 Focus: {focused_ini} | Task: {focused_task[:8]}")
+        print(f"  🎯 Focus: {focused_plan} | Task: {focused_task[:8]}")
 
         if self.state.task_track:
             track = [
-                f"{t['ini']}({t['uuid'][:8]})"
+                f"{t.get('plan') or t.get('ini')}({t['uuid'][:8]})"
                 for t in self.state.task_track[:5]
             ]
             print(f"  🛤️ Track: {' -> '.join(track)}")
 
-        if self.state.inis_of_interest:
-            print(f"  ⭐ Interests: {', '.join(self.state.inis_of_interest)}")
+        if self.state.plans_of_interest:
+            print(f"  ⭐ Interests: {', '.join(self.state.plans_of_interest)}")
 
         # 2. Pulse Section (Honest Layers)
         interesting_tasks = [
@@ -125,7 +125,7 @@ class Dashboard:
 
         print("\n [PULSE SUMMARY]")
         print(
-            f"  Pulse  | Focused: {focused_ini[:20]:<20} | "
+            f"  Pulse  | Focused: {focused_plan[:20]:<20} | "
             f"Plans: {len(set(t['project'] for t in interesting_tasks)):<2} | "
             f"Done Today: {comp_count}"
         )
@@ -156,7 +156,7 @@ class Dashboard:
             p_total = len(p_tasks)
 
             icon = "○"
-            if p == self.state.focused_ini:
+            if p == self.state.focused_plan:
                 icon = "📌"
             elif p_active > 0:
                 icon = "⚡"
@@ -200,7 +200,7 @@ class Dashboard:
     def render_tactical_list(self, tasks: List[Dict[str, Any]]):
         print("[TACTICAL READOUT]")
         print(
-            "  ST | UUID     | MODE       | INITIATIVE                | "
+            "  ST | UUID     | MODE       | PLAN                      | "
             "DESCRIPTION                                        | URG"
         )
         print("  " + "-" * 120)
@@ -209,7 +209,7 @@ class Dashboard:
 
     def render_tactical_table(self, tasks: List[Dict[str, Any]]):
         print("\n[TACTICAL READOUT]")
-        print("| ST | UUID | MODE | INITIATIVE | DESCRIPTION | URG |")
+        print("| ST | UUID | MODE | PLAN | DESCRIPTION | URG |")
         print("|---|---|---|---|---|---|")
         for t in tasks:
             uuid = t["uuid"]
