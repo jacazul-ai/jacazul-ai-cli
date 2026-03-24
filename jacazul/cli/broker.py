@@ -4,7 +4,8 @@ import subprocess
 import sys
 import json
 import re
-from typing import Optional, Tuple
+import time
+from typing import Optional, Any, Tuple
 from jacazul.taskwarrior.core import TaskWrapper
 
 # 🐊 Jacazul GitHub Broker (The Caboco)
@@ -12,13 +13,73 @@ from jacazul.taskwarrior.core import TaskWrapper
 
 
 class GitHubBroker:
-    def __init__(self):
+    def __init__(
+        self,
+        vault_dir: Optional[str] = None,
+        vault_name: Optional[str] = None,
+        cryptozoid_bin: Optional[str] = None,
+    ):
         self.tw = TaskWrapper()
-        self.vault_dir = os.path.expanduser("~/.jacazul-ai")
-        self.vault_name = "jacazul-vault"
+        self.vault_dir = vault_dir or os.environ.get(
+            "JACAZUL_HOME", os.path.expanduser("~/.jacazul-ai")
+        )
+        self.vault_name = vault_name or "jacazul-vault"
         self.vault_file = os.path.join(self.vault_dir, "vault.json")
         self.github_vault_legacy = os.path.join(self.vault_dir, "github.enc")
-        self.cryptozoid_bin = os.path.expanduser("~/go/bin/cryptozoid")
+        self.cache_dir = os.path.join(self.vault_dir, "cache", "github")
+        self.cryptozoid_bin = cryptozoid_bin or os.path.expanduser(
+            "~/go/bin/cryptozoid"
+        )
+
+    def _ensure_cache_dir(self, repo: str):
+        path = os.path.join(self.cache_dir, repo.replace("/", "_"))
+        if not os.path.exists(path):
+            os.makedirs(path, exist_ok=True)
+        return path
+
+    def _get_cache_file(self, repo: str, kind: str) -> str:
+        repo_path = self._ensure_cache_dir(repo)
+        return os.path.join(repo_path, f"{kind}.json")
+
+    def _read_cache(
+        self, repo: str, kind: str, ttl_seconds: int
+    ) -> Optional[Any]:
+        """Reads data from local cache if not expired."""
+        cache_file = self._get_cache_file(repo, kind)
+        if not os.path.exists(cache_file):
+            return None
+
+        # Check TTL
+        mtime = os.path.getmtime(cache_file)
+        if (time.time() - mtime) > ttl_seconds:
+            return None
+
+        try:
+            with open(cache_file, "r") as f:
+                return json.load(f)
+        except Exception:
+            return None
+
+    def _write_cache(self, repo: str, kind: str, data: Any):
+        """Writes data to local cache."""
+        cache_file = self._get_cache_file(repo, kind)
+        try:
+            with open(cache_file, "w") as f:
+                json.dump(data, f, indent=2)
+        except Exception as e:
+            print(f"⚠️ Warning: Failed to write cache: {e}", file=sys.stderr)
+
+    def _invalidate_cache(self, repo: str, kind: Optional[str] = None):
+        """Invalidates cache for a specific repo and kind (or all kinds)."""
+        repo_path = self._ensure_cache_dir(repo)
+        if kind:
+            cache_file = os.path.join(repo_path, f"{kind}.json")
+            if os.path.exists(cache_file):
+                os.remove(cache_file)
+        else:
+            import shutil
+
+            shutil.rmtree(repo_path, ignore_errors=True)
 
     def _decrypt(self, encrypted_blob: str) -> Optional[str]:
         """Decrypts a blob using cryptozoid ec decrypt."""
@@ -229,6 +290,13 @@ class GitHubBroker:
 
         result = self._run_gh(args, repo=repo)
         if result.returncode == 0:
+            # Invalidate cache on success
+            if not repo:
+                org, proj = self._infer_context()
+                repo = f"{org}/{proj}" if org and proj else None
+            if repo:
+                self._invalidate_cache(repo)
+
             # gh issue create prints the URL of the new issue
             issue_url = result.stdout.strip()
             print(f"✅ Issue created: {issue_url}")
@@ -240,17 +308,43 @@ class GitHubBroker:
             return None
 
     def list_labels(self, repo: Optional[str] = None):
-        """Lists available labels in the repository."""
-        result = self._run_gh(["label", "list"], repo=repo)
+        """Lists available labels in the repository (with cache)."""
+        if not repo:
+            org, proj = self._infer_context()
+            if org and proj:
+                repo = f"{org}/{proj}"
+
+        if not repo:
+            print(
+                "❌ Error: Could not infer repository context.",
+                file=sys.stderr,
+            )
+            return
+
+        # Try cache (24h TTL)
+        cached = self._read_cache(repo, "labels", 86400)
+        if cached:
+            print(f"🐊 Labels for {repo} (Cached):")
+            for label in cached:
+                print(f"  - {label['name']}: {label.get('description', '')}")
+            return
+
+        result = self._run_gh(
+            ["label", "list", "--json", "name,description"], repo=repo
+        )
         if result.returncode == 0:
-            print(result.stdout)
+            labels = json.loads(result.stdout)
+            self._write_cache(repo, "labels", labels)
+            print(f"🐊 Labels for {repo} (API):")
+            for label in labels:
+                print(f"  - {label['name']}: {label.get('description', '')}")
         else:
             print(
                 f"❌ Failed to list labels: {result.stderr}", file=sys.stderr
             )
 
     def list_milestones(self, repo: Optional[str] = None):
-        """Lists available milestones in the repository."""
+        """Lists available milestones in the repository (with cache)."""
         # Infer context if not provided
         if not repo:
             org, proj = self._infer_context()
@@ -264,19 +358,26 @@ class GitHubBroker:
             )
             return
 
+        # Try cache (1h TTL)
+        cached = self._read_cache(repo, "milestones", 3600)
+        if cached:
+            print(f"🐊 Milestones for {repo} (Cached):")
+            for ms in cached:
+                print(f"  - [{ms['number']}] {ms['title']} ({ms['state']})")
+            return
+
         # Use api with the full path. gh api doesn't support --repo flag
         endpoint = f"repos/{repo}/milestones"
         result = self._run_gh(
             ["api", endpoint], repo=None, use_repo_flag=False
         )
         if result.returncode == 0:
-            import json
-
             milestones = json.loads(result.stdout)
+            self._write_cache(repo, "milestones", milestones)
             if not milestones:
                 print(f"ℹ️ No milestones found in {repo}.")
                 return
-            print(f"🐊 Milestones for {repo}:")
+            print(f"🐊 Milestones for {repo} (API):")
             for ms in milestones:
                 print(f"  - [{ms['number']}] {ms['title']} ({ms['state']})")
         else:
@@ -313,6 +414,13 @@ class GitHubBroker:
 
         result = self._run_gh(args, repo=repo)
         if result.returncode == 0:
+            # Invalidate cache on success
+            if not repo:
+                org, proj = self._infer_context()
+                repo = f"{org}/{proj}" if org and proj else None
+            if repo:
+                self._invalidate_cache(repo)
+
             print(f"✅ Issue #{clean_id} updated.")
         else:
             print(
@@ -333,6 +441,13 @@ class GitHubBroker:
 
         result = self._run_gh(args, repo=repo)
         if result.returncode == 0:
+            # Invalidate cache on success
+            if not repo:
+                org, proj = self._infer_context()
+                repo = f"{org}/{proj}" if org and proj else None
+            if repo:
+                self._invalidate_cache(repo)
+
             print(f"✅ Issue #{clean_id} closed.")
         else:
             print(
