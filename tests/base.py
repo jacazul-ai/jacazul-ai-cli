@@ -6,17 +6,20 @@ import subprocess
 import unittest
 from typing import Tuple
 
+
 class JacazulTest(unittest.TestCase):
     """Base class for Jacazul tool tests with strict environment isolation."""
-    
+
     @classmethod
     def setUpClass(cls):
         # Base paths for tools
         # The project_root is the parent of the root 'tests' directory
         cls.test_dir_path = os.path.dirname(__file__)
-        cls.project_root = os.path.abspath(os.path.join(cls.test_dir_path, ".."))
+        cls.project_root = os.path.abspath(
+            os.path.join(cls.test_dir_path, "..")
+        )
         cls.cli_dir = os.path.join(cls.project_root, "jacazul/cli")
-        
+
         cls.taskp = os.path.join(cls.cli_dir, "taskp.py")
         cls.tw_flow = os.path.join(cls.cli_dir, "flow.py")
         cls.ponder = os.path.join(cls.cli_dir, "ponder.py")
@@ -26,16 +29,18 @@ class JacazulTest(unittest.TestCase):
         self.test_dir = tempfile.mkdtemp(prefix="jacazul_test_")
         self.taskdata = os.path.join(self.test_dir, "data")
         os.makedirs(self.taskdata, exist_ok=True)
-        
+
         # Prepare environment overrides
         self.env = os.environ.copy()
         self.env["TASKDATA"] = self.taskdata
         self.env["PROJECT_ID"] = "test_project"
         # Ensure PYTHONPATH includes the project root for jacazul.* imports
-        self.env["PYTHONPATH"] = f"{self.project_root}:{self.env.get('PYTHONPATH', '')}"
+        self.env["PYTHONPATH"] = (
+            f"{self.project_root}:{self.env.get('PYTHONPATH', '')}"
+        )
         # Prevent Jacazul scripts from looking at real user config
         self.env["TASKRC"] = os.path.join(self.test_dir, ".taskrc")
-        
+
         # Create a dummy .taskrc to avoid Taskwarrior complaints
         with open(self.env["TASKRC"], "w") as f:
             f.write(f"data.location={self.taskdata}\n")
@@ -48,18 +53,20 @@ class JacazulTest(unittest.TestCase):
         if os.path.exists(self.test_dir):
             shutil.rmtree(self.test_dir)
 
-    def run_cmd(self, cmd: str, env: dict = None, check: bool = False) -> Tuple[str, str, int]:
+    def run_cmd(
+        self, cmd: str, env: dict = None, check: bool = False
+    ) -> Tuple[str, str, int]:
         """Run a command within the isolated test environment."""
         run_env = self.env.copy()
         if env:
             run_env.update(env)
-            
+
         res = subprocess.run(
             cmd,
             shell=True,
             env=run_env,
             capture_output=True,
             text=True,
-            check=check
+            check=check,
         )
         return res.stdout.strip(), res.stderr.strip(), res.returncode

@@ -6,6 +6,7 @@ import tempfile
 import orjson
 from jacazul.hatch.persona import PersonaManager, PersonaState
 
+
 class TestPersonaSwitch(unittest.TestCase):
     def setUp(self):
         self.test_dir = tempfile.mkdtemp()
@@ -22,17 +23,18 @@ class TestPersonaSwitch(unittest.TestCase):
         state = self.manager.load()
         state.anchored_persona = "codana"
         self.manager.save(state)
-        
+
         new_state = self.manager.load()
         self.assertEqual(new_state.anchored_persona, "codana")
 
     def test_json_structure(self):
         state = PersonaState(anchored_persona="codana")
         self.manager.save(state)
-        
+
         with open(os.path.join(self.test_dir, "persona.json"), "rb") as f:
             data = orjson.loads(f.read())
             self.assertEqual(data["anchored_persona"], "codana")
+
 
 if __name__ == "__main__":
     unittest.main()
