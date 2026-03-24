@@ -18,3 +18,39 @@ license: MIT
 - **"sync issue #X"** - Sincroniza o status de um ticket do GitHub com o Taskwarrior.
 - **"list labels"** - Lista as labels disponíveis no repositório (via cache).
 - **"open issue"** - Cria um novo ticket baseado no diff ou na tarefa atual.
+
+## jacazul-broker CLI Reference
+
+**CRITICAL:** All args are **positional**. Use `-` as placeholder for optional args you want to skip.
+
+```
+# List labels
+jacazul-broker labels [repo]
+
+# List milestones
+jacazul-broker milestones [repo]
+
+# Create issue
+jacazul-broker open <title> [body|-] [repo|-] [assignee|-] [labels...]
+
+# Edit issue
+jacazul-broker edit <id> [title|-] [body|-] [repo|-] [assignee|-] [add_labels...]
+
+# Close issue
+jacazul-broker close <id> [repo|-] [comment]
+
+# Sync GitHub issue state → Taskwarrior
+jacazul-broker sync <issue_id> [repo]
+```
+
+**Examples:**
+```bash
+# Create issue, skip repo and assignee, set label
+jacazul-broker open "feat: my feature" "Body text here" - - "enhancement"
+
+# Create issue with no body or repo
+jacazul-broker open "fix: crash on startup"
+
+# Close issue with comment
+jacazul-broker close 30 - "Implemented in commit abc123"
+```
