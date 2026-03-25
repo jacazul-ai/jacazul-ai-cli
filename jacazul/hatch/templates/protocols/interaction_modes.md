@@ -12,6 +12,7 @@ Modes define the **Agent's Behavior** for a given task. Explicitly setting a mod
 | **`[DEBUG]`** | Root cause analysis. | High (Read-only) | Diagnosis & fix proposal. |
 | **`[REVIEW]`** | Code audit & feedback. | Read-only | Suggestions/Critique. |
 | **`[PR-REVIEW]`** | Prepare/Check PR or diffs. | Read-only | Summary & Readiness check. |
+| **`[SPIKE]`** | Time-boxed research or proof-of-concept. | High (Read-only) | Findings & Go/No-Go. |
 
 **Usage:** Prefix tasks with the mode to enforce behavior.
 - `[GUIDE] Implement login` -> I tell you how.

@@ -914,8 +914,25 @@ def main():
     elif cmd == "tree":
         flow.cmd_tree(args[0] if args else "status:pending")
     elif cmd == "focus":
+        independent = "--independent" in args or "--ind" in args
+        args = [a for a in args if a not in ("--independent", "--ind")]
         sub = args[0] if args else None
-        if sub in ["plan", "ini"]:
+        if independent:
+            uuid = flow.resolve_uuid(args[0]) if args else None
+            tasks = flow.tw.export([uuid]) if uuid else []
+            if not tasks:
+                flow.error("Usage: focus --independent <uuid>")
+            task = tasks[0]
+            plan = task.get("project", "")
+            print(
+                f"══ Independent Session Focus ══\n"
+                f"Task : {uuid[:8]} — {task.get('description', '')}\n"
+                f"Plan : {plan}\n\n"
+                f"Spawn an independent session with:\n\n"
+                f"  JACAZUL_FOCUS_PLAN={plan} "
+                f"JACAZUL_FOCUS_TASK={uuid[:8]} tw-flow status"
+            )
+        elif sub in ["plan", "ini"]:
             name = (
                 args[1]
                 if len(args) > 1

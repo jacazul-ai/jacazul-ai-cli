@@ -118,26 +118,40 @@ class FocusManager:
         self.file_path = os.path.join(self.data_dir, "focus.json")
 
     def load(self) -> FocusState:
+        env_plan = os.environ.get("JACAZUL_FOCUS_PLAN")
+        env_task = os.environ.get("JACAZUL_FOCUS_TASK")
+
         if not os.path.exists(self.file_path):
-            return FocusState(task_track=[], plans_of_interest=[])
+            return FocusState(
+                focused_plan=env_plan,
+                focused_task_uuid=env_task,
+                task_track=[],
+                plans_of_interest=[],
+            )
 
         try:
             with open(self.file_path, "rb") as f:
                 data = orjson.loads(f.read())
-                
+
                 # Migration logic: Support both old and new keys
-                focused_plan = data.get("focused_plan") or data.get("focused_ini")
-                plans_of_interest = data.get("plans_of_interest") or data.get("inis_of_interest", [])
-                
+                focused_plan = data.get("focused_plan") or data.get(
+                    "focused_ini"
+                )
+                plans_of_interest = data.get("plans_of_interest") or data.get(
+                    "inis_of_interest", []
+                )
+
                 # Migrate internal track entries
                 track = data.get("task_track", [])
                 for entry in track:
                     if "ini" in entry:
                         entry["plan"] = entry.pop("ini")
 
+                # Env vars override focus fields (READ-ONLY parallel session)
                 return FocusState(
-                    focused_plan=focused_plan,
-                    focused_task_uuid=data.get("focused_task_uuid"),
+                    focused_plan=env_plan or focused_plan,
+                    focused_task_uuid=env_task
+                    or data.get("focused_task_uuid"),
                     task_track=track,
                     plans_of_interest=plans_of_interest,
                 )

@@ -144,9 +144,9 @@ class FlowTest(JacazulTest):
     def test_initiative_prepends_mode_prefix(self):
         """Interaction modes: Initiative must correctly prepend [MODE]."""
         out, _, _ = self.run_cmd(
-            f"{self.tw_flow} ini mtest 'PLAN|Arch|r|today'"
+            f"{self.tw_flow} ini mtest 'SPIKE|Arch|r|today'"
         )
-        self.assertIn("[PLAN] Arch", out)
+        self.assertIn("[SPIKE] Arch", out)
 
     def test_ponder_dashboard_mode_highlighting(self):
         """Ponder: Tactical dashboard must highlight interaction modes."""
@@ -270,6 +270,14 @@ class FlowTest(JacazulTest):
         self.assertNotEqual(code, 0)
         self.assertIn("Unknown focus subcommand", out_err + err)
 
+    def test_independent_focus_displays_spawn_instructions(self):
+        """Independent Focus: 'tw-flow focus ind <uuid>' must display env var spawn instructions."""
+        out, _, code = self.run_cmd(f"{self.tw_flow} focus --independent {self.u1}")
+        self.assertEqual(code, 0)
+        self.assertIn("Independent Session Focus", out)
+        self.assertIn("JACAZUL_FOCUS_PLAN=test_ini", out)
+        self.assertIn(f"JACAZUL_FOCUS_TASK={self.u1[:8]}", out)
+
     def test_vaccinated_done_enforces_python_quality(self):
         """Quality Gate: 'tw-flow done' must block if Python files fail."""
         # 1. Create a task and add outcome
@@ -302,6 +310,7 @@ class FlowTest(JacazulTest):
             out_check, _, _ = self.run_cmd(f"{self.taskp} {uuid} export")
             self.assertEqual(orjson.loads(out_check)[0]["status"], "pending")
         finally:
+            self.run_cmd(f"git restore --staged {dirty_file}")
             if os.path.exists(dirty_file):
                 os.remove(dirty_file)
 
