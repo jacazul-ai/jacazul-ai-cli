@@ -1,4 +1,15 @@
 {
+  "permissions": {
+    "allow": [
+      "Bash(tw-flow:*)",
+      "Bash(taskp:*)",
+      "Bash(jacazul-broker:*)",
+      "Bash(jacazul-persona:*)",
+      "Bash(jacazul-hatch:*)",
+      "Bash(py-check:*)",
+      "Bash(scripts/run_smoke.py:*)"
+    ]
+  },
   "hooks": {
     "SessionStart": [
       {
