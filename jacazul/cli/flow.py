@@ -541,8 +541,39 @@ class FlowManager:
         self.tw.run([uuid, "annotate", f"HANDOFF: {msg}"])
         self.success(f"Handoff to task {uuid[:8]} with note")
 
+    def cmd_notes(self, input_id: str):
+        uuid = self.resolve_uuid(input_id)
+        tasks = self.tw.export([uuid])
+        if not tasks:
+            self.error(f"Task {uuid[:8]} not found.")
+        annotations = tasks[0].get("annotations", [])
+        if not annotations:
+            print(f"No annotations on task {uuid[:8]}.")
+            return
+        print(f"══ Notes for task {uuid[:8]} ══")
+        for ann in annotations:
+            print(f"  [{ann['entry']}] {ann['description']}")
+
     def cmd_note(self, input_id: str, note_type: str, msg: str):
         uuid = self.resolve_uuid(input_id)
+        if note_type.lower() in ("delete", "del"):
+            tasks = self.tw.export([uuid])
+            if not tasks:
+                self.error(f"Task {uuid[:8]} not found.")
+            annotations = tasks[0].get("annotations", [])
+            match = next(
+                (a for a in annotations if a["entry"] == msg), None
+            )
+            if not match:
+                self.error(
+                    f"No annotation found with timestamp [{msg}] on task "
+                    f"{uuid[:8]}.\n"
+                    f"   ACTION: Run 'tw-flow notes {uuid[:8]}' to list "
+                    f"valid timestamps."
+                )
+            self.tw.run([uuid, "denotate", match["description"]])
+            self.success(f"Deleted annotation [{msg}] from task {uuid[:8]}")
+            return
         self.verify_not_completed(uuid)
         prefixes = {
             "research": "RESEARCH",
@@ -879,6 +910,8 @@ def main():
         flow.cmd_reopen(args[0])
     elif cmd == "amend":
         flow.cmd_amend(args[0], args[1:])
+    elif cmd == "notes":
+        flow.cmd_notes(args[0])
     elif cmd == "note":
         flow.cmd_note(args[0], args[1], " ".join(args[2:]))
     elif cmd == "ticket":

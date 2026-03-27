@@ -447,6 +447,29 @@ class FlowTest(JacazulTest):
         self.assertEqual(task["description"], "Fix")
         self.assertEqual(task["externalid"], "#F1")
 
+    def test_notes_lists_annotations(self):
+        """Notes: tw-flow notes must list annotations with timestamps."""
+        self.run_cmd(f"{self.tw_flow} note {self.u1} decision 'Test decision'")
+        out, _, code = self.run_cmd(f"{self.tw_flow} notes {self.u1}")
+        self.assertEqual(code, 0)
+        self.assertIn("DECISION: Test decision", out)
+
+    def test_note_delete_removes_annotation(self):
+        """Notes: tw-flow note delete must remove specific annotation."""
+        self.run_cmd(f"{self.tw_flow} note {self.u1} decision 'To be deleted'")
+        # Get timestamp
+        out, _, _ = self.run_cmd(f"{self.taskp} {self.u1[:8]} export")
+        task = orjson.loads(out)[0]
+        timestamp = task["annotations"][-1]["entry"]
+        # Delete
+        _, _, code = self.run_cmd(
+            f"{self.tw_flow} note {self.u1} delete {timestamp}"
+        )
+        self.assertEqual(code, 0)
+        # Verify gone
+        out2, _, _ = self.run_cmd(f"{self.tw_flow} notes {self.u1}")
+        self.assertNotIn("To be deleted", out2)
+
     def test_completed_task_modification_blocks(self):
         """Safety: Modifying completed task must fail."""
         self.run_cmd(f"{self.tw_flow} outcome {self.u1} 'Done'")
