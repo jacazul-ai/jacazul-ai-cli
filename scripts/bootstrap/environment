@@ -53,20 +53,9 @@ if [ -z "$JACAZUL_SESSION_ID" ]; then
     export JACAZUL_SESSION_ID=$(python3 -c "import uuid; print(uuid.uuid4().hex[:8])")
 fi
 
-# 4.1 Seed session focus file from env vars (one-time bootstrap)
-if [ -n "$JACAZUL_FOCUS_PLAN" ] && [ -n "$JACAZUL_SESSION_ID" ] && [ -n "$TASKDATA" ]; then
-    SESSION_FOCUS="$TASKDATA/focus-${JACAZUL_SESSION_ID}.json"
-    if [ ! -f "$SESSION_FOCUS" ]; then
-        FOCUS_TASK="${JACAZUL_FOCUS_TASK:-}"
-        python3 -c "
-import json, sys
-data = {'focused_plan': '$JACAZUL_FOCUS_PLAN', 'focused_task_uuid': '$FOCUS_TASK' or None, 'task_track': [], 'plans_of_interest': []}
-print(json.dumps(data))
-" > "$SESSION_FOCUS"
-    fi
-    unset JACAZUL_FOCUS_PLAN
-    unset JACAZUL_FOCUS_TASK
-fi
+# 4.1 Session focus initialization
+# Note: Actual focus file creation is handled by scripts/bootstrap/taskwarrior
+# This just keeps the env vars available for taskwarrior bootstrap
 
 # 5. Mode Configuration
 export JACAZUL_MODE="${JACAZUL_MODE:-COUNSELOR}"
