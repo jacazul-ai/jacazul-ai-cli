@@ -200,10 +200,10 @@ class Dashboard:
     def render_tactical_list(self, tasks: List[Dict[str, Any]]):
         print("[TACTICAL READOUT]")
         print(
-            "  ST | UUID     | MODE       | PLAN                      | "
+            "  ST | UUID     | MODE       | PLAN                               | "
             "DESCRIPTION                                        | URG"
         )
-        print("  " + "-" * 120)
+        print("  " + "-" * 130)
         for t in tasks:
             self.render_task_line(t)
 
@@ -239,7 +239,7 @@ class Dashboard:
 
             print(
                 f"| {status_icon} | `{uuid[:8]}` | {mode} | "
-                f"{project[:25]:<25} | {desc[:50]:<50} | {urgency:.1f} |"
+                f"{project} | {desc[:50]:<50} | {urgency:.1f} |"
             )
 
     def render_task_line(self, t: Dict[str, Any]):
@@ -268,7 +268,7 @@ class Dashboard:
 
         print(
             f"  {status_icon:<2} | {uuid[:8]} | {mode:<10} | "
-            f"{project[:25]:<25} | {desc[:50]:<50} | [{urgency:.1f}]"
+            f"{project:<35} | {desc[:50]:<50} | [{urgency:.1f}]"
         )
 
 

@@ -54,6 +54,7 @@ Use standard prefixes:
    - Run `git diff HEAD` (or `--staged`) to review changes.
    - Run `git log -n 3` to match project style.
 2. **No Auto-Commit:** Do not stage or commit unless the user explicitly requests it.
-3. **Error as Prompt:** If a Git command fails (e.g., merge conflict, dirty worktree), transform the error into a clear prompt for the user.
+3. **Selective Staging (MANDATORY):** NEVER use `git add .` or `git add -A`. ALWAYS stage only files directly relevant to the current task. Cross-reference with `tw-flow status` to understand scope. Only stage files unrelated to the task if the user explicitly requests it.
+4. **Error as Prompt:** If a Git command fails (e.g., merge conflict, dirty worktree), transform the error into a clear prompt for the user.
 
 </agent_instructions>

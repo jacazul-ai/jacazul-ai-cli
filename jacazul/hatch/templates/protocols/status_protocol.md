@@ -30,6 +30,7 @@ Always choose the right tool based on the context:
 **RULE 2:** NEVER use box-drawing characters (╔, ═, ║, ┌, ─) for tables or summaries. They collapse into unreadable single lines.
 **RULE 3:** ALWAYS use **Standard Markdown Tables** for all tabular data.
 **RULE 4:** ALWAYS wrap structural ASCII (trees, maps) in **triple-backtick code blocks**.
+**RULE 5:** When interpreting CLI output (`tw-flow ponder`, `tw-flow status`, etc.), ALWAYS include the full task name, plan name, and description — NEVER refer to tasks by UUID alone. A response like "task `6640cb28`" without its name and plan is incomplete and useless to the user.
 
 ### 1. Emoji Pulse Summary
 A quick snapshot of the project's vital signs. Format:
@@ -50,6 +51,17 @@ Display the current plan's tasks using a Markdown table.
 | ST | UUID | TICKET | DESCRIPTION | URG |
 |---|---|---|---|---|
 | [Icon] | `[uuid]` | [Ticket] | [Description] | [Urg] |
+
+### 3b. Ponder Table (for tw-flow ponder output)
+When presenting ponder results, ALWAYS use a markdown table with full names — never truncate plan or description:
+
+**Active tasks first:**
+
+| ST | UUID | PLANO | DESCRIÇÃO | URG |
+|---|---|---|---|---|
+| ⚡/!! | `[uuid]` | [full plan name] | [full description] | [urg] |
+
+**Then overdue top 5, then pulse summary.**
 
 ### 4. Next Action
 Ask a specific, tactical question based on the state above.
