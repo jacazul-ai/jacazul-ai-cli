@@ -454,6 +454,38 @@ class GitHubBroker:
                 f"❌ Failed to close issue: {result.stderr}", file=sys.stderr
             )
 
+    def view_issue(self, issue_id: str, repo: Optional[str] = None):
+        """Fetches and displays full details of a GitHub issue."""
+        clean_id = issue_id.lstrip("#")
+        result = self._run_gh(
+            [
+                "issue", "view", clean_id,
+                "--json",
+                "number,title,state,body,labels,assignees,createdAt",
+            ],
+            repo=repo,
+        )
+        if result.returncode != 0:
+            print(
+                f"❌ Failed to fetch issue: {result.stderr}", file=sys.stderr
+            )
+            return
+
+        data = json.loads(result.stdout)
+        state = data.get("state", "UNKNOWN").upper()
+        title = data.get("title", "")
+        body = data.get("body", "")
+        labels = [lb["name"] for lb in data.get("labels", [])]
+        assignees = [a["login"] for a in data.get("assignees", [])]
+
+        print(f"🐊 Issue #{clean_id} [{state}] — {title}")
+        if labels:
+            print(f"   Labels: {', '.join(labels)}")
+        if assignees:
+            print(f"   Assignees: {', '.join(assignees)}")
+        print()
+        print(body)
+
     def list_issues(
         self,
         repo: Optional[str] = None,
@@ -503,9 +535,12 @@ def main():
     if len(sys.argv) < 2:
         print(
             "Usage: jacazul-broker "
-            "<sync|list|labels|milestones|open|edit|close> ..."
+            "<sync|view|list|labels|milestones|open|edit|close> ..."
         )
         print("\nCommands:")
+        print(
+            "  view <issue_id> [repo]        Shows full issue details and body"
+        )
         print(
             "  sync <issue_id> [repo]        Syncs issue status to local tasks"
         )
@@ -542,7 +577,15 @@ def main():
                 kwargs[key] = val
         return kwargs
 
-    if cmd == "sync":
+    if cmd == "view":
+        if not args:
+            error(
+                "Issue ID required.\n"
+                "   ACTION: Use 'jacazul-broker view #123'"
+            )
+        broker.view_issue(args[0], args[1] if len(args) > 1 else None)
+
+    elif cmd == "sync":
         if not args:
             error(
                 "Issue ID required for sync.\n"
@@ -609,7 +652,7 @@ def main():
     else:
         error(
             f"Unknown command: '{cmd}'.\n"
-            "   ACTION: Use one of: sync, list, labels, milestones, "
+            "   ACTION: Use one of: view, sync, list, labels, milestones, "
             "open, edit, close."
         )
 
