@@ -116,21 +116,27 @@ class FocusManager:
     def __init__(self):
         self.data_dir = Environment.get_taskdata()
         self.file_path = os.path.join(self.data_dir, "focus.json")
+        session_id = os.environ.get("JACAZUL_SESSION_ID")
+        self.session_file_path = (
+            os.path.join(self.data_dir, f"focus-{session_id}.json")
+            if session_id
+            else None
+        )
+
+    def _active_file(self) -> str:
+        """Return session file if SESSION_ID set, otherwise global focus.json."""
+        if self.session_file_path:
+            return self.session_file_path
+        return self.file_path
 
     def load(self) -> FocusState:
-        env_plan = os.environ.get("JACAZUL_FOCUS_PLAN")
-        env_task = os.environ.get("JACAZUL_FOCUS_TASK")
+        active = self._active_file()
 
-        if not os.path.exists(self.file_path):
-            return FocusState(
-                focused_plan=env_plan,
-                focused_task_uuid=env_task,
-                task_track=[],
-                plans_of_interest=[],
-            )
+        if not os.path.exists(active):
+            return FocusState(task_track=[], plans_of_interest=[])
 
         try:
-            with open(self.file_path, "rb") as f:
+            with open(active, "rb") as f:
                 data = orjson.loads(f.read())
 
                 # Migration logic: Support both old and new keys
@@ -147,11 +153,9 @@ class FocusManager:
                     if "ini" in entry:
                         entry["plan"] = entry.pop("ini")
 
-                # Env vars override focus fields (READ-ONLY parallel session)
                 return FocusState(
-                    focused_plan=env_plan or focused_plan,
-                    focused_task_uuid=env_task
-                    or data.get("focused_task_uuid"),
+                    focused_plan=focused_plan,
+                    focused_task_uuid=data.get("focused_task_uuid"),
                     task_track=track,
                     plans_of_interest=plans_of_interest,
                 )
@@ -160,7 +164,8 @@ class FocusManager:
 
     def save(self, state: FocusState):
         os.makedirs(self.data_dir, exist_ok=True)
-        with open(self.file_path, "wb") as f:
+        target = self._active_file()
+        with open(target, "wb") as f:
             f.write(orjson.dumps(state.to_dict(), option=orjson.OPT_INDENT_2))
 
     def update_plan(self, name: str):

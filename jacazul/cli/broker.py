@@ -454,83 +454,137 @@ class GitHubBroker:
                 f"❌ Failed to close issue: {result.stderr}", file=sys.stderr
             )
 
+    def list_issues(
+        self,
+        repo: Optional[str] = None,
+        state: str = "open",
+        milestone: Optional[str] = None,
+        limit: int = 30,
+    ):
+        """Lists issues in the repository."""
+        args = ["issue", "list", "--state", state, "--limit", str(limit)]
+        if milestone:
+            args += ["--milestone", milestone]
+
+        args += ["--json", "number,title,state,updatedAt"]
+
+        result = self._run_gh(args, repo=repo)
+        if result.returncode == 0:
+            issues = json.loads(result.stdout)
+            if not issues:
+                print(
+                    f"ℹ️ No {state} issues found in {repo or 'current repo'}."
+                )
+                return
+
+            print(
+                f"🐊 {state.capitalize()} issues for {repo or 'current repo'}:"
+            )
+            for issue in issues:
+                print(
+                    f"  - [#{issue['number']}] {issue['title']} "
+                    f"({issue['state']})"
+                )
+        else:
+            print(
+                f"❌ Failed to list issues: {result.stderr}", file=sys.stderr
+            )
+
+
+def error(msg: str):
+    """🐊 Error as Prompt: Emits error to stderr with ACTION hints."""
+    print(f"❌ ERROR: {msg}", file=sys.stderr)
+    sys.exit(1)
+
 
 def main():
     # Quick CLI for testing the broker directly
     broker = GitHubBroker()
-    if len(sys.argv) > 1:
-        cmd = sys.argv[1]
-        if cmd == "sync":
-            broker.sync_issue(
-                sys.argv[2], sys.argv[3] if len(sys.argv) > 3 else None
-            )
-        elif cmd == "labels":
-            broker.list_labels(sys.argv[2] if len(sys.argv) > 2 else None)
-        elif cmd == "milestones":
-            broker.list_milestones(sys.argv[2] if len(sys.argv) > 2 else None)
-        elif cmd == "open":
-            # Syntax: broker.py open <title> [body] [repo] [assignee]
-            # [labels...]
-            title = sys.argv[2]
-            body = (
-                sys.argv[3]
-                if len(sys.argv) > 3 and sys.argv[3] != "-"
-                else None
-            )
-            repo = (
-                sys.argv[4]
-                if len(sys.argv) > 4 and sys.argv[4] != "-"
-                else None
-            )
-            assignee = (
-                sys.argv[5]
-                if len(sys.argv) > 5 and sys.argv[5] != "-"
-                else None
-            )
-            labels = sys.argv[6:] if len(sys.argv) > 6 else None
-            broker.open_issue(title, body, repo, assignee, labels)
-        elif cmd == "edit":
-            # Syntax: broker.py edit <id> [title] [body] [repo] [assignee]
-            # [add_labels...]
-            issue_id = sys.argv[2]
-            title = (
-                sys.argv[3]
-                if len(sys.argv) > 3 and sys.argv[3] != "-"
-                else None
-            )
-            body = (
-                sys.argv[4]
-                if len(sys.argv) > 4 and sys.argv[4] != "-"
-                else None
-            )
-            repo = (
-                sys.argv[5]
-                if len(sys.argv) > 5 and sys.argv[5] != "-"
-                else None
-            )
-            assignee = (
-                sys.argv[6]
-                if len(sys.argv) > 6 and sys.argv[6] != "-"
-                else None
-            )
-            add_labels = sys.argv[7:] if len(sys.argv) > 7 else None
-            broker.edit_issue(
-                issue_id, title, body, repo, assignee, add_labels
-            )
-        elif cmd == "close":
-            # Syntax: broker.py close <id> [repo] [comment]
-            issue_id = sys.argv[2]
-            repo = (
-                sys.argv[3]
-                if len(sys.argv) > 3 and sys.argv[3] != "-"
-                else None
-            )
-            comment = sys.argv[4] if len(sys.argv) > 4 else None
-            broker.close_issue(issue_id, repo, comment)
-    else:
+    if len(sys.argv) < 2:
         print(
             "Usage: jacazul-broker "
-            "<sync|labels|milestones|open|edit|close> ..."
+            "<sync|list|labels|milestones|open|edit|close> ..."
+        )
+        print("\nCommands:")
+        print("  sync <issue_id> [repo]        Syncs issue status to local tasks")
+        print("  list [repo] [state] [ms]      Lists issues (state: open|closed|all)")
+        print("  labels [repo]                 Lists repository labels (cached)")
+        print("  milestones [repo]             Lists repository milestones (cached)")
+        print("  open <title> [body] [repo]    Opens a new issue")
+        print("  edit <id> [title] [body]      Edits an existing issue")
+        print("  close <id> [repo] [comment]   Closes an issue")
+        sys.exit(0)
+
+    cmd = sys.argv[1]
+    args = sys.argv[2:]
+
+    if cmd == "sync":
+        if not args:
+            error(
+                "Issue ID required for sync.\n"
+                "   ACTION: Use 'jacazul-broker sync #123'"
+            )
+        broker.sync_issue(args[0], args[1] if len(args) > 1 else None)
+
+    elif cmd == "list":
+        # Syntax: broker.py list [repo] [state] [milestone]
+        repo = args[0] if len(args) > 0 and args[0] != "-" else None
+        state = args[1] if len(args) > 1 and args[1] != "-" else "open"
+        milestone = args[2] if len(args) > 2 and args[2] != "-" else None
+        broker.list_issues(repo, state, milestone)
+
+    elif cmd == "labels":
+        broker.list_labels(args[0] if args else None)
+
+    elif cmd == "milestones":
+        broker.list_milestones(args[0] if args else None)
+
+    elif cmd == "open":
+        # Syntax: broker.py open <title> [body] [repo] [assignee] [labels...]
+        if len(args) < 1:
+            error(
+                "Title required to open issue.\n"
+                "   ACTION: Use 'jacazul-broker open \"My title\"'"
+            )
+        title = args[0]
+        body = args[1] if len(args) > 1 and args[1] != "-" else None
+        repo = args[2] if len(args) > 2 and args[2] != "-" else None
+        assignee = args[3] if len(args) > 3 and args[3] != "-" else None
+        labels = args[4:] if len(args) > 4 else None
+        broker.open_issue(title, body, repo, assignee, labels)
+
+    elif cmd == "edit":
+        # Syntax: broker.py edit <id> [title] [body] [repo] [assignee] [add_labels...]
+        if len(args) < 1:
+            error(
+                "Issue ID required to edit.\n"
+                "   ACTION: Use 'jacazul-broker edit #123 title=\"New Title\"'"
+            )
+        issue_id = args[0]
+        title = args[1] if len(args) > 1 and args[1] != "-" else None
+        body = args[2] if len(args) > 2 and args[2] != "-" else None
+        repo = args[3] if len(args) > 3 and args[3] != "-" else None
+        assignee = args[4] if len(args) > 4 and args[4] != "-" else None
+        add_labels = args[5:] if len(args) > 5 else None
+        broker.edit_issue(issue_id, title, body, repo, assignee, add_labels)
+
+    elif cmd == "close":
+        # Syntax: broker.py close <id> [repo] [comment]
+        if len(args) < 1:
+            error(
+                "Issue ID required to close.\n"
+                "   ACTION: Use 'jacazul-broker close #123'"
+            )
+        issue_id = args[0]
+        repo = args[1] if len(args) > 1 and args[1] != "-" else None
+        comment = args[2] if len(args) > 2 else None
+        broker.close_issue(issue_id, repo, comment)
+
+    else:
+        error(
+            f"Unknown command: '{cmd}'.\n"
+            "   ACTION: Use one of: sync, list, labels, milestones, "
+            "open, edit, close."
         )
 
 

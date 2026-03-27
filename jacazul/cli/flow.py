@@ -914,24 +914,81 @@ def main():
     elif cmd == "tree":
         flow.cmd_tree(args[0] if args else "status:pending")
     elif cmd == "focus":
-        independent = "--independent" in args or "--ind" in args
-        args = [a for a in args if a not in ("--independent", "--ind")]
         sub = args[0] if args else None
-        if independent:
-            uuid = flow.resolve_uuid(args[0]) if args else None
-            tasks = flow.tw.export([uuid]) if uuid else []
-            if not tasks:
-                flow.error("Usage: focus --independent <uuid>")
-            task = tasks[0]
-            plan = task.get("project", "")
-            print(
-                f"══ Independent Session Focus ══\n"
-                f"Task : {uuid[:8]} — {task.get('description', '')}\n"
-                f"Plan : {plan}\n\n"
-                f"Spawn an independent session with:\n\n"
-                f"  JACAZUL_FOCUS_PLAN={plan} "
-                f"JACAZUL_FOCUS_TASK={uuid[:8]} tw-flow status"
-            )
+        if sub == "ind":
+            ind_sub = args[1] if len(args) > 1 else None
+            if ind_sub in ["plan", "ini"]:
+                name = (
+                    args[2] if len(args) > 2
+                    else (
+                        flow.tw.export(["+ACTIVE"])[0].get("project")
+                        if flow.tw.export(["+ACTIVE"])
+                        else None
+                    )
+                )
+                if name:
+                    flow.focus.update_plan(name)
+                    tasks = flow.tw.export(
+                        [f"project:{name}", "status:pending", "limit:1"]
+                    )
+                    if tasks:
+                        flow.focus.push_task(tasks[0]["uuid"], name)
+                        flow.success(
+                            f"Independent focus anchored to plan: {name} "
+                            f"(Task pushed to heap: {tasks[0]['uuid'][:8]})"
+                        )
+                    else:
+                        flow.success(f"Independent focus anchored to plan: {name}")
+                else:
+                    flow.error("Plan name required")
+            elif ind_sub == "task":
+                uuid = flow.resolve_uuid(args[2]) if len(args) > 2 else None
+                tasks = flow.tw.export([uuid]) if uuid else []
+                if tasks:
+                    flow.focus.push_task(uuid, tasks[0].get("project", ""))
+                    flow.success(
+                        f"Independent focus anchored to task: {uuid[:8]} "
+                        f"(pushed to stack)"
+                    )
+                else:
+                    flow.error("Usage: focus ind task <uuid>")
+            elif ind_sub:
+                tasks = flow.tw.export([f"project:{ind_sub}", "limit:1"])
+                if tasks:
+                    name = tasks[0]["project"]
+                    flow.focus.update_plan(name)
+                    pending = flow.tw.export(
+                        [f"project:{name}", "status:pending", "limit:1"]
+                    )
+                    if pending:
+                        flow.focus.push_task(pending[0]["uuid"], name)
+                        flow.success(
+                            f"Independent smart-focus anchored to: {name} "
+                            f"(Task: {pending[0]['uuid'][:8]})"
+                        )
+                    else:
+                        flow.success(
+                            f"Independent smart-focus anchored to: {name}"
+                        )
+                else:
+                    flow.error(
+                        f"Unknown plan or smart-focus: '{ind_sub}'.\n"
+                        "   ACTION: Use 'focus ind plan <name>', "
+                        "'focus ind task <uuid>', or 'focus ind <plan-name>'."
+                    )
+            else:
+                flow.error("Usage: focus ind [plan <name>|task <uuid>|<plan-name>]")
+        elif sub == "back":
+            session_file = flow.focus.session_file_path
+            if session_file and os.path.exists(session_file):
+                os.remove(session_file)
+                flow.success(
+                    "Exited independent session. Switched back to global focus."
+                )
+            else:
+                flow.error(
+                    "No independent session active. Already in global mode."
+                )
         elif sub in ["plan", "ini"]:
             name = (
                 args[1]
@@ -1001,8 +1058,15 @@ def main():
             else:
                 flow.error("Usage: focus interest [add|remove|list] <name>")
         elif sub == "clear":
-            flow.focus.save(FocusState(task_track=[], plans_of_interest=[]))
-            flow.success("Focus and task track cleared.")
+            session_file = flow.focus.session_file_path
+            if session_file and os.path.exists(session_file):
+                os.remove(session_file)
+                flow.success("Independent session focus cleared.")
+            else:
+                flow.error(
+                    "No independent session active. focus.json is never "
+                    "touched by clear."
+                )
         elif sub:
             # Smart Focus: Check if 'sub' is a valid plan name
             tasks = flow.tw.export([f"project:{sub}", "limit:1"])

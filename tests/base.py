@@ -40,6 +40,8 @@ class JacazulTest(unittest.TestCase):
         )
         # Prevent Jacazul scripts from looking at real user config
         self.env["TASKRC"] = os.path.join(self.test_dir, ".taskrc")
+        # Isolate tests from session context
+        self.env.pop("JACAZUL_SESSION_ID", None)
 
         # Create a dummy .taskrc to avoid Taskwarrior complaints
         with open(self.env["TASKRC"], "w") as f:

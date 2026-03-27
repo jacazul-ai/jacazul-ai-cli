@@ -270,13 +270,49 @@ class FlowTest(JacazulTest):
         self.assertNotEqual(code, 0)
         self.assertIn("Unknown focus subcommand", out_err + err)
 
-    def test_independent_focus_displays_spawn_instructions(self):
-        """Independent Focus: 'tw-flow focus ind <uuid>' must display env var spawn instructions."""
-        out, _, code = self.run_cmd(f"{self.tw_flow} focus --independent {self.u1}")
+    def test_independent_focus_creates_session_file(self):
+        """Independent Focus: focus ind task must create session file."""
+        session_id = "testsession"
+        env = f"JACAZUL_SESSION_ID={session_id}"
+        out, _, code = self.run_cmd(
+            f"{env} {self.tw_flow} focus ind task {self.u1}"
+        )
         self.assertEqual(code, 0)
-        self.assertIn("Independent Session Focus", out)
-        self.assertIn("JACAZUL_FOCUS_PLAN=test_ini", out)
-        self.assertIn(f"JACAZUL_FOCUS_TASK={self.u1[:8]}", out)
+        session_file = os.path.join(self.taskdata, f"focus-{session_id}.json")
+        self.assertTrue(os.path.exists(session_file))
+        with open(session_file, "rb") as f:
+            data = orjson.loads(f.read())
+        self.assertEqual(data.get("focused_plan"), "test_ini")
+        self.assertIn(self.u1[:8], data.get("focused_task_uuid", ""))
+
+    def test_independent_focus_plan(self):
+        """Independent Focus: focus ind plan must anchor to plan in session file."""
+        session_id = "testsession"
+        env = f"JACAZUL_SESSION_ID={session_id}"
+        out, _, code = self.run_cmd(
+            f"{env} {self.tw_flow} focus ind plan test_ini"
+        )
+        self.assertEqual(code, 0)
+        self.assertIn("Independent focus anchored to plan: test_ini", out)
+        session_file = os.path.join(self.taskdata, f"focus-{session_id}.json")
+        self.assertTrue(os.path.exists(session_file))
+        with open(session_file, "rb") as f:
+            data = orjson.loads(f.read())
+        self.assertEqual(data.get("focused_plan"), "test_ini")
+
+    def test_independent_focus_back(self):
+        """Independent Focus: focus back must delete session file and exit ind mode."""
+        session_id = "testsession"
+        env = f"JACAZUL_SESSION_ID={session_id}"
+        # First create session
+        self.run_cmd(f"{env} {self.tw_flow} focus ind plan test_ini")
+        session_file = os.path.join(self.taskdata, f"focus-{session_id}.json")
+        self.assertTrue(os.path.exists(session_file))
+        # Then exit
+        out, _, code = self.run_cmd(f"{env} {self.tw_flow} focus back")
+        self.assertEqual(code, 0)
+        self.assertIn("Switched back to global focus", out)
+        self.assertFalse(os.path.exists(session_file))
 
     def test_vaccinated_done_enforces_python_quality(self):
         """Quality Gate: 'tw-flow done' must block if Python files fail."""
