@@ -273,9 +273,9 @@ class FlowTest(JacazulTest):
     def test_independent_focus_creates_session_file(self):
         """Independent Focus: focus ind task must create session file."""
         session_id = "testsession"
-        env = f"JACAZUL_SESSION_ID={session_id}"
+        session_env = {"JACAZUL_SESSION_ID": session_id}
         out, _, code = self.run_cmd(
-            f"{env} {self.tw_flow} focus ind task {self.u1}"
+            f"{self.tw_flow} focus ind task {self.u1}", env=session_env
         )
         self.assertEqual(code, 0)
         session_file = os.path.join(self.taskdata, f"focus-{session_id}.json")
@@ -288,9 +288,9 @@ class FlowTest(JacazulTest):
     def test_independent_focus_plan(self):
         """Independent Focus: ind plan anchors to plan in session file."""
         session_id = "testsession"
-        env = f"JACAZUL_SESSION_ID={session_id}"
+        session_env = {"JACAZUL_SESSION_ID": session_id}
         out, _, code = self.run_cmd(
-            f"{env} {self.tw_flow} focus ind plan test_ini"
+            f"{self.tw_flow} focus ind plan test_ini", env=session_env
         )
         self.assertEqual(code, 0)
         self.assertIn("Independent focus anchored to plan: test_ini", out)
@@ -303,16 +303,31 @@ class FlowTest(JacazulTest):
     def test_independent_focus_back(self):
         """Independent Focus: focus back deletes session file."""
         session_id = "testsession"
-        env = f"JACAZUL_SESSION_ID={session_id}"
+        session_env = {"JACAZUL_SESSION_ID": session_id}
         # First create session
-        self.run_cmd(f"{env} {self.tw_flow} focus ind plan test_ini")
+        self.run_cmd(f"{self.tw_flow} focus ind plan test_ini", env=session_env)
         session_file = os.path.join(self.taskdata, f"focus-{session_id}.json")
         self.assertTrue(os.path.exists(session_file))
         # Then exit
-        out, _, code = self.run_cmd(f"{env} {self.tw_flow} focus back")
+        out, _, code = self.run_cmd(f"{self.tw_flow} focus back", env=session_env)
         self.assertEqual(code, 0)
         self.assertIn("Switched back to global focus", out)
         self.assertFalse(os.path.exists(session_file))
+
+    def test_focus_back_falls_back_to_global_focus(self):
+        """Independent Focus: after focus back, SESSION_ID set but file deleted falls back to global."""
+        session_id = "testsession2"
+        session_env = {"JACAZUL_SESSION_ID": session_id}
+        # Set a plan in global focus first
+        self.run_cmd(f"{self.tw_flow} focus plan test_ini")
+        # Create independent session and focus on different plan
+        self.run_cmd(f"{self.tw_flow} focus ind plan test_ini", env=session_env)
+        # Exit independent session (deletes session file)
+        self.run_cmd(f"{self.tw_flow} focus back", env=session_env)
+        # With SESSION_ID still set but file deleted, focus must read global focus.json
+        out, _, code = self.run_cmd(f"{self.tw_flow} focus", env=session_env)
+        self.assertEqual(code, 0)
+        self.assertIn("test_ini", out)
 
     def test_vaccinated_done_enforces_python_quality(self):
         """Quality Gate: 'tw-flow done' must block if Python files fail."""

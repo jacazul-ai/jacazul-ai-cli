@@ -124,13 +124,19 @@ class FocusManager:
         )
 
     def _active_file(self) -> str:
-        """Return session file if SESSION_ID set, otherwise global focus.json."""
+        """Return session file if SESSION_ID set, else global focus.json."""
         if self.session_file_path:
             return self.session_file_path
         return self.file_path
 
+    def _read_file(self) -> str:
+        """Return session file if SESSION_ID set and exists, else global."""
+        if self.session_file_path and os.path.exists(self.session_file_path):
+            return self.session_file_path
+        return self.file_path
+
     def load(self) -> FocusState:
-        active = self._active_file()
+        active = self._read_file()
 
         if not os.path.exists(active):
             return FocusState(task_track=[], plans_of_interest=[])
