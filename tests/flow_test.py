@@ -286,7 +286,7 @@ class FlowTest(JacazulTest):
         self.assertIn(self.u1[:8], data.get("focused_task_uuid", ""))
 
     def test_independent_focus_plan(self):
-        """Independent Focus: focus ind plan must anchor to plan in session file."""
+        """Independent Focus: ind plan anchors to plan in session file."""
         session_id = "testsession"
         env = f"JACAZUL_SESSION_ID={session_id}"
         out, _, code = self.run_cmd(
@@ -301,7 +301,7 @@ class FlowTest(JacazulTest):
         self.assertEqual(data.get("focused_plan"), "test_ini")
 
     def test_independent_focus_back(self):
-        """Independent Focus: focus back must delete session file and exit ind mode."""
+        """Independent Focus: focus back deletes session file."""
         session_id = "testsession"
         env = f"JACAZUL_SESSION_ID={session_id}"
         # First create session
@@ -471,7 +471,7 @@ class FlowTest(JacazulTest):
         self.assertNotIn("To be deleted", out2)
 
     def test_completed_task_modification_blocks(self):
-        """Safety: execute/done on completed task must fail; note is allowed."""
+        """Safety: execute on completed task fails; note is allowed."""
         self.run_cmd(f"{self.tw_flow} outcome {self.u1} 'Done'")
         self.run_cmd(f"{self.tw_flow} done {self.u1}")
 
@@ -482,11 +482,35 @@ class FlowTest(JacazulTest):
         self.assertEqual(code, 0)
 
         # execute on completed task must still fail
-        _, err, code = self.run_cmd(
-            f"{self.tw_flow} execute {self.u1}"
-        )
+        _, err, code = self.run_cmd(f"{self.tw_flow} execute {self.u1}")
         self.assertNotEqual(code, 0)
         self.assertIn("ACTION: To fix metadata", err)
+
+    def test_note_and_delete_on_completed_task(self):
+        """Notes: add and delete annotations on completed tasks must work."""
+        self.run_cmd(f"{self.tw_flow} outcome {self.u1} 'Done'")
+        self.run_cmd(f"{self.tw_flow} done {self.u1}")
+
+        # Add note to completed task
+        _, _, code = self.run_cmd(
+            f"{self.tw_flow} note {self.u1} note 'Post-completion note'"
+        )
+        self.assertEqual(code, 0)
+
+        # Get timestamp of the annotation just added
+        out, _, _ = self.run_cmd(f"taskp export status:completed {self.u1}")
+        task = orjson.loads(out)[0]
+        timestamp = task["annotations"][-1]["entry"]
+
+        # Delete annotation from completed task
+        _, _, code = self.run_cmd(
+            f"{self.tw_flow} note {self.u1} delete {timestamp}"
+        )
+        self.assertEqual(code, 0)
+
+        # Verify gone
+        out2, _, _ = self.run_cmd(f"{self.tw_flow} notes {self.u1}")
+        self.assertNotIn("Post-completion note", out2)
 
     def test_note_invalid_type_instructional_error(self):
         """Error as Prompt: Invalid note type must provide feedback."""
