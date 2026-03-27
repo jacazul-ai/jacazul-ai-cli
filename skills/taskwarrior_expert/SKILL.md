@@ -73,11 +73,33 @@ Modes define the **Agent's Behavior** for a given task. Prefix tasks with the mo
 - **`tw-flow`**: Standardized task management with context propagation.
 - **`taskp`**: **CRITICAL** Project-Aware Taskwarrior Wrapper. Always use `taskp` instead of raw `task`.
 
+## 🎯 Independent Focus Mode
+
+Sessions can be isolated from the global `focus.json` using `JACAZUL_SESSION_ID`.
+
+**Commands:**
+```bash
+tw-flow focus ind plan <name>       # Anchor to plan in independent session
+tw-flow focus ind task <uuid>       # Anchor to task in independent session
+tw-flow focus ind <plan-name>       # Smart focus in independent mode
+tw-flow focus back                  # Exit independent mode, return to global focus
+```
+
+**Bootstrap pre-seed (via env vars):**
+```bash
+JACAZUL_FOCUS_PLAN=my-plan JACAZUL_FOCUS_TASK=<uuid> jacazul-claude
+```
+The taskwarrior bootstrap will create `focus-{SESSION_ID}.json` automatically.
+
+**Rule:** If `JACAZUL_SESSION_ID` is set, ALL focus reads/writes go to `focus-{SESSION_ID}.json`. The global `focus.json` is never touched by an independent session.
+
+---
+
 ## 🚀 Quick Start Guide
 
-### 1. Create an Initiative
+### 1. Create a Plan
 ```bash
-tw-flow initiative feature-x \
+tw-flow plan feature-x \
   "DESIGN|Design schema|research|today" \
   "EXECUTE|Implement POST|implementation|tomorrow"
 ```
@@ -93,6 +115,5 @@ tw-flow done <uuid>
 ### 3. Check Status
 ```bash
 tw-flow ponder          # Horizon View (Global)
-   - *Note: The standalone "ponder" command is deprecated and will be removed in a future release.*
-tw-flow status  # Hands-on View (Focused)
+tw-flow status          # Hands-on View (Focused)
 ```

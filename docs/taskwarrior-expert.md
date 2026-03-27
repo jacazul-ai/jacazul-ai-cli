@@ -195,12 +195,33 @@ tw-flow reopen <uuid>
 Soft delete a task by moving it to an `_archive` project and marking it done.
 
 ### tw-flow focus (Anchor System)
-Manage session continuity by "locking" attention on specific initiatives or tasks.
-- `tw-flow focus ini <name>`: Anchors the session to a specific initiative.
+Manage session continuity by "locking" attention on specific plans or tasks.
+
+**Global focus (shared across sessions):**
+- `tw-flow focus plan <name>`: Anchors the session to a specific plan.
 - `tw-flow focus task <uuid>`: Anchors to a task and pushes it to the focus stack.
 - `tw-flow focus pop`: Reverts focus to the previous task in the stack.
-- `tw-flow focus interest add <name>`: Adds an initiative to the "Signal over Noise" dashboard.
-- `tw-flow focus clear`: Resets all session anchors.
+- `tw-flow focus interest add <name>`: Adds a plan to the "Signal over Noise" dashboard.
+- `tw-flow focus <plan-name>`: Smart focus — auto-detects plan and anchors.
+
+**Independent focus (session-isolated via `JACAZUL_SESSION_ID`):**
+- `tw-flow focus ind plan <name>`: Anchors to a plan in an isolated session file.
+- `tw-flow focus ind task <uuid>`: Anchors to a task in an isolated session file.
+- `tw-flow focus ind <plan-name>`: Smart focus in independent mode.
+- `tw-flow focus back`: Exits independent mode and returns to global focus.json.
+
+**Independent session bootstrap:**
+
+Set env vars before starting a session to pre-seed independent focus:
+```bash
+JACAZUL_FOCUS_PLAN=my-plan JACAZUL_FOCUS_TASK=<uuid> jacazul-claude
+```
+The taskwarrior bootstrap creates `focus-{SESSION_ID}.json` automatically.
+
+**How independent focus works:**
+- If `JACAZUL_SESSION_ID` is set, all focus reads/writes go to `focus-{SESSION_ID}.json`.
+- The global `focus.json` is never modified by an independent session.
+- `focus back` deletes the session file, returning to global focus.
 
 ### tw-flow ponder --all
 > **Note:** The standalone `ponder` command is deprecated and will be removed in the future. Prefer using `tw-flow ponder` for full workflow integration.
@@ -275,5 +296,5 @@ When running in a Taskwarrior 3 environment (e.g., Fedora 43 container), the `sc
 
 ---
 
-**Version:** 1.7.0  
-**Last Updated:** 2026-03-03
+**Version:** 1.8.0
+**Last Updated:** 2026-03-27
