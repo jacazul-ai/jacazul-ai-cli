@@ -39,22 +39,27 @@ The Broker is the engine that performs the actual synchronization.
 - **Git Context Inference:** Automatically detects Org and Project from local `.git` remotes.
 - **Hierarchical Decryption:** Resolves and decrypts the best token from the vault.
 - **Killer Sync:** Automatically closes Taskwarrior tasks if the corresponding GitHub issue is marked as `CLOSED`.
+- **Error as Prompt:** The Broker provides `ACTION:` hints and returns non-zero exit codes on failure.
 
-### CLI Commands (Direct Use):
+### CLI Commands (Direct Use)
+
+**CRITICAL:** Commands `open` and `edit` use **keyword arguments** (`key=val`). Other commands use positional arguments.
+
 ```bash
-# Sync local tasks with GitHub status
-jacazul-broker sync <issue_id>
+# Sync local tasks with GitHub status (positional)
+jacazul-broker sync <issue_id> [repo]
 
-# Open a new issue
-jacazul-broker open "Title" "Body description"
-```
+# List issues (positional)
+jacazul-broker list [repo] [state] [milestone]
 
-# Edit an existing issue
-# Syntax: edit <id> [title] [body] [repo] [assignee] [add_labels...]
-python3 jacazul/cli/broker.py edit <issue_id> "-" "-" "-" "piraz" "enhancement"
+# Open a new issue (kwargs)
+jacazul-broker open title="Issue Title" [body="Description"] [repo="org/repo"] [labels="bug,ui"]
 
-# Close an issue
-python3 jacazul/cli/broker.py close <issue_id> "Closing comment"
+# Edit an existing issue (ID + kwargs)
+jacazul-broker edit <id> [title="New Title"] [body="New body"] [add_labels="enhancement"]
+
+# Close an issue (positional)
+jacazul-broker close <id> [repo] [comment]
 ```
 
 ## 🧪 IdZoid Security Integration
@@ -65,5 +70,5 @@ All tokens are processed via `cryptozoid`.
 - **Cleaning:** The Broker automatically strips trailing newlines (`\n`) from decrypted tokens to ensure API compatibility.
 
 ---
-**Version:** 1.0.0  
-**Last Updated:** 2026-03-22
+**Version:** 1.1.0  
+**Last Updated:** 2026-03-26
