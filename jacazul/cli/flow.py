@@ -179,6 +179,7 @@ class FlowManager:
                     "INVESTIGATE",
                     "GUIDE",
                     "EXECUTE",
+                    "REFINE",
                     "TEST",
                     "DEBUG",
                     "REVIEW",

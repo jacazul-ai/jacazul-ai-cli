@@ -1,10 +1,6 @@
-# Jacazul AI CLI — Gemini Bootstrap
+# Jacazul AI CLI Manifesto
 
-## 🛠 Core Skills (Persistent Activation)
-@skills/jacazul-engine/SKILL.md
-@skills/taskwarrior_expert/SKILL.md
-
-@AGENTS.md
+This document defines the foundational engineering standards, architectural patterns, and operational philosophies for the Jacazul AI CLI project.
 
 ## 🏛 Architectural Boundaries
 
@@ -35,6 +31,7 @@ The project adheres to a "Silent by Default" logging policy to maintain CLI usab
 ### 2. Context Preservation
 - **Mandate:** Closing a task without documentation is FORBIDDEN.
 - **Protocol:** The `tw-flow done` command requires an `OUTCOME:` annotation. Discarded tasks MUST include an automatic audit record.
+
 ## 🧠 Session Stabilization & Context Engineering
 
 These directives ensure that the AI ecosystem remains functional and context-aware across different platforms and tool availability states.
@@ -47,7 +44,7 @@ These directives ensure that the AI ecosystem remains functional and context-awa
 - **Fallback:** Use base system primitives (standard bash redirection: `cat >`, `touch`, `echo >>`) to achieve filesystem changes. Always verify the state change manually (`ls`, `cat`) after a workaround execution.
 
 ### 3. Horizontal Skill Architecture
-- **Mandate:** Agents MUST activate required expert skills (`jacazul-engine`, `taskwarrior-expert`, `git-expert`) directly and simultaneously. 
+- **Mandate:** Agents MUST activate required expert skills (`jacazul-engine`, `taskwarrior-expert`, `git-expert`) directly and simultaneously.
 - **Goal:** Avoid cascading dependencies where one skill activates another. Independence ensures that a failure in one subsystem does not blind the entire agent.
 
 ### 4. The Keystone Pattern (Context Resolution)
@@ -65,7 +62,7 @@ These directives ensure that the AI ecosystem remains functional and context-awa
   - **Copilot/Opencode:** Use the **Agent** pattern (`jacazul.md` in `~/.copilot/agents`).
   - **Gemini CLI:** Operates via the **Skill** pattern or direct **Onboard Prompt** logic. The `jacazul-engine` skill provides the protocols in this environment.
   - **Claude Code:** Operates via the **Skill** pattern using the `Skill()` tool. Skills (`jacazul-engine`, `taskwarrior-expert`, `git-expert`) MUST be activated in the first turn, in parallel with `tw-flow focus`.
-- **Prompt Marketing & Workflow Awareness:** 
+- **Prompt Marketing & Workflow Awareness:**
   - **Concept:** Low-friction, high-value alerts within scripts (`tw-flow focus`, `onboard`) that notify the user of specific task attributes (e.g., "ALERT: External ticket detected, git-expert will use it for automated commit referencing.").
   - **Goal:** To maintain alignment between the developer's focus and the project's technical requirements (like Git/Ticket integration) without interrupting the productive flow.
 
@@ -96,5 +93,6 @@ Validation is the only path to finality. No logic change should occur without a 
 - **Authority:** The `jacazul-broker` binary (global) or `jacazul.cli.broker` (Python) is the SOLE authority for GitHub interactions.
 - **Security:** Credential resolution is hierarchical (Project > Org > User) and handled via `cryptozoid` and `vault.json`.
 - **Sync:** Use `jacazul-broker sync #ID` to synchronize GitHub Issue states with Taskwarrior local tasks.
+
 ---
-**Last Updated:** 2026-03-23
+**Last Updated:** 2026-03-27

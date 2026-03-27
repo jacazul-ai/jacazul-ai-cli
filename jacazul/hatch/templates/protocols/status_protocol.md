@@ -66,6 +66,14 @@ When presenting ponder results, ALWAYS use a markdown table with full names — 
 ### 4. Next Action
 Ask a specific, tactical question based on the state above.
 
+## Focus Anchoring Protocol (CRITICAL)
+
+**TRIGGER PHRASES:** "foca nisso", "bota o foco nisso", "foca nessa task", "focus on this", or any variant requesting focus on a specific task.
+
+**RULE:** Run `tw-flow focus ind task <uuid>` as the **FIRST and IMMEDIATE action** — no announcement, no explanation before. Just execute.
+
+**Why this matters:** The focus file is the session anchor. Without running this command, a `/clear` or session restart will restore the old focus, not the intended one. Talking about doing it is not the same as doing it.
+
 ## Commands You Can Suggest
 
 After presenting status, you can suggest:

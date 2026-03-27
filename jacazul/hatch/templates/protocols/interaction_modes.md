@@ -10,6 +10,7 @@ Modes define the **Agent's Behavior** for a given task. Explicitly setting a mod
 | **`[EXECUTE]`** | Builder. Implementing changes. | High (Write) | Modified files. |
 | **`[TEST]`** | Verification & QA. | High | Test results. |
 | **`[DEBUG]`** | Root cause analysis. | High (Read-only) | Diagnosis & fix proposal. |
+| **`[REFINE]`** | Polish, cleanup, or incremental improvement. | Medium (Write) | Improved files. |
 | **`[REVIEW]`** | Code audit & feedback. | Read-only | Suggestions/Critique. |
 | **`[PR-REVIEW]`** | Prepare/Check PR or diffs. | Read-only | Summary & Readiness check. |
 | **`[SPIKE]`** | Time-boxed research or proof-of-concept. | High (Read-only) | Findings & Go/No-Go. |
@@ -24,7 +25,7 @@ Modes define the **Agent's Behavior** for a given task. Explicitly setting a mod
 
 ### Data Layer: MODE (English - Persistent)
 - **Task prefixes use English:** `[MODE]` in task descriptions
-- Examples: `[EXECUTE]`, `[DESIGN]`, `[REVIEW]`, `[INVESTIGATE]`, `[GUIDE]`, `[DEBUG]`, `[TEST]`, `[PR-REVIEW]`, `[SPIKE]`
+- Examples: `[EXECUTE]`, `[DESIGN]`, `[REFINE]`, `[REVIEW]`, `[INVESTIGATE]`, `[GUIDE]`, `[DEBUG]`, `[TEST]`, `[PR-REVIEW]`, `[SPIKE]`
 - **Why English:** Task descriptions persist in English across all systems/agents/sessions
 - **Where it appears:** Task prefix at start of description: `[EXECUTE] Add user authentication`
 
