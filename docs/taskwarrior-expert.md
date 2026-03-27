@@ -201,6 +201,7 @@ Manage session continuity by "locking" attention on specific plans or tasks.
 - `tw-flow focus plan <name>`: Anchors the session to a specific plan.
 - `tw-flow focus task <uuid>`: Anchors to a task and pushes it to the focus stack.
 - `tw-flow focus pop`: Reverts focus to the previous task in the stack.
+- `tw-flow focus clear`: Resets plan and task anchors in the active focus file (session or global). Does NOT delete the session file.
 - `tw-flow focus interest add <name>`: Adds a plan to the "Signal over Noise" dashboard.
 - `tw-flow focus <plan-name>`: Smart focus — auto-detects plan and anchors.
 
@@ -208,7 +209,7 @@ Manage session continuity by "locking" attention on specific plans or tasks.
 - `tw-flow focus ind plan <name>`: Anchors to a plan in an isolated session file.
 - `tw-flow focus ind task <uuid>`: Anchors to a task in an isolated session file.
 - `tw-flow focus ind <plan-name>`: Smart focus in independent mode.
-- `tw-flow focus back`: Exits independent mode and returns to global focus.json.
+- `tw-flow focus back`: Exits independent mode — deletes the session file and returns to global focus.json.
 
 **Independent session bootstrap:**
 
@@ -222,6 +223,7 @@ The taskwarrior bootstrap creates `focus-{SESSION_ID}.json` automatically.
 - If `JACAZUL_SESSION_ID` is set, all focus reads/writes go to `focus-{SESSION_ID}.json`.
 - The global `focus.json` is never modified by an independent session.
 - `focus back` deletes the session file, returning to global focus.
+- `focus clear` only zeroes plan/task anchors — use `focus back` to exit independent mode.
 
 ### tw-flow ponder --all
 > **Note:** The standalone `ponder` command is deprecated and will be removed in the future. Prefer using `tw-flow ponder` for full workflow integration.

@@ -574,7 +574,6 @@ class FlowManager:
             self.tw.run([uuid, "denotate", match["description"]])
             self.success(f"Deleted annotation [{msg}] from task {uuid[:8]}")
             return
-        self.verify_not_completed(uuid)
         prefixes = {
             "research": "RESEARCH",
             "r": "RESEARCH",
@@ -1091,15 +1090,12 @@ def main():
             else:
                 flow.error("Usage: focus interest [add|remove|list] <name>")
         elif sub == "clear":
-            session_file = flow.focus.session_file_path
-            if session_file and os.path.exists(session_file):
-                os.remove(session_file)
-                flow.success("Independent session focus cleared.")
-            else:
-                flow.error(
-                    "No independent session active. focus.json is never "
-                    "touched by clear."
-                )
+            state = flow.focus.load()
+            state.focused_plan = None
+            state.focused_task_uuid = None
+            state.task_track = []
+            flow.focus.save(state)
+            flow.success("Focus cleared (plan and task anchors reset).")
         elif sub:
             # Smart Focus: Check if 'sub' is a valid plan name
             tasks = flow.tw.export([f"project:{sub}", "limit:1"])

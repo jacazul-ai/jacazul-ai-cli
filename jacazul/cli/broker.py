@@ -506,17 +506,41 @@ def main():
             "<sync|list|labels|milestones|open|edit|close> ..."
         )
         print("\nCommands:")
-        print("  sync <issue_id> [repo]        Syncs issue status to local tasks")
-        print("  list [repo] [state] [ms]      Lists issues (state: open|closed|all)")
-        print("  labels [repo]                 Lists repository labels (cached)")
-        print("  milestones [repo]             Lists repository milestones (cached)")
-        print("  open <title> [body] [repo]    Opens a new issue")
-        print("  edit <id> [title] [body]      Edits an existing issue")
+        print(
+            "  sync <issue_id> [repo]        Syncs issue status to local tasks"
+        )
+        print(
+            "  list [repo] [state] [ms]      Lists issues "
+            "(state: open|closed|all)"
+        )
+        print(
+            "  labels [repo]                 Lists repository labels (cached)"
+        )
+        print(
+            "  milestones [repo]             Lists repository "
+            "milestones (cached)"
+        )
+        print(
+            '  open title="..." [body="..."] [repo="..."] '
+            '[assignee="..."] [labels="l1,l2"]'
+        )
+        print(
+            '  edit <id> [title="..."] [body="..."] [repo="..."] '
+            '[assignee="..."] [add_labels="l1"]'
+        )
         print("  close <id> [repo] [comment]   Closes an issue")
         sys.exit(0)
 
     cmd = sys.argv[1]
     args = sys.argv[2:]
+
+    def parse_kwargs(args_list):
+        kwargs = {}
+        for arg in args_list:
+            if "=" in arg:
+                key, val = arg.split("=", 1)
+                kwargs[key] = val
+        return kwargs
 
     if cmd == "sync":
         if not args:
@@ -540,32 +564,34 @@ def main():
         broker.list_milestones(args[0] if args else None)
 
     elif cmd == "open":
-        # Syntax: broker.py open <title> [body] [repo] [assignee] [labels...]
-        if len(args) < 1:
+        kwargs = parse_kwargs(args)
+        title = kwargs.get("title")
+        if not title:
             error(
                 "Title required to open issue.\n"
-                "   ACTION: Use 'jacazul-broker open \"My title\"'"
+                "   ACTION: Use 'jacazul-broker open title=\"My title\"'"
             )
-        title = args[0]
-        body = args[1] if len(args) > 1 and args[1] != "-" else None
-        repo = args[2] if len(args) > 2 and args[2] != "-" else None
-        assignee = args[3] if len(args) > 3 and args[3] != "-" else None
-        labels = args[4:] if len(args) > 4 else None
+        body = kwargs.get("body")
+        repo = kwargs.get("repo")
+        assignee = kwargs.get("assignee")
+        labels_raw = kwargs.get("labels")
+        labels = labels_raw.split(",") if labels_raw else None
         broker.open_issue(title, body, repo, assignee, labels)
 
     elif cmd == "edit":
-        # Syntax: broker.py edit <id> [title] [body] [repo] [assignee] [add_labels...]
-        if len(args) < 1:
+        if not args:
             error(
                 "Issue ID required to edit.\n"
                 "   ACTION: Use 'jacazul-broker edit #123 title=\"New Title\"'"
             )
         issue_id = args[0]
-        title = args[1] if len(args) > 1 and args[1] != "-" else None
-        body = args[2] if len(args) > 2 and args[2] != "-" else None
-        repo = args[3] if len(args) > 3 and args[3] != "-" else None
-        assignee = args[4] if len(args) > 4 and args[4] != "-" else None
-        add_labels = args[5:] if len(args) > 5 else None
+        kwargs = parse_kwargs(args[1:])
+        title = kwargs.get("title")
+        body = kwargs.get("body")
+        repo = kwargs.get("repo")
+        assignee = kwargs.get("assignee")
+        add_labels_raw = kwargs.get("add_labels")
+        add_labels = add_labels_raw.split(",") if add_labels_raw else None
         broker.edit_issue(issue_id, title, body, repo, assignee, add_labels)
 
     elif cmd == "close":

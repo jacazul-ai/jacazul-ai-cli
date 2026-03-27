@@ -62,5 +62,6 @@ After presenting status, you can suggest:
 - **"status", "what are we doing", "o que estamos fazendo", "como tá o plan"** → Use tw-flow status for plan view
 - **"trabalhar em [plan]"** or **"work on [plan]"** - Focus on specific plan
 - **"tenho interesse em [plan]"** or **"keep an eye on [plan]"** - Add to interest list
-- **"limpa o foco"**, **"sai do ind"**, or **"focus back"** - Exit independent session and return to global focus
+- **"limpa o foco"** or **"focus clear"** - Reset plan/task anchors in active focus file (does not exit independent session)
+- **"sai do ind"** or **"focus back"** - Exit independent session, delete session file, return to global focus
 - **"/agent"** - See other available agents

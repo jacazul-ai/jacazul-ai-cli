@@ -471,13 +471,19 @@ class FlowTest(JacazulTest):
         self.assertNotIn("To be deleted", out2)
 
     def test_completed_task_modification_blocks(self):
-        """Safety: Modifying completed task must fail."""
+        """Safety: execute/done on completed task must fail; note is allowed."""
         self.run_cmd(f"{self.tw_flow} outcome {self.u1} 'Done'")
         self.run_cmd(f"{self.tw_flow} done {self.u1}")
 
-        # Try note
+        # note on completed task is allowed (annotations are always valid)
+        _, _, code = self.run_cmd(
+            f"{self.tw_flow} note {self.u1} note 'Post-completion note'"
+        )
+        self.assertEqual(code, 0)
+
+        # execute on completed task must still fail
         _, err, code = self.run_cmd(
-            f"{self.tw_flow} note {self.u1} note 'Illegal'"
+            f"{self.tw_flow} execute {self.u1}"
         )
         self.assertNotEqual(code, 0)
         self.assertIn("ACTION: To fix metadata", err)

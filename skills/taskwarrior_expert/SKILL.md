@@ -82,7 +82,8 @@ Sessions can be isolated from the global `focus.json` using `JACAZUL_SESSION_ID`
 tw-flow focus ind plan <name>       # Anchor to plan in independent session
 tw-flow focus ind task <uuid>       # Anchor to task in independent session
 tw-flow focus ind <plan-name>       # Smart focus in independent mode
-tw-flow focus back                  # Exit independent mode, return to global focus
+tw-flow focus back                  # Exit independent mode, delete session file, return to global focus
+tw-flow focus clear                 # Reset plan/task anchors in active file (does NOT delete session file)
 ```
 
 **Bootstrap pre-seed (via env vars):**
@@ -92,6 +93,7 @@ JACAZUL_FOCUS_PLAN=my-plan JACAZUL_FOCUS_TASK=<uuid> jacazul-claude
 The taskwarrior bootstrap will create `focus-{SESSION_ID}.json` automatically.
 
 **Rule:** If `JACAZUL_SESSION_ID` is set, ALL focus reads/writes go to `focus-{SESSION_ID}.json`. The global `focus.json` is never touched by an independent session.
+**Distinction:** `focus back` exits the independent session (deletes session file). `focus clear` only zeroes the plan/task anchors within the current active file.
 
 ---
 
