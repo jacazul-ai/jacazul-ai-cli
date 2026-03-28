@@ -28,10 +28,13 @@ if [ ! -f "$SETTINGS_FILE" ]; then
 fi
 
 # 3. Surgical update with jq
-# Preserves existing config and only ensures required fields are present
+# Unions permissions.allow from template into existing settings (idempotent, never overwrites user entries)
 if [ -f "$TEMPLATE_SETTINGS" ] && command -v jq &> /dev/null; then
     TMP_FILE=$(mktemp)
-    jq -s '.[0] * .[1]' "$SETTINGS_FILE" "$TEMPLATE_SETTINGS" > "$TMP_FILE" && mv "$TMP_FILE" "$SETTINGS_FILE"
+    TEMPLATE_ALLOWS=$(jq '.permissions.allow // []' "$TEMPLATE_SETTINGS")
+    jq --argjson adds "$TEMPLATE_ALLOWS" '
+        .permissions.allow = ((.permissions.allow // []) + $adds | unique)
+    ' "$SETTINGS_FILE" > "$TMP_FILE" && mv "$TMP_FILE" "$SETTINGS_FILE"
 fi
 
 if [ -n "$DEBUG" ]; then
