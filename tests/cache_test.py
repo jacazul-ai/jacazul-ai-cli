@@ -242,3 +242,76 @@ class FlowCacheSubcommandTest(JacazulTest):
         )
         self.assertNotIn("[cached]", out)
         self.assertIn("══ Plan:", out)
+
+
+class FlowPlansCacheTest(JacazulTest):
+    """Tests for tw-flow plans/inis output caching."""
+
+    def setUp(self):
+        super().setUp()
+        self.run_cmd(
+            f"{self.tw_flow} ini cache_ini 'Step 1|research|today'"
+        )
+        out, _, _ = self.run_cmd(f"{self.taskp} project:cache_ini export")
+        tasks = orjson.loads(out or "[]")
+        self.u1 = tasks[0]["uuid"]
+        self.cache_dir = os.path.join(
+            self.test_dir, "cache", "tw-flow", "test_project", "global"
+        )
+
+    # ── TTL / Prompt as Ad ───────────────────────────────────────────────────
+
+    def test_plans_cache_hit_within_ttl_shows_prompt_as_ad(self):
+        """Plans Cache: Second plans call within TTL must show [cached] signal."""
+        self.run_cmd(f"{self.tw_flow} plans")
+        out, _, _ = self.run_cmd(f"{self.tw_flow} plans")
+        self.assertIn("[cached]", out)
+        self.assertNotIn("Project Plans Landscape", out)
+
+    def test_plans_force_bypasses_cache(self):
+        """Plans Cache: plans --force must show full output even when cache is valid."""
+        self.run_cmd(f"{self.tw_flow} plans")
+        out, _, _ = self.run_cmd(f"{self.tw_flow} plans --force")
+        self.assertNotIn("[cached]", out)
+        self.assertIn("Project Plans Landscape", out)
+
+    # ── Separate cache keys per filter ───────────────────────────────────────
+
+    def test_plans_closed_has_separate_cache_key(self):
+        """Plans Cache: plans --closed must use a separate cache key from plans."""
+        self.run_cmd(f"{self.tw_flow} plans")
+        # --closed is a different key, must NOT be cached
+        out, _, _ = self.run_cmd(f"{self.tw_flow} plans --closed")
+        self.assertNotIn("[cached]", out)
+
+    def test_plans_all_has_separate_cache_key(self):
+        """Plans Cache: plans --all must use a separate cache key from plans."""
+        self.run_cmd(f"{self.tw_flow} plans")
+        # --all is a different key, must NOT be cached
+        out, _, _ = self.run_cmd(f"{self.tw_flow} plans --all")
+        self.assertNotIn("[cached]", out)
+
+    # ── Cache Invalidation ───────────────────────────────────────────────────
+
+    def test_plans_cache_invalidated_on_plan_create(self):
+        """Plans Cache: Creating a new plan must bust the plans cache."""
+        self.run_cmd(f"{self.tw_flow} plans")
+        self.run_cmd(f"{self.tw_flow} ini new_plan_x 'New task|research|today'")
+        out, _, _ = self.run_cmd(f"{self.tw_flow} plans")
+        self.assertNotIn("[cached]", out)
+        self.assertIn("Project Plans Landscape", out)
+
+    def test_plans_cache_invalidated_on_done(self):
+        """Plans Cache: Completing the last task in a plan must bust the plans cache."""
+        self.run_cmd(f"{self.tw_flow} plans")
+        self.run_cmd(f"{self.tw_flow} outcome {self.u1} 'Done'")
+        self.run_cmd(f"{self.tw_flow} done {self.u1}")
+        out, _, _ = self.run_cmd(f"{self.tw_flow} plans")
+        self.assertNotIn("[cached]", out)
+
+    def test_plans_cache_invalidated_on_discard(self):
+        """Plans Cache: Discarding a task must bust the plans cache."""
+        self.run_cmd(f"{self.tw_flow} plans")
+        self.run_cmd(f"{self.tw_flow} discard {self.u1}")
+        out, _, _ = self.run_cmd(f"{self.tw_flow} plans")
+        self.assertNotIn("[cached]", out)

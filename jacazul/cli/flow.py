@@ -20,8 +20,9 @@ VERSION = "1.6.0"
 
 
 class CacheManager:
-    STATUS_TTL = 30  # seconds
-    PONDER_TTL = 300  # 5 minutes
+    STATUS_TTL = 120  # 2 minutes
+    PONDER_TTL = 600  # 10 minutes
+    PLANS_TTL = 300  # 5 minutes
 
     def __init__(self, taskdata: str):
         jacazul_home = os.environ.get(
@@ -68,7 +69,7 @@ class CacheManager:
     def bust(self, ini_name: Optional[str] = None, focus_change: bool = False):
         if not os.path.exists(self.cache_dir):
             return
-        for key in ["status", "ponder"]:
+        for key in ["status", "ponder", "plans", "plans_all", "plans_closed"]:
             p = self._path(key)
             if os.path.exists(p):
                 os.remove(p)
@@ -971,6 +972,7 @@ def main():
     cmd, args, flow = sys.argv[1], sys.argv[2:], FlowManager()
     if cmd in ["plan", "initiative", "ini"]:
         flow.cmd_plan(args[0], args[1:])
+        flow.cache.bust()
     elif cmd == "status":
         pending_only = "--pending" in args
         use_table = "--table" in args
@@ -1046,7 +1048,24 @@ def main():
     elif cmd in ["plans", "inis", "initiatives"]:
         show_all = "--all" in args
         show_closed = "--closed" in args
-        flow.cmd_plans(show_all, show_closed)
+        force = "--force" in args
+        if show_all:
+            cache_key = "plans_all"
+        elif show_closed:
+            cache_key = "plans_closed"
+        else:
+            cache_key = "plans"
+        if not force:
+            cached = flow.cache.get(cache_key, CacheManager.PLANS_TTL)
+            if cached is not None:
+                print("🐊 [cached] Plans unchanged. Use --force to refresh.")
+                sys.exit(0)
+        buf = io.StringIO()
+        with redirect_stdout(buf):
+            flow.cmd_plans(show_all, show_closed)
+        output = buf.getvalue()
+        sys.stdout.write(output)
+        flow.cache.set(cache_key, output)
     elif cmd == "active":
         flow.cmd_active()
     elif cmd == "blocked":
@@ -1063,6 +1082,7 @@ def main():
         flow.cmd_wait(args[0], args[1])
     elif cmd == "discard":
         flow.cmd_discard(args[0])
+        flow.cache.bust()
     elif cmd == "rename":
         if len(args) < 2:
             flow.error("Usage: tw-flow rename <old_name> <new_name>")
