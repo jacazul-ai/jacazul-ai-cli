@@ -485,7 +485,7 @@ class FlowManager:
         args = (
             [filter_val, "ready"]
             if "project:" in filter_val or "status:" in filter_val
-            else [f"project:{filter_val}", "status:pending", "ready"]
+            else [f'project:"{filter_val}"', "status:pending", "ready"]
         )
         res = self.tw.run(args, capture=True)
         if res.returncode == 0:
@@ -903,7 +903,7 @@ class FlowManager:
         ini = tasks[0].get("project", "unscoped")
         archive = f"{ini.split(':_archive')[0]}:_archive"
         os.environ["TW_FLOW_INTERNAL"] = "true"
-        self.tw.run([uuid, "modify", f"project:{archive}", "+DISCARDED"])
+        self.tw.run([uuid, "modify", f'project:"{archive}"', "+DISCARDED"])
         self.tw.run(
             [uuid, "annotate", "OUTCOME: Task discarded and moved to archive."]
         )
@@ -1086,7 +1086,7 @@ def main():
                 if name:
                     flow.focus.update_plan(name)
                     tasks = flow.tw.export(
-                        [f"project:{name}", "status:pending", "limit:1"]
+                        [f'project:"{name}"', "status:pending", "limit:1"]
                     )
                     if tasks:
                         flow.focus.push_task(tasks[0]["uuid"], name)
@@ -1112,12 +1112,12 @@ def main():
                 else:
                     flow.error("Usage: focus ind task <uuid>")
             elif ind_sub:
-                tasks = flow.tw.export([f"project:{ind_sub}", "limit:1"])
+                tasks = flow.tw.export([f'project:"{ind_sub}"', "limit:1"])
                 if tasks:
                     name = tasks[0]["project"]
                     flow.focus.update_plan(name)
                     pending = flow.tw.export(
-                        [f"project:{name}", "status:pending", "limit:1"]
+                        [f'project:"{name}"', "status:pending", "limit:1"]
                     )
                     if pending:
                         flow.focus.push_task(pending[0]["uuid"], name)
@@ -1166,7 +1166,7 @@ def main():
                 flow.focus.update_plan(name)
                 flow.cache.bust(ini_name=name)
                 tasks = flow.tw.export(
-                    [f"project:{name}", "status:pending", "limit:1"]
+                    [f'project:"{name}"', "status:pending", "limit:1"]
                 )
                 if tasks:
                     flow.focus.push_task(tasks[0]["uuid"], name)
@@ -1231,13 +1231,13 @@ def main():
             flow.success("Focus cleared (plan and task anchors reset).")
         elif sub:
             # Smart Focus: Check if 'sub' is a valid plan name
-            tasks = flow.tw.export([f"project:{sub}", "limit:1"])
+            tasks = flow.tw.export([f'project:"{sub}"', "limit:1"])
             if tasks:
                 name = tasks[0]["project"]
                 flow.focus.update_plan(name)
                 flow.cache.bust(focus_change=True)
                 pending = flow.tw.export(
-                    [f"project:{name}", "status:pending", "limit:1"]
+                    [f'project:"{name}"', "status:pending", "limit:1"]
                 )
                 if pending:
                     flow.focus.push_task(pending[0]["uuid"], name)
