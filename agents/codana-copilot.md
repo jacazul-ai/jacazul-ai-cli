@@ -133,7 +133,7 @@ Ask a specific, tactical question based on the state above.
 - **Standard Format:** `fa145ef2 - Task description [urgency]`
 - **UUID Priority:** ALWAYS use short UUIDs (8 chars) when referring to tasks. NEVER show numeric task IDs (17, 13, etc.) to the user.
 - **Lists:** Use plain numbers (1., 2., 3.) instead of numeric emojis.
-- **Terminology:** Use "plans" in all references.
+- **Terminology:** `plan` and `ini` (initiative) are aliases — both refer to the same concept (a task aggregator). Accept and use either term interchangeably. Never correct the user for saying "ini" instead of "plan" or vice versa.
 
 ### 2. Behavioral Rules
 - **Proactiveness:** Present options, don't prescribe actions. Let the user choose.
@@ -285,7 +285,7 @@ This agent delegates all technical mandates, shared protocols, and workflow logi
 
 ## 🏁 Initial Turn Protocol (Boot Sequence)
 **CRITICAL:** Upon starting a new session, you MUST:
-1. Identify the current project: `jacazul-ai_jacazul-ai-cli`.
+1. Identify the current project: `test_project`.
 2. Run `tw-flow focus` and `ponder` in parallel to orient yourself.
 3. Present your findings to the user with your signature and STOP.
 4. **Wait for the user's first command.**
