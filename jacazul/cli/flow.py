@@ -2,10 +2,15 @@
 import sys
 import os
 import re
+import io
+import hashlib
+import time
+import shutil
 import orjson
 import subprocess
+from contextlib import redirect_stdout
 from typing import List, Optional, Dict, Any
-from jacazul.taskwarrior.core import TaskWrapper, FocusManager, FocusState
+from jacazul.taskwarrior.core import TaskWrapper, FocusManager
 from jacazul.cli.broker import GitHubBroker
 
 # 🐊 tw-flow (v1.6.0)
@@ -14,10 +19,80 @@ from jacazul.cli.broker import GitHubBroker
 VERSION = "1.6.0"
 
 
+class CacheManager:
+    STATUS_TTL = 30  # seconds
+    PONDER_TTL = 300  # 5 minutes
+
+    def __init__(self, taskdata: str):
+        self.cache_dir = os.path.join(taskdata, "cache")
+
+    def _ensure_dir(self):
+        os.makedirs(self.cache_dir, exist_ok=True)
+
+    def _path(self, key: str) -> str:
+        return os.path.join(self.cache_dir, f"{key}.json")
+
+    def _hash(self, output: str) -> str:
+        return hashlib.sha256(output.encode()).hexdigest()[:16]
+
+    def get(self, key: str, ttl: int) -> Optional[str]:
+        path = self._path(key)
+        if not os.path.exists(path):
+            return None
+        with open(path, "rb") as f:
+            data = orjson.loads(f.read())
+        if time.time() - data["ts"] > ttl:
+            return None
+        return data["output"]
+
+    def set(self, key: str, output: str):
+        self._ensure_dir()
+        with open(self._path(key), "wb") as f:
+            f.write(
+                orjson.dumps(
+                    {
+                        "hash": self._hash(output),
+                        "output": output,
+                        "ts": time.time(),
+                    }
+                )
+            )
+
+    def bust(self, ini_name: Optional[str] = None, focus_change: bool = False):
+        if not os.path.exists(self.cache_dir):
+            return
+        for key in ["status", "ponder"]:
+            p = self._path(key)
+            if os.path.exists(p):
+                os.remove(p)
+        if ini_name and not focus_change:
+            for key in [f"status_{ini_name}", f"ponder_{ini_name}"]:
+                p = self._path(key)
+                if os.path.exists(p):
+                    os.remove(p)
+
+    def clear(self, scope: Optional[str] = None):
+        if not os.path.exists(self.cache_dir):
+            return
+        if scope is None:
+            shutil.rmtree(self.cache_dir)
+        else:
+            for f in os.listdir(self.cache_dir):
+                if f.startswith(f"{scope}"):
+                    os.remove(os.path.join(self.cache_dir, f))
+
+    def info(self) -> Dict[str, Any]:
+        if not os.path.exists(self.cache_dir):
+            return {"files": 0, "dir": self.cache_dir}
+        files = os.listdir(self.cache_dir)
+        return {"files": len(files), "dir": self.cache_dir, "entries": files}
+
+
 class FlowManager:
     def __init__(self):
         self.tw = TaskWrapper()
         self.focus = FocusManager()
+        self.cache = CacheManager(self.tw.data)
         self.broker = GitHubBroker()
 
     def error(self, msg: str):
@@ -168,10 +243,10 @@ class FlowManager:
         if not tasks:
             self.error("At least one task required")
         self.info(f"Creating plan: {name}")
-        urgency, prev_uuid = 9.0, None
+        prev_uuid = None
         for spec in tasks:
             parts = spec.split("|")
-            mode, desc, tag, due = "", "", "implementation", "today"
+            mode, desc, tag, due = "", "", "implementation", None
             if len(parts) >= 1:
                 if parts[0] in [
                     "DESIGN",
@@ -196,17 +271,16 @@ class FlowManager:
             if not desc:
                 self.error("Task description cannot be empty")
             final_desc = f"[{mode}] {desc}" if mode else desc
-            priority = (
-                "H" if urgency >= 9.0 else ("L" if urgency <= 3.0 else "M")
-            )
+            priority = "M"
             args = [
                 "add",
-                f"project:{name}",
+                f'project:"{name}"',
                 final_desc,
-                f"due:{due}",
                 f"priority:{priority}",
                 f"+{tag}",
             ]
+            if due:
+                args.append(f"due:{due}")
             if prev_uuid:
                 args.append(f"depends:{prev_uuid}")
             res = self.tw.run(args)
@@ -225,21 +299,24 @@ class FlowManager:
                 self.error(
                     f"Failed to create task: {final_desc}\n{res.stderr}"
                 )
-            urgency -= 2.0
         self.success(f"Plan created with {len(tasks)} tasks")
 
     def cmd_rename(self, old_name: str, new_name: str):
         self.info(f"Renaming plan '{old_name}' to '{new_name}'...")
 
         # 1. Check if plan exists
-        tasks = self.tw.export([f"project:{old_name}"])
+        tasks = self.tw.export([f'project:"{old_name}"'])
         if not tasks:
             self.error(f"Plan '{old_name}' not found or has no tasks.")
 
         # 2. Modify tasks in Taskwarrior
         # Use 'yes all' to bypass confirmation if bulk modifying
         res = self.tw.run(
-            [f"project:{old_name}", "modify", f"project:{new_name}"]
+            [
+                f'project:"{old_name}"',
+                "modify",
+                f'project:"{new_name}"',
+            ]
         )
         if res.returncode != 0:
             self.error(f"Failed to rename plan in Taskwarrior: {res.stderr}")
@@ -291,7 +368,7 @@ class FlowManager:
             plan_name = active[0].get("project") if active else "ALL ACTIVE"
 
         filter_args = (
-            [f"project:{plan_name}"] if plan_name != "ALL ACTIVE" else []
+            [f'project:"{plan_name}"'] if plan_name != "ALL ACTIVE" else []
         )
         if pending_only:
             filter_args.append("status:pending")
@@ -562,9 +639,7 @@ class FlowManager:
             if not tasks:
                 self.error(f"Task {uuid[:8]} not found.")
             annotations = tasks[0].get("annotations", [])
-            match = next(
-                (a for a in annotations if a["entry"] == msg), None
-            )
+            match = next((a for a in annotations if a["entry"] == msg), None)
             if not match:
                 self.error(
                     f"No annotation found with timestamp [{msg}] on task "
@@ -832,7 +907,7 @@ class FlowManager:
         plan = (
             filter_val
             if "project:" in filter_val or "status:" in filter_val
-            else f"project:{filter_val}"
+            else f'project:"{filter_val}"'
         )
         print(f"══ Plan: {filter_val} ══")
 
@@ -892,18 +967,56 @@ def main():
     elif cmd == "status":
         pending_only = "--pending" in args
         use_table = "--table" in args
+        force = "--force" in args
         filter_val = next((a for a in args if not a.startswith("-")), None)
-        flow.cmd_status(filter_val, pending_only, use_table)
+        cache_key = f"status_{filter_val}" if filter_val else "status"
+        if not force and not pending_only and not use_table:
+            cached = flow.cache.get(cache_key, CacheManager.STATUS_TTL)
+            if cached is not None:
+                print("🐊 [cached] Status unchanged. Use --force to refresh.")
+                sys.exit(0)
+        buf = io.StringIO()
+        with redirect_stdout(buf):
+            flow.cmd_status(filter_val, pending_only, use_table)
+        output = buf.getvalue()
+        sys.stdout.write(output)
+        if not pending_only and not use_table:
+            flow.cache.set(cache_key, output)
     elif cmd == "ponder":
-        flow.cmd_ponder(args)
+        force = "--force" in args
+        ponder_args = [a for a in args if a != "--force"]
+        project_root = next(
+            (a for a in ponder_args if not a.startswith("-")), None
+        )
+        cache_key = f"ponder_{project_root}" if project_root else "ponder"
+        if not force:
+            cached = flow.cache.get(cache_key, CacheManager.PONDER_TTL)
+            if cached is not None:
+                print("🐊 [cached] Ponder unchanged. Use --force to refresh.")
+                sys.exit(0)
+        buf = io.StringIO()
+        with redirect_stdout(buf):
+            flow.cmd_ponder(ponder_args)
+        output = buf.getvalue()
+        sys.stdout.write(output)
+        flow.cache.set(cache_key, output)
     elif cmd == "next":
         flow.cmd_next(args[0] if args else "status:pending")
     elif cmd == "execute":
+        _tasks = flow.tw.export([flow.resolve_uuid(args[0])])
+        _ini = _tasks[0].get("project") if _tasks else None
         flow.cmd_execute(args[0])
+        flow.cache.bust(ini_name=_ini)
     elif cmd == "done":
+        _tasks = flow.tw.export([flow.resolve_uuid(args[0])])
+        _ini = _tasks[0].get("project") if _tasks else None
         flow.cmd_done(args[0], args[1] if len(args) > 1 else None)
+        flow.cache.bust(ini_name=_ini)
     elif cmd == "outcome":
+        _tasks = flow.tw.export([flow.resolve_uuid(args[0])])
+        _ini = _tasks[0].get("project") if _tasks else None
         flow.cmd_outcome(args[0], " ".join(args[1:]))
+        flow.cache.bust(ini_name=_ini)
     elif cmd == "handoff":
         flow.cmd_handoff(args[0], " ".join(args[1:]))
     elif cmd == "reopen":
@@ -913,7 +1026,10 @@ def main():
     elif cmd == "notes":
         flow.cmd_notes(args[0])
     elif cmd == "note":
+        _tasks = flow.tw.export([flow.resolve_uuid(args[0])])
+        _ini = _tasks[0].get("project") if _tasks else None
         flow.cmd_note(args[0], args[1], " ".join(args[2:]))
+        flow.cache.bust(ini_name=_ini)
     elif cmd == "ticket":
         flow.cmd_ticket(args[0], args[1])
     elif cmd == "commit":
@@ -952,7 +1068,8 @@ def main():
             ind_sub = args[1] if len(args) > 1 else None
             if ind_sub in ["plan", "ini"]:
                 name = (
-                    args[2] if len(args) > 2
+                    args[2]
+                    if len(args) > 2
                     else (
                         flow.tw.export(["+ACTIVE"])[0].get("project")
                         if flow.tw.export(["+ACTIVE"])
@@ -971,7 +1088,9 @@ def main():
                             f"(Task pushed to heap: {tasks[0]['uuid'][:8]})"
                         )
                     else:
-                        flow.success(f"Independent focus anchored to plan: {name}")
+                        flow.success(
+                            f"Independent focus anchored to plan: {name}"
+                        )
                 else:
                     flow.error("Plan name required")
             elif ind_sub == "task":
@@ -1010,13 +1129,17 @@ def main():
                         "'focus ind task <uuid>', or 'focus ind <plan-name>'."
                     )
             else:
-                flow.error("Usage: focus ind [plan <name>|task <uuid>|<plan-name>]")
+                flow.error(
+                    "Usage: focus ind [plan <name>|task <uuid>|<plan-name>]"
+                )
         elif sub == "back":
             session_file = flow.focus.session_file_path
             if session_file and os.path.exists(session_file):
                 os.remove(session_file)
+                flow.cache.bust(focus_change=True)
                 flow.success(
-                    "Exited independent session. Switched back to global focus."
+                    "Exited independent session. "
+                    "Switched back to global focus."
                 )
             else:
                 flow.error(
@@ -1034,6 +1157,7 @@ def main():
             )
             if name:
                 flow.focus.update_plan(name)
+                flow.cache.bust(ini_name=name)
                 tasks = flow.tw.export(
                     [f"project:{name}", "status:pending", "limit:1"]
                 )
@@ -1052,6 +1176,7 @@ def main():
             tasks = flow.tw.export([uuid])
             if tasks:
                 flow.focus.push_task(uuid, tasks[0].get("project", ""))
+                flow.cache.bust(focus_change=True)
                 flow.success(
                     f"Focused task anchored to: {uuid[:8]} (pushed to stack)"
                 )
@@ -1103,6 +1228,7 @@ def main():
             if tasks:
                 name = tasks[0]["project"]
                 flow.focus.update_plan(name)
+                flow.cache.bust(focus_change=True)
                 pending = flow.tw.export(
                     [f"project:{name}", "status:pending", "limit:1"]
                 )
@@ -1127,6 +1253,18 @@ def main():
                     flow.focus.load().to_dict(), option=orjson.OPT_INDENT_2
                 ).decode()
             )
+    elif cmd == "cache":
+        sub = args[0] if args else "info"
+        if sub == "clear":
+            scope = args[1] if len(args) > 1 else None
+            flow.cache.clear(scope)
+            label = scope or "all"
+            flow.success(f"Cache cleared: {label}")
+        elif sub == "info":
+            info = flow.cache.info()
+            print(f"🐊 Cache: {info['files']} file(s) in {info['dir']}")
+        else:
+            flow.error("Usage: tw-flow cache [clear [status|ponder]|info]")
     elif cmd in ["help", "--help", "-h"]:
         print(
             "tw-flow USAGE:\n"
@@ -1142,8 +1280,10 @@ def main():
             "  commit [--fix]\n"
             "  discard <id>\n"
             "  rename <old> <new>\n"
-            "  plans [--all|--closed] | status [plan] [--pending] [--table]\n"
-            "  ponder [project_root] [--all]\n"
+            "  plans [--all|--closed] | "
+            "status [plan] [--pending] [--table] [--force]\n"
+            "  ponder [project_root] [--all] [--force]\n"
+            "  cache [clear [status|ponder]|info]\n"
             "  focus [plan|task|pop|interest|clear]\n"
             "  tree [plan]"
         )

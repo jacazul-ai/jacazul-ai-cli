@@ -95,6 +95,31 @@ class FlowTest(JacazulTest):
         self.assertIn("[TASK LANDSCAPE]", out)
         self.assertIn("[TACTICAL READOUT]", out)
 
+    def test_cool_down_protocol_and_hyphen_fix(self):
+        """Standardization: 'tw-flow plan' must not add default due/priority and must support hyphens (Fix #37)."""
+        # 1. Test hyphenated plan name (Fix #37)
+        plan_name = "cool-down-test"
+        out, _, _ = self.run_cmd(f"{self.tw_flow} plan {plan_name} 'DESIGN|Cool task|design'")
+        self.assertIn(f"Creating plan: {plan_name}", out)
+        self.assertIn("Created task", out)
+
+        # 2. Verify Cool Down protocol (no default due, priority:M)
+        out_exp, _, _ = self.run_cmd(f"{self.taskp} project:{plan_name} export")
+        tasks = orjson.loads(out_exp)
+        self.assertEqual(len(tasks), 1)
+        task = tasks[0]
+        self.assertNotIn("due", task, "Task should not have a default due date")
+        self.assertEqual(task.get("priority"), "M", "Task should have priority:M by default")
+
+        # 3. Verify tree and status also work with hyphenated names
+        out_status, _, _ = self.run_cmd(f"{self.tw_flow} status {plan_name}")
+        self.assertIn(f"Plan: {plan_name}", out_status)
+        self.assertIn("Cool task", out_status)
+
+        out_tree, _, _ = self.run_cmd(f"{self.tw_flow} tree {plan_name}")
+        self.assertIn(f"Plan: {plan_name}", out_tree)
+        self.assertIn("Cool task", out_tree)
+
     def test_tw_flow_commit_draft_generation(self):
         """Standardization: 'tw-flow commit' must generate a draft."""
         self.run_cmd(f"{self.tw_flow} ticket {self.u1} '#JAC-789'")
