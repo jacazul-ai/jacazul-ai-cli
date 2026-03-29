@@ -1,92 +1,51 @@
-# Documentation
+# Documentation Central 📚
 
-Welcome to the AI CLI Sandboxed documentation.
+Welcome to the Jacazul AI CLI documentation. This project is built around the concept of **Persistent Tactical Memory** and **Multi-Persona Navigation**.
 
-## 📚 Table of Contents
+## 📖 Table of Contents
 
-### Getting Started
-- [Quick Start Guide](getting-started.md) - Setup and first steps
-- [Verification Methodology](verification-methodology.md) - High-integrity execution flow
-- [Copilot CLI Behavior](copilot-cli-behavior.md) - Internal diagnostics and patterns
+### 🚀 Getting Started
+- [Quick Start Guide](getting-started.md) - Host and Sandbox setup.
+- [Verification Methodology](verification-methodology.md) - How we ensure high-integrity delivery.
+- [Technical Architecture](ARCHITECTURE.md) - Internal structure and CLI reference.
 
-### Dual-Persona System
-- [Jacazul & Codana Agents](agents/README.md) - Dual-persona workflow navigators
-- [Persona Switching Guide](agents/persona-switching.md) - How to switch between personas
+### 🎭 The Navigators (Personas)
+- [Multi-Persona System](agents/persona-system.md) - Architecture and design.
+- [Jacazul & Codana](agents/README.md) - The original duo.
+- [Arnalbam & Atena](agents/README.md) - The Shredded and the Wise additions.
+- [Persona Switching](agents/persona-switching.md) - How to swap partners mid-session.
 
-### Custom Agents
-- [Jacazul Agent](agents/jacazul.md) - PT-BR street-smart navigator
-- [Codana Agent](agents/codana.md) - EN tactical operator
+### 🛠️ Expert Skills
+- [Taskwarrior Expert](taskwarrior-expert.md) - Mastering the 7-phase workflow.
+- [Python Expert](python-expert.md) - PEP 8 and quality gates.
+- [GitHub Broker](github-broker.md) - Secure issue and ticket synchronization.
 
-### Skills
-- [Taskwarrior Expert](taskwarrior-expert.md) - Complete workflow management guide
-- [Skills Overview](skills/README.md) - All available skills
-
-### Advanced Topics
-- [Dual-Persona System](agents/persona-system.md) - Architecture and design
-- [Environment Modes](environment-modes.md) - UNHINGED vs CAGED (Native vs Container)
-- [NO BULLSHIT Policy](agents/no-bullshit-policy.md) - Global feedback standard
-- Session continuity and handoffs
-- Custom workflow patterns
-- Container customization
+### 🔒 Advanced Concepts
+- [Environment Modes](environment-modes.md) - COUNSELOR (Safety) vs UNHINGED (Autonomy).
+- [Output Caching](tw-flow-cache.md) - Session-scoped context protection.
+- [NO BULLSHIT Policy](agents/no-bullshit-policy.md) - Our feedback standard.
 
 ---
 
-## 🚀 Quick Links
+## 🌟 The Navigator Ecosystem
 
-**New users:** Start with [Getting Started](getting-started.md)
+We use distinct AI personalities to match your workflow needs. Swapping is conversational—no commands required.
 
-**Workflow navigators:** See [Jacazul & Codana](agents/README.md)
-
-**Want to switch personas?** Read [Persona Switching Guide](agents/persona-switching.md)
-
-**Taskwarrior users:** Jump to [Taskwarrior Expert Guide](taskwarrior-expert.md)
-
-**Developers:** Check the main [README](../README.md)
-
----
-
-## 📖 Documentation Structure
-
-```
-docs/
- README.md (you are here)
- getting-started.md (sandbox quick start)
- verification-methodology.md (5-step flow)
- copilot-cli-behavior.md (internal diagnostics)
- agents/
-  README.md (dual-persona overview)
-  jacazul.md (🐊 Jacazul agent guide)
-  codana.md (� Codana agent guide)
-  persona-switching.md (how to switch)
-  persona-system.md (architecture)
-  no-bullshit-policy.md (feedback standards)
- taskwarrior-expert.md (complete workflow guide)
- skills/ (available skills)
-```
+| Navigator | Voice | Specialization |
+| :--- | :--- | :--- |
+| **🐊 Jacazul** | PT-BR | Street-smart orientation and quick wins. |
+| **{🔷} Codana** | EN | Tactical precision and complex logic. |
+| **{💪} Arnalbam** | Bilingual | High-octane motivation and heavy refactoring. |
+| **🦉 Atena** | Pedagogical | Step-by-step guidance and workflow training. |
 
 ---
 
-## 🌟 What's New: Dual-Persona System
+## 🆘 Troubleshooting & Support
 
-This project uses **two distinct AI personas** to match different workflow styles:
-
-- **🐊 Jacazul** - PT-BR street-smart, laid-back, direct. Your casual navigator.
-- **{🔷} Codana** - EN tactical, professional, sharp. Your mission-focused operator.
-
-Both share the same NO BULLSHIT philosophy: genuine feedback only, no fluff.
-
-**Switch between them anytime** by saying "me traz a codana" or "bring me jacazul" — it's conversational, no special syntax.
+1. Check the **[Technical Architecture](ARCHITECTURE.md)** for CLI parity and path issues.
+2. Use the `onboard` trigger to refresh your agent's context.
+3. Consult the **[Verification Methodology](verification-methodology.md)** if tasks are failing Quality Gates.
 
 ---
 
-## 🆘 Need Help?
-
-1. Check the relevant guide above
-2. Review examples in the documentation
-3. Try `onboard` command to see persona in action
-4. Consult skill-specific docs in `/project/skills/`
-
----
-
-**Last Updated:** 2026-02-10
-
+**Philosophy:** "Plan effectively, execute efficiently, and never lose context."

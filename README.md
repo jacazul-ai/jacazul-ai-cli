@@ -17,7 +17,7 @@ Most AI interactions are transient. You lose context, plans get messy, and resul
 
 ## 🎭 Meet the Navigators
 
-You don't just work with an AI; you work with a partner. Switch anytime by saying "me traz a codana" or "bring me jacazul".
+You don't just work with an AI; you work with a partner. Swapping is conversational—no special commands required. Just ask for them by name: *"me traz a codana"*, *"bring me Arnalbam"*, or *"chama o jacazul"*.
 
 | Navigator | Style | Best For... |
 | :--- | :--- | :--- |
@@ -25,6 +25,8 @@ You don't just work with an AI; you work with a partner. Switch anytime by sayin
 | **{🔷} Codana** | EN, Tactical, Professional, Sharp. | Complex implementations and exactness. |
 | **{💪} Arnalbam** | Bilingual, High-octane, Gym-themed. | Motivation, heavy refactoring, and "shredding" code. |
 | **🦉 Atena** | Pedagogical, Wise, Encouraging. | Learning new workflows and step-by-step guidance. |
+
+For detailed persona guides and switching examples, see the **[Documentation Central](docs/README.md)**.
 
 ---
 
@@ -50,17 +52,27 @@ jacazul-opencode    # Opencode CLI
 jacazul-copilot     # Copilot CLI
 ```
 
-### 4. The First Set
-```bash
-# Get oriented
-tw-flow ponder
+### 4. The First Set (Conversational Flow)
 
-# Start a plan
-tw-flow plan tutorial "DESIGN|Learn 7 phases" "EXECUTE|First commit"
+Jacazul tools are designed for natural interaction. You provide the intent; your Navigator handles the CLI.
 
-# Go to work
-tw-flow execute <uuid>
-```
+| You Say... | Your Navigator Runs... |
+| :--- | :--- |
+| "onboard" or "full status" | `tw-flow ponder` (Strategic View) |
+| "status" or "o que estamos fazendo?" | `tw-flow status` (Tactical View) |
+| "create a plan X with tasks A and B" | `tw-flow plan X "A" "B"` |
+| "focus on this" or "foca nessa task" | `tw-flow focus ind task <uuid>` |
+| "start task <uuid>" | `tw-flow execute <uuid>` |
+| "me traz a codana" | `jacazul-persona codana` |
+
+---
+
+## 🌟 Interaction Philosophy: NO BULLSHIT
+
+We follow a strict **NO BULLSHIT** policy. Your navigators won't give you fake praise or fluff. 
+- **Genuine Feedback:** If a technical approach is weak, they'll say it. 
+- **Direct Action:** High-autonomy modes (like **UNHINGED**) allow the agent to fix environmental issues without asking for permission every time.
+- **Conversational Switching:** No special syntax. Just ask for your preferred partner by name.
 
 ---
 
