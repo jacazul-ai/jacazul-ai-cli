@@ -74,7 +74,13 @@ class TaskWrapper:
         capture: bool = True,
         verbose: Optional[str] = "new-id",
     ) -> subprocess.CompletedProcess:
-        cmd = [self.bin, f"rc:{self.rc}", f"rc.data.location={self.data}"]
+        cmd = [
+            self.bin,
+            f"rc:{self.rc}",
+            f"rc.data.location={self.data}",
+            "rc.confirmation=no",
+            "rc.bulk=0",
+        ]
         if verbose:
             cmd.append(f"rc.verbose={verbose}")
         cmd.extend(args)
