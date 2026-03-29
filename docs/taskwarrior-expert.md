@@ -1,104 +1,47 @@
 # Taskwarrior Expert Skill
 
-Complete guide for the taskwarrior-expert skill - a structured workflow system for managing tasks, initiatives, and session context using Taskwarrior.
+Agent behavior guide for the `taskwarrior-expert` skill — a structured workflow system for managing tasks, initiatives (plans/inis), and session context using Taskwarrior.
 
-## 📍 Script Locations (IMPORTANT)
-
-**When this skill is activated in UNHINGED mode, scripts are located at:**
-
-```
-~/bin/  (Symlinked from /project/skills/taskwarrior_expert/scripts/)
-```
-
-**Available scripts:**
-- `skills/taskwarrior_expert/scripts/tw-flow` - Main workflow tool (v1.7.0)
-- `skills/taskwarrior_expert/scripts/taskp` - Project-aware wrapper
-- `skills/taskwarrior_expert/scripts/tw-flow ponder` - Dashboard visualization (v1.6.0)
-> **Note:** The standalone `ponder` command is deprecated and will be removed in the future. Prefer using `tw-flow ponder` for full workflow integration.
-
-**How to use them:**
-
-```bash
-# Option 1: Direct path
-/project/skills/taskwarrior_expert/scripts/tw-flow status
-
-# Option 2: If scripts are in PATH (after configure)
-tw-flow status
-```
-
-**For AI Agents:** Always use `taskp` or `tw-flow`. NEVER invoke the raw `task` binary directly to maintain project isolation.
+> For CLI command reference, see [tw-flow.md](tw-flow.md).
+> For output caching, see [tw-flow-cache.md](tw-flow-cache.md).
 
 ---
 
 ## 🎯 Overview
 
-The taskwarrior-expert skill transforms Taskwarrior into a powerful workflow engine with:
-- **7-phase structured workflow** for consistent task execution
+The `taskwarrior-expert` skill transforms Taskwarrior into a structured workflow engine. It defines:
+- A **7-phase workflow** for consistent task execution
 - **8 interaction modes** controlling agent autonomy levels
 - **Per-project isolation** via `PROJECT_ID` detection
-- **Dashboard visualization** for quick state assessment
 - **Context preservation** via structured annotations and inherited context
 
-## 🚀 Quick Start
-
-### 1. Check Current State
-```bash
-tw-flow tw-flow ponder
-> **Note:** The standalone `ponder` command is deprecated and will be removed in the future. Prefer using `tw-flow ponder` for full workflow integration.
-```
-*Pro-tip: You can also use the standalone `tw-flow ponder` command, but `tw-flow tw-flow ponder` is recommended for better workflow integration.*
-> **Note:** The standalone `ponder` command is deprecated and will be removed in the future. Prefer using `tw-flow ponder` for full workflow integration.
-
-### 2. Create an Initiative
-```bash
-tw-flow initiative my-feature \
-  "DESIGN|Design API schema|research|today" \
-  "EXECUTE|Implement endpoints|implementation|tomorrow" \
-  "TEST|Write tests|testing|2days"
-```
-
-### 3. Execute Tasks
-```bash
-# Start work
-tw-flow execute <uuid>
-
-# Add context
-tw-flow note <uuid> research "Found library X supports feature Y"
-tw-flow note <uuid> decision "Using approach A for performance"
-
-# Record outcome and complete
-tw-flow outcome <uuid> "Implemented OAuth flow with JWT tokens"
-tw-flow done <uuid>
-```
+**Terminology:** `plan` and `ini` (initiative) are aliases — both refer to the same concept (a task aggregator). Accept either term interchangeably.
 
 ---
 
 ## 📋 The 7-Phase Workflow
 
 ### Phase 1: Orient (Ponder)
-**Purpose:** Understand the current state before acting.
+Understand the current state before acting.
 ```bash
 tw-flow ponder
-> **Note:** The standalone `ponder` command is deprecated and will be removed in the future. Prefer using `tw-flow ponder` for full workflow integration.
 ```
-**Tactical View (v1.4.0):**
 - **Initiative Landscape:** Summary of active/ready tasks per initiative.
-- **Tactical Readout:** Columnar table showing Status (⚡ ACTIVE, !! OVERDUE), UUID, Mode, and Urgency.
+- **Tactical Readout:** Columnar table showing Status, UUID, Mode, and Urgency.
 
 ---
 
 ### Phase 2: Initiative (Decide)
-**Purpose:** Break down goals into actionable dependency chains.
+Break down goals into actionable dependency chains.
 ```bash
-tw-flow initiative <feature> <tasks...>
+tw-flow plan <name> <tasks...>
 ```
-**Task format:** `"MODE|description|tag|due_offset"`
-*Note: The `plan` command is deprecated in favor of `initiative`.*
+Task format: `"MODE|description|tag|due_offset"`
 
 ---
 
 ### Phase 3: Execute (Act)
-**Purpose:** Start working on the highest priority ready task.
+Start working on the highest priority ready task.
 ```bash
 tw-flow execute <uuid>
 ```
@@ -107,16 +50,15 @@ tw-flow execute <uuid>
 ---
 
 ### Phase 4: Context (Record)
-**Purpose:** Document work as you go for future reference.
+Document work as you go for future reference.
 ```bash
 tw-flow note <uuid> <type> <message>
 ```
-Types: `research` (r), `decision` (d), `blocked` (b), `lesson` (l), `question` (q), `hypothesis` (y), `ac` (a), `note` (n), `link`.
+Types: `research` (r), `decision` (d), `blocked` (b), `lesson` (l), `question` (q), `hypothesis` (y), `outcome` (o), `note` (n), `link`.
 
 ---
 
 ### Phase 5: Review (Verify)
-**Protocol:**
 1. Summarize accomplishment.
 2. Show results (code, output, tests).
 3. Ask user: "Shall I close this task?"
@@ -124,7 +66,7 @@ Types: `research` (r), `decision` (d), `blocked` (b), `lesson` (l), `question` (
 ---
 
 ### Phase 6: Outcome (Capture)
-**Purpose:** Record final results BEFORE closing. **MANDATORY** for `tw-flow done`.
+Record final results BEFORE closing. **Mandatory** for `tw-flow done`.
 ```bash
 tw-flow outcome <uuid> "What was achieved"
 ```
@@ -133,7 +75,7 @@ tw-flow outcome <uuid> "What was achieved"
 
 ### Phase 7: Close (Finalize)
 ```bash
-tw-flow done <uuid> [optional_note]
+tw-flow done <uuid>
 ```
 Checks for newly unblocked tasks and updates initiative progress.
 
@@ -142,7 +84,7 @@ Checks for newly unblocked tasks and updates initiative progress.
 ## 🚦 Interaction Modes
 
 | Mode | Behavior | Autonomy | Use When |
-|------|----------|----------|----------|
+|---|---|---|---|
 | **[PLAN]** | Analysis & breakdown | Low | Need requirements consensus |
 | **[INVESTIGATE]** | Code exploration | High (Read) | Unknown codebase |
 | **[GUIDE]** | Step-by-step instructions | Zero | User wants manual control |
@@ -154,149 +96,42 @@ Checks for newly unblocked tasks and updates initiative progress.
 
 ---
 
-## 🛠 Advanced Commands (v1.4.0)
-
-### tw-flow status
-Shows initiative status with a **split view** (shows both PENDING and COMPLETED by default):
-- **PENDING:** Tasks remaining in the initiative. Includes ticket display if available.
-- **COMPLETED:** History of what has already been done.
-- **Flag `--pending`**: Use to hide completed tasks and show only pending ones.
-- **Flag `--table`**: Output status as a Markdown table (ideal for AI interfaces).
-*Auto-detects active initiative if no argument provided.*
-
-### tw-flow tree
-Visualizes dependencies in an ASCII tree:
-```
- Initiative: my-feature ══
- ✓ (ae749be5) | Design phase
-   ├── ⚡ (4facb768) | Implementation
-   └── 🔒 (0e7ab763) | Testing (Blocked)
-```
-
-### tw-flow ticket (UDA Integration)
-Link a task to an external issue/ticket using the `externalid` UDA.
-```bash
-tw-flow ticket <uuid> "#JAC-013"
-```
-
-### tw-flow amend (Metadata Fix)
-Update description or ticket for any task (pending or completed) without triggering workflow errors.
-```bash
-tw-flow amend <uuid> description="New desc" ticket="#JAC-456"
-```
-
-### tw-flow reopen
-Revert a completed task back to the `pending` state for additional work.
-```bash
-tw-flow reopen <uuid>
-```
-
-### tw-flow discard
-Soft delete a task by moving it to an `_archive` project and marking it done.
-
-### tw-flow focus (Anchor System)
-Manage session continuity by "locking" attention on specific plans or tasks.
-
-**Global focus (shared across sessions):**
-- `tw-flow focus plan <name>`: Anchors the session to a specific plan.
-- `tw-flow focus task <uuid>`: Anchors to a task and pushes it to the focus stack.
-- `tw-flow focus pop`: Reverts focus to the previous task in the stack.
-- `tw-flow focus clear`: Resets plan and task anchors in the active focus file (session or global). Does NOT delete the session file.
-- `tw-flow focus interest add <name>`: Adds a plan to the "Signal over Noise" dashboard.
-- `tw-flow focus <plan-name>`: Smart focus — auto-detects plan and anchors.
-
-**Independent focus (session-isolated via `JACAZUL_SESSION_ID`):**
-- `tw-flow focus ind plan <name>`: Anchors to a plan in an isolated session file.
-- `tw-flow focus ind task <uuid>`: Anchors to a task in an isolated session file.
-- `tw-flow focus ind <plan-name>`: Smart focus in independent mode.
-- `tw-flow focus back`: Exits independent mode — deletes the session file and returns to global focus.json.
-
-**Independent session bootstrap:**
-
-Set env vars before starting a session to pre-seed independent focus:
-```bash
-JACAZUL_FOCUS_PLAN=my-plan JACAZUL_FOCUS_TASK=<uuid> jacazul-claude
-```
-The taskwarrior bootstrap creates `focus-{SESSION_ID}.json` automatically.
-
-**How independent focus works:**
-- If `JACAZUL_SESSION_ID` is set, all focus reads/writes go to `focus-{SESSION_ID}.json`.
-- The global `focus.json` is never modified by an independent session.
-- `focus back` deletes the session file, returning to global focus.
-- `focus clear` only zeroes plan/task anchors — use `focus back` to exit independent mode.
-
-### tw-flow ponder --all
-> **Note:** The standalone `ponder` command is deprecated and will be removed in the future. Prefer using `tw-flow ponder` for full workflow integration.
-Bypass interest filters to see the full global project status.
-- **Flag `--table`**: Output the tactical readout as a Markdown table.
-*Note: A warning is shown when using standalone `tw-flow ponder` instead of `tw-flow tw-flow ponder`.*
-> **Note:** The standalone `ponder` command is deprecated and will be removed in the future. Prefer using `tw-flow ponder` for full workflow integration.
-
----
-
-## 🛡 Security & Process Enforcement (v1.4.0)
-
-The v1.4.0 update introduces several measures to ensure data integrity and process compliance:
+## 🛡 Security & Process Enforcement
 
 ### 1. Mandatory OUTCOME Record
-The `tw-flow done` command now **enforces** the presence of an `OUTCOME:` annotation.
-- **Goal:** Prevent "ghost tasks" closed without documentation.
-- **Behavior:** If no outcome is found, the command will block and provide instructional guidance on how to use `tw-flow outcome`.
+`tw-flow done` enforces the presence of an `OUTCOME:` annotation. If missing, the command blocks and provides instructional guidance.
 
 ### 2. Taskp Vaccination (Command Interception)
-To prevent agents (or users) from bypassing the workflow, the `taskp` wrapper now intercepts specific commands:
-- **Blocked:** `taskp <uuid> done` is restricted.
-- **Blocked:** Manual addition of the `+DISCARDED` tag via `taskp modify`.
-- **Reason:** These actions must go through `tw-flow` to ensure proper archiving and documentation.
+The `taskp` wrapper intercepts:
+- **Blocked:** `taskp <uuid> done` — must use `tw-flow done`
+- **Blocked:** Manual addition of `+DISCARDED` tag — must use `tw-flow discard`
 
 ### 3. Automatic Discard Audit
-The `tw-flow discard` command has been enhanced to maintain a perfect audit trail:
-- **Auto-Archive:** Moves tasks to a dedicated `: _archive` project.
-- **Auto-Tag:** Adds the `+DISCARDED` tag.
-- **Auto-Outcome:** Automatically annotates the task with `OUTCOME: Task discarded and moved to archive.`
+`tw-flow discard` maintains a full audit trail:
+- Moves task to `_archive` project
+- Adds `+DISCARDED` tag
+- Auto-annotates with `OUTCOME: Task discarded and moved to archive.`
 
 ### 4. Prompt Marketing & Workflow Awareness
-The update introduces low-friction alerts within `tw-flow status` and `tw-flow focus`.
-- **Behavior:** If a focused task has an `externalid` attached (directly or inherited from ancestors), a tactical alert is displayed.
-- **Example:** `🐊 ALERT: Inherited ticket detected (#16). Git-expert will use this for automated commit referencing.`
+If a focused task has an `externalid` attached (directly or inherited), a tactical alert is displayed:
+```
+🐊 ALERT: Inherited ticket detected (#16). Git-expert will use this for automated commit referencing.
+```
 
 ### 5. Completed Task Protection
-Commands that modify task state (`execute`, `done`, `note`, `ticket`, `outcome`, `handoff`) are blocked for COMPLETED tasks.
-- **Guidance:** If a modification is attempted, the system provides an instructional error recommending `amend` for metadata fixes or `reopen` for additional work.
-
----
-
----
-
-## 🔄 Taskwarrior Version Parity (v1.8.0)
-
-To ensure data integrity between different host operating systems (e.g., Debian 12 with TW 2.6.2 and Fedora 43 with TW 3.4.1), the system implements an automatic version parity and migration logic.
-
-### 1. Host Version Detection
-The `scripts/bootstrap/environment` script automatically detects the host's Taskwarrior version or package manager (dnf/apt) to determine the target environment.
-- **Taskwarrior 3 (Host):** Triggers `ai-sandbox-fedora` image selection (Fedora 43 based).
-- **Taskwarrior 2 (Host):** Triggers `ai-sandbox` image selection (Ubuntu/Debian based).
-
-### 2. Automatic SQLite Migration
-When running in a Taskwarrior 3 environment (e.g., Fedora 43 container), the `scripts/bootstrap/taskwarrior` script detects legacy 2.x data (`.data` files) and performs an automatic migration to SQLite.
-- **Backup:** A full backup of `.data` files is created at `~/.jacazul-ai/.task-backups/migration-TIMESTAMP/` before any changes.
-- **Import:** Executes `task import-v2 rc.hooks=0` to convert the database to the new **Taskchampion** (SQLite) format.
-- **Validation:** The migration is per-project (using `TASKDATA` isolation), ensuring that each initiative is converted safely and independently.
-
-### 3. Cross-Version Commands
-- **task import-v2**: Used ONLY in Taskwarrior 3 environments to import legacy data.
-- **tw-flow status**: Automatically detects and handles both legacy and SQLite databases depending on the available binary version.
+Commands that modify task state (`execute`, `done`, `note`, `ticket`, `outcome`, `handoff`) are blocked for COMPLETED tasks. The system recommends `amend` for metadata fixes or `reopen` for additional work.
 
 ---
 
 ## 💡 Best Practices
 
-1. **Use UUIDs:** Always refer to tasks by their 8-character UUID.
-2. **One Active Task:** Avoid having multiple active tasks in the same initiative to maintain focus and urgency accuracy.
-3. **Structured Notes:** Use prefixes (`RESEARCH:`, `DECISION:`) to make context retrieval easy for future agents.
-4. **Never Bypass Abstractions:** Bypassing `taskp` to use `task` directly breaks project isolation and data integrity.
+1. **Use UUIDs:** Always refer to tasks by their 8-character UUID. Never show numeric IDs.
+2. **One Active Task:** Avoid multiple active tasks in the same initiative.
+3. **Structured Notes:** Use prefixes (`RESEARCH:`, `DECISION:`) for easy context retrieval.
+4. **Never Bypass Abstractions:** Use `taskp` or `tw-flow`. Never invoke raw `task` directly.
+5. **Urgency Calibration:** Only set `due` for real deadlines. Reserve `priority:H` for tasks that are blocking others or have external commitments.
 
 ---
 
 **Version:** 1.8.0
-**Last Updated:** 2026-03-27
+**Last Updated:** 2026-03-28

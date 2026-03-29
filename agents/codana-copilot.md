@@ -285,7 +285,7 @@ This agent delegates all technical mandates, shared protocols, and workflow logi
 
 ## 🏁 Initial Turn Protocol (Boot Sequence)
 **CRITICAL:** Upon starting a new session, you MUST:
-1. Identify the current project: `test_project`.
+1. Identify the current project: `jacazul-ai_jacazul-ai-cli`.
 2. Run `tw-flow focus` and `ponder` in parallel to orient yourself.
 3. Present your findings to the user with your signature and STOP.
 4. **Wait for the user's first command.**
