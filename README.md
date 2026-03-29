@@ -1,95 +1,85 @@
-# Jacazul AI CLI (Monstro do Lago)
+# Jacazul AI CLI (Monstro do Lago) 🐊
 
-This project provides a powerful, dual-mode environment for running AI-powered command line interface (CLI) tools (Gemini, Opencode, Copilot) within Docker/Podman containers (**CAGED**) or directly on your host (**COUNSELOR**).
+**Stop AI Amnesia. Master Your Workflow.**
 
-## ✨ Features
+Jacazul AI CLI is a high-performance, dual-mode environment designed to run AI-powered command line tools (Gemini, Opencode, Copilot, Claude) with persistent memory, structured task management, and distinct personalities.
 
-- **JIT Prompt Forge** - Just-in-Time generation of session-aware instructions.
-- **Dual-Mode Execution** - Choose between isolated containers (**CAGED**) or high-performance native execution (**COUNSELOR**).
-- **Jacazul AI Ecosystem** - Optimized for Gemini CLI, Opencode, and Copilot tools.
-- **Per-project task databases** - Isolated Taskwarrior databases for each project.
-- **Structured 7-Phase Workflow** - Robust task management with interaction modes.
-- **Context Delegation** - Intelligent Lazy Loading to minimize context window bloat.
+## 🌟 Why Jacazul?
 
-## 🏗️ Project Architecture (Python Standard Package)
+Most AI interactions are transient. You lose context, plans get messy, and results are hard to reproduce. Jacazul solves this by providing:
 
-Jacazul AI CLI is structured as a standard Python package for maximum robustness and professional distribution.
+- **🧠 Persistent Tactical Memory**: Isolated Taskwarrior databases per project. Your AI never forgets what it was doing.
+- **🛡️ Dual-Mode Security**: Run in isolated containers (**CAGED**) for maximum safety or native host (**COUNSELOR**) for raw performance.
+- **🎭 Multi-Persona System**: Switch between distinct AI characters to match your current workflow vibe.
+- **🚀 7-Phase Lifecycle**: A robust workflow (Orient, Plan, Execute, Context, Review, Outcome, Close) that ensures high-integrity delivery.
 
-### Core Structure
-- **`jacazul/`**: Root Python package (Flat Layout).
-  - `hatch/`: The **Incubator**. Contains the Prompt Forge engine and dynamic templates.
-  - `taskwarrior/`: Specialized logic for per-project Taskwarrior databases.
-  - `cli/`: Entry point implementations for all CLI tools.
-- **`skills/`**: Expert capability modules (Markdown-based instructions).
-  - `jacazul-engine/`: Core protocols (UUID, Language, Handoff).
-  - `taskwarrior-expert/`, `python-expert/`, `git-expert/`.
-- **`tests/`**: Consolidated smoke test suite.
-- **`pyproject.toml`**: Centralized dependency and entry point configuration.
+---
 
-### CLI Tools (Entry Points)
-The following commands are automatically installed into the environment:
-- `tw-flow`: Main workflow manager (inis, execute, done, outcome, ticket, amend, reopen).
-- `taskp`: Project-aware Taskwarrior wrapper.
-- `ponder`: Tactical project dashboard.
-- `jacazul-hatch`: JIT Prompt Forge manual trigger.
-- `jacazul-persona`: Persona switching (Jacazul <-> Codana).
-- `py-check`: PEP 8 quality gate and auto-beautifier.
-- `jacazul-claude`: Claude CLI (Native) integration.
+## 🎭 Meet the Navigators
 
-## 🚀 Quick Start (COUNSELOR Mode)
+You don't just work with an AI; you work with a partner. Switch anytime by saying "me traz a codana" or "bring me jacazul".
+
+| Navigator | Style | Best For... |
+| :--- | :--- | :--- |
+| **🐊 Jacazul** | PT-BR, Street-smart, Laid-back. | Project orientation and quick navigation. |
+| **{🔷} Codana** | EN, Tactical, Professional, Sharp. | Complex implementations and exactness. |
+| **{💪} Arnalbam** | Bilingual, High-octane, Gym-themed. | Motivation, heavy refactoring, and "shredding" code. |
+| **🦉 Atena** | Pedagogical, Wise, Encouraging. | Learning new workflows and step-by-step guidance. |
+
+---
+
+## 🚀 Getting Started
 
 ### 1. Pre-requisites
-Jacazul requires the following tools installed on your host:
 - **Python 3.13+**
-- **Go (Golang)** - Required for security and platform tools (IdZoid).
+- **Go** (for security modules)
 - **Taskwarrior** (2.6+ or 3.x)
-- **GitHub CLI (gh)** - Required for GitHub integration.
+- **GitHub CLI (gh)**
 
-### 2. Configure the Environment
+### 2. Quick Install
 ```bash
 make configure
-```
-*This initializes the virtual environment, installs the Jacazul package, and sets up the security vault.*
-
-### 3. Connect to GitHub (The Broker)
-```bash
 make github
 ```
-*This verifies the GitHub CLI and blindas your Personal Access Token (PAT) in the vault.*
 
-### 4. Run your preferred CLI
+### 3. Run Your Engine
 ```bash
-jacazul-gemini      # Gemini CLI (Native)
-jacazul-claude      # Claude CLI (Native)
-jacazul-opencode    # Opencode CLI (Native)
-jacazul-copilot     # Copilot CLI (Native)
+jacazul-gemini      # Gemini CLI
+jacazul-claude      # Claude CLI
+jacazul-opencode    # Opencode CLI
+jacazul-copilot     # Copilot CLI
 ```
 
-### 3. Try the Workflow
+### 4. The First Set
 ```bash
-# Check current state
-ponder
+# Get oriented
+tw-flow ponder
 
-# Create an initiative (ini)
-tw-flow ini my-feature \
-  "DESIGN|Design system|research|today" \
-  "EXECUTE|Build logic|implementation|tomorrow"
+# Start a plan
+tw-flow plan tutorial "DESIGN|Learn 7 phases" "EXECUTE|First commit"
 
-# Start working
+# Go to work
 tw-flow execute <uuid>
 ```
 
+---
+
+## 🏗️ Deep Dive
+
+For technical details, internal architecture, and file layouts, see [Technical Architecture](docs/ARCHITECTURE.md).
+
 ## 🛠️ Expert Skills
 
-- **Taskwarrior Expert:** Workflow management and persistence.
-- **Python Expert:** PEP 8 compliance and automated linting.
-- **Git Expert:** Conventional commits and repository integrity.
-- **Commit Expert:** Standardized commit message generation.
+Jacazul extends your capabilities via specialized skills:
+- **Taskwarrior Expert**: Advanced workflow persistence.
+- **Python Expert**: PEP 8 compliance and auto-beautification.
+- **Git Expert**: Strict conventional commit standards.
+- **GitHub Broker**: Secure, credential-less ticket synchronization.
+
+---
 
 ## 📝 License
 
 MIT
-
----
 
 **Philosophy:** "Plan effectively, execute efficiently, and never lose context."
