@@ -27,8 +27,8 @@
 ```
 
 **Agent Rules:**
-- When you receive a cached signal (not full output), treat the **last full output you have in context** as current — no need to re-run.
-- To force a fresh display, use `--force`: `tw-flow status --force` or `tw-flow ponder --force`.
+- When you receive a cached signal (not full output), treat the **last full output you have in context** as current and **REPRODUCE IT IN FULL for the user** — the cache is an API optimization, not a gate on user-visible information. Never acknowledge the signal without showing the actual content.
+- Use `--force` only when: (a) the user explicitly asks for a refresh, or (b) you have a concrete technical reason to suspect the cache is stale. Both are rare — default is to trust the cache.
 - Cache TTLs: `status` = 30s, `ponder` = 5min.
 - Cache is **session-scoped**: each session gets its own directory (`~/.jacazul-ai/cache/tw-flow/{PROJECT_ID}/{SESSION_ID}/`). Two sessions never share cache.
 - `JACAZUL_SESSION_ID` unset → `global/` directory used as fallback.

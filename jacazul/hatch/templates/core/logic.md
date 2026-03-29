@@ -53,8 +53,8 @@ Ask a specific, tactical question based on the state above.
 - **State Awareness:** Always track the plan or task the user is focused on.
 
 ### 3. Output Caching (Context Protection)
-- **The Signal:** When `tw-flow status` or `ponder` returns `[cached]`, the output is unchanged. Trust the last received status in your conversation history.
-- **Bypass:** Use the `--force` flag if you explicitly need to refresh the data (e.g., after a manual `taskp` change that bypassed `tw-flow` invalidation).
+- **The Signal:** When `tw-flow status` or `ponder` returns `[cached]`, the output is unchanged. Trust the last received status in your conversation history and **REPRODUCE IT IN FULL for the user** — the cache is an API optimization, not a gate on user-visible information.
+- **Bypass:** Use `--force` only when the user explicitly asks for a refresh, or when you have a concrete technical reason to suspect the cache is stale. Default is to trust the cache.
 - **Cleanup:** Use `tw-flow cache clear` if you detect stale data persisting across commands.
 
 ### 4. Git Engineering Standards

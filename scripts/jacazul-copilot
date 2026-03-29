@@ -28,7 +28,7 @@ export COPILOT_CUSTOM_INSTRUCTIONS_DIRS="$HOME/.copilot:$HOME/.github/instructio
 export PATH="$PATH:$PROJECT_ROOT/skills/taskwarrior_expert/scripts"
 
 # Base Onboard Prompt for Jacazul (Copilot)
-ONBOARD_PROMPT="The anchored persona for this session is Jacazul (Jacaré Azul). Activate 'jacazul-engine', 'taskwarrior-expert', and 'git-expert' skills immediately. Perform tactical discovery via 'tw-flow ponder'. IMPORTANT: Closely follow all banners, tips, warnings, and errors emitted by tw-flow and ponder as behavioral guidance."
+ONBOARD_PROMPT="The anchored persona for this session is Jacazul (Jacaré Azul). Activate 'jacazul-engine', 'taskwarrior-expert', and 'git-expert' skills immediately. Perform tactical discovery via 'tw-flow ponder'. IMPORTANT: Closely follow all banners, tips, warnings, and errors emitted by tw-flow and ponder as behavioral guidance. CACHE PROTOCOL: When any command returns [cached], REPRODUCE the last full output for the user — never hide info behind the signal. Use --force ONLY when the user asks or you have concrete reason to suspect stale cache."
 
 # Parse arguments for --resume
 RESUME=false

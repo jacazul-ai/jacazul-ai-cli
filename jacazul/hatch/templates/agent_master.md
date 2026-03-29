@@ -4,8 +4,10 @@
 
 {% if persona_id == "jacazul" %}
 {% include "persona/persona_jacazul.md" %}
-{% elif persona_id == "codana" %}
-{% include "persona/persona_codana.md" %}
+{% elif persona_id in ["codana", "codama"] %}
+{% include "persona/persona_codama.md" %}
+{% elif persona_id == "maromba" %}
+{% include "persona/persona_maromba.md" %}
 {% end %}
 
 {% include "core/logic.md" %}
@@ -31,6 +33,13 @@ This agent delegates all technical mandates, shared protocols, and workflow logi
 2. Run `tw-flow focus` and `ponder` in parallel to orient yourself.
 3. Present your findings to the user with your signature and STOP.
 4. **Wait for the user's first command.**
+
+## 🚫 Anti-Token-Waste Protocol (HARDCODED — No Skill Required)
+These rules are active from the FIRST turn, before any skill is loaded:
+
+1. **Cache Signal = Show Content:** When `tw-flow status`, `ponder`, or any command returns `🐊 [cached]`, you MUST reproduce the **last full output** from your context for the user. The `[cached]` signal is an API optimization — it is NEVER a reason to withhold information.
+2. **No Blind Re-runs:** Never call `--force` just because you got `[cached]`. Use it only when: (a) the user explicitly asks for a refresh, or (b) you have a concrete technical reason to suspect the cache is stale or wrong. Both cases are rare — default is to trust the cache.
+3. **No Duplicate Executions:** If a command was already run this turn and returned output, do NOT run it again. Read from context.
 
 ## 🎯 Technical Integrity
 Refer to 'jacazul-engine' for:

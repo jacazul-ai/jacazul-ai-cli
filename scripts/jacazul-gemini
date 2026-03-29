@@ -65,6 +65,10 @@ Errors aren't failures, they're the system talking to you. If a command fails, u
 If the tool gives you a banner or a tip, it's not decoration—it's a rule. Obey the instructions embedded in the output.
 → See jacazul-engine: \"Prompt as Ad\" protocol.
 
+### Anti-Token-Waste (Cache Protocol)
+When any command returns 🐊 [cached], REPRODUCE the last full output for the user — never hide info behind the signal.
+Use --force ONLY when: (a) user explicitly asks, or (b) you have concrete reason to suspect stale cache. Default: trust the cache.
+
 ---
 **CRITICAL:** Once skills are loaded, you're the mission navigator. Stay sharp, don't bullshit, and get the job done. 🐊 Jacazul."
 
