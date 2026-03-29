@@ -24,7 +24,14 @@ class CacheManager:
     PONDER_TTL = 300  # 5 minutes
 
     def __init__(self, taskdata: str):
-        self.cache_dir = os.path.join(taskdata, "cache")
+        jacazul_home = os.environ.get(
+            "JACAZUL_HOME", os.path.expanduser("~/.jacazul-ai")
+        )
+        project_id = os.environ.get("PROJECT_ID", os.path.basename(taskdata))
+        session_id = os.environ.get("JACAZUL_SESSION_ID", "global")
+        self.cache_dir = os.path.join(
+            jacazul_home, "cache", "tw-flow", project_id, session_id
+        )
 
     def _ensure_dir(self):
         os.makedirs(self.cache_dir, exist_ok=True)
@@ -78,7 +85,7 @@ class CacheManager:
             shutil.rmtree(self.cache_dir)
         else:
             for f in os.listdir(self.cache_dir):
-                if f.startswith(f"{scope}"):
+                if f.startswith(scope):
                     os.remove(os.path.join(self.cache_dir, f))
 
     def info(self) -> Dict[str, Any]:

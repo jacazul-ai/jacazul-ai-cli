@@ -58,6 +58,15 @@ Modes define the **Agent's Behavior** for a given task. Prefix tasks with the mo
 | **`[DEBUG]`** | Root cause analysis. | High (Read-only) | Diagnosis & fix proposal. |
 | **`[REVIEW]`** | Code audit & feedback. | Read-only | Suggestions/Critique. |
 
+## ⚖️ Urgency Calibration Protocol (Cool Down)
+
+To maintain a high-fidelity tactical radar, agents MUST follow the **Cool Down** protocol for task creation:
+
+1.  **Default Chill:** New tasks MUST NOT have a default `due` date. Only assign a `due` date if explicitly requested or logically mandatory.
+2.  **Priority Neutral:** Default all tasks to `priority:M`. Avoid `priority:H` during plan creation unless it's an immediate blocker.
+3.  **Just-in-Time Heat:** Urgency elevation (priority changes, due dates) should primarily happen during `tw-flow focus` or roadmap transitions.
+4.  **Safe Quoting:** Always quote project names in CLI commands to prevent Taskwarrior expression parsing errors (e.g., `taskp project:"plan-name" export`).
+
 ## 💡 Best Practices
 
 1. **Simple Descriptions:** Use clear descriptions like "Implement user auth" instead of prefixing with project names.
@@ -72,6 +81,22 @@ Modes define the **Agent's Behavior** for a given task. Prefix tasks with the mo
    - *Note: The standalone "ponder" command is deprecated and will be removed in a future release.*
 - **`tw-flow`**: Standardized task management with context propagation.
 - **`taskp`**: **CRITICAL** Project-Aware Taskwarrior Wrapper. Always use `taskp` instead of raw `task`.
+
+## 📦 Output Cache Protocol
+
+`tw-flow status` and `tw-flow ponder` use a built-in TTL + hash-based cache. When output is unchanged, a short inline signal is printed instead of full output:
+
+```
+🐊 [cached] Status unchanged since 12s ago. Use --force to refresh.
+```
+
+**Rules:**
+- Cached signal = last full output in context is still valid. No need to re-run.
+- Use `--force` to bypass: `tw-flow status --force` / `tw-flow ponder --force`.
+- TTLs: `status` = 30s, `ponder` = 5min.
+- Cache is session-scoped: `~/.jacazul-ai/cache/tw-flow/{PROJECT_ID}/{SESSION_ID}/`. Sessions never share cache.
+- `JACAZUL_SESSION_ID` unset → `global/` directory used as fallback.
+- Bootstrap automatically purges directories from expired sessions.
 
 ## 🎯 Independent Focus Mode
 
@@ -102,8 +127,8 @@ The taskwarrior bootstrap will create `focus-{SESSION_ID}.json` automatically.
 ### 1. Create a Plan
 ```bash
 tw-flow plan feature-x \
-  "DESIGN|Design schema|research|today" \
-  "EXECUTE|Implement POST|implementation|tomorrow"
+  "DESIGN|Design schema|research" \
+  "EXECUTE|Implement POST|implementation"
 ```
 
 ### 2. Work on a Task

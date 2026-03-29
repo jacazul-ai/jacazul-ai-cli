@@ -17,7 +17,9 @@ class FlowCacheTest(JacazulTest):
         tasks = orjson.loads(out or "[]")
         self.u1 = tasks[0]["uuid"]
         self.u2 = tasks[1]["uuid"]
-        self.cache_dir = os.path.join(self.taskdata, "cache")
+        self.cache_dir = os.path.join(
+            self.test_dir, "cache", "tw-flow", "test_project", "global"
+        )
 
     # ── Storage Layer ────────────────────────────────────────────────────────
 
@@ -154,7 +156,9 @@ class FlowCacheSubcommandTest(JacazulTest):
         self.run_cmd(
             f"{self.tw_flow} ini cache_ini 'Step 1|research|today'"
         )
-        self.cache_dir = os.path.join(self.taskdata, "cache")
+        self.cache_dir = os.path.join(
+            self.test_dir, "cache", "tw-flow", "test_project", "global"
+        )
 
     def _prime_cache(self):
         """Prime the cache by calling status and ponder."""
@@ -221,3 +225,20 @@ class FlowCacheSubcommandTest(JacazulTest):
         # ponder cache gone
         ponder_file = os.path.join(self.cache_dir, "ponder.json")
         self.assertFalse(os.path.exists(ponder_file))
+
+    def test_session_isolation_different_sessions_have_separate_cache(self):
+        """Cache: Two sessions must not share cache — session B gets fresh output."""
+        session_a = "session_aaa"
+        session_b = "session_bbb"
+        # Session A primes cache
+        self.run_cmd(
+            f"{self.tw_flow} status cache_ini",
+            env={"JACAZUL_SESSION_ID": session_a},
+        )
+        # Session B runs same command — must NOT get cached signal
+        out, _, _ = self.run_cmd(
+            f"{self.tw_flow} status cache_ini",
+            env={"JACAZUL_SESSION_ID": session_b},
+        )
+        self.assertNotIn("[cached]", out)
+        self.assertIn("══ Plan:", out)

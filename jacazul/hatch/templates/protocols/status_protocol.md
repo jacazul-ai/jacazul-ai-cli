@@ -18,6 +18,22 @@
 
 **RULE:** Status queries default to **tw-flow status** (focused). Only use **tw-flow ponder** for full project view on onboard.
 
+## 📦 Output Cache Protocol (Prompt as Ad)
+
+`tw-flow status` and `tw-flow ponder` have a built-in output cache (TTL-based + hash-based). When the cache is valid and unchanged, the command prints a short inline signal instead of full output:
+
+```
+🐊 [cached] Status unchanged since 12s ago. Use --force to refresh.
+```
+
+**Agent Rules:**
+- When you receive a cached signal (not full output), treat the **last full output you have in context** as current — no need to re-run.
+- To force a fresh display, use `--force`: `tw-flow status --force` or `tw-flow ponder --force`.
+- Cache TTLs: `status` = 30s, `ponder` = 5min.
+- Cache is **session-scoped**: each session gets its own directory (`~/.jacazul-ai/cache/tw-flow/{PROJECT_ID}/{SESSION_ID}/`). Two sessions never share cache.
+- `JACAZUL_SESSION_ID` unset → `global/` directory used as fallback.
+- On bootstrap, directories from expired sessions are automatically purged.
+
 ## 🧭 Navigation Strategy (Hands-on vs Horizon)
 
 Always choose the right tool based on the context:

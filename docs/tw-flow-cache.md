@@ -21,14 +21,19 @@ The cache system suppresses redundant output from `tw-flow status` and `tw-flow 
 ## Cache Storage
 
 ```
-~/.jacazul-ai/.task/{PROJECT_ID}/cache/
-  status.json
-  status_{ini-name}.json
-  ponder.json
-  ponder_{ini-name}.json
+~/.jacazul-ai/cache/tw-flow/{PROJECT_ID}/
+  global/
+    status.json
+    status_{ini-name}.json
+    ponder.json
+    ponder_{ini-name}.json
+  {SESSION_ID}/
+    status.json
+    ponder.json
+    ...
 ```
 
-One directory per project. One file per command + filter combination.
+Each session gets its own subdirectory under `{PROJECT_ID}/`. `JACAZUL_SESSION_ID` unset → `global/` subdirectory is used as fallback.
 
 ---
 
@@ -40,6 +45,17 @@ One directory per project. One file per command + filter combination.
 | `tw-flow status flow-x` | `status_flow-x.json` |
 | `tw-flow ponder` | `ponder.json` |
 | `tw-flow ponder flow-x` | `ponder_flow-x.json` |
+
+Files stay clean — session isolation is handled by the directory structure, not the filename.
+
+---
+
+## Session Isolation & Orphan Purge
+
+Each session writes to its own directory. On bootstrap, the `taskwarrior` bootstrap script automatically purges subdirectories from expired sessions:
+
+- `global/` is never purged.
+- Any subdirectory that doesn't match the current `JACAZUL_SESSION_ID` is deleted (`rm -rf`).
 
 ---
 

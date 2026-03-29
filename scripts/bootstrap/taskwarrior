@@ -94,6 +94,18 @@ EOF
         fi
     fi
 
+    # Purge orphan session caches (dirs from expired sessions)
+    FLOW_CACHE_DIR="$JACAZUL_HOME/cache/tw-flow/$PROJECT_ID"
+    if [ -d "$FLOW_CACHE_DIR" ] && [ -n "$JACAZUL_SESSION_ID" ]; then
+        for d in "$FLOW_CACHE_DIR"/*/; do
+            [ -d "$d" ] || continue
+            dirname=$(basename "$d")
+            [[ "$dirname" == "global" ]] && continue
+            [[ "$dirname" == "$JACAZUL_SESSION_ID" ]] && continue
+            rm -rf "$d"
+        done
+    fi
+
     # Emit logs only in DEBUG mode
     if [ -n "$DEBUG" ]; then
         echo "🐊 Task Data: $TASKDATA"

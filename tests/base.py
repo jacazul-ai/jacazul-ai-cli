@@ -40,6 +40,7 @@ class JacazulTest(unittest.TestCase):
         )
         # Prevent Jacazul scripts from looking at real user config
         self.env["TASKRC"] = os.path.join(self.test_dir, ".taskrc")
+        self.env["JACAZUL_HOME"] = self.test_dir
         # Isolate tests from session context
         self.env.pop("JACAZUL_SESSION_ID", None)
 
