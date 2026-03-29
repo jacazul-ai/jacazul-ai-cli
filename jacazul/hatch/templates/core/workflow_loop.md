@@ -15,8 +15,8 @@ Before acting, understand the state of the world. Follow the **Onboard Protocol*
 Break down a goal into a dependency chain.
 ```bash
 tw-flow plan feature-x
-  "DESIGN|Design API schema|research|today"
-  "EXECUTE|Implement logic|implementation|tomorrow"
+  "DESIGN|Design API schema|research"
+  "EXECUTE|Implement logic|implementation"
 ```
 
 ### Phase 3: Execute (Act)
