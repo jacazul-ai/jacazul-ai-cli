@@ -1046,6 +1046,15 @@ def main():
     elif cmd == "context":
         flow.cmd_context(args[0])
     elif cmd in ["plans", "inis", "initiatives"]:
+        if "--help" in args:
+            print(
+                "Usage: tw-flow plans [--all|--closed] [--force]\n"
+                "  (no flags)   Show active plans only\n"
+                "  --all        Show all plans (active + closed)\n"
+                "  --closed     Show closed (zeroed) plans only\n"
+                "  --force      Bypass cache and fetch fresh data"
+            )
+            sys.exit(0)
         show_all = "--all" in args
         show_closed = "--closed" in args
         force = "--force" in args
