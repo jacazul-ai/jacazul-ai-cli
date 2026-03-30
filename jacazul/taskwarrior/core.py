@@ -1,11 +1,92 @@
+import hashlib
 import os
+import shutil
 import subprocess
 import orjson
+import re
+import time
 from typing import Optional, List, Dict, Any
 from dataclasses import dataclass, asdict
 
-# 🐊 tw_expert Core Module (v1.4.0)
-# Centralized logic for Environment, Taskwarrior, and Focus management.
+# 🐊 tw_expert Core Module (v1.5.0)
+# Centralized logic for Environment, Taskwarrior, Cache, and Focus management.
+
+
+class CacheManager:
+    STATUS_TTL = 120  # 2 minutes
+    PONDER_TTL = 600  # 10 minutes
+    PLANS_TTL = 300  # 5 minutes
+
+    def __init__(self, taskdata: str):
+        jacazul_home = os.environ.get(
+            "JACAZUL_HOME", os.path.expanduser("~/.jacazul-ai")
+        )
+        project_id = os.environ.get("PROJECT_ID", os.path.basename(taskdata))
+        session_id = os.environ.get("JACAZUL_SESSION_ID", "global")
+        self.cache_dir = os.path.join(
+            jacazul_home, "cache", "tw-flow", project_id, session_id
+        )
+
+    def _ensure_dir(self):
+        os.makedirs(self.cache_dir, exist_ok=True)
+
+    def _path(self, key: str) -> str:
+        return os.path.join(self.cache_dir, f"{key}.json")
+
+    def _hash(self, output: str) -> str:
+        return hashlib.sha256(output.encode()).hexdigest()[:16]
+
+    def get(self, key: str, ttl: int) -> Optional[str]:
+        path = self._path(key)
+        if not os.path.exists(path):
+            return None
+        with open(path, "rb") as f:
+            data = orjson.loads(f.read())
+        if time.time() - data["ts"] > ttl:
+            return None
+        return data["output"]
+
+    def set(self, key: str, output: str):
+        self._ensure_dir()
+        with open(self._path(key), "wb") as f:
+            f.write(
+                orjson.dumps(
+                    {
+                        "hash": self._hash(output),
+                        "output": output,
+                        "ts": time.time(),
+                    }
+                )
+            )
+
+    def bust(self, ini_name: Optional[str] = None, focus_change: bool = False):
+        if not os.path.exists(self.cache_dir):
+            return
+        for key in ["status", "ponder", "plans", "plans_all", "plans_closed"]:
+            p = self._path(key)
+            if os.path.exists(p):
+                os.remove(p)
+        if ini_name and not focus_change:
+            for key in [f"status_{ini_name}", f"ponder_{ini_name}"]:
+                p = self._path(key)
+                if os.path.exists(p):
+                    os.remove(p)
+
+    def clear(self, scope: Optional[str] = None):
+        if not os.path.exists(self.cache_dir):
+            return
+        if scope is None:
+            shutil.rmtree(self.cache_dir)
+        else:
+            for f in os.listdir(self.cache_dir):
+                if f.startswith(scope):
+                    os.remove(os.path.join(self.cache_dir, f))
+
+    def info(self) -> Dict[str, Any]:
+        if not os.path.exists(self.cache_dir):
+            return {"files": 0, "dir": self.cache_dir}
+        files = os.listdir(self.cache_dir)
+        return {"files": len(files), "dir": self.cache_dir, "entries": files}
 
 
 class Environment:
@@ -105,6 +186,61 @@ class TaskWrapper:
             return orjson.loads(res.stdout)
         except Exception:
             return []
+
+
+# 🐊 Jacazul Broker Engine (The Protocol)
+# Handles synchronization between Taskwarrior and various Git providers.
+#
+# INTERFACE DESIGN (Duck Typing):
+# Any Broker class MUST implement:
+# - sync_issue(issue_id, repo=None)
+# - view_issue(issue_id, repo=None)
+
+
+class GitHubBroker:
+    """Implementation for GitHub using 'gh' CLI."""
+
+    def __init__(self):
+        self.tw = TaskWrapper()
+        self.vault_dir = os.environ.get(
+            "JACAZUL_HOME", os.path.expanduser("~/.jacazul-ai")
+        )
+        self.cryptozoid_bin = os.path.expanduser("~/go/bin/cryptozoid")
+
+    def sync_issue(self, issue_id: str, repo: Optional[str] = None):
+        # Implementation delegated to the broker binary for security
+        # This is a bridge to the CLI experience
+        subprocess.run(
+            ["jacazul-broker", "sync", issue_id] + ([repo] if repo else [])
+        )
+
+    def view_issue(self, issue_id: str, repo: Optional[str] = None):
+        subprocess.run(
+            ["jacazul-broker", "view", issue_id] + ([repo] if repo else [])
+        )
+
+
+class BitbucketBroker:
+    """Implementation for Bitbucket/Jira (Mocked/Stubbed)."""
+
+    def sync_issue(self, issue_id: str, repo: Optional[str] = None):
+        print(f"🐊 [Bitbucket/Jira] Mock Syncing ticket {issue_id}...")
+        print(f"✅ Status: MOCKED (Pattern: {issue_id})")
+
+    def view_issue(self, issue_id: str, repo: Optional[str] = None):
+        print(f"🐊 [Bitbucket/Jira] Viewing ticket {issue_id}...")
+
+
+class BrokerFactory:
+    """Decides which broker to use based on ticket pattern."""
+
+    @staticmethod
+    def get_broker(ticket: str):
+        if ticket.startswith("#"):
+            return GitHubBroker()
+        if re.match(r"^[A-Z0-9]+-[0-9]+$", ticket):
+            return BitbucketBroker()
+        return GitHubBroker() if ticket.startswith("#") else None
 
 
 @dataclass

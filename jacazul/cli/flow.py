@@ -3,97 +3,15 @@ import sys
 import os
 import re
 import io
-import hashlib
-import time
-import shutil
 import orjson
 import subprocess
 from contextlib import redirect_stdout
 from typing import List, Optional, Dict, Any
-from jacazul.taskwarrior.core import TaskWrapper, FocusManager
-from jacazul.cli.broker import GitHubBroker
+from jacazul.taskwarrior.core import CacheManager, TaskWrapper, FocusManager
+from jacazul.cli.broker import BrokerFactory
 
 # 🐊 tw-flow (v1.6.0)
 # Python port of the Taskwarrior Flow manager.
-
-VERSION = "1.6.0"
-
-
-class CacheManager:
-    STATUS_TTL = 120  # 2 minutes
-    PONDER_TTL = 600  # 10 minutes
-    PLANS_TTL = 300  # 5 minutes
-
-    def __init__(self, taskdata: str):
-        jacazul_home = os.environ.get(
-            "JACAZUL_HOME", os.path.expanduser("~/.jacazul-ai")
-        )
-        project_id = os.environ.get("PROJECT_ID", os.path.basename(taskdata))
-        session_id = os.environ.get("JACAZUL_SESSION_ID", "global")
-        self.cache_dir = os.path.join(
-            jacazul_home, "cache", "tw-flow", project_id, session_id
-        )
-
-    def _ensure_dir(self):
-        os.makedirs(self.cache_dir, exist_ok=True)
-
-    def _path(self, key: str) -> str:
-        return os.path.join(self.cache_dir, f"{key}.json")
-
-    def _hash(self, output: str) -> str:
-        return hashlib.sha256(output.encode()).hexdigest()[:16]
-
-    def get(self, key: str, ttl: int) -> Optional[str]:
-        path = self._path(key)
-        if not os.path.exists(path):
-            return None
-        with open(path, "rb") as f:
-            data = orjson.loads(f.read())
-        if time.time() - data["ts"] > ttl:
-            return None
-        return data["output"]
-
-    def set(self, key: str, output: str):
-        self._ensure_dir()
-        with open(self._path(key), "wb") as f:
-            f.write(
-                orjson.dumps(
-                    {
-                        "hash": self._hash(output),
-                        "output": output,
-                        "ts": time.time(),
-                    }
-                )
-            )
-
-    def bust(self, ini_name: Optional[str] = None, focus_change: bool = False):
-        if not os.path.exists(self.cache_dir):
-            return
-        for key in ["status", "ponder", "plans", "plans_all", "plans_closed"]:
-            p = self._path(key)
-            if os.path.exists(p):
-                os.remove(p)
-        if ini_name and not focus_change:
-            for key in [f"status_{ini_name}", f"ponder_{ini_name}"]:
-                p = self._path(key)
-                if os.path.exists(p):
-                    os.remove(p)
-
-    def clear(self, scope: Optional[str] = None):
-        if not os.path.exists(self.cache_dir):
-            return
-        if scope is None:
-            shutil.rmtree(self.cache_dir)
-        else:
-            for f in os.listdir(self.cache_dir):
-                if f.startswith(scope):
-                    os.remove(os.path.join(self.cache_dir, f))
-
-    def info(self) -> Dict[str, Any]:
-        if not os.path.exists(self.cache_dir):
-            return {"files": 0, "dir": self.cache_dir}
-        files = os.listdir(self.cache_dir)
-        return {"files": len(files), "dir": self.cache_dir, "entries": files}
 
 
 class FlowManager:
@@ -101,7 +19,6 @@ class FlowManager:
         self.tw = TaskWrapper()
         self.focus = FocusManager()
         self.cache = CacheManager(self.tw.data)
-        self.broker = GitHubBroker()
 
     def error(self, msg: str):
         print(f"ERROR: {msg}", file=sys.stderr)
@@ -592,12 +509,16 @@ class FlowManager:
         if res.returncode == 0:
             self.success(f"Task {uuid[:8]} completed!")
 
-            # GitHub Protocol Sync
+            # Multi-Broker Protocol Sync
             ticket = self.find_ticket(uuid)
-            if ticket and ticket.startswith("#"):
-                print("")
-                self.info(f"The Protocol: Synchronizing ticket {ticket}...")
-                self.broker.sync_issue(ticket)
+            if ticket:
+                broker = BrokerFactory.get_broker(ticket)
+                if broker:
+                    print("")
+                    self.info(
+                        f"The Protocol: Synchronizing ticket {ticket}..."
+                    )
+                    broker.sync_issue(ticket)
 
             # Check if any tasks were unblocked
             print("")
@@ -695,13 +616,14 @@ class FlowManager:
         uuid = self.resolve_uuid(input_id)
         self.verify_not_completed(uuid)
 
-        # Validate ticket if it looks like a GitHub issue
-        if ticket.startswith("#"):
+        # Validate ticket if we have a compatible broker
+        broker = BrokerFactory.get_broker(ticket)
+        if broker:
             self.info(f"The Protocol: Validating ticket {ticket}...")
             # We use sync_issue here because it provides a good summary
             # and checks existence. If it fails, we still allow the link
             # but warn the user.
-            self.broker.sync_issue(ticket)
+            broker.sync_issue(ticket)
 
         self.tw.run([uuid, "modify", f"externalid:{ticket}"])
         self.success(f"Task {uuid[:8]} linked to ticket: {ticket}")
