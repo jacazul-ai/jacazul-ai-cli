@@ -274,13 +274,16 @@ class GitHubBroker:
         self,
         title: str,
         body: Optional[str] = None,
+        body_file: Optional[str] = None,
         repo: Optional[str] = None,
         assignee: Optional[str] = None,
         labels: Optional[list] = None,
     ):
         """Opens a new GitHub issue."""
         args = ["issue", "create", "--title", title]
-        if body:
+        if body_file:
+            args += ["--body-file", body_file]
+        elif body:
             args += ["--body", body]
         if assignee:
             args += ["--assignee", assignee]
@@ -391,6 +394,7 @@ class GitHubBroker:
         issue_id: str,
         title: Optional[str] = None,
         body: Optional[str] = None,
+        body_file: Optional[str] = None,
         repo: Optional[str] = None,
         assignee: Optional[str] = None,
         add_labels: Optional[list] = None,
@@ -401,7 +405,9 @@ class GitHubBroker:
         args = ["issue", "edit", clean_id]
         if title:
             args += ["--title", title]
-        if body:
+        if body_file:
+            args += ["--body-file", body_file]
+        elif body:
             args += ["--body", body]
         if assignee:
             args += ["--assignee", assignee]
@@ -556,14 +562,18 @@ def main():
             "milestones (cached)"
         )
         print(
-            '  open title="..." [body="..."] [repo="..."] '
+            '  open title="..." [body="..."] [body_file="..."] [repo="..."] '
             '[assignee="..."] [labels="l1,l2"]'
         )
         print(
-            '  edit <id> [title="..."] [body="..."] [repo="..."] '
-            '[assignee="..."] [add_labels="l1"]'
+            '  edit <id> [title="..."] [body="..."] [body_file="..."] '
+            '[repo="..."] [assignee="..."] [add_labels="l1"]'
         )
         print("  close <id> [repo] [comment]   Closes an issue")
+        print(
+            "\n💡 Tip: For complex Markdown bodies (backticks, quotes, "
+            "newlines), prefer body_file=\"/path/to/body.md\" over body=\"...\""
+        )
         sys.exit(0)
 
     cmd = sys.argv[1]
@@ -615,11 +625,12 @@ def main():
                 "   ACTION: Use 'jacazul-broker open title=\"My title\"'"
             )
         body = kwargs.get("body")
+        body_file = kwargs.get("body_file")
         repo = kwargs.get("repo")
         assignee = kwargs.get("assignee")
         labels_raw = kwargs.get("labels")
         labels = labels_raw.split(",") if labels_raw else None
-        broker.open_issue(title, body, repo, assignee, labels)
+        broker.open_issue(title, body, body_file, repo, assignee, labels)
 
     elif cmd == "edit":
         if not args:
@@ -631,11 +642,12 @@ def main():
         kwargs = parse_kwargs(args[1:])
         title = kwargs.get("title")
         body = kwargs.get("body")
+        body_file = kwargs.get("body_file")
         repo = kwargs.get("repo")
         assignee = kwargs.get("assignee")
         add_labels_raw = kwargs.get("add_labels")
         add_labels = add_labels_raw.split(",") if add_labels_raw else None
-        broker.edit_issue(issue_id, title, body, repo, assignee, add_labels)
+        broker.edit_issue(issue_id, title, body, body_file, repo, assignee, add_labels)
 
     elif cmd == "close":
         # Syntax: broker.py close <id> [repo] [comment]
