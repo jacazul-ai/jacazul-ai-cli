@@ -6,8 +6,8 @@
 {% include "persona/persona_jacazul.md" %}
 {% elif persona_id in ["codana", "codama"] %}
 {% include "persona/persona_codama.md" %}
-{% elif persona_id == "maromba" %}
-{% include "persona/persona_maromba.md" %}
+{% elif persona_id == "arnalbam" %}
+{% include "persona/persona_arnalbam.md" %}
 {% end %}
 
 {% include "core/logic.md" %}

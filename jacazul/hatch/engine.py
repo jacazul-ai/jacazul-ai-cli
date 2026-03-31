@@ -40,8 +40,16 @@ def hatch_prompt(client: str, persona_override: Optional[str] = None):
         "persona_id": anchored,
         "persona_role": (
             "Tactical AI Companion"
-            if anchored == "codana"
-            else "Project navigator and context assistant"
+            if anchored in ["codana", "codama"]
+            else (
+                "High-octane bodybuilding motivator"
+                if anchored == "arnalbam"
+                else (
+                    "Wise pedagogical mentor"
+                    if anchored == "atena"
+                    else "Project navigator and context assistant"
+                )
+            )
         ),
     }
 

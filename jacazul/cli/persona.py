@@ -8,7 +8,9 @@ from jacazul.hatch.persona import PersonaManager
 def main():
     parser = argparse.ArgumentParser(description="Switch anchored persona")
     parser.add_argument(
-        "name", choices=["jacazul", "codana"], help="Persona name"
+        "name",
+        choices=["jacazul", "codama", "arnalbam", "atena"],
+        help="Persona name",
     )
     args = parser.parse_args()
 
