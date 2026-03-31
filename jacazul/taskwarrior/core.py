@@ -232,15 +232,64 @@ class BitbucketBroker:
 
 
 class BrokerFactory:
-    """Decides which broker to use based on ticket pattern."""
+    """Decides broker by project context and ticket pattern."""
+
+    @staticmethod
+    def _infer_broker_from_git():
+        """Infers the broker provider from the current git remote."""
+        try:
+            # Check for a git remote to anchor project context
+            res = subprocess.run(
+                ["git", "remote", "-v"],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            if res.returncode == 0:
+                output = res.stdout.lower()
+                if "github.com" in output:
+                    return GitHubBroker()
+                if "bitbucket.org" in output:
+                    return BitbucketBroker()
+        except Exception:
+            pass
+        return None
 
     @staticmethod
     def get_broker(ticket: str):
+        # 1. Check for custom configuration overrides (User is King)
+        config_path = os.path.expanduser("~/.jacazul-ai/brokers.json")
+        if os.path.exists(config_path):
+            try:
+                with open(config_path, "rb") as f:
+                    config = orjson.loads(f.read())
+
+                patterns = config.get("patterns", [])
+                for entry in patterns:
+                    regex = entry.get("regex")
+                    broker_type = entry.get("broker")
+                    if regex and broker_type and re.match(regex, ticket):
+                        if broker_type.lower() == "github":
+                            return GitHubBroker()
+                        if broker_type.lower() == "bitbucket":
+                            return BitbucketBroker()
+            except Exception:
+                pass
+
+        # 2. Project Anchor (Git Context)
+        # If we are in a Git repo, the remote provider should dictate the
+        # broker, ensuring project-level consistency.
+        git_broker = BrokerFactory._infer_broker_from_git()
+        if git_broker:
+            return git_broker
+
+        # 3. Hardcoded Fallbacks (Pattern Matching)
         if ticket.startswith("#"):
             return GitHubBroker()
         if re.match(r"^[A-Z0-9]+-[0-9]+$", ticket):
             return BitbucketBroker()
-        return GitHubBroker() if ticket.startswith("#") else None
+
+        return None
 
 
 @dataclass

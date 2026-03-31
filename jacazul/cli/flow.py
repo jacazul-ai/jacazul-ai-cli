@@ -7,8 +7,7 @@ import orjson
 import subprocess
 from contextlib import redirect_stdout
 from typing import List, Optional, Dict, Any
-from jacazul.taskwarrior.core import CacheManager, TaskWrapper, FocusManager
-from jacazul.cli.broker import BrokerFactory
+from jacazul.taskwarrior.core import CacheManager, TaskWrapper, FocusManager, BrokerFactory
 
 # 🐊 tw-flow (v1.6.0)
 # Python port of the Taskwarrior Flow manager.
