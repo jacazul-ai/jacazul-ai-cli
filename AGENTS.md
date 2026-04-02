@@ -90,6 +90,40 @@ Validation is the only path to finality. No logic change should occur without a 
 - **Mandate:** Bug fixes and new features MUST start with an empirical reproduction test case (smoke test or script) that fails in the current environment.
 - **Goal:** Prove the existence of the problem and verify that the solution actually addresses the root cause.
 
+## 📚 Documentation Mandate
+
+### 1. Task → Test → Docs (Completion Protocol)
+- **Mandate:** No task is complete without a corresponding documentation update.
+- **Order:** Implementation → Test → Docs. All three are required for closure.
+- **Scope:** Any feature, command, flag, or behavioral change visible to the user MUST be reflected in the appropriate doc before `tw-flow done`.
+- **Agent Rule:** Before proposing `tw-flow done`, agents MUST ask: "Does this change affect user-facing behavior? If yes, which doc needs updating?"
+
+### 2. Documentation Map
+
+| File | Audience | Intent |
+|---|---|---|
+| `README.md` | New users | Entry point. Trigger-based: "I want to X → do Y". Links to docs for depth. |
+| `docs/tw-flow.md` | Users | Trigger-based CLI reference. Every command = a trigger + what it does. |
+| `docs/getting-started.md` | New users | First-session walkthrough. Minimal prerequisites → first working command. |
+| `docs/taskwarrior-expert.md` | Users | 7-phase workflow from the user's perspective. When to use each phase. |
+| `docs/interaction-modes.md` | Users | Mode selection guide. "I want to X → use mode Y." |
+| `docs/environment-modes.md` | Users | COUNSELOR vs UNHINGED. When and why to switch. |
+| `docs/github-broker.md` | Users | Ticket sync triggers and credential-less flow. |
+| `docs/tw-flow-cache.md` | Users | Cache behavior, signals, and bypass triggers. |
+| `docs/ARCHITECTURE.md` | Contributors | Internal design decisions. Not trigger-based — explains *why*, not *how to use*. |
+| `AGENTS.md` | AI Agents | Engineering standards and operational mandates. |
+
+### 3. Documentation Philosophy
+
+**README and all `docs/` files (except ARCHITECTURE)** follow the **Trigger → Action** pattern:
+- Content is organized around what the user wants to accomplish, not how the system is built.
+- Each section answers: "When the user does/wants X, they run/see Y."
+- Complex internals link to `docs/ARCHITECTURE.md` — they do not appear inline.
+
+**`docs/ARCHITECTURE.md`** is the only file organized from the system's perspective:
+- Explains design decisions, boundaries, and trade-offs.
+- Target audience: contributors and agents investigating root causes.
+
 ## 🧪 Platform Testing (GitHub Broker)
 
 - **Test Mandate:** All experimental, POC, or non-production GitHub Broker operations MUST target the dedicated sandbox repository: `jacazul-ai/jacazul-ai-sandbox`.
