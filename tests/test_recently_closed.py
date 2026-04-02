@@ -46,8 +46,25 @@ class TestRecentlyClosed(unittest.TestCase):
             )
 
     def tearDown(self):
-        """No pending tasks to clean up — plan is zeroed."""
-        pass
+        """Delete completed sandbox tasks to keep the database clean."""
+        result = subprocess.run(
+            [
+                "taskp",
+                f'project:"{self.SANDBOX_PLAN}"',
+                "status:completed",
+                "export",
+            ],
+            capture_output=True,
+            text=True,
+        )
+        tasks = json.loads(result.stdout or "[]")
+        for t in tasks:
+            subprocess.run(
+                ["taskp", t["uuid"], "delete"],
+                input="yes\n",
+                capture_output=True,
+                text=True,
+            )
 
     def test_recently_closed_section_present(self):
         """Ponder must include a RECENTLY CLOSED section."""
