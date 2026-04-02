@@ -28,7 +28,13 @@ The project adheres to a "Silent by Default" logging policy to maintain CLI usab
 - **Protocol:** All operations MUST go through the `taskp` project-aware wrapper or the `tw-flow` workflow manager.
 - **Isolation:** Project isolation via `TASKDATA` MUST be preserved at all costs.
 
-### 2. Context Preservation
+### 2. Hatch-Generated Skills (CRITICAL)
+- **Mandate:** The `jacazul-engine` skill and all agent prompt files are **generated artifacts** produced by `jacazul-hatch` from source templates. NEVER edit generated files directly.
+- **Source of Truth:** All skill and agent prompt updates MUST be made in `jacazul/hatch/templates/`. The templates are the canonical source.
+- **Regeneration:** After editing templates, regenerate with `jacazul-hatch --client <client>` to propagate changes.
+- **Generated Locations:** `skills/jacazul-engine/SKILL.md` (from `gemini_full.md`), `agents/{persona}-{client}.md` (from `agent_master.md`).
+
+### 3. Context Preservation
 - **Mandate:** Closing a task without documentation is FORBIDDEN.
 - **Protocol:** The `tw-flow done` command requires an `OUTCOME:` annotation. Discarded tasks MUST include an automatic audit record.
 
@@ -57,6 +63,8 @@ These directives ensure that the AI ecosystem remains functional and context-awa
   1. **Orientation (The Anchor):** Run `tw-flow focus`.
   2. **Decision Branch:** IF anchored, run `tw-flow status` and `tw-flow context <uuid>`. IF empty, run `tw-flow ponder` for a strategic overview.
 - **UUID Priority:** Tasks MUST be referenced by their 8-character UUID. Numeric Task IDs are transient and MUST NOT be shown to users.
+- **Task Reference Format:** NEVER show a UUID alone. ALWAYS include: `uuid description [plan-name]`. Abbreviated descriptions are acceptable. Example: `f519b8c5 Define backlog UDA schema [tw-flow-backlog]`.
+- **Task Completion Announcement:** When finishing a task and proposing the next, ALWAYS use format: `"Terminei a tarefa <uuid> <desc> [<plan>], começa com <uuid> <desc> [<plan>]"`. The user is often working across multiple plans and needs full context at a glance.
 - **Persona Voice:** Responses MUST align with the active persona (Jacazul/Codana) and the detected user language, while persistent data (tasks, commits) remains in English.
 - **Agent vs. Skill Distinction:**
   - **Copilot/Opencode:** Use the **Agent** pattern (`jacazul.md` in `~/.copilot/agents`).
@@ -95,4 +103,4 @@ Validation is the only path to finality. No logic change should occur without a 
 - **Sync:** Use `jacazul-broker sync #ID` to synchronize GitHub Issue states with Taskwarrior local tasks.
 
 ---
-**Last Updated:** 2026-03-27
+**Last Updated:** 2026-04-02
