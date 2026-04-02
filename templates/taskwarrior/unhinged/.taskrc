@@ -22,6 +22,16 @@ uda.project_weight.default=0
 uda.externalid.type=string
 uda.externalid.label=Ticket
 
+# UDA: Backlog (Plan lifecycle state - hidden from default views)
+uda.backlog.type=numeric
+uda.backlog.label=Backlog
+uda.backlog.default=0
+
+# UDA: Archive (Plan lifecycle state - completed plans)
+uda.archive.type=numeric
+uda.archive.label=Archive
+uda.archive.default=0
+
 # Report: Ranked Projects
 report.ranked.description=Tasks sorted by Project Weight
 report.ranked.columns=id,project,project_weight,description,urgency

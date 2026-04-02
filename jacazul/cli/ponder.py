@@ -17,11 +17,13 @@ class Dashboard:
         show_all: bool = False,
         hide_tip: bool = False,
         use_table: bool = False,
+        with_backlog: bool = False,
     ):
         self.project_root = project_root
         self.show_all = show_all
         self.hide_tip = hide_tip
         self.use_table = use_table
+        self.with_backlog = with_backlog
         self.tw = TaskWrapper()
         self.focus = FocusManager()
         self.state = self.focus.load()
@@ -58,6 +60,12 @@ class Dashboard:
         all_tasks = self.tw.export(["status:pending"])
         # Filter: project must be a string and not None
         all_tasks = [t for t in all_tasks if isinstance(t.get("project"), str)]
+        # Filter backlog plans unless --with-backlog or --all
+        if not self.with_backlog and not self.show_all:
+            all_tasks = [
+                t for t in all_tasks
+                if not (t.get("backlog") and int(t.get("backlog", 0)) == 1)
+            ]
 
         header = self.project_id
         if self.project_root:

@@ -7,7 +7,18 @@ import orjson
 import subprocess
 from contextlib import redirect_stdout
 from typing import List, Optional, Dict, Any
-from jacazul.taskwarrior.core import CacheManager, TaskWrapper, FocusManager, BrokerFactory
+from importlib.metadata import version as _pkg_version
+from jacazul.taskwarrior.core import (
+    CacheManager,
+    TaskWrapper,
+    FocusManager,
+    BrokerFactory,
+)
+
+try:
+    VERSION = _pkg_version("jacazul-ai-cli")
+except Exception:
+    VERSION = "dev"
 
 # 🐊 tw-flow (v1.6.0)
 # Python port of the Taskwarrior Flow manager.
@@ -697,7 +708,34 @@ class FlowManager:
         )
         self.tw.run([uuid, "info"], capture=False, verbose=verbose)
 
-    def cmd_plans(self, show_all: bool = False, show_closed: bool = False):
+    def cmd_backlog(self, plan_name: str):
+        """Move a plan to backlog state (hidden from default views)."""
+        tasks = self.tw.export([f'project:"{plan_name}"', "status:pending"])
+        if not tasks:
+            self.error(f"No pending tasks found for plan: {plan_name}")
+            return
+        for t in tasks:
+            self.tw.run([t["uuid"], "modify", "backlog:1"])
+        self.cache.bust(ini_name=plan_name)
+        self.success(f"Plan '{plan_name}' moved to backlog. 💤")
+
+    def cmd_activate(self, plan_name: str):
+        """Move a backlog plan back to active state."""
+        tasks = self.tw.export([f'project:"{plan_name}"', "status:pending"])
+        if not tasks:
+            self.error(f"No pending tasks found for plan: {plan_name}")
+            return
+        for t in tasks:
+            self.tw.run([t["uuid"], "modify", "backlog:0"])
+        self.cache.bust(ini_name=plan_name)
+        self.success(f"Plan '{plan_name}' activated. ●")
+
+    def cmd_plans(
+        self,
+        show_all: bool = False,
+        show_closed: bool = False,
+        with_backlog: bool = False,
+    ):
         self.info("Project Plans Landscape:")
         print("")
 
@@ -717,6 +755,7 @@ class FlowManager:
                     "active": 0,
                     "completed": 0,
                     "blocked": 0,
+                    "backlog": False,
                 }
 
             if t["status"] == "pending":
@@ -725,6 +764,8 @@ class FlowManager:
                     projects[plan]["active"] += 1
                 if t.get("tags") and "BLOCKED" in t["tags"]:
                     projects[plan]["blocked"] += 1
+                if t.get("backlog") and int(t.get("backlog", 0)) == 1:
+                    projects[plan]["backlog"] = True
             elif t["status"] == "completed":
                 projects[plan]["completed"] += 1
 
@@ -735,6 +776,11 @@ class FlowManager:
         for plan in plans:
             p = projects[plan]
             is_open = p["pending"] > 0
+            is_backlog = p["backlog"]
+
+            # Skip backlog plans unless --with-backlog or --all
+            if is_backlog and not with_backlog and not show_all:
+                continue
 
             if show_all:
                 should_show = True
@@ -744,8 +790,12 @@ class FlowManager:
                 should_show = is_open
 
             if should_show:
-                icon = "●" if is_open else "✓"
-                status_label = "ACTIVE" if is_open else "ZEROED"
+                if is_backlog:
+                    icon = "💤"
+                    status_label = "BACKLOG"
+                else:
+                    icon = "●" if is_open else "✓"
+                    status_label = "ACTIVE" if is_open else "ZEROED"
                 print(f"{icon} {plan} [{status_label}]")
                 print(
                     f"  Pending: {p['pending']} | Active: {p['active']} | "
@@ -762,9 +812,14 @@ class FlowManager:
 
         show_all = "--all" in args
         use_table = "--table" in args
+        with_backlog = "--with-backlog" in args
         project_root = next((a for a in args if not a.startswith("-")), None)
         db = Dashboard(
-            project_root, show_all, hide_tip=True, use_table=use_table
+            project_root,
+            show_all,
+            hide_tip=True,
+            use_table=use_table,
+            with_backlog=with_backlog,
         )
         db.render()
 
@@ -966,23 +1021,38 @@ def main():
         flow.cmd_commit(is_fix="--fix" in args)
     elif cmd == "context":
         flow.cmd_context(args[0])
+    elif cmd == "backlog":
+        if not args:
+            flow.error("Usage: tw-flow backlog <plan-name>")
+        flow.cmd_backlog(args[0])
+        flow.cache.bust()
+    elif cmd == "activate":
+        if not args:
+            flow.error("Usage: tw-flow activate <plan-name>")
+        flow.cmd_activate(args[0])
+        flow.cache.bust()
     elif cmd in ["plans", "inis", "initiatives"]:
         if "--help" in args:
             print(
-                "Usage: tw-flow plans [--all|--closed] [--force]\n"
-                "  (no flags)   Show active plans only\n"
-                "  --all        Show all plans (active + closed)\n"
-                "  --closed     Show closed (zeroed) plans only\n"
-                "  --force      Bypass cache and fetch fresh data"
+                "Usage: tw-flow plans"
+                " [--all|--closed|--with-backlog] [--force]\n"
+                "  (no flags)      Show active plans only\n"
+                "  --all           Show all plans (active + closed)\n"
+                "  --closed        Show closed (zeroed) plans only\n"
+                "  --with-backlog  Include backlog plans (marked 💤)\n"
+                "  --force         Bypass cache and fetch fresh data"
             )
             sys.exit(0)
         show_all = "--all" in args
         show_closed = "--closed" in args
+        with_backlog = "--with-backlog" in args
         force = "--force" in args
         if show_all:
             cache_key = "plans_all"
         elif show_closed:
             cache_key = "plans_closed"
+        elif with_backlog:
+            cache_key = "plans_with_backlog"
         else:
             cache_key = "plans"
         if not force:
@@ -992,7 +1062,7 @@ def main():
                 sys.exit(0)
         buf = io.StringIO()
         with redirect_stdout(buf):
-            flow.cmd_plans(show_all, show_closed)
+            flow.cmd_plans(show_all, show_closed, with_backlog)
         output = buf.getvalue()
         sys.stdout.write(output)
         flow.cache.set(cache_key, output)

@@ -106,8 +106,9 @@ class Environment:
     def get_taskrc() -> str:
         if "TASKRC" in os.environ:
             return os.environ["TASKRC"]
-        if Environment.get_mode() == "UNHINGED":
-            return os.path.join(Environment.get_jacazul_home(), ".taskrc")
+        jacazul_rc = os.path.join(Environment.get_jacazul_home(), ".taskrc")
+        if os.path.exists(jacazul_rc):
+            return jacazul_rc
         return os.path.expanduser("~/.taskrc")
 
     @staticmethod
