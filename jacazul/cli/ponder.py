@@ -63,7 +63,8 @@ class Dashboard:
         # Filter backlog plans unless --with-backlog or --all
         if not self.with_backlog and not self.show_all:
             all_tasks = [
-                t for t in all_tasks
+                t
+                for t in all_tasks
                 if not (t.get("backlog") and int(t.get("backlog", 0)) == 1)
             ]
 
@@ -199,6 +200,8 @@ class Dashboard:
         else:
             self.render_tactical_list(readout_tasks[:15])
 
+        self.render_recently_closed()
+
         if not self.hide_tip:
             print(
                 "\nWARN: You are using the standalone 'ponder' command. "
@@ -207,10 +210,12 @@ class Dashboard:
 
     def render_tactical_list(self, tasks: List[Dict[str, Any]]):
         print("[TACTICAL READOUT]")
-        print(
-            "  ST | UUID     | MODE       | PLAN                               | "
+        header = (
+            "  ST | UUID     | MODE       | "
+            "PLAN                               | "
             "DESCRIPTION                                        | URG"
         )
+        print(header)
         print("  " + "-" * 130)
         for t in tasks:
             self.render_task_line(t)
@@ -278,6 +283,58 @@ class Dashboard:
             f"  {status_icon:<2} | {uuid[:8]} | {mode:<10} | "
             f"{project:<35} | {desc[:50]:<50} | [{urgency:.1f}]"
         )
+
+    def render_recently_closed(self, max_plans: int = 3):
+        pending_projects = set(
+            t["project"]
+            for t in self.tw.export(["status:pending"])
+            if isinstance(t.get("project"), str)
+        )
+
+        completed = self.tw.export(["status:completed"])
+        completed = [
+            t
+            for t in completed
+            if isinstance(t.get("project"), str)
+            and "_archive" not in t["project"]
+            and "_trash" not in t["project"]
+            and t["project"] not in pending_projects
+            and (
+                not self.project_root
+                or t["project"].startswith(self.project_root)
+            )
+        ]
+
+        # Group by project, track most recent end date
+        by_plan: Dict[str, Dict[str, Any]] = {}
+        for t in completed:
+            plan = t["project"]
+            end = t.get("end", "")
+            if plan not in by_plan or end > by_plan[plan]["end"]:
+                by_plan[plan] = {"end": end, "tasks": []}
+            by_plan[plan]["tasks"].append(t)
+
+        if not by_plan:
+            return
+
+        recent = sorted(
+            by_plan.items(), key=lambda x: x[1]["end"], reverse=True
+        )
+        recent = recent[:max_plans]
+
+        print("[RECENTLY CLOSED]")
+        for plan, data in recent:
+            # Find OUTCOME annotation from any task in this plan
+            outcome = None
+            for t in sorted(data["tasks"], key=lambda x: x.get("end", "")):
+                for ann in t.get("annotations", []):
+                    desc = ann.get("description", "")
+                    if desc.startswith("OUTCOME:"):
+                        outcome = desc.split("OUTCOME:", 1)[1].strip()
+            end_date = data["end"][:10] if data["end"] else "?"
+            outcome_str = f" — {outcome[:60]}" if outcome else ""
+            print(f"  ✓ {plan:<35} [{end_date}]{outcome_str}")
+        print("")
 
 
 def main():
