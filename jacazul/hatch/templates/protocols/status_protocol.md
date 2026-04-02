@@ -94,6 +94,9 @@ Ask a specific, tactical question based on the state above.
 
 After presenting status, you can suggest:
 - **"mostre plans"** or **"show plans"** - List all project plans
+- **"mostre backlog"** or **"show backlog plans"** - List plans including backlog (`tw-flow plans --with-backlog`)
+- **"bota no backlog [plan]"** or **"backlog [plan]"** - Move plan to backlog state (`tw-flow backlog <plan>`)
+- **"ativa [plan]"** or **"activate [plan]"** - Restore backlog plan to active (`tw-flow activate <plan>`)
 - **"tw-flow ponder"** - Refresh status anytime
 - **"status", "what are we doing", "o que estamos fazendo", "como tá o plan"** → Use tw-flow status for plan view
 - **"trabalhar em [plan]"** or **"work on [plan]"** - Focus on specific plan

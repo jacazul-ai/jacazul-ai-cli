@@ -55,9 +55,28 @@ tw-flow done <uuid>
 ```bash
 tw-flow plan <name> <tasks...>     # Create a new plan/ini
 tw-flow ini <name> <tasks...>      # Same as plan
-tw-flow plans                      # List all active plans
+tw-flow plans                      # List active plans (backlog hidden by default)
+tw-flow plans --with-backlog       # Include backlog plans (marked 💤)
+tw-flow plans --all                # Show all plans including closed
 tw-flow rename <old> <new>         # Rename a plan
 ```
+
+### Plan State Management
+
+Plans have three lifecycle states:
+
+| State | Visibility | Command | Marker |
+|---|---|---|---|
+| **active** | Default views | (created state) | `●` |
+| **backlog** | Hidden by default | `tw-flow backlog <plan>` | `💤` |
+| **archive** | Hidden by default | auto on last task done | `✓` |
+
+```bash
+tw-flow backlog <plan>             # Move plan to backlog (hidden, 💤)
+tw-flow activate <plan>           # Restore backlog plan to active
+```
+
+Backlog plans are hidden from `ponder` and `plans` by default. Use `--with-backlog` to reveal them.
 
 ### Task Execution
 
@@ -87,6 +106,7 @@ tw-flow status [plan] --pending    # Hide completed tasks
 tw-flow ponder                     # Full project landscape (horizon view)
 tw-flow ponder <plan>              # Filtered landscape
 tw-flow ponder --all               # Bypass interest filters
+tw-flow ponder --with-backlog      # Include backlog plans
 tw-flow tree [plan]                # ASCII dependency tree
 ```
 
@@ -153,5 +173,5 @@ When running in a TW 3 environment, `scripts/bootstrap/taskwarrior` detects lega
 
 ---
 
-**Version:** 1.0.0
-**Last Updated:** 2026-03-28
+**Version:** 1.1.0
+**Last Updated:** 2026-04-02
