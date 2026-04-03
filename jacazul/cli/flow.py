@@ -730,6 +730,221 @@ class FlowManager:
         self.cache.bust(ini_name=plan_name)
         self.success(f"Plan '{plan_name}' activated. ●")
 
+    def cmd_roadmap(self):
+        """Render the strategic roadmap ledger grouped by phase."""
+        project_id = os.environ.get("PROJECT_ID", "")
+        roadmap_plan = f"{project_id}-roadmap"
+        phases_order = [
+            "in-progress",
+            "next",
+            "blocked",
+            "future",
+            "shipped",
+            "cancelled",
+        ]
+        phase_icons = {
+            "in-progress": "▶",
+            "next": "→",
+            "blocked": "⛔",
+            "future": "◌",
+            "shipped": "✓",
+            "cancelled": "✗",
+        }
+
+        tasks = self.tw.export([f'project:"{roadmap_plan}"', "status:pending"])
+        if not tasks:
+            self.info(
+                "No roadmap found. Run 'tw-flow roadmap init' to create one."
+            )
+            return
+
+        by_phase: Dict[str, List[Dict[str, Any]]] = {}
+        for t in tasks:
+            p = t.get("phase") or "future"
+            by_phase.setdefault(p, []).append(t)
+
+        print(f"\n══ ROADMAP: {project_id} ══\n")
+        for phase in phases_order:
+            if phase not in by_phase:
+                continue
+            icon = phase_icons.get(phase, "○")
+            print(f"[{phase.upper()}]")
+            for t in by_phase[phase]:
+                desc = t.get("description", "?")
+                ini = t.get("roadmap_ini", "")
+                uuid_short = t["uuid"][:8]
+                ini_status = ""
+                if ini:
+                    pending = self.tw.export(
+                        [f'project:"{ini}"', "status:pending"]
+                    )
+                    completed = self.tw.export(
+                        [f'project:"{ini}"', "status:completed"]
+                    )
+                    if not pending and completed:
+                        ini_status = "✓ shipped"
+                    elif pending:
+                        active = [p for p in pending if p.get("start")]
+                        ini_status = (
+                            f"● pending:{len(pending)} active:{len(active)}"
+                        )
+                    else:
+                        ini_status = "? no tasks"
+                    ini_str = f" → {ini} [{ini_status}]"
+                else:
+                    ini_str = ""
+                print(f"  {icon} `{uuid_short}` {desc}{ini_str}")
+            print("")
+
+    def cmd_roadmap_init(self):
+        """Discover existing inis and build roadmap ledger projection."""
+        project_id = os.environ.get("PROJECT_ID", "")
+        roadmap_plan = f"{project_id}-roadmap"
+
+        # Check if roadmap already exists
+        existing = self.tw.export(
+            [f'project:"{roadmap_plan}"', "status:pending"]
+        )
+        if existing:
+            self.error(
+                f"Roadmap already initialized: {roadmap_plan}. "
+                "Use 'tw-flow roadmap' to view it."
+            )
+            return
+
+        # Discover all inis
+        all_tasks = self.tw.export(["status:pending"])
+        all_tasks += self.tw.export(["status:completed"])
+        plans: Dict[str, Dict[str, Any]] = {}
+        for t in all_tasks:
+            p = t.get("project", "")
+            if (
+                not p
+                or p.endswith("-roadmap")
+                or "_archive" in p
+                or "_trash" in p
+            ):
+                continue
+            if p not in plans:
+                plans[p] = {"pending": 0, "completed": 0, "discarded": False}
+            if t["status"] == "pending":
+                plans[p]["pending"] += 1
+            elif t["status"] == "completed":
+                plans[p]["completed"] += 1
+
+        # Classify
+        shipped, active, other = [], [], []
+        for name, data in plans.items():
+            if data["pending"] == 0 and data["completed"] > 0:
+                shipped.append(name)
+            elif data["pending"] > 0:
+                active.append(name)
+            else:
+                other.append(name)
+
+        # Present projection
+        print(f"\n══ ROADMAP INIT: {project_id} ══")
+        print(f"\nDiscovered {len(plans)} plans. Proposed phases:\n")
+        print(
+            f"  shipped     ({len(shipped)}): {', '.join(shipped[:5])}"
+            f"{'...' if len(shipped) > 5 else ''}"
+        )
+        print(
+            f"  in-progress ({len(active)}): {', '.join(active[:5])}"
+            f"{'...' if len(active) > 5 else ''}"
+        )
+        print(
+            f"  future      ({len(other)}): {', '.join(other[:5])}"
+            f"{'...' if len(other) > 5 else ''}"
+        )
+        print(
+            "\nThis creates a ledger plan. Adjust phases after with "
+            "'tw-flow roadmap add'."
+        )
+        print("Proceed? [y/N] ", end="", flush=True)
+        confirm = input().strip().lower()
+        if confirm != "y":
+            self.info("Aborted.")
+            return
+
+        # Create roadmap plan with one root task per active/future ini
+        # Shipped inis are recorded as completed phases
+        def add_phase(desc: str, phase: str, ini: str):
+            self.tw.run(
+                ["add", f"project:{roadmap_plan}", desc],
+                capture=True,
+            )
+            # Extract UUID from output "Created task N." then fetch it
+            new_tasks = self.tw.export(
+                [
+                    f'project:"{roadmap_plan}"',
+                    "status:pending",
+                    f"description:{desc}",
+                ]
+            )
+            if new_tasks:
+                uuid = new_tasks[-1]["uuid"]
+                self.tw.run(
+                    [uuid, "modify", f"phase:{phase}", f"roadmap_ini:{ini}"]
+                )
+
+        for name in active:
+            add_phase(name, "in-progress", name)
+        for name in other:
+            add_phase(name, "future", name)
+        self.success(
+            f"Roadmap initialized: {roadmap_plan} "
+            f"({len(active)} active + {len(other)} future phases). "
+            f"{len(shipped)} shipped inis available via "
+            f"'tw-flow roadmap add shipped'."
+        )
+
+    def cmd_roadmap_add(self, phase: str, description: str, ini: str = ""):
+        """Add a phase to the roadmap ledger."""
+        valid_phases = {
+            "shipped",
+            "in-progress",
+            "next",
+            "blocked",
+            "future",
+            "cancelled",
+        }
+        if phase not in valid_phases:
+            self.error(
+                f"Invalid phase '{phase}'. "
+                f"Valid: {', '.join(sorted(valid_phases))}"
+            )
+            return
+        project_id = os.environ.get("PROJECT_ID", "")
+        roadmap_plan = f"{project_id}-roadmap"
+        args = [
+            "add",
+            f"project:{roadmap_plan}",
+            f"phase:{phase}",
+            description,
+        ]
+        if ini:
+            args.append(f"roadmap_ini:{ini}")
+        self.tw.run(args)
+        ini_str = f" → {ini}" if ini else ""
+        self.success(f"Phase added: [{phase}] {description}{ini_str}")
+
+    def cmd_ship(self, uuid: str):
+        """Mark a roadmap phase as shipped."""
+        tasks = self.tw.export([uuid, "status:pending"])
+        if not tasks:
+            self.error(f"Task not found or already completed: {uuid}")
+            return
+        t = tasks[0]
+        if not t.get("project", "").endswith("-roadmap"):
+            self.error(
+                "Only roadmap phase tasks can be shipped. "
+                "Use 'tw-flow done' for operational tasks."
+            )
+            return
+        self.tw.run([uuid, "modify", "phase:shipped"])
+        self.success(f"Phase shipped: {t.get('description', uuid)[:60]} ✓")
+
     def cmd_plans(
         self,
         show_all: bool = False,
@@ -1087,6 +1302,27 @@ def main():
         if len(args) < 2:
             flow.error("Usage: tw-flow rename <old_name> <new_name>")
         flow.cmd_rename(args[0], args[1])
+    elif cmd == "roadmap":
+        sub = args[0] if args else None
+        if sub == "init":
+            flow.cmd_roadmap_init()
+        elif sub == "add":
+            if len(args) < 3:
+                flow.error(
+                    "Usage: tw-flow roadmap add <phase> <description>"
+                    " [--ini <plan>]"
+                )
+            ini = ""
+            if "--ini" in args:
+                ini_idx = args.index("--ini")
+                ini = args[ini_idx + 1] if ini_idx + 1 < len(args) else ""
+            flow.cmd_roadmap_add(args[1], args[2], ini)
+        else:
+            flow.cmd_roadmap()
+    elif cmd == "ship":
+        if not args:
+            flow.error("Usage: tw-flow ship <phase-uuid>")
+        flow.cmd_ship(args[0])
     elif cmd == "tree":
         flow.cmd_tree(args[0] if args else "status:pending")
     elif cmd == "focus":

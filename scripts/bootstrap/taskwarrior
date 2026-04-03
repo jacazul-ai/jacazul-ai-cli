@@ -37,6 +37,20 @@ if [ -n "$PROJECT_ID" ]; then
         fi
     fi
 
+    # Surgical sync of UDAs for COUNSELOR mode (caged template)
+    if [ "$JACAZUL_MODE" != "UNHINGED" ] && [ -n "$TASKRC" ] && [ -f "$TASKRC" ]; then
+        TEMPLATE_RC="$PROJECT_ROOT/templates/taskwarrior/caged/.taskrc"
+        if [ -f "$TEMPLATE_RC" ]; then
+            grep "^uda\." "$TEMPLATE_RC" | while read -r line; do
+                key=$(echo "$line" | cut -d'=' -f1)
+                if ! grep -q "^$key=" "$TASKRC"; then
+                    [ -n "$DEBUG" ] && echo "🐊 Injecting missing UDA: $line"
+                    echo "$line" >> "$TASKRC"
+                fi
+            done
+        fi
+    fi
+
     # Create task data directory if missing
     if [ ! -d "$TASKDATA" ]; then
         echo "🐊 Creating task data directory: $TASKDATA"

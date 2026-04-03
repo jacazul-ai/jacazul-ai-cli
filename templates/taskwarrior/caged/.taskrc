@@ -32,6 +32,14 @@ uda.archive.type=numeric
 uda.archive.label=Archive
 uda.archive.default=0
 
+# UDA: Phase (Roadmap ledger phase)
+uda.phase.type=string
+uda.phase.label=Phase
+
+# UDA: Roadmap Ini (Link from roadmap phase to operational ini)
+uda.roadmap_ini.type=string
+uda.roadmap_ini.label=Roadmap Ini
+
 # Report: Ranked Projects
 report.ranked.description=Tasks sorted by Project Weight
 report.ranked.columns=id,project,project_weight,description,urgency
