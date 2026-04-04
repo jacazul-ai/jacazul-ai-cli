@@ -206,7 +206,7 @@ class GitHubBroker:
         if repo and use_repo_flag:
             cmd += ["--repo", repo]
 
-        return subprocess.run(cmd, capture_output=True, text=True, env=env)
+        return subprocess.run(cmd, capture_output=True, encoding="utf-8", env=env)
 
     def sync_issue(self, issue_id: str, repo: Optional[str] = None):
         """

@@ -5,11 +5,15 @@ import subprocess
 import orjson
 import re
 import time
+import sys
+import locale
 from typing import Optional, List, Dict, Any
 from dataclasses import dataclass, asdict
 
-# 🐊 tw_expert Core Module (v1.5.0)
+# 🐊 tw_expert Core Module (v1.5.1)
 # Centralized logic for Environment, Taskwarrior, Cache, and Focus management.
+
+_REAL_TASK_CACHE = None
 
 
 class CacheManager:
@@ -123,11 +127,72 @@ class Environment:
 
     @staticmethod
     def get_real_task_bin() -> str:
+        global _REAL_TASK_CACHE
+        if _REAL_TASK_CACHE:
+            return _REAL_TASK_CACHE
+
         if "JACAZUL_REAL_TASK" in os.environ:
-            return os.environ["JACAZUL_REAL_TASK"]
+            path = os.environ["JACAZUL_REAL_TASK"]
+            if os.path.exists(path):
+                _REAL_TASK_CACHE = path
+                return path
+
+        # Priority 0: Local Project Binary (Fastest)
+        if os.name == "nt":
+            try:
+                # jacazul/taskwarrior/core.py -> ../../bin/tw/task.exe
+                base_dir = os.path.dirname(
+                    os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+                )
+                local_bin = os.path.join(base_dir, "bin", "tw", "task.exe")
+                if os.path.exists(local_bin):
+                    _REAL_TASK_CACHE = local_bin
+                    return local_bin
+            except Exception:
+                pass
+
+        # Priority 1: Search in PATH (Expensive on Windows)
+        search_bins = ["taskwarrior", "task"]
+        if os.name == "nt":
+            search_bins = ["task.exe", "taskwarrior.exe"]
+
+        for b_name in search_bins:
+            path = shutil.which(b_name)
+            if path and "scripts/task" not in path.replace("\\", "/"):
+                # Extra check: if it's go-task (common on Windows), we ignore it
+                if os.name == "nt" and "task.exe" in path.lower():
+                    try:
+                        # Quick test to see if it's the real Taskwarrior
+                        res = subprocess.run(
+                            [path, "--version"],
+                            capture_output=True,
+                            text=True,
+                            timeout=2,
+                        )
+                        if "task" in res.stdout.lower() and "." in res.stdout:
+                            _REAL_TASK_CACHE = path
+                            return path
+                    except Exception:
+                        continue
+                else:
+                    _REAL_TASK_CACHE = path
+                    return path
+
+        if os.name == "nt":
+            # Final fallback: common Windows paths
+            common_paths = [
+                os.path.join(os.getcwd(), "bin", "tw", "task.exe"),
+                os.path.expandvars("%ProgramFiles%\\taskwarrior\\task.exe"),
+                os.path.expandvars("%USERPROFILE%\\scoop\\shims\\task.exe"),
+                "C:\\ProgramData\\chocolatey\\bin\\task.exe",
+            ]
+            for p in common_paths:
+                if os.path.exists(p):
+                    _REAL_TASK_CACHE = p
+                    return p
 
         try:
-            # We want to avoid our own scripts/task wrapper
+            # Unix-like fallback
             res = subprocess.run(
                 ["which", "-a", "task"],
                 capture_output=True,
@@ -137,15 +202,19 @@ class Environment:
             bins = res.stdout.strip().split("\n")
             for b in bins:
                 if "scripts/task" not in b:
+                    _REAL_TASK_CACHE = b
                     return b
         except Exception:
             pass
-        return "/usr/bin/task"
+
+        _REAL_TASK_CACHE = "task" if os.name == "nt" else "/usr/bin/task"
+        return _REAL_TASK_CACHE
 
 
 class TaskWrapper:
     def __init__(self):
         self.bin = Environment.get_real_task_bin()
+        print(f"DEBUG: Using task bin: {self.bin}", file=sys.stderr)
         self.rc = Environment.get_taskrc()
         self.data = Environment.get_taskdata()
         os.makedirs(self.data, exist_ok=True)
@@ -167,10 +236,18 @@ class TaskWrapper:
             cmd.append(f"rc.verbose={verbose}")
         cmd.extend(args)
 
+        # On Windows, native task.exe often expects/outputs ANSI encoding
+        # unless configured otherwise. We try to detect the system encoding.
+        encoding = "utf-8"
+        if os.name == "nt":
+            # For Windows, we use the preferred encoding which is usually ANSI (cp1252)
+            encoding = locale.getpreferredencoding(False)
+
         res = subprocess.run(
             cmd,
             capture_output=capture,
-            text=True,
+            encoding=encoding,
+            errors="replace",
             env=os.environ.copy(),
             check=False,
         )

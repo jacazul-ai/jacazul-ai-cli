@@ -118,3 +118,6 @@ sandbox/copilot/.copilot
 sandbox/copilot/.task/
 skills/jacazul-*
 .gemini/
+
+# Binaries
+*.exe
