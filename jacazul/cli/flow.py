@@ -985,6 +985,64 @@ class FlowManager:
         self.tw.run([uuid, "modify", "phase:shipped"])
         self.success(f"Phase shipped: {t.get('description', uuid)[:60]} ✓")
 
+    def cmd_session_list(self):
+        """List all independent sessions with mtime-based status."""
+        import glob
+        import time
+
+        data_dir = self.focus.data_dir
+        session_files = sorted(
+            glob.glob(os.path.join(data_dir, "focus-*.json")),
+            key=os.path.getmtime,
+            reverse=True,
+        )
+
+        if not session_files:
+            self.info("No independent sessions found.")
+            return
+
+        current_session_id = os.environ.get("JACAZUL_SESSION_ID", "")
+        now = time.time()
+
+        print("SESSION ID   PLAN                           TASK       AGE     STATUS")
+        print("-" * 72)
+        for f in session_files:
+            fname = os.path.basename(f)
+            session_id = fname[len("focus-"):-len(".json")]
+            mtime = os.path.getmtime(f)
+            age_seconds = now - mtime
+
+            if age_seconds < 7200:
+                status = "active"
+            elif age_seconds < 28800:
+                status = "idle"
+            else:
+                status = "orphan"
+
+            if age_seconds < 60:
+                age_str = f"{int(age_seconds)}s"
+            elif age_seconds < 3600:
+                age_str = f"{int(age_seconds // 60)}m"
+            elif age_seconds < 86400:
+                age_str = f"{int(age_seconds // 3600)}h"
+            else:
+                age_str = f"{int(age_seconds // 86400)}d"
+
+            try:
+                with open(f, "rb") as fh:
+                    data = orjson.loads(fh.read())
+                plan = data.get("focused_plan") or "-"
+                task_uuid = data.get("focused_task_uuid") or "-"
+                task_short = task_uuid[:8] if task_uuid != "-" else "-"
+            except Exception:
+                plan = "?"
+                task_short = "?"
+
+            marker = "*" if session_id == current_session_id else " "
+            print(
+                f"{session_id} {marker}  {plan:<30} {task_short:<10} {age_str:<7} {status}"
+            )
+
     def cmd_plans(
         self,
         show_all: bool = False,
@@ -1342,6 +1400,15 @@ def main():
         if len(args) < 2:
             flow.error("Usage: tw-flow rename <old_name> <new_name>")
         flow.cmd_rename(args[0], args[1])
+    elif cmd == "session":
+        sub = args[0] if args else None
+        if sub == "list":
+            flow.cmd_session_list()
+        else:
+            flow.error(
+                "Usage: tw-flow session list\n"
+                "   ACTION: Available subcommands: list"
+            )
     elif cmd == "roadmap":
         sub = args[0] if args else None
         if sub == "init":
@@ -1592,6 +1659,11 @@ def main():
         )
     else:
         flow.error(f"Unknown command: {cmd}")
+
+    # Heartbeat: touch active session file on every command execution
+    session_file = flow.focus.session_file_path
+    if session_file and os.path.exists(session_file):
+        os.utime(session_file, None)
 
 
 if __name__ == "__main__":
