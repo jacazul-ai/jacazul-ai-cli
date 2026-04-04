@@ -6,6 +6,18 @@ SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
 PROJECT_ROOT="$(readlink -f "$SCRIPT_DIR/..")"
 
 # -----------------------------------------------------------------------------
+# Session Restore: parse --jacazul-session BEFORE bootstrap sources
+# -----------------------------------------------------------------------------
+for i in "$@"; do
+    if [[ "$i" == "--jacazul-session" ]]; then
+        _next=true
+    elif [[ "${_next:-false}" == "true" ]]; then
+        export JACAZUL_SESSION_ID="$i"
+        _next=false
+    fi
+done
+
+# -----------------------------------------------------------------------------
 # Runtime Bootstrap (Dynamics)
 # -----------------------------------------------------------------------------
 BOOTSTRAP_ENV="$PROJECT_ROOT/scripts/bootstrap/environment"
@@ -40,12 +52,36 @@ if [ -n "$DRY" ]; then
     exit 0
 fi
 
+# Parse arguments — strip --jacazul-session from args passed to opencode
+CLEAN_ARGS=()
+_skip_next=false
+for arg in "$@"; do
+    if [[ "$_skip_next" == "true" ]]; then
+        _skip_next=false
+        continue
+    fi
+    if [[ "$arg" == "--jacazul-session" ]]; then
+        _skip_next=true
+    else
+        CLEAN_ARGS+=("$arg")
+    fi
+done
+
 # Prepare arguments: ensure --agent jacazul is present if not specified
-ARGS=("$@")
-if [[ "$*" != *"--agent"* ]]; then
+ARGS=("${CLEAN_ARGS[@]}")
+if [[ "${CLEAN_ARGS[*]}" != *"--agent"* ]]; then
     ARGS=("--agent" "jacazul" "${ARGS[@]}")
 fi
 
 # Execute opencode directly to preserve TUI interactivity.
 # The 'Initial Turn Protocol' in the JIT agent will guide the LLM.
-exec "$OPENCODE_BIN" "${ARGS[@]}"
+"$OPENCODE_BIN" "${ARGS[@]}"
+
+# Exit banner: only shown if an independent session file exists
+FOCUS_FILE="$JACAZUL_HOME/.task/$PROJECT_ID/focus-$JACAZUL_SESSION_ID.json"
+if [ -f "$FOCUS_FILE" ]; then
+    echo ""
+    echo "╭─ 🐊 Jacazul Session ───────────────────────────────────────╮"
+    echo "│  To resume: jacazul-opencode --jacazul-session $JACAZUL_SESSION_ID      │"
+    echo "╰────────────────────────────────────────────────────────────╯"
+fi

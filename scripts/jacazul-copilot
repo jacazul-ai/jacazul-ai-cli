@@ -6,6 +6,18 @@ SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
 PROJECT_ROOT="$(readlink -f "$SCRIPT_DIR/..")"
 
 # -----------------------------------------------------------------------------
+# Session Restore: parse --jacazul-session BEFORE bootstrap sources
+# -----------------------------------------------------------------------------
+for i in "$@"; do
+    if [[ "$i" == "--jacazul-session" ]]; then
+        _next=true
+    elif [[ "${_next:-false}" == "true" ]]; then
+        export JACAZUL_SESSION_ID="$i"
+        _next=false
+    fi
+done
+
+# -----------------------------------------------------------------------------
 # Runtime Bootstrap (Dynamics)
 # -----------------------------------------------------------------------------
 BOOTSTRAP_ENV="$PROJECT_ROOT/scripts/bootstrap/environment"
@@ -30,12 +42,19 @@ export PATH="$PATH:$PROJECT_ROOT/skills/taskwarrior_expert/scripts"
 # Base Onboard Prompt for Jacazul (Copilot)
 ONBOARD_PROMPT="The anchored persona for this session is Jacazul (Jacaré Azul). Activate 'jacazul-engine', 'taskwarrior-expert', and 'git-expert' skills immediately. Perform tactical discovery via 'tw-flow ponder'. IMPORTANT: Closely follow all banners, tips, warnings, and errors emitted by tw-flow and ponder as behavioral guidance. CACHE PROTOCOL: When any command returns [cached], REPRODUCE the last full output for the user — never hide info behind the signal. Use --force ONLY when the user asks or you have concrete reason to suspect stale cache."
 
-# Parse arguments for --resume
+# Parse arguments for --resume and --jacazul-session
 RESUME=false
 CLEAN_ARGS=()
+_skip_next=false
 for arg in "$@"; do
+    if [[ "$_skip_next" == "true" ]]; then
+        _skip_next=false
+        continue
+    fi
     if [[ "$arg" == "--resume" ]]; then
         RESUME=true
+    elif [[ "$arg" == "--jacazul-session" ]]; then
+        _skip_next=true
     else
         CLEAN_ARGS+=("$arg")
     fi
@@ -46,10 +65,10 @@ if [ "$RESUME" = true ]; then
     set -- "${CLEAN_ARGS[@]}"
 else
     # If no arguments provided, default to deterministic onboarding with agent
-    if [ $# -eq 0 ]; then
+    if [ ${#CLEAN_ARGS[@]} -eq 0 ]; then
         set -- --agent jacazul -i "$ONBOARD_PROMPT"
     else
-        USER_PROMPT="$*"
+        USER_PROMPT="${CLEAN_ARGS[*]}"
         set -- --agent jacazul -i "$ONBOARD_PROMPT" "$USER_PROMPT"
     fi
 fi
@@ -69,4 +88,13 @@ if [ -n "$DRY" ]; then
 fi
 
 # Execute real copilot
-exec $REAL_COPILOT "$@"
+$REAL_COPILOT "$@"
+
+# Exit banner: only shown if an independent session file exists
+FOCUS_FILE="$JACAZUL_HOME/.task/$PROJECT_ID/focus-$JACAZUL_SESSION_ID.json"
+if [ -f "$FOCUS_FILE" ]; then
+    echo ""
+    echo "╭─ 🐊 Jacazul Session ───────────────────────────────────────╮"
+    echo "│  To resume: jacazul-copilot --jacazul-session $JACAZUL_SESSION_ID      │"
+    echo "╰────────────────────────────────────────────────────────────╯"
+fi
