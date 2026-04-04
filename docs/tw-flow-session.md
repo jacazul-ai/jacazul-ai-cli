@@ -135,11 +135,28 @@ disappears.
 3. Known gotchas, blockers, or partial states left in the codebase
 4. The single next concrete action to take on resume
 
-### On next session startup
+### Injection protocol (once-only with crash safety)
 
-If `session-note-{SESSION_ID}.md` exists, the bootstrap injects it as
-a system prompt **once**, then archives it to `session-notes/`. It is
-never printed twice.
+```
+Bootstrap detects session-note-{SESSION_ID}.md (no injected: flag)
+        ↓
+Injects content into agent prompt
+        ↓
+Appends "injected: <timestamp>" to the file immediately
+        ↓
+Agent initializes — runs tw-flow focus (onboard protocol)
+        ↓
+tw-flow detects injected: flag → archives to session-notes/
+```
+
+The file is **never deleted immediately** — the `injected:` flag is
+written first. If power is lost before archival, the flag prevents
+double injection on the next startup. The content is preserved in the
+file until the first `tw-flow` command confirms the handshake.
+
+The first `tw-flow focus` call in the onboard protocol acts as the
+implicit handshake — no explicit `tw-flow session ack` command needed.
+The existing onboard protocol guarantees this call happens.
 
 ---
 
@@ -173,18 +190,39 @@ manual `tw-flow focus ind`.
 
 ### How it works
 
-The wrapper scripts (`jacazul-claude`, `jacazul-gemini`, etc.) use a
-regular process call instead of `exec`, keeping the shell alive after
-the CLI exits to run the exit banner.
+The `--jacazul-session <id>` flag is parsed in each wrapper **before**
+sourcing the bootstrap environment:
+
+```bash
+# Parse BEFORE source bootstrap/environment
+for i in "$@"; do
+    if [[ "$i" == "--jacazul-session" ]]; then _next=true
+    elif [[ "${_next:-false}" == "true" ]]; then
+        export JACAZUL_SESSION_ID="$i"; _next=false
+    fi
+done
+
+source "$BOOTSTRAP_ENV"  # guard: if [ -z "$JACAZUL_SESSION_ID" ] → preserves it
+```
+
+The bootstrap guard `if [ -z "$JACAZUL_SESSION_ID" ]` preserves the
+restored ID instead of generating a new UUID.
+
+The wrappers use a regular process call instead of `exec`, keeping the
+shell alive for the exit banner. Banner only shown if a focus file
+exists — global sessions get no banner.
 
 ```bash
 # Launch CLI (no exec — shell stays alive)
-"$CLAUDE_BIN" --append-system-prompt "$ONBOARD_PROMPT" "$@"
+"$CLAUDE_BIN" --append-system-prompt "$ONBOARD_PROMPT" "${CLEAN_ARGS[@]}"
 
-# Exit banner
-echo "╭─ 🐊 Jacazul Session ───────────────────────────────────────╮"
-echo "│  To resume: jacazul-claude --jacazul-session $JACAZUL_SESSION_ID  │"
-echo "╰────────────────────────────────────────────────────────────╯"
+# Exit banner — only if independent session file exists
+FOCUS_FILE="$JACAZUL_HOME/.task/$PROJECT_ID/focus-$JACAZUL_SESSION_ID.json"
+if [ -f "$FOCUS_FILE" ]; then
+    echo "╭─ 🐊 Jacazul Session ───────────────────────────────────────╮"
+    echo "│  To resume: jacazul-claude --jacazul-session $JACAZUL_SESSION_ID      │"
+    echo "╰────────────────────────────────────────────────────────────╯"
+fi
 ```
 
 ---
