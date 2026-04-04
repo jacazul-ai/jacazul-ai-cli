@@ -36,9 +36,9 @@ uda.archive.default=0
 uda.phase.type=string
 uda.phase.label=Phase
 
-# UDA: Roadmap Ini (Link from roadmap phase to operational ini)
-uda.roadmap_ini.type=string
-uda.roadmap_ini.label=Roadmap Ini
+# UDA: Operational Ini (Link from roadmap phase to operational ini)
+uda.operational_ini.type=string
+uda.operational_ini.label=Operational Ini
 
 # Report: Ranked Projects
 report.ranked.description=Tasks sorted by Project Weight

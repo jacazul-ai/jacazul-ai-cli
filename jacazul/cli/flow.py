@@ -752,6 +752,9 @@ class FlowManager:
         }
 
         tasks = self.tw.export([f'project:"{roadmap_plan}"', "status:pending"])
+        tasks += self.tw.export(
+            [f'project:"{roadmap_plan}"', "status:completed"]
+        )
         if not tasks:
             self.info(
                 "No roadmap found. Run 'tw-flow roadmap init' to create one."
@@ -771,7 +774,7 @@ class FlowManager:
             print(f"[{phase.upper()}]")
             for t in by_phase[phase]:
                 desc = t.get("description", "?")
-                ini = t.get("roadmap_ini", "")
+                ini = t.get("operational_ini", "")
                 uuid_short = t["uuid"][:8]
                 ini_status = ""
                 if ini:
@@ -784,13 +787,17 @@ class FlowManager:
                     if not pending and completed:
                         ini_status = "✓ shipped"
                     elif pending:
-                        active = [p for p in pending if p.get("start")]
+                        active_tasks = [p for p in pending if p.get("start")]
                         ini_status = (
-                            f"● pending:{len(pending)} active:{len(active)}"
+                            f"● pending:{len(pending)}"
+                            f" active:{len(active_tasks)}"
                         )
                     else:
                         ini_status = "? no tasks"
-                    ini_str = f" → {ini} [{ini_status}]"
+                    if ini != desc:
+                        ini_str = f" → {ini} [{ini_status}]"
+                    else:
+                        ini_str = f" [{ini_status}]"
                 else:
                     ini_str = ""
                 print(f"  {icon} `{uuid_short}` {desc}{ini_str}")
@@ -801,9 +808,12 @@ class FlowManager:
         project_id = os.environ.get("PROJECT_ID", "")
         roadmap_plan = f"{project_id}-roadmap"
 
-        # Check if roadmap already exists
+        # Check if roadmap already exists (pending or completed)
         existing = self.tw.export(
             [f'project:"{roadmap_plan}"', "status:pending"]
+        )
+        existing += self.tw.export(
+            [f'project:"{roadmap_plan}"', "status:completed"]
         )
         if existing:
             self.error(
@@ -826,21 +836,29 @@ class FlowManager:
             ):
                 continue
             if p not in plans:
-                plans[p] = {"pending": 0, "completed": 0, "discarded": False}
+                plans[p] = {"pending": 0, "completed": 0, "active": 0}
             if t["status"] == "pending":
                 plans[p]["pending"] += 1
+                if t.get("start"):
+                    plans[p]["active"] += 1
             elif t["status"] == "completed":
                 plans[p]["completed"] += 1
 
         # Classify
-        shipped, active, other = [], [], []
+        # in-progress = has at least one task with start set (actively running)
+        # next = has pending tasks but none started
+        # future = zero pending and zero completed (never touched)
+        # shipped = zero pending, has completed tasks
+        shipped, in_progress, next_phase, future = [], [], [], []
         for name, data in plans.items():
             if data["pending"] == 0 and data["completed"] > 0:
                 shipped.append(name)
+            elif data["pending"] > 0 and data["active"] > 0:
+                in_progress.append(name)
             elif data["pending"] > 0:
-                active.append(name)
+                next_phase.append(name)
             else:
-                other.append(name)
+                future.append(name)
 
         # Present projection
         print(f"\n══ ROADMAP INIT: {project_id} ══")
@@ -850,12 +868,16 @@ class FlowManager:
             f"{'...' if len(shipped) > 5 else ''}"
         )
         print(
-            f"  in-progress ({len(active)}): {', '.join(active[:5])}"
-            f"{'...' if len(active) > 5 else ''}"
+            f"  in-progress ({len(in_progress)}): {', '.join(in_progress[:5])}"
+            f"{'...' if len(in_progress) > 5 else ''}"
         )
         print(
-            f"  future      ({len(other)}): {', '.join(other[:5])}"
-            f"{'...' if len(other) > 5 else ''}"
+            f"  next        ({len(next_phase)}): {', '.join(next_phase[:5])}"
+            f"{'...' if len(next_phase) > 5 else ''}"
+        )
+        print(
+            f"  future      ({len(future)}): {', '.join(future[:5])}"
+            f"{'...' if len(future) > 5 else ''}"
         )
         print(
             "\nThis creates a ledger plan. Adjust phases after with "
@@ -885,18 +907,36 @@ class FlowManager:
             if new_tasks:
                 uuid = new_tasks[-1]["uuid"]
                 self.tw.run(
-                    [uuid, "modify", f"phase:{phase}", f"roadmap_ini:{ini}"]
+                    [
+                        uuid,
+                        "modify",
+                        f"phase:{phase}",
+                        f"operational_ini:{ini}",
+                    ]
                 )
 
-        for name in active:
+        for name in in_progress:
             add_phase(name, "in-progress", name)
-        for name in other:
+        for name in next_phase:
+            add_phase(name, "next", name)
+        for name in future:
             add_phase(name, "future", name)
+        for name in shipped:
+            add_phase(name, "shipped", name)
+            # Mark shipped phases as done in Taskwarrior
+            done_tasks = self.tw.export(
+                [
+                    f'project:"{roadmap_plan}"',
+                    "status:pending",
+                    f"description:{name}",
+                ]
+            )
+            if done_tasks:
+                self.tw.run([done_tasks[-1]["uuid"], "done"])
         self.success(
             f"Roadmap initialized: {roadmap_plan} "
-            f"({len(active)} active + {len(other)} future phases). "
-            f"{len(shipped)} shipped inis available via "
-            f"'tw-flow roadmap add shipped'."
+            f"({len(in_progress)} in-progress + {len(next_phase)} next + "
+            f"{len(future)} future + {len(shipped)} shipped phases)."
         )
 
     def cmd_roadmap_add(self, phase: str, description: str, ini: str = ""):
@@ -924,7 +964,7 @@ class FlowManager:
             description,
         ]
         if ini:
-            args.append(f"roadmap_ini:{ini}")
+            args.append(f"operational_ini:{ini}")
         self.tw.run(args)
         ini_str = f" → {ini}" if ini else ""
         self.success(f"Phase added: [{phase}] {description}{ini_str}")
