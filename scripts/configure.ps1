@@ -152,9 +152,48 @@ if (!(Test-Path $VAULT_KEY)) {
 }
 
 # -----------------------------------------------------------------------------
+# 0.4.1 Download Taskwarrior Native Binary (Windows)
+# -----------------------------------------------------------------------------
+$TW_BIN_DIR = Join-Path $PROJECT_ROOT "bin\tw"
+$LOCAL_TASK = Join-Path $TW_BIN_DIR "task.exe"
+
+Write-Host "[+] Checking for Taskwarrior native binary..." -ForegroundColor Cyan
+
+# Force TLS 1.2 for modern GitHub API requirements
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+
+$REPO = "jeffmr2704/taskwarrior-windows"
+$API_URL = "https://api.github.com/repos/$REPO/releases/latest"
+
+try {
+    Write-Host "[i] Fetching latest release info from $REPO..." -ForegroundColor Gray
+    $release = Invoke-RestMethod -Uri $API_URL -UseBasicParsing
+    $asset = $release.assets | Where-Object { $_.name -eq "task.exe" } | Select-Object -First 1
+
+    if ($asset) {
+        $downloadUrl = $asset.browser_download_url
+        if (!(Test-Path $TW_BIN_DIR)) { 
+            Write-Host "[+] Creating directory $TW_BIN_DIR" -ForegroundColor Gray
+            New-Item -ItemType Directory -Force -Path $TW_BIN_DIR | Out-Null 
+        }
+
+        Write-Host "[+] Downloading Taskwarrior v$($release.tag_name)..." -ForegroundColor Cyan
+        Invoke-WebRequest -Uri $downloadUrl -OutFile $LOCAL_TASK -UseBasicParsing
+        Write-Host "[v] task.exe downloaded successfully." -ForegroundColor Green
+    } else {
+        Write-Warning "Could not find 'task.exe' asset in the latest release of $REPO."
+    }
+} catch {
+    Write-Host "[-] Warning: Failed to download latest Taskwarrior binary automatically." -ForegroundColor Yellow
+    Write-Host "    Reason: $($_.Exception.Message)" -ForegroundColor Gray
+    if (!(Test-Path $LOCAL_TASK)) {
+        Write-Error "CRITICAL: task.exe is missing and download failed. Please install it manually in bin/tw/task.exe"
+    }
+}
+
+# -----------------------------------------------------------------------------
 # 0.5 Persist Taskwarrior Binary Path (JACAZUL_REAL_TASK)
 # -----------------------------------------------------------------------------
-$LOCAL_TASK = Join-Path $PROJECT_ROOT "bin\tw\task.exe"
 if (Test-Path $LOCAL_TASK) {
     Write-Host "[+] Persisting JACAZUL_REAL_TASK to User Environment..." -ForegroundColor Cyan
     $currentRealTask = [Environment]::GetEnvironmentVariable("JACAZUL_REAL_TASK", "User")
