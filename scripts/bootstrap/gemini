@@ -35,11 +35,31 @@ jq '
     .general.previewFeatures = true
 ' "$SETTINGS_FILE" > "$TMP_FILE" && mv "$TMP_FILE" "$SETTINGS_FILE"
 
-# 4. Link Global Skills (Surgical)
+# 4. Inject Gemini Policies (Surgical)
+POLICIES_DIR="$GEMINI_DIR/policies"
+mkdir -p "$POLICIES_DIR"
+
+# 4.1 Sync policies from root-level /.gemini/policies directory
+REPO_POLICIES="$PROJECT_ROOT/.gemini/policies"
+if [ -d "$REPO_POLICIES" ]; then
+    for policy_file in "$REPO_POLICIES"/*.toml; do
+        [ -f "$policy_file" ] || continue
+        name=$(basename "$policy_file")
+        target="$POLICIES_DIR/$name"
+        
+        # Always ensure the home policy matches the repo version
+        if [ -n "$DEBUG" ]; then
+            echo "🐊 Syncing Gemini policy: $name"
+        fi
+        cp "$policy_file" "$target"
+    done
+fi
+
+# 5. Link Global Skills (Surgical)
 SKILLS_DIR="$GEMINI_DIR/skills"
 mkdir -p "$SKILLS_DIR"
 
-# 4.1 Link skills from root-level /skills directory
+# 5.1 Link skills from root-level /skills directory
 for skill_dir in "$PROJECT_ROOT/skills"/*; do
     [ -d "$skill_dir" ] || continue
     name=$(basename "$skill_dir")
@@ -63,7 +83,7 @@ for skill_dir in "$PROJECT_ROOT/skills"/*; do
     fi
 done
 
-# 4.2 Link legacy skills from templates (if any left)
+# 5.2 Link legacy skills from templates (if any left)
 if [ -d "$TEMPLATES_DIR/skills" ]; then
     for skill_dir in "$TEMPLATES_DIR/skills"/*; do
         [ -d "$skill_dir" ] || continue
