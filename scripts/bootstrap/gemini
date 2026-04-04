@@ -39,8 +39,8 @@ jq '
 POLICIES_DIR="$GEMINI_DIR/policies"
 mkdir -p "$POLICIES_DIR"
 
-# 4.1 Sync policies from root-level /.gemini/policies directory
-REPO_POLICIES="$PROJECT_ROOT/.gemini/policies"
+# 4.1 Sync policies from root-level /policies/gemini directory
+REPO_POLICIES="$PROJECT_ROOT/policies/gemini"
 if [ -d "$REPO_POLICIES" ]; then
     for policy_file in "$REPO_POLICIES"/*.toml; do
         [ -f "$policy_file" ] || continue

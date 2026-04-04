@@ -1,0 +1,10 @@
+[[rule]]
+toolName = "activate_skill"
+decision = "allow"
+priority = 900
+
+[[rule]]
+toolName = "run_shell_command"
+commandRegex = ".*(tw-flow|ponder|taskp)($| .*)"
+decision = "allow"
+priority = 800
