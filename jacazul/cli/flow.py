@@ -1057,6 +1057,49 @@ class FlowManager:
                 f"{session_id} {marker}  {plan:<30} {task_short:<10} {age_str:<7} {status}"
             )
 
+    def cmd_session_purge(self, confirm: bool = False):
+        """Remove orphan session files (mtime > 8h)."""
+        import glob
+        import time
+
+        data_dir = self.focus.data_dir
+        current_session_id = os.environ.get("JACAZUL_SESSION_ID", "")
+        now = time.time()
+
+        session_files = glob.glob(os.path.join(data_dir, "focus-*.json"))
+        orphans = []
+        for f in session_files:
+            session_id = os.path.basename(f)[len("focus-"):-len(".json")]
+            if session_id == current_session_id:
+                continue
+            age_seconds = now - os.path.getmtime(f)
+            if age_seconds >= 28800:
+                orphans.append(session_id)
+
+        if not orphans:
+            self.info("No orphan sessions to purge.")
+            return
+
+        print(f"Orphan sessions ({len(orphans)}):")
+        for sid in orphans:
+            note = os.path.join(data_dir, f"session-note-{sid}.md")
+            has_note = " + note" if os.path.exists(note) else ""
+            print(f"  {sid}{has_note}")
+
+        if not confirm:
+            print("")
+            self.info("Dry run. Use --confirm to delete.")
+            return
+
+        for sid in orphans:
+            focus_file = os.path.join(data_dir, f"focus-{sid}.json")
+            note_file = os.path.join(data_dir, f"session-note-{sid}.md")
+            os.remove(focus_file)
+            if os.path.exists(note_file):
+                os.remove(note_file)
+
+        self.success(f"Purged {len(orphans)} orphan session(s).")
+
     def cmd_session_ack(self):
         """Acknowledge session handoff note — marks it as read, dismisses status banner."""
         from datetime import datetime, timezone
@@ -1599,10 +1642,13 @@ def main():
             flow.cmd_session_resume()
         elif sub == "ack":
             flow.cmd_session_ack()
+        elif sub == "purge":
+            confirm = "--confirm" in args
+            flow.cmd_session_purge(confirm=confirm)
         else:
             flow.error(
                 "Usage: tw-flow session <subcommand>\n"
-                "   ACTION: Available subcommands: list, dump, resume, ack"
+                "   ACTION: Available subcommands: list, dump, resume, ack, purge"
             )
     elif cmd == "roadmap":
         sub = args[0] if args else None
