@@ -98,6 +98,32 @@ To maintain a high-fidelity tactical radar, agents MUST follow the **Cool Down**
 - `JACAZUL_SESSION_ID` unset → `global/` directory used as fallback.
 - Bootstrap automatically purges directories from expired sessions.
 
+## 🔄 Session Handoff (Prepare for Restart)
+
+When ending a session with incomplete work or detecting context degradation, prepare a handoff note for the next agent:
+
+```bash
+tw-flow session resume        # Print previous session note (silent if none) — run on onboard
+tw-flow session dump          # Create handoff note for the next session
+tw-flow session dump --force  # Overwrite existing note
+```
+
+**On onboard (when anchored):** Run `tw-flow session resume` first. If it prints, read it before anything else — it is the narrative lens for the current state.
+
+**File behavior for dump (Error as Prompt):**
+- **First call:** Creates `session-note-{SESSION_ID}.md` with a single `<!-- FILL IN -->` section. Fill it in now.
+- **File exists + `<!-- FILL IN -->` present:** You already ran dump — fill it in, do not regenerate.
+- **File exists + no `<!-- FILL IN -->`:** A previous agent filled this in. READ IT FIRST — it has the context you need.
+
+After filling in the note, inform the user:
+```
+Dump gerado. Resume com: jacazul-<agent> --jacazul-session {SESSION_ID}
+```
+
+On the next session startup, the bootstrap injects the note once and archives it.
+
+---
+
 ## 🎯 Independent Focus Mode
 
 Sessions can be isolated from the global `focus.json` using `JACAZUL_SESSION_ID`.

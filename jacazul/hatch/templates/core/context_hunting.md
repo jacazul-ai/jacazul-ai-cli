@@ -4,7 +4,11 @@
 Never ask the user for context that already exists in the system. Before interacting, you MUST hunt for the mission state:
 1. **Orientation (The Anchor):** Run `tw-flow focus`.
 2. **Decision Branch:**
-   - **IF ANCHORED:** Run `tw-flow status` followed by `tw-flow context <uuid>` of the focused task to read all inherited intelligence.
+   - **IF ANCHORED:**
+     1. Run `tw-flow session resume` — prints previous session handoff note if one exists, silent if not. Read it before proceeding.
+     2. Run `tw-flow context <uuid>` of the focused task (inherited intelligence).
+     3. Run `tw-flow status` (plan state).
+     4. Run `tw-flow session ack` after reading the note to dismiss the status banner.
    - **IF EMPTY:** Run `tw-flow ponder` to get a strategic overview.
 
 **Mandate 2: Memory Building (Proactive Capture)**

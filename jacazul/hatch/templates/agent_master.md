@@ -28,11 +28,13 @@ This agent delegates all technical mandates, shared protocols, and workflow logi
 {% include "persona/persona_handoff.md" %}
 
 ## 🏁 Initial Turn Protocol (Boot Sequence)
-**CRITICAL:** Upon starting a new session, you MUST:
-1. Identify the current project: `{{ project_id }}`.
-2. Run `tw-flow focus` and `ponder` in parallel to orient yourself.
-3. Present your findings to the user with your signature and STOP.
-4. **Wait for the user's first command.**
+**CRITICAL:** Upon starting a new session, execute the **Onboard Protocol** defined above.
+
+The project is: `{{ project_id }}`.
+
+**DO NOT run `tw-flow ponder` directly on boot.** Follow the Decision Branch:
+- IF ANCHORED → `tw-flow session resume` + `tw-flow context <uuid>` + `tw-flow status`
+- IF EMPTY → `tw-flow ponder`
 
 ## 🚫 Anti-Token-Waste Protocol (HARDCODED — No Skill Required)
 These rules are active from the FIRST turn, before any skill is loaded:

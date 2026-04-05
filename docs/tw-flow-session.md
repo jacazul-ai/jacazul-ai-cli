@@ -65,6 +65,7 @@ A session file only exists when `tw-flow focus ind` is used. The global
 ```bash
 tw-flow session list                    # List all independent sessions
 tw-flow session dump                    # Generate introspective handoff note
+tw-flow session resume                  # Print previous session handoff note (silent if none)
 tw-flow session purge                   # Remove orphan session files
 ```
 
@@ -129,11 +130,18 @@ disappears.
 - `git diff --stat` of uncommitted files
 - Pending tasks in the active plan with their urgency
 
-**Filled in by the agent** via a prompt template (introspective layer):
-1. Exactly where execution stopped — the last concrete action taken
-2. What is not obvious from the code or task annotations
-3. Known gotchas, blockers, or partial states left in the codebase
-4. The single next concrete action to take on resume
+**Filled in by the agent** — a single open `<!-- FILL IN -->` section.
+Write whatever is not captured by code or tasks: where execution stopped,
+non-obvious state, gotchas, and the single next concrete action to take on resume.
+
+### File behavior (Error as Prompt)
+
+The command will not silently overwrite an existing file:
+
+- **First call:** Creates the file with `<!-- FILL IN -->`. Fill it in now.
+- **File exists + `<!-- FILL IN -->` present:** You already ran dump and did not fill it in. Go fill it — do not regenerate.
+- **File exists + no `<!-- FILL IN -->`:** A previous agent already filled this in. Read it first — it has the context you are missing.
+- **`--force` flag:** Overwrite unconditionally.
 
 ### Injection protocol (once-only with crash safety)
 
@@ -157,6 +165,18 @@ file until the first `tw-flow` command confirms the handshake.
 The first `tw-flow focus` call in the onboard protocol acts as the
 implicit handshake — no explicit `tw-flow session ack` command needed.
 The existing onboard protocol guarantees this call happens.
+
+---
+
+## tw-flow session resume
+
+Prints the handoff note left by the previous session. Silent if no note exists or if it was already injected by bootstrap.
+
+```bash
+tw-flow session resume
+```
+
+Called as **step 1 of the onboard protocol when anchored**. The agent cannot miss what is already printed on screen.
 
 ---
 

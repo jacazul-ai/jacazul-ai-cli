@@ -330,6 +330,20 @@ class FlowManager:
 
         if plan_name == state.focused_plan:
             print("📌 ANCHORED SESSION")
+            session_id = os.environ.get("JACAZUL_SESSION_ID", "global")
+            note_path = os.path.join(
+                self.focus.data_dir,
+                f"session-note-{session_id}.md",
+            )
+            if os.path.exists(note_path):
+                with open(note_path) as f:
+                    note_content = f.read()
+                if "injected:" not in note_content:
+                    print(
+                        "📋 SESSION NOTE PENDING — run 'tw-flow session resume' "
+                        "to load previous session context before proceeding.\n"
+                        "   ACTION: Run 'tw-flow session ack' after reading to dismiss."
+                    )
 
         if state.focused_task_uuid:
             print(f"\n🎯 FOCUS CONTEXT [{state.focused_task_uuid[:8]}]:")
@@ -1043,6 +1057,180 @@ class FlowManager:
                 f"{session_id} {marker}  {plan:<30} {task_short:<10} {age_str:<7} {status}"
             )
 
+    def cmd_session_ack(self):
+        """Acknowledge session handoff note — marks it as read, dismisses status banner."""
+        from datetime import datetime, timezone
+
+        session_id = os.environ.get("JACAZUL_SESSION_ID", "global")
+        note_path = os.path.join(
+            self.focus.data_dir,
+            f"session-note-{session_id}.md",
+        )
+        if not os.path.exists(note_path):
+            self.info("No session note found.")
+            return
+        with open(note_path) as f:
+            content = f.read()
+        if "injected:" in content:
+            self.info("Session note already acknowledged.")
+            return
+        ts = datetime.now(timezone.utc).isoformat()
+        with open(note_path, "a") as f:
+            f.write(f"\ninjected: {ts}\n")
+        self.success("Session note acknowledged. Context loaded.")
+
+    def cmd_session_resume(self):
+        """Print session handoff note if it exists. Silent if not."""
+        session_id = os.environ.get("JACAZUL_SESSION_ID", "global")
+        note_path = os.path.join(
+            self.focus.data_dir,
+            f"session-note-{session_id}.md",
+        )
+        if not os.path.exists(note_path):
+            return
+        with open(note_path) as f:
+            content = f.read()
+        if "injected:" in content:
+            return
+        print(f"📋 SESSION HANDOFF — {note_path}")
+        print("")
+        print(content)
+
+    def cmd_session_dump(self, force: bool = False):
+        """Generate introspective handoff note for the current session."""
+        import subprocess as sp
+        from datetime import datetime, timezone
+
+        session_id = os.environ.get("JACAZUL_SESSION_ID", "global")
+        state = self.focus.load()
+        plan = state.focused_plan or ""
+        task_uuid = state.focused_task_uuid or ""
+
+        lines = []
+        lines.append(f"# Session Handoff Note")
+        lines.append(f"**Date:** {datetime.now(timezone.utc).strftime('%Y-%m-%d')}")
+        lines.append(f"**Session:** {session_id}")
+        lines.append("")
+        lines.append("---")
+        lines.append("")
+
+        # Focus state
+        lines.append("## Current Focus")
+        lines.append("")
+        if plan:
+            lines.append(f"**Plan:** `{plan}`")
+        if task_uuid:
+            tasks = self.tw.export([task_uuid[:8]])
+            desc = tasks[0].get("description", task_uuid) if tasks else task_uuid
+            lines.append(f"**Anchor:** `{task_uuid[:8]}` {desc}")
+        lines.append("")
+        lines.append("Restore focus:")
+        lines.append("```bash")
+        if task_uuid:
+            lines.append(f"tw-flow focus ind task {task_uuid[:8]}")
+        elif plan:
+            lines.append(f"tw-flow focus ind plan {plan}")
+        lines.append("```")
+        lines.append("")
+        lines.append("---")
+        lines.append("")
+
+        # Inherited context from focused task
+        if task_uuid:
+            tasks = self.tw.export([task_uuid[:8]])
+            if tasks:
+                t = tasks[0]
+                annotations = t.get("annotations", [])
+                decisions = [
+                    a["description"]
+                    for a in annotations
+                    if a.get("description", "").startswith("DECISION:")
+                    or a.get("description", "").startswith("OUTCOME:")
+                    or a.get("description", "").startswith("RESEARCH:")
+                ]
+                if decisions:
+                    lines.append("## Inherited Context")
+                    lines.append("")
+                    for d in decisions[-5:]:  # last 5 most relevant
+                        lines.append(f"- {d}")
+                    lines.append("")
+                    lines.append("---")
+                    lines.append("")
+
+        # Pending tasks in plan
+        if plan:
+            pending = self.tw.export(
+                [f'project:"{plan}"', "status:pending"]
+            )
+            if pending:
+                lines.append("## Pending Tasks in Plan")
+                lines.append("")
+                lines.append("| UUID | Description |")
+                lines.append("|---|---|")
+                for t in pending:
+                    lines.append(
+                        f"| `{t['uuid'][:8]}` | {t.get('description', '?')} |"
+                    )
+                lines.append("")
+                lines.append("---")
+                lines.append("")
+
+        # Git diff --stat
+        git_result = sp.run(
+            ["git", "diff", "--stat", "HEAD"],
+            capture_output=True,
+            text=True,
+        )
+        if git_result.stdout.strip():
+            lines.append("## Uncommitted Changes")
+            lines.append("")
+            lines.append("```")
+            lines.append(git_result.stdout.strip())
+            lines.append("```")
+            lines.append("")
+            lines.append("---")
+            lines.append("")
+
+        # Introspective prompt template
+        lines.append("## Session Notes")
+        lines.append("")
+        lines.append("<!-- FILL IN -->")
+        lines.append("")
+
+        content = "\n".join(lines)
+
+        # Write to session note file
+        output_path = os.path.join(
+            self.focus.data_dir,
+            f"session-note-{session_id}.md",
+        )
+
+        if not force and os.path.exists(output_path):
+            with open(output_path) as f:
+                existing = f.read()
+            if "<!-- FILL IN -->" in existing:
+                self.error(
+                    f"Session note already exists: {output_path}\n"
+                    "It has an unfilled section. You created this already — "
+                    "fill it in, don't regenerate.\n"
+                    "Use --force to overwrite."
+                )
+            else:
+                self.error(
+                    f"Session note already exists: {output_path}\n"
+                    "This note was written by a previous agent and already has content. "
+                    "READ IT FIRST — it has the context you are missing right now.\n"
+                    "Use --force to overwrite."
+                )
+            return
+
+        with open(output_path, "w") as f:
+            f.write(content)
+
+        self.success(f"Session dump written: {output_path}")
+        print("")
+        print(content)
+
     def cmd_plans(
         self,
         show_all: bool = False,
@@ -1404,10 +1592,17 @@ def main():
         sub = args[0] if args else None
         if sub == "list":
             flow.cmd_session_list()
+        elif sub == "dump":
+            force = "--force" in args
+            flow.cmd_session_dump(force=force)
+        elif sub == "resume":
+            flow.cmd_session_resume()
+        elif sub == "ack":
+            flow.cmd_session_ack()
         else:
             flow.error(
-                "Usage: tw-flow session list\n"
-                "   ACTION: Available subcommands: list"
+                "Usage: tw-flow session <subcommand>\n"
+                "   ACTION: Available subcommands: list, dump, resume, ack"
             )
     elif cmd == "roadmap":
         sub = args[0] if args else None
@@ -1655,7 +1850,9 @@ def main():
             "  ponder [project_root] [--all] [--force]\n"
             "  cache [clear [status|ponder]|info]\n"
             "  focus [plan|task|pop|interest|clear]\n"
-            "  tree [plan]"
+            "  tree [plan]\n"
+            "  roadmap [init|add <phase> <desc> [--ini <plan>]]\n"
+            "  session [list|dump]"
         )
     else:
         flow.error(f"Unknown command: {cmd}")

@@ -1,0 +1,29 @@
+## 🔄 Session Resume & Handoff
+
+### Receiving Context (On Restart)
+
+When `tw-flow status` shows `📋 SESSION NOTE PENDING`, a handoff note from a previous session is waiting. This is **part of the anchored session context** — not optional extra info.
+
+**Protocol (mandatory when banner is present):**
+1. Run `tw-flow session resume` — prints the full handoff note
+2. Read it entirely — it is the narrative lens that explains the current state
+3. Run `tw-flow context <uuid>` — inherited intelligence from Taskwarrior
+4. Run `tw-flow session ack` — dismisses the banner, marks note as read
+5. Only then proceed with `tw-flow status`
+
+**CRITICAL:** Do not summarize or skip the output of `tw-flow session resume`. Reproduce it in full. It contains what no task annotation captures: where execution stopped, non-obvious state, and the next concrete action.
+
+### Preparing Context (Before Closing)
+
+When ending a session with incomplete work or detecting context degradation:
+
+1. Run `tw-flow session dump` — generates `session-note-{SESSION_ID}.md`
+2. Fill in the `<!-- FILL IN -->` section: what was done, what is not obvious, next action
+3. Inform the user: "Dump gerado. Resume com: `jacazul-<agent> --jacazul-session {SESSION_ID}`"
+
+### File Behavior for dump (Error as Prompt)
+
+- **First call:** Creates the file with `<!-- FILL IN -->`. Fill it in now.
+- **File exists + `<!-- FILL IN -->` present:** You already ran dump — fill it in, do not regenerate.
+- **File exists + no `<!-- FILL IN -->`:** A previous agent filled this. READ IT FIRST.
+- **`--force` flag:** Overwrite unconditionally. Use only when explicitly requested.

@@ -1,4 +1,5 @@
 {% include "context_hunting.md" %}
+{% include "session_resume.md" %}
 
 ## Response Format (Technical Full-Disclosure)
 
