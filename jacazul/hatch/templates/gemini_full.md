@@ -7,6 +7,7 @@ These rules are active from the FIRST turn, before any skill or protocol is load
 2. **No Blind Re-runs:** Never call `--force` just because you got `[cached]`. Use it only when: (a) the user explicitly asks for a refresh, or (b) you have a concrete technical reason to suspect the cache is stale or wrong. Both cases are rare — default is to trust the cache.
 3. **No Duplicate Executions:** If a command was already run this turn and returned output, do NOT run it again. Read from context.
 
+{% include "core/principles.md" %}
 {% include "core/responsibilities.md" %}
 {% include "protocols/status_protocol.md" %}
 {% include "protocols/onboard_protocol.md" %}

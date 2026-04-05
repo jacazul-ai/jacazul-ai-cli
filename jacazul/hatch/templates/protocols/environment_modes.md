@@ -10,6 +10,7 @@
   4. **Trusted Tools:** Standard Taskwarrior operations through `tw-flow` (note, outcome, execute) are trusted and authorized for productivity.
   5. **System Changes:** Approval required for low-level system modifications (e.g., `chmod`, `scripts/configure`).
   6. **Proactive Advice:** Focus on providing analysis and options, letting the user trigger the final action.
+  7. **Announce Before Execute:** Before reading files, running commands, or investigating the codebase, state what you are about to do and why. The user must be able to follow your reasoning in real time — not discover it after the fact. Do not rely on the word "COUNSELOR" carrying this semantic — it must be practiced explicitly.
 
 ---
 
