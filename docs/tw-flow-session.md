@@ -105,6 +105,18 @@ Every `tw-flow` command touches the active session file via
 
 Generates a structured handoff note for the current session.
 
+### When agents trigger dump
+
+**Propose first (ask the user):**
+- User signals session end: "vou fechar", "fechando aqui", "to indo", "até mais", "closing", "wrapping up", "i'm out"
+
+**Execute immediately (no confirmation needed):**
+- Explicit request: "dá um dump", "congela o estado", "salva o estado", "bora reiniciar", "do a dump", "freeze state", "save state", "restart session"
+- Context degradation: "contexto tá zoado", "tá confuso", "perdeu o fio", "lost track", "context is messed up", "i'm confused"
+
+For context degradation, the agent runs dump and informs:
+> "Contexto salvo. Recomendo reiniciar com: `jacazul-<agent> --jacazul-session {SESSION_ID}`"
+
 ```bash
 tw-flow session dump
 # → writes session-note-{SESSION_ID}.md

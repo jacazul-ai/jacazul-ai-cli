@@ -15,8 +15,23 @@ When `tw-flow status` shows `📋 SESSION NOTE PENDING`, a handoff note from a p
 
 ### Preparing Context (Before Closing)
 
-When ending a session with incomplete work or detecting context degradation:
+**TRIGGER PHRASES — Propose dump (ask first):**
+- PT-BR: "vou fechar", "fechando aqui", "to indo", "até mais"
+- EN: "closing", "wrapping up", "i'm out", "see you later"
 
+→ Ask: "Quer que eu gere o session dump antes de fechar?"
+
+**TRIGGER PHRASES — Execute dump immediately (no confirmation needed):**
+- PT-BR: "dá um dump", "congela o estado", "salva o estado", "bora reiniciar", "reinicia a sessão"
+- EN: "do a dump", "freeze state", "save state", "restart session"
+
+**TRIGGER PHRASES — Execute dump immediately (context degradation — agent saves the session):**
+- PT-BR: "contexto tá zoado", "tá confuso", "perdeu o fio"
+- EN: "lost track", "context is messed up", "i'm confused"
+
+→ For context degradation: run dump immediately, then inform: "Contexto salvo. Recomendo reiniciar com: `jacazul-<agent> --jacazul-session {SESSION_ID}`"
+
+**Protocol (after trigger):**
 1. Run `tw-flow session dump` — generates `session-note-{SESSION_ID}.md`
 2. Fill in the `<!-- FILL IN -->` section: what was done, what is not obvious, next action
 3. Inform the user: "Dump gerado. Resume com: `jacazul-<agent> --jacazul-session {SESSION_ID}`"
