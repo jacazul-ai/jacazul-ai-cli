@@ -117,10 +117,10 @@ Codana **always uses 8-character short UUIDs**:
 ### Script Paths
 Codana uses absolute paths for all taskwarrior tools:
 ```
-~/.gemini/skills/taskwarrior_expert/scripts/tw-flow ponder
+~/.gemini/skills/taskwarrior-expert/scripts/tw-flow ponder
 > **Note:** The standalone `ponder` command is deprecated and will be removed in the future. Prefer using `tw-flow ponder` for full workflow integration.
-~/.gemini/skills/taskwarrior_expert/scripts/taskp
-~/.gemini/skills/taskwarrior_expert/scripts/tw-flow
+~/.gemini/skills/taskwarrior-expert/scripts/taskp
+~/.gemini/skills/taskwarrior-expert/scripts/tw-flow
 ```
 
 ### Project Isolation

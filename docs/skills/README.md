@@ -25,7 +25,7 @@ tw-flow ponder
 tw-flow initiative my-feature "EXECUTE|Build API|implementation|today"
 ```
 
-**Location:** `/project/skills/taskwarrior_expert/`
+**Location:** `/project/skills/taskwarrior-expert/`
 
 ---
 

@@ -10,7 +10,7 @@ The main workflow tool for the Jacazul AI CLI. Manages tasks, initiatives (plans
 ## 📍 Script Locations
 
 ```
-~/bin/          (symlinked from /project/skills/taskwarrior_expert/scripts/)
+~/bin/          (symlinked from /project/skills/taskwarrior-expert/scripts/)
 ```
 
 Available scripts:

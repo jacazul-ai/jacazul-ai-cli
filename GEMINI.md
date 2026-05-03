@@ -2,7 +2,7 @@
 
 ## 🛠 Core Skills (Persistent Activation)
 @skills/jacazul-engine/SKILL.md
-@skills/taskwarrior_expert/SKILL.md
+@skills/taskwarrior-expert/SKILL.md
 
 @AGENTS.md
 

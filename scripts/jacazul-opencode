@@ -34,7 +34,7 @@ export CONTEXT_REAL_PATH="$(pwd)"
 export CONTEXT_SYSTEM_USER="$(whoami)"
 
 # Add workflow scripts to PATH
-export PATH="$PATH:$PROJECT_ROOT/skills/taskwarrior_expert/scripts"
+export PATH="$PATH:$PROJECT_ROOT/skills/taskwarrior-expert/scripts"
 
 # 1. Verification: Opencode installation
 OPENCODE_BIN=$(which opencode 2>/dev/null || echo "/home/fpiraz/.opencode/bin/opencode")

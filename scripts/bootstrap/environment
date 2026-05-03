@@ -69,7 +69,7 @@ BOOTSTRAP_LANG="$PROJECT_ROOT/scripts/bootstrap/language"
 TW_FLOW_BIN="$HOME/.jacazul-ai/.venv/bin/tw-flow"
 if [ ! -x "$TW_FLOW_BIN" ]; then
     # Fallback to legacy path if venv not ready yet
-    TW_FLOW_BIN="$PROJECT_ROOT/skills/taskwarrior_expert/scripts/tw-flow"
+    TW_FLOW_BIN="$PROJECT_ROOT/skills/taskwarrior-expert/scripts/tw-flow"
 fi
 
 if [ ! -x "$TW_FLOW_BIN" ]; then
@@ -90,13 +90,8 @@ BOOTSTRAP_HATCH="$PROJECT_ROOT/scripts/bootstrap/hatch"
 BOOTSTRAP_TW="$PROJECT_ROOT/scripts/bootstrap/taskwarrior"
 [ -f "$BOOTSTRAP_TW" ] && source "$BOOTSTRAP_TW"
 
-# 4.4 Gemini
-BOOTSTRAP_GEMINI="$PROJECT_ROOT/scripts/bootstrap/gemini"
-[ -f "$BOOTSTRAP_GEMINI" ] && source "$BOOTSTRAP_GEMINI" "$HOME/.gemini"
-
-# 4.5 Claude
-BOOTSTRAP_CLAUDE="$PROJECT_ROOT/scripts/bootstrap/claude"
-[ -f "$BOOTSTRAP_CLAUDE" ] && source "$BOOTSTRAP_CLAUDE" "$HOME/.claude"
+# 4.4 Gemini — moved to jacazul-gemini launcher (outside run-once guard)
+# 4.5 Claude — moved to jacazul-claude launcher (outside run-once guard)
 
 # 5. Finalize Initialization
 export JACAZUL_ENV_INITIALIZED=true

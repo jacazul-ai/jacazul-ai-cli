@@ -36,7 +36,7 @@ export CONTEXT_GIT_USER="${CONTEXT_GIT_USER:-$(whoami)}"
 export GEMINI_INSTRUCTIONS_DIR="$PROJECT_ROOT/templates/context/instructions"
 
 # Add workflow scripts to PATH
-export PATH="$PATH:$PROJECT_ROOT/skills/taskwarrior_expert/scripts"
+export PATH="$PATH:$PROJECT_ROOT/skills/taskwarrior-expert/scripts"
 
 # -----------------------------------------------------------------------------
 # System Prompt Governance (#46)

@@ -35,7 +35,7 @@ export CONTEXT_SYSTEM_USER="$(whoami)"
 export CONTEXT_GIT_USER="${CONTEXT_GIT_USER:-$(whoami)}"
 
 # Add workflow scripts to PATH
-export PATH="$PATH:$PROJECT_ROOT/skills/taskwarrior_expert/scripts"
+export PATH="$PATH:$PROJECT_ROOT/skills/taskwarrior-expert/scripts"
 
 # High-Attitude Onboard Prompt for Jacazul (Claude Edition)
 ONBOARD_PROMPT="🚀 JACAZUL BOOTSTRAP PROTOCOL
