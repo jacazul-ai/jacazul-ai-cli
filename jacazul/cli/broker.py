@@ -465,7 +465,9 @@ class GitHubBroker:
         clean_id = issue_id.lstrip("#")
         result = self._run_gh(
             [
-                "issue", "view", clean_id,
+                "issue",
+                "view",
+                clean_id,
                 "--json",
                 "number,title,state,body,labels,assignees,createdAt",
             ],
@@ -572,7 +574,7 @@ def main():
         print("  close <id> [repo] [comment]   Closes an issue")
         print(
             "\n💡 Tip: For complex Markdown bodies (backticks, quotes, "
-            "newlines), prefer body_file=\"/path/to/body.md\" over body=\"...\""
+            'newlines), prefer body_file="/path/to/body.md" over body="..."'
         )
         sys.exit(0)
 
@@ -590,8 +592,7 @@ def main():
     if cmd == "view":
         if not args:
             error(
-                "Issue ID required.\n"
-                "   ACTION: Use 'jacazul-broker view #123'"
+                "Issue ID required.\n   ACTION: Use 'jacazul-broker view #123'"
             )
         broker.view_issue(args[0], args[1] if len(args) > 1 else None)
 
@@ -647,7 +648,9 @@ def main():
         assignee = kwargs.get("assignee")
         add_labels_raw = kwargs.get("add_labels")
         add_labels = add_labels_raw.split(",") if add_labels_raw else None
-        broker.edit_issue(issue_id, title, body, body_file, repo, assignee, add_labels)
+        broker.edit_issue(
+            issue_id, title, body, body_file, repo, assignee, add_labels
+        )
 
     elif cmd == "close":
         # Syntax: broker.py close <id> [repo] [comment]

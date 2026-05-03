@@ -491,7 +491,7 @@ class FlowManager:
 
             pycheck_bin = os.path.join(
                 os.path.expanduser("~/.jacazul-ai"),
-                "skills/python_expert/scripts/py-check",
+                "skills/python-expert/scripts/py-check",
             )
             # Fallback to local path if not in home
             if not os.path.exists(pycheck_bin):
@@ -501,7 +501,7 @@ class FlowManager:
                             os.path.dirname(os.path.abspath(__file__))
                         )
                     ),
-                    "skills/python_expert/scripts/py-check",
+                    "skills/python-expert/scripts/py-check",
                 )
 
             check_res = subprocess.run(
@@ -1018,11 +1018,13 @@ class FlowManager:
         current_session_id = os.environ.get("JACAZUL_SESSION_ID", "")
         now = time.time()
 
-        print("SESSION ID   PLAN                           TASK       AGE     STATUS")
+        print(
+            "SESSION ID   PLAN                           TASK       AGE     STATUS"
+        )
         print("-" * 72)
         for f in session_files:
             fname = os.path.basename(f)
-            session_id = fname[len("focus-"):-len(".json")]
+            session_id = fname.removeprefix("focus-").removesuffix(".json")
             mtime = os.path.getmtime(f)
             age_seconds = now - mtime
 
@@ -1054,7 +1056,8 @@ class FlowManager:
 
             marker = "*" if session_id == current_session_id else " "
             print(
-                f"{session_id} {marker}  {plan:<30} {task_short:<10} {age_str:<7} {status}"
+                f"{session_id} {marker}  {plan:<30} {task_short:<10} {
+                    age_str:<7} {status}"
             )
 
     def cmd_session_purge(self, confirm: bool = False):
@@ -1069,7 +1072,11 @@ class FlowManager:
         session_files = glob.glob(os.path.join(data_dir, "focus-*.json"))
         orphans = []
         for f in session_files:
-            session_id = os.path.basename(f)[len("focus-"):-len(".json")]
+            session_id = (
+                os.path.basename(f)
+                .removeprefix("focus-")
+                .removesuffix(".json")
+            )
             if session_id == current_session_id:
                 continue
             age_seconds = now - os.path.getmtime(f)
@@ -1150,8 +1157,10 @@ class FlowManager:
         task_uuid = state.focused_task_uuid or ""
 
         lines = []
-        lines.append(f"# Session Handoff Note")
-        lines.append(f"**Date:** {datetime.now(timezone.utc).strftime('%Y-%m-%d')}")
+        lines.append("# Session Handoff Note")
+        lines.append(
+            f"**Date:** {datetime.now(timezone.utc).strftime('%Y-%m-%d')}"
+        )
         lines.append(f"**Session:** {session_id}")
         lines.append("")
         lines.append("---")
@@ -1164,7 +1173,9 @@ class FlowManager:
             lines.append(f"**Plan:** `{plan}`")
         if task_uuid:
             tasks = self.tw.export([task_uuid[:8]])
-            desc = tasks[0].get("description", task_uuid) if tasks else task_uuid
+            desc = (
+                tasks[0].get("description", task_uuid) if tasks else task_uuid
+            )
             lines.append(f"**Anchor:** `{task_uuid[:8]}` {desc}")
         lines.append("")
         lines.append("Restore focus:")
@@ -1202,9 +1213,7 @@ class FlowManager:
 
         # Pending tasks in plan
         if plan:
-            pending = self.tw.export(
-                [f'project:"{plan}"', "status:pending"]
-            )
+            pending = self.tw.export([f'project:"{plan}"', "status:pending"])
             if pending:
                 lines.append("## Pending Tasks in Plan")
                 lines.append("")

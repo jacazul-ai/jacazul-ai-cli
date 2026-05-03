@@ -38,13 +38,14 @@ class TestBrokerKwargs(unittest.TestCase):
         # If it failed at our parser, it would hit the 'Title required' error.
         self.assertNotIn("Title required to open issue", res.stderr)
 
-
     def test_open_issue_body_file_parser(self):
         """Verify that body_file= kwarg is parsed and forwarded (not blocked)."""
         with tempfile.NamedTemporaryFile(
             mode="w", suffix=".md", delete=False
         ) as f:
-            f.write("## Body with `backticks` and \"quotes\"\n\nNewline content.")
+            f.write(
+                '## Body with `backticks` and "quotes"\n\nNewline content.'
+            )
             tmp_path = f.name
 
         try:
@@ -59,7 +60,8 @@ class TestBrokerKwargs(unittest.TestCase):
                 capture_output=True,
                 text=True,
             )
-            # Parser must not reject body_file= — any failure must be at gh level
+            # Parser must not reject body_file= — any failure must be at gh
+            # level
             self.assertNotIn("Title required to open issue", res.stderr)
             self.assertNotIn("body_file", res.stderr)
         finally:
@@ -95,7 +97,7 @@ class TestBrokerKwargs(unittest.TestCase):
         with tempfile.NamedTemporaryFile(
             mode="w", suffix=".md", delete=False
         ) as f:
-            f.write("## Updated body\n\nWith `special` chars and \"quotes\".")
+            f.write('## Updated body\n\nWith `special` chars and "quotes".')
             tmp_path = f.name
 
         try:
@@ -123,22 +125,18 @@ class TestBrokerKwargs(unittest.TestCase):
             text=True,
         )
         self.assertEqual(res.returncode, 1)
-        self.assertIn(
-            "ACTION: Use 'jacazul-broker view #123'", res.stderr
-        )
+        self.assertIn("ACTION: Use 'jacazul-broker view #123'", res.stderr)
 
     def test_view_issue_calls_gh(self):
         """Verify that 'view' reaches gh (not blocked by our parser)."""
         # Uses a fake repo — fails at gh level, not our parser.
         res = subprocess.run(
-            ["jacazul-broker", "view", "1",
-             "jacazul-ai/jacazul-ai-sandbox"],
+            ["jacazul-broker", "view", "1", "jacazul-ai/jacazul-ai-sandbox"],
             capture_output=True,
             text=True,
         )
-        self.assertNotIn(
-            "ACTION: Use 'jacazul-broker view #123'", res.stderr
-        )
+        self.assertNotIn("ACTION: Use 'jacazul-broker view #123'", res.stderr)
+
 
 if __name__ == "__main__":
     unittest.main()

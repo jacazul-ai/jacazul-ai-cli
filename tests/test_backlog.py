@@ -22,8 +22,12 @@ class TestBacklogFeature(unittest.TestCase):
     def tearDown(self):
         """Discard all tasks in the sandbox plan."""
         result = subprocess.run(
-            ["taskp", f'project:"{self.SANDBOX_PLAN}"',
-             "status:pending", "export"],
+            [
+                "taskp",
+                f'project:"{self.SANDBOX_PLAN}"',
+                "status:pending",
+                "export",
+            ],
             capture_output=True,
             text=True,
         )

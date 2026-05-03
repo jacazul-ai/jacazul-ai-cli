@@ -99,17 +99,25 @@ class FlowTest(JacazulTest):
         """Standardization: 'tw-flow plan' must not add default due/priority and must support hyphens (Fix #37)."""
         # 1. Test hyphenated plan name (Fix #37)
         plan_name = "cool-down-test"
-        out, _, _ = self.run_cmd(f"{self.tw_flow} plan {plan_name} 'DESIGN|Cool task|design'")
+        out, _, _ = self.run_cmd(
+            f"{self.tw_flow} plan {plan_name} 'DESIGN|Cool task|design'"
+        )
         self.assertIn(f"Creating plan: {plan_name}", out)
         self.assertIn("Created task", out)
 
         # 2. Verify Cool Down protocol (no default due, priority:M)
-        out_exp, _, _ = self.run_cmd(f"{self.taskp} project:{plan_name} export")
+        out_exp, _, _ = self.run_cmd(
+            f"{self.taskp} project:{plan_name} export"
+        )
         tasks = orjson.loads(out_exp)
         self.assertEqual(len(tasks), 1)
         task = tasks[0]
-        self.assertNotIn("due", task, "Task should not have a default due date")
-        self.assertEqual(task.get("priority"), "M", "Task should have priority:M by default")
+        self.assertNotIn(
+            "due", task, "Task should not have a default due date"
+        )
+        self.assertEqual(
+            task.get("priority"), "M", "Task should have priority:M by default"
+        )
 
         # 3. Verify tree and status also work with hyphenated names
         out_status, _, _ = self.run_cmd(f"{self.tw_flow} status {plan_name}")
@@ -330,11 +338,15 @@ class FlowTest(JacazulTest):
         session_id = "testsession"
         session_env = {"JACAZUL_SESSION_ID": session_id}
         # First create session
-        self.run_cmd(f"{self.tw_flow} focus ind plan test_ini", env=session_env)
+        self.run_cmd(
+            f"{self.tw_flow} focus ind plan test_ini", env=session_env
+        )
         session_file = os.path.join(self.taskdata, f"focus-{session_id}.json")
         self.assertTrue(os.path.exists(session_file))
         # Then exit
-        out, _, code = self.run_cmd(f"{self.tw_flow} focus back", env=session_env)
+        out, _, code = self.run_cmd(
+            f"{self.tw_flow} focus back", env=session_env
+        )
         self.assertEqual(code, 0)
         self.assertIn("Switched back to global focus", out)
         self.assertFalse(os.path.exists(session_file))
@@ -346,10 +358,13 @@ class FlowTest(JacazulTest):
         # Set a plan in global focus first
         self.run_cmd(f"{self.tw_flow} focus plan test_ini")
         # Create independent session and focus on different plan
-        self.run_cmd(f"{self.tw_flow} focus ind plan test_ini", env=session_env)
+        self.run_cmd(
+            f"{self.tw_flow} focus ind plan test_ini", env=session_env
+        )
         # Exit independent session (deletes session file)
         self.run_cmd(f"{self.tw_flow} focus back", env=session_env)
-        # With SESSION_ID still set but file deleted, focus must read global focus.json
+        # With SESSION_ID still set but file deleted, focus must read global
+        # focus.json
         out, _, code = self.run_cmd(f"{self.tw_flow} focus", env=session_env)
         self.assertEqual(code, 0)
         self.assertIn("test_ini", out)
@@ -389,26 +404,6 @@ class FlowTest(JacazulTest):
             self.run_cmd(f"git restore --staged {dirty_file}")
             if os.path.exists(dirty_file):
                 os.remove(dirty_file)
-
-    def test_initiative_rename_synchronization(self):
-        """Standardization: 'tw-flow rename' must sync TW and Focus."""
-        # 1. Setup an initiative, interest it, and focus it
-        self.run_cmd(f"{self.tw_flow} ini old_ini 'Task|r|today'")
-        self.run_cmd(f"{self.tw_flow} focus interest add old_ini")
-        self.run_cmd(f"{self.tw_flow} focus old_ini")
-
-        # 2. Rename it
-        self.run_cmd(f"{self.tw_flow} rename old_ini new_ini")
-
-        # 3. Verify Taskwarrior update
-        out_tasks, _, _ = self.run_cmd(f"{self.taskp} project:new_ini export")
-        self.assertEqual(len(orjson.loads(out_tasks)), 1)
-
-        # 4. Verify Focus update
-        focus_file = os.path.join(self.taskdata, "focus.json")
-        with open(focus_file, "rb") as f:
-            state = orjson.loads(f.read())
-            self.assertEqual(state.get("focused_plan"), "new_ini")
 
     def test_initiative_rename_synchronization(self):
         """Standardization: 'tw-flow rename' must sync TW and Focus."""

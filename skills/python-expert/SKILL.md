@@ -30,6 +30,24 @@ No Python code shall be committed or finalized without passing the **`py-check`*
 ### 3. Error as Prompt (Instructional Feedback)
 Linter errors are **Tactical Prompts**. If `py-check` fails, you MUST fix the identified issue before proceeding.
 
+### 4. Semantic Preservation for Docstrings and Comments
+When fixing `E501` or other formatting issues in docstrings, comments, and
+string literals, you MUST preserve the original meaning and wording whenever
+possible.
+
+**Preferred order:**
+1. Wrap the docstring/comment across multiple lines.
+2. Restructure surrounding code if needed.
+3. Rewrite wording only as a last resort.
+
+**Docstring wrapping rule:**
+- Preserve the original text.
+- Wrap at the last whitespace before column 79.
+- Drop that whitespace instead of leaving trailing spaces.
+- Continue on the next properly indented line.
+- Do NOT shorten, paraphrase, or remove meaning just to keep a docstring on a
+  single line.
+
 ## 📋 Operational Mandate
 
 1. **Test-First:** Create a failing reproduction test (smoke test) before fixing bugs or adding logic.

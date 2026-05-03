@@ -93,8 +93,12 @@ class TestSessionList(unittest.TestCase):
             text=True,
             env=env,
         )
-        lines = [l for l in result.stdout.splitlines() if "currentsession" in l]
-        self.assertTrue(any("*" in l for l in lines))
+        lines = [
+            line
+            for line in result.stdout.splitlines()
+            if "currentsession" in line
+        ]
+        self.assertTrue(any("*" in line for line in lines))
 
     def test_other_session_not_marked(self):
         """Sessions other than current must NOT have * marker."""
@@ -108,8 +112,12 @@ class TestSessionList(unittest.TestCase):
             text=True,
             env=env,
         )
-        lines = [l for l in result.stdout.splitlines() if "othersession" in l]
-        self.assertTrue(all("*" not in l for l in lines))
+        lines = [
+            line
+            for line in result.stdout.splitlines()
+            if "othersession" in line
+        ]
+        self.assertTrue(all("*" not in line for line in lines))
 
     def test_heartbeat_updates_mtime(self):
         """Any tw-flow command must touch the active session file."""

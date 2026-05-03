@@ -46,9 +46,7 @@ class TestRoadmapInitGuard(unittest.TestCase):
 
     def _seed_pending_roadmap_task(self):
         """Add a pending sentinel task directly to the roadmap plan."""
-        self._taskp(
-            ["add", f"project:{self.roadmap_plan}", "sentinel phase"]
-        )
+        self._taskp(["add", f"project:{self.roadmap_plan}", "sentinel phase"])
 
     def _seed_completed_roadmap_task(self):
         """Add a task to the roadmap plan and immediately complete it."""

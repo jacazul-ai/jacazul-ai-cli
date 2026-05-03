@@ -60,14 +60,14 @@ class FlowCacheTest(JacazulTest):
     # ── TTL / Prompt as Ad ───────────────────────────────────────────────────
 
     def test_status_cache_hit_within_ttl_shows_prompt_as_ad(self):
-        """Cache: Second status within TTL must show Prompt as Ad, not full output."""
+        """Cache: Second status within TTL must show Prompt as Ad."""
         self.run_cmd(f"{self.tw_flow} status cache_ini")
         out, _, _ = self.run_cmd(f"{self.tw_flow} status cache_ini")
         self.assertIn("[cached]", out)
         self.assertNotIn("══ Plan:", out)
 
     def test_ponder_cache_hit_within_ttl_shows_prompt_as_ad(self):
-        """Cache: Second ponder within TTL must show Prompt as Ad, not full output."""
+        """Cache: Second ponder within TTL must show cached prompt only."""
         self.run_cmd(f"{self.tw_flow} ponder")
         out, _, _ = self.run_cmd(f"{self.tw_flow} ponder")
         self.assertIn("[cached]", out)
@@ -76,14 +76,16 @@ class FlowCacheTest(JacazulTest):
     # ── --force flag ─────────────────────────────────────────────────────────
 
     def test_status_force_bypasses_cache(self):
-        """Cache: status --force must show full output even when cache is valid."""
+        """Cache: status --force must show full output even when cache is
+        valid."""
         self.run_cmd(f"{self.tw_flow} status cache_ini")
         out, _, _ = self.run_cmd(f"{self.tw_flow} status cache_ini --force")
         self.assertNotIn("[cached]", out)
         self.assertIn("══ Plan:", out)
 
     def test_ponder_force_bypasses_cache(self):
-        """Cache: ponder --force must show full output even when cache is valid."""
+        """Cache: ponder --force must show full output even when cache is
+        valid."""
         self.run_cmd(f"{self.tw_flow} ponder")
         out, _, _ = self.run_cmd(f"{self.tw_flow} ponder --force")
         self.assertNotIn("[cached]", out)
@@ -92,7 +94,8 @@ class FlowCacheTest(JacazulTest):
     # ── Cache Invalidation on Writes ─────────────────────────────────────────
 
     def test_cache_invalidated_on_note(self):
-        """Cache Invalidation: Adding a note must bust status and ponder cache."""
+        """Cache Invalidation: Adding a note must bust status and ponder
+        cache."""
         self.run_cmd(f"{self.tw_flow} status cache_ini")
         self.run_cmd(f"{self.tw_flow} note {self.u1} decision 'Test decision'")
         out, _, _ = self.run_cmd(f"{self.tw_flow} status cache_ini")
@@ -123,7 +126,8 @@ class FlowCacheTest(JacazulTest):
         self.assertNotIn("[cached]", out)
 
     def test_cache_invalidated_on_focus_change(self):
-        """Cache Invalidation: Changing focus must bust status.json and ponder.json."""
+        """Cache Invalidation: Changing focus must bust status.json and
+        ponder.json."""
         self.run_cmd(f"{self.tw_flow} status cache_ini")
         self.run_cmd(f"{self.tw_flow} focus ini cache_ini")
         out, _, _ = self.run_cmd(f"{self.tw_flow} status cache_ini")
@@ -132,16 +136,20 @@ class FlowCacheTest(JacazulTest):
     def test_other_ini_cache_unaffected_by_write_on_different_ini(self):
         """Cache Invalidation: Write on ini X must NOT bust cache for ini Y."""
         # Create a second ini
-        self.run_cmd(f"{self.tw_flow} ini other_ini 'Other task|research|today'")
+        self.run_cmd(
+            f"{self.tw_flow} ini other_ini 'Other task|research|today'"
+        )
         out_exp, _, _ = self.run_cmd(f"{self.taskp} project:other_ini export")
-        other_uuid = orjson.loads(out_exp)[0]["uuid"]
+        orjson.loads(out_exp)[0]["uuid"]
 
         # Prime cache for both
         self.run_cmd(f"{self.tw_flow} status cache_ini")
         self.run_cmd(f"{self.tw_flow} status other_ini")
 
         # Write on cache_ini
-        self.run_cmd(f"{self.tw_flow} note {self.u1} decision 'Bust cache_ini'")
+        self.run_cmd(
+            f"{self.tw_flow} note {self.u1} decision 'Bust cache_ini'"
+        )
 
         # other_ini cache should still be valid (Prompt as Ad)
         out, _, _ = self.run_cmd(f"{self.tw_flow} status other_ini")
@@ -153,9 +161,7 @@ class FlowCacheSubcommandTest(JacazulTest):
 
     def setUp(self):
         super().setUp()
-        self.run_cmd(
-            f"{self.tw_flow} ini cache_ini 'Step 1|research|today'"
-        )
+        self.run_cmd(f"{self.tw_flow} ini cache_ini 'Step 1|research|today'")
         self.cache_dir = os.path.join(
             self.test_dir, "cache", "tw-flow", "test_project", "global"
         )
@@ -191,7 +197,8 @@ class FlowCacheSubcommandTest(JacazulTest):
         self.assertFalse(os.path.exists(self.cache_dir))
 
     def test_cache_clear_forces_fresh_status_output(self):
-        """Cache clear: Status after clear must show full output, not cached."""
+        """Cache clear: Status after clear must show full output, not
+        cached."""
         self._prime_cache()
         # Confirm cached
         out, _, _ = self.run_cmd(f"{self.tw_flow} status cache_ini")
@@ -227,7 +234,8 @@ class FlowCacheSubcommandTest(JacazulTest):
         self.assertFalse(os.path.exists(ponder_file))
 
     def test_session_isolation_different_sessions_have_separate_cache(self):
-        """Cache: Two sessions must not share cache — session B gets fresh output."""
+        """Cache: Two sessions must not share cache — session B gets fresh
+        output."""
         session_a = "session_aaa"
         session_b = "session_bbb"
         # Session A primes cache
@@ -249,9 +257,7 @@ class FlowPlansCacheTest(JacazulTest):
 
     def setUp(self):
         super().setUp()
-        self.run_cmd(
-            f"{self.tw_flow} ini cache_ini 'Step 1|research|today'"
-        )
+        self.run_cmd(f"{self.tw_flow} ini cache_ini 'Step 1|research|today'")
         out, _, _ = self.run_cmd(f"{self.taskp} project:cache_ini export")
         tasks = orjson.loads(out or "[]")
         self.u1 = tasks[0]["uuid"]
@@ -262,14 +268,16 @@ class FlowPlansCacheTest(JacazulTest):
     # ── TTL / Prompt as Ad ───────────────────────────────────────────────────
 
     def test_plans_cache_hit_within_ttl_shows_prompt_as_ad(self):
-        """Plans Cache: Second plans call within TTL must show [cached] signal."""
+        """Plans Cache: Second plans call within TTL must show [cached]
+        signal."""
         self.run_cmd(f"{self.tw_flow} plans")
         out, _, _ = self.run_cmd(f"{self.tw_flow} plans")
         self.assertIn("[cached]", out)
         self.assertNotIn("Project Plans Landscape", out)
 
     def test_plans_force_bypasses_cache(self):
-        """Plans Cache: plans --force must show full output even when cache is valid."""
+        """Plans Cache: plans --force must show full output even when cache is
+        valid."""
         self.run_cmd(f"{self.tw_flow} plans")
         out, _, _ = self.run_cmd(f"{self.tw_flow} plans --force")
         self.assertNotIn("[cached]", out)
@@ -278,14 +286,16 @@ class FlowPlansCacheTest(JacazulTest):
     # ── Separate cache keys per filter ───────────────────────────────────────
 
     def test_plans_closed_has_separate_cache_key(self):
-        """Plans Cache: plans --closed must use a separate cache key from plans."""
+        """Plans Cache: plans --closed must use a separate cache key from
+        plans."""
         self.run_cmd(f"{self.tw_flow} plans")
         # --closed is a different key, must NOT be cached
         out, _, _ = self.run_cmd(f"{self.tw_flow} plans --closed")
         self.assertNotIn("[cached]", out)
 
     def test_plans_all_has_separate_cache_key(self):
-        """Plans Cache: plans --all must use a separate cache key from plans."""
+        """Plans Cache: plans --all must use a separate cache key from
+        plans."""
         self.run_cmd(f"{self.tw_flow} plans")
         # --all is a different key, must NOT be cached
         out, _, _ = self.run_cmd(f"{self.tw_flow} plans --all")
@@ -296,13 +306,16 @@ class FlowPlansCacheTest(JacazulTest):
     def test_plans_cache_invalidated_on_plan_create(self):
         """Plans Cache: Creating a new plan must bust the plans cache."""
         self.run_cmd(f"{self.tw_flow} plans")
-        self.run_cmd(f"{self.tw_flow} ini new_plan_x 'New task|research|today'")
+        self.run_cmd(
+            f"{self.tw_flow} ini new_plan_x 'New task|research|today'"
+        )
         out, _, _ = self.run_cmd(f"{self.tw_flow} plans")
         self.assertNotIn("[cached]", out)
         self.assertIn("Project Plans Landscape", out)
 
     def test_plans_cache_invalidated_on_done(self):
-        """Plans Cache: Completing the last task in a plan must bust the plans cache."""
+        """Plans Cache: Completing the last task in a plan must bust the plans
+        cache."""
         self.run_cmd(f"{self.tw_flow} plans")
         self.run_cmd(f"{self.tw_flow} outcome {self.u1} 'Done'")
         self.run_cmd(f"{self.tw_flow} done {self.u1}")
