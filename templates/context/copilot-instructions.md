@@ -59,7 +59,7 @@ Session context, plans, and all progress are exclusively stored and managed in T
 
 ## 🚨 Taskwarrior Scripts
 
-All taskwarrior-expert scripts are located at: `~/.copilot/skills/taskwarrior_expert/scripts/`
+All taskwarrior-expert scripts are located at: `~/.copilot/skills/taskwarrior-expert/scripts/`
 
 Main tools: **tw-flow** (workflow), **taskp** (project-aware wrapper), **ponder** (dashboard)
 
@@ -136,7 +136,7 @@ Each project has its own isolated Taskwarrior database:
 - When splitting a task into multiple subtasks, insert them in sequence and update numbering and urgencies for all tasks in the plan.
 - When moving a task to a different position (e.g., moving step 3 to step 1, or step 1 to the end), renumber and re-urgencize all tasks to reflect the new order.
 - Always ensure task numbers and urgencies reflect the intended execution order after any modification.
-- Show started tasks: `~/.copilot/skills/taskwarrior_expert/scripts/taskp +ACTIVE`
+- Show started tasks: `~/.copilot/skills/taskwarrior-expert/scripts/taskp +ACTIVE`
 
 **Focusing on a specific plan:**
 When user says "let's work on plan X", filter all subsequent task operations to that plan's project namespace
@@ -144,53 +144,53 @@ When user says "let's work on plan X", filter all subsequent task operations to 
 ### 5. Retrieving Context
 View all tasks for current work:
 ```bash
-~/.copilot/skills/taskwarrior_expert/scripts/taskp "plan_id" status:pending
-~/.copilot/skills/taskwarrior_expert/scripts/taskp <id> info  # View full task details including annotations
+~/.copilot/skills/taskwarrior-expert/scripts/taskp "plan_id" status:pending
+~/.copilot/skills/taskwarrior-expert/scripts/taskp <id> info  # View full task details including annotations
 ```
 
 ### 6. Task Updates
-- Mark progress: `~/.copilot/skills/taskwarrior_expert/scripts/taskp <id> start` (sets start time)
-- Complete: `~/.copilot/skills/taskwarrior_expert/scripts/taskp <id> done` (marks as completed)
-- Modify: `~/.copilot/skills/taskwarrior_expert/scripts/taskp <id> modify urgency:7.9` (change attributes)
+- Mark progress: `~/.copilot/skills/taskwarrior-expert/scripts/taskp <id> start` (sets start time)
+- Complete: `~/.copilot/skills/taskwarrior-expert/scripts/taskp <id> done` (marks as completed)
+- Modify: `~/.copilot/skills/taskwarrior-expert/scripts/taskp <id> modify urgency:7.9` (change attributes)
 - Add subtasks: Create new tasks with dependencies
 
 ## Practical Examples
 
 **Starting a new plan with tw-flow:**
 ```bash
-~/.copilot/skills/taskwarrior_expert/scripts/tw-flow plan ai_cli_sandboxed:refactor-auth \
+~/.copilot/skills/taskwarrior-expert/scripts/tw-flow plan ai_cli_sandboxed:refactor-auth \
   "Design new auth flow|research|today" \
   "Implement JWT tokens|implementation|tomorrow"
 ```
 
 **Adding research context:**
 ```bash
-~/.copilot/skills/taskwarrior_expert/scripts/taskp 1 annotate "Found library: passport.js - supports multiple strategies"
-~/.copilot/skills/taskwarrior_expert/scripts/taskp 1 annotate "Security consideration: token expiry should be 15 min for access, 7 days for refresh"
+~/.copilot/skills/taskwarrior-expert/scripts/taskp 1 annotate "Found library: passport.js - supports multiple strategies"
+~/.copilot/skills/taskwarrior-expert/scripts/taskp 1 annotate "Security consideration: token expiry should be 15 min for access, 7 days for refresh"
 ```
 
 **Checking what's next:**
 ```bash
-~/.copilot/skills/taskwarrior_expert/scripts/ponder ai_cli_sandboxed
+~/.copilot/skills/taskwarrior-expert/scripts/ponder ai_cli_sandboxed
 ```
 
 **Checking tasks for specific plan:**
 ```bash
-~/.copilot/skills/taskwarrior_expert/scripts/taskp project:ai_cli_sandboxed:refactor-auth status:pending ready
+~/.copilot/skills/taskwarrior-expert/scripts/taskp project:ai_cli_sandboxed:refactor-auth status:pending ready
 ```
 
-- Use `~/.copilot/skills/taskwarrior_expert/scripts/ponder` to show initial dashboard view.
+- Use `~/.copilot/skills/taskwarrior-expert/scripts/ponder` to show initial dashboard view.
 
 ## Integration Rules
 1. **Use project-aware tools**: Prefer `taskp`, `tw-flow`, and `ponder` over raw `task` commands
-2. **ALWAYS use full paths**: Use `~/.copilot/skills/taskwarrior_expert/scripts/` prefix for all script invocations
+2. **ALWAYS use full paths**: Use `~/.copilot/skills/taskwarrior-expert/scripts/` prefix for all script invocations
 3. **Default to Taskwarrior**: Use tasks instead of creating plan files
 4. **Context is additive**: Always use annotations to add context, never replace
 5. **Dynamic prioritization**: Adjust task priorities (numerical values) based on user feedback during conversation
 6. **Status command behavior**: When user asks for status or "what are we doing", use `tw-flow status [initiative]` for focused view (not ponder). Use ponder only for onboard (full project view)
 7. **Plan focus**: When user says "let's work on plan X", focus all task operations on that plan
 8. **User requests context storage**: When user says "add this to the task" or "save this context", use annotations
-9. **Review before work**: Always check `~/.copilot/skills/taskwarrior_expert/scripts/ponder PROJECT_ID` before starting to see current state
+9. **Review before work**: Always check `~/.copilot/skills/taskwarrior-expert/scripts/ponder PROJECT_ID` before starting to see current state
 10. **Database isolation**: Each project has its own database - tasks are automatically isolated by PROJECT_ID
 
 ## Reference Documentation
