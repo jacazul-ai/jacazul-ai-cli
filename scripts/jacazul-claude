@@ -37,6 +37,15 @@ export CONTEXT_GIT_USER="${CONTEXT_GIT_USER:-$(whoami)}"
 # Add workflow scripts to PATH
 export PATH="$PATH:$PROJECT_ROOT/skills/taskwarrior-expert/scripts"
 
+# Claude Bootstrap (settings + skill links)
+BOOTSTRAP_CLAUDE="$PROJECT_ROOT/scripts/bootstrap/claude"
+if [ -f "$BOOTSTRAP_CLAUDE" ]; then
+    source "$BOOTSTRAP_CLAUDE"
+else
+    echo "❌ Jacazul Claude bootstrap not found at $BOOTSTRAP_CLAUDE" >&2
+    exit 1
+fi
+
 # High-Attitude Onboard Prompt for Jacazul (Claude Edition)
 ONBOARD_PROMPT="🚀 JACAZUL BOOTSTRAP PROTOCOL
 
