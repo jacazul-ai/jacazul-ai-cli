@@ -16,10 +16,16 @@ HOST_GITCONFIG="$HOST_SANDBOX/.gitconfig"
 # Create directories if they don't exist
 mkdir -p "$HOST_SANDBOX_CONFIG_DIR" "$HOST_SANDBOX_COPILOT_DIR" "$HOST_SANDBOX_NPM_DIR" "$HOST_SANDBOX_TASK_DIR"
 
-# Calculate Project Identity (following gemini pattern)
-PARENT_DIR=$(basename "$(dirname "$(pwd)")")
-CURRENT_DIR=$(basename "$(pwd)")
-PROJECT_ID="${PARENT_DIR}_${CURRENT_DIR}"
+# Calculate Project Identity (worktree-aware)
+PROJECT_ID_LIB="$SCRIPT_DIR/bootstrap/project-identity"
+if [ -f "$PROJECT_ID_LIB" ]; then
+    source "$PROJECT_ID_LIB"
+    jacazul_export_project_identity
+else
+    PARENT_DIR=$(basename "$(dirname "$(pwd)")")
+    CURRENT_DIR=$(basename "$(pwd)")
+    PROJECT_ID="${PARENT_DIR}_${CURRENT_DIR}"
+fi
 
 # Capture complete session context for onboard
 REAL_PATH="$(pwd)"

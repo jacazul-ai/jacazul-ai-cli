@@ -73,7 +73,10 @@ Use Taskwarrior as a context cache for plans, tasks, research findings, and less
 
 ### Project Identity (PROJECT_ID)
 
-The `PROJECT_ID` environment variable is automatically calculated by the copilot script:
+The `PROJECT_ID` environment variable is automatically calculated from the canonical project anchor:
+- regular Git repo → `git rev-parse --show-toplevel`
+- linked worktree with shared `.git`/`.bare` → parent of the common Git directory
+- fallback outside Git → current directory
 
 ```bash
 PROJECT_ID="${PARENT_DIR}_${CURRENT_DIR}"
@@ -119,7 +122,7 @@ Each project has its own isolated Taskwarrior database:
 
 **Database Isolation:** Each project uses an isolated Taskwarrior database at `~/.task/$PROJECT_ID/`
 
-**PROJECT_ID:** Auto-set by copilot script as `${PARENT_DIR}_${CURRENT_DIR}`. Tools (tw-flow, taskp, ponder) automatically detect and route to correct database.
+**PROJECT_ID:** Auto-set from the canonical project anchor as `${PARENT_DIR}_${CURRENT_DIR}`. Tools (tw-flow, taskp, ponder) automatically detect and route to the correct database, even from linked worktrees.
 
 **Task Organization:** Tasks within each database use simple descriptions. Database isolation keeps projects separate—no prefixes needed.
 

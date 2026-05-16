@@ -1,0 +1,58 @@
+#!/bin/bash
+# Shared project identity resolver for Jacazul launchers.
+# Resolves PROJECT_ID against the canonical project anchor.
+# Prefer PROJECT_ROOT from the bootstrap when available, then fall back to pwd.
+
+jacazul_resolve_project_anchor() {
+    local cwd top_level git_dir common_dir common_base
+
+    cwd="${1:-${PROJECT_ROOT:-$(pwd -P)}}"
+    cwd="$(cd "$cwd" 2>/dev/null && pwd -P || printf '%s' "$cwd")"
+
+    if ! command -v git >/dev/null 2>&1; then
+        printf '%s\n' "$cwd"
+        return 0
+    fi
+
+    if git -C "$cwd" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+        top_level=$(git -C "$cwd" rev-parse --show-toplevel 2>/dev/null)
+        git_dir=$(git -C "$cwd" rev-parse --path-format=absolute --git-dir 2>/dev/null)
+        common_dir=$(git -C "$cwd" rev-parse --path-format=absolute --git-common-dir 2>/dev/null)
+
+        if [ -n "$top_level" ] && [ -n "$git_dir" ] && [ -n "$common_dir" ] \
+            && [ "$git_dir" != "$common_dir" ]; then
+            common_base=$(basename "$common_dir")
+            case "$common_base" in
+                .git|.bare)
+                    printf '%s\n' "$(dirname "$common_dir")"
+                    return 0
+                    ;;
+            esac
+        fi
+
+        if [ -n "$top_level" ]; then
+            printf '%s\n' "$top_level"
+            return 0
+        fi
+    fi
+
+    printf '%s\n' "$cwd"
+}
+
+jacazul_export_project_identity() {
+    local anchor_dir
+
+    anchor_dir=$(jacazul_resolve_project_anchor "${1:-${PROJECT_ROOT:-$(pwd -P)}}")
+
+    PARENT_DIR=$(basename "$(dirname "$anchor_dir")")
+    CURRENT_DIR=$(basename "$anchor_dir")
+
+    export JACAZUL_PROJECT_ANCHOR="$anchor_dir"
+    export PARENT_DIR
+    export CURRENT_DIR
+
+    if [ -z "$PROJECT_ID" ]; then
+        PROJECT_ID="${PARENT_DIR}_${CURRENT_DIR}"
+        export PROJECT_ID
+    fi
+}

@@ -13,7 +13,12 @@ license: MIT
 Taskwarrior uses **isolated databases per project** for isolation and performance.
 
 ### PROJECT_ID Variable
-The `PROJECT_ID` environment variable is automatically set by the bootstrap script:
+The `PROJECT_ID` environment variable is automatically set by the bootstrap script from the canonical project anchor:
+- regular Git repo → `git rev-parse --show-toplevel`
+- linked worktree with shared `.git`/`.bare` → parent of the common Git directory
+- fallback outside Git → current directory
+
+The final value remains:
 ```bash
 PROJECT_ID="${PARENT_DIR}_${CURRENT_DIR}"
 ```

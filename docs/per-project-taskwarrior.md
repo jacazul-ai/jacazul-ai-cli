@@ -30,7 +30,7 @@ Automatically detects the current project and uses the appropriate database.
 
 **Detection Priority:**
 1. `$PROJECT_ID` environment variable (copilot environment)
-2. Git repository (parent_current format)
+2. Canonical Git project anchor (repo top-level or linked worktree common-dir parent)
 3. Current directory name (fallback)
 
 **Usage:**
@@ -160,7 +160,10 @@ cd /project/skills/taskwarrior-expert/scripts
 
 ### PROJECT_ID
 
-Set automatically by the copilot script:
+Set automatically from the canonical project anchor:
+- regular Git repo → `git rev-parse --show-toplevel`
+- linked worktree with shared `.git`/`.bare` → parent of the common Git directory
+- fallback outside Git → current directory
 
 ```bash
 PROJECT_ID="${PARENT_DIR}_${CURRENT_DIR}"
