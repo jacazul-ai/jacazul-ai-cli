@@ -50,7 +50,10 @@ jacazul-gemini      # Gemini CLI
 jacazul-claude      # Claude CLI
 jacazul-opencode    # Opencode CLI
 jacazul-copilot     # Copilot CLI
+jacazul-pi          # Pi CLI with Jacazul footer/dashboard integration
 ```
+
+For Pi footer/dashboard behavior, see [pi-jacazul-line](docs/pi-jacazul-line.md).
 
 ### 4. The First Set (Conversational Flow)
 

@@ -45,11 +45,40 @@ for skill_dir in "$PROJECT_ROOT/skills"/*; do
         expected_target=$(readlink -f "$skill_dir")
         if [ "$current_target" != "$expected_target" ]; then
             [ -n "$DEBUG" ] && echo "⚠️  pi skill $name points to wrong location. Re-linking..."
-            ln -sf "$skill_dir" "$target"
+            ln -sfn "$skill_dir" "$target"
         fi
     else
         [ -n "$DEBUG" ] && echo "🐊 Linking global pi skill: $name"
-        ln -sf "$skill_dir" "$target"
+        ln -sfn "$skill_dir" "$target"
+    fi
+done
+
+# 3. Link Global Extensions (Surgical)
+# Project-owned Pi extensions live in the repository and are linked into Pi's
+# global auto-discovery directory. Runtime owns the dynamic link; the repo owns
+# the source of truth.
+PI_EXTENSIONS_DIR="$HOME/.pi/agent/extensions"
+
+if [ ! -d "$PI_EXTENSIONS_DIR" ]; then
+    [ -n "$DEBUG" ] && echo "🐊 Creating pi extensions directory at $PI_EXTENSIONS_DIR..."
+    mkdir -p "$PI_EXTENSIONS_DIR"
+fi
+
+for extension_file in "$PROJECT_ROOT/extensions"/*.ts; do
+    [ -f "$extension_file" ] || continue
+    name=$(basename "$extension_file")
+    target="$PI_EXTENSIONS_DIR/$name"
+
+    if [ -L "$target" ]; then
+        current_target=$(readlink -f "$target")
+        expected_target=$(readlink -f "$extension_file")
+        if [ "$current_target" != "$expected_target" ]; then
+            [ -n "$DEBUG" ] && echo "⚠️  pi extension $name points to wrong location. Re-linking..."
+            ln -sfn "$extension_file" "$target"
+        fi
+    else
+        [ -n "$DEBUG" ] && echo "🐊 Linking global pi extension: $name"
+        ln -sfn "$extension_file" "$target"
     fi
 done
 

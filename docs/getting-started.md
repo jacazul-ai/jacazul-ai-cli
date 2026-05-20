@@ -60,7 +60,12 @@ jacazul-copilot
 
 # Start Jacazul for OpenCode
 jacazul-opencode
+
+# Start Jacazul for Pi CLI with footer/dashboard integration
+jacazul-pi
 ```
+
+For Pi footer/dashboard behavior, see [pi-jacazul-line](pi-jacazul-line.md).
 
 ---
 
