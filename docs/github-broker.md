@@ -16,6 +16,10 @@ Jacazul manages multiple GitHub tokens using a hierarchical resolution strategy.
 
 Use this tool to manage your encrypted tokens.
 
+### Launcher behavior
+
+When you run `scripts/configure`, Jacazul exposes `jacazul-github` through a project-owned launcher instead of a pip-generated console-script shim. If an older shim exists in `~/.local/bin/jacazul-github`, configure replaces that Jacazul-specific shim with a link to the portable launcher so the command also works when `~/.local/bin` appears before `~/bin` in your `PATH`.
+
 ### Common Commands:
 ```bash
 # Show current configured scopes

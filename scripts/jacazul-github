@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+VENV_DIR="$HOME/.jacazul-ai/.venv"
+VENV_PYTHON="$VENV_DIR/bin/python3"
+
+if [ ! -x "$VENV_PYTHON" ]; then
+    echo "❌ ERROR: Jacazul Python runtime not found at $VENV_PYTHON" >&2
+    echo "   Action: Run scripts/configure from the jacazul-ai-cli repository." >&2
+    exit 1
+fi
+
+exec "$VENV_PYTHON" -m jacazul.cli.github "$@"

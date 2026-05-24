@@ -161,7 +161,7 @@ CLI_LINKS=(
     "ponder:$HOME/.jacazul-ai/.venv/bin/ponder"
     "jacazul-hatch:$HOME/.jacazul-ai/.venv/bin/jacazul-hatch"
     "jacazul-persona:$HOME/.jacazul-ai/.venv/bin/jacazul-persona"
-    "jacazul-github:$HOME/.jacazul-ai/.venv/bin/jacazul-github"
+    "jacazul-github:scripts/jacazul-github"
     "jacazul-broker:$HOME/.jacazul-ai/.venv/bin/jacazul-broker"
     "py-check:$HOME/.jacazul-ai/.venv/bin/py-check"
 )
@@ -176,14 +176,46 @@ for entry in "${CLI_LINKS[@]}"; do
     fi
     
     LINK_PATH="$HOME/bin/$LINK_NAME"
-    if [ ! -L "$LINK_PATH" ] && [ ! -f "$LINK_PATH" ]; then
+    if [ -L "$LINK_PATH" ]; then
+        CURRENT_TARGET="$(readlink "$LINK_PATH")"
+        if [ "$CURRENT_TARGET" != "$LINK_TARGET" ]; then
+            echo "Updating symbolic link for $LINK_NAME at $LINK_PATH..."
+            ln -sfn "$LINK_TARGET" "$LINK_PATH"
+            echo "✅ Link updated: $LINK_PATH -> $LINK_TARGET"
+        else
+            echo "ℹ️  $LINK_PATH already points to $LINK_TARGET."
+        fi
+    elif [ ! -f "$LINK_PATH" ]; then
         echo "Creating symbolic link for $LINK_NAME at $LINK_PATH..."
         ln -s "$LINK_TARGET" "$LINK_PATH"
         echo "✅ Link created: $LINK_PATH"
     else
-        echo "ℹ️  $LINK_PATH already exists. Skipping link creation."
+        echo "ℹ️  $LINK_PATH already exists as a regular file. Skipping link creation."
     fi
 done
+
+# -----------------------------------------------------------------------------
+# 3.1 Replace legacy jacazul-github shims in ~/.local/bin
+# -----------------------------------------------------------------------------
+LOCAL_GITHUB_LINK="$HOME/.local/bin/jacazul-github"
+GITHUB_WRAPPER="$PROJECT_ROOT/scripts/jacazul-github"
+
+if [ -L "$LOCAL_GITHUB_LINK" ]; then
+    CURRENT_TARGET="$(readlink "$LOCAL_GITHUB_LINK")"
+    if [ "$CURRENT_TARGET" != "$GITHUB_WRAPPER" ]; then
+        echo "Updating legacy jacazul-github link at $LOCAL_GITHUB_LINK..."
+        ln -sfn "$GITHUB_WRAPPER" "$LOCAL_GITHUB_LINK"
+        echo "✅ Link updated: $LOCAL_GITHUB_LINK -> $GITHUB_WRAPPER"
+    fi
+elif [ -f "$LOCAL_GITHUB_LINK" ] && \
+    grep -q "from jacazul.cli.github import main" "$LOCAL_GITHUB_LINK"; then
+    BACKUP_PATH="$LOCAL_GITHUB_LINK.legacy"
+    echo "Replacing legacy jacazul-github shim at $LOCAL_GITHUB_LINK..."
+    mv "$LOCAL_GITHUB_LINK" "$BACKUP_PATH"
+    ln -s "$GITHUB_WRAPPER" "$LOCAL_GITHUB_LINK"
+    echo "✅ Legacy shim moved to $BACKUP_PATH"
+    echo "✅ Link created: $LOCAL_GITHUB_LINK -> $GITHUB_WRAPPER"
+fi
 
 echo ""
 echo "Setup complete! The following tools are available in ~/bin:"
