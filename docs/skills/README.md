@@ -29,6 +29,29 @@ tw-flow initiative my-feature "EXECUTE|Build API|implementation|today"
 
 ---
 
+### Git Expert
+**Status:** ✅ Active
+**Documentation:** [`skills/git-expert/SKILL.md`](../../skills/git-expert/SKILL.md)
+
+When preparing a commit, the agent must treat the commit message as a
+technical artifact: classify the changed area, choose a scope only when it is
+clear, keep the title within 50 characters, wrap body lines at 72 characters,
+and use a ticket footer only when an external GitHub, Bitbucket, or Jira ticket
+exists.
+
+**Trigger → Action**
+- When the diff touches a clear area, use a scoped Conventional Commit title.
+- When the diff is generic or cross-cutting, omit scope or ask for guidance.
+- When drafting the body, explain what changed and why with 72-column wrapping.
+- When an external ticket exists, keep `Refs: #X`, `Fixes: #X`, or the
+  configured external tracker reference as the final line.
+- When no external ticket exists, omit the footer entirely; never reference
+  internal Taskwarrior UUIDs or local task IDs.
+
+**Location:** `/project/skills/git-expert/`
+
+---
+
 ## 🔜 Future Skills
 
 Skills planned for addition:
