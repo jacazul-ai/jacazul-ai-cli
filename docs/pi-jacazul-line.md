@@ -10,14 +10,17 @@ Run Pi through the Jacazul wrapper:
 jacazul-pi
 ```
 
-On startup, the Pi bootstrap links repository-owned extensions from
-`extensions/*.ts` into Pi's global extension discovery directory:
+On startup, the Pi bootstrap links the production footer extension from
+`extensions/pi/jacazul-line.ts` into Pi's global extension discovery directory:
 
 ```text
 ~/.pi/agent/extensions/
 ```
 
 Pi can then load or reload the footer extension with its normal extension flow.
+Diagnostic Pi probes may also live under `extensions/pi/`, but they are not
+linked automatically; load them explicitly only while investigating.
+
 If Pi is already running, use:
 
 ```text
@@ -30,11 +33,15 @@ If Pi is already running, use:
 It avoids powerline separators by default because multi-line layouts need clear
 rows more than decorative segment arrows.
 
+The footer uses the `PROJECT_ID` exported by the Jacazul bootstrap. The bootstrap
+is responsible for resolving the current project from the launch cwd before Pi
+starts.
+
 The footer prioritizes:
 
 | Row | Shows |
 |---|---|
-| Workflow | Crocodile marker, `JACAZUL_MODE`, and `PROJECT_ID` |
+| Workflow | Crocodile marker with `JACAZUL_MODE`, then `PROJECT_ID` |
 | Focus | Focus label qualified as `(independent)` when session-scoped, focused plan, plus short task UUID and task description when present |
 | Location/Git | Current path, normal Git repository, or linked worktree/common Git identity |
 | Runtime | Pi model, thinking level, context usage, tokens, cache, and cost |
@@ -53,6 +60,9 @@ description resolves. It does not read Taskwarrior storage internals directly,
 because Jacazul may run against older Taskwarrior data files or newer
 Taskwarrior 3/taskchampion storage. `taskp` is the compatibility boundary.
 
+`taskp` is invoked with the current `PROJECT_ID`, so task lookup stays inside the
+active project's Taskwarrior silo.
+
 ## I want to understand focus scope
 
 When `JACAZUL_SESSION_ID` points to an independent session focus file, the
@@ -66,9 +76,9 @@ without spending space on the workflow row.
 The MVP style is dashboard-first:
 
 ```text
-🐊 | COUNSELOR | jacazul-ai_jacazul-ai-cli
+🐊 COUNSELOR | jacazul-ai_jacazul-ai-cli
 🎯 focus (independent) | pi-lualine-footer-extension | aeab3350 [DESIGN] Design Pi lualine-style custom footer extension
-🌿 worktree | ~/.bare/jacazul-ai-cli | tw-flow-to-go(branch)
+ worktree | ~/.bare/jacazul-ai-cli | tw-flow-to-go(branch)
 🤖 | gpt-5.5 · medium · ctx 23.3%/272k | ↑65k ↓2.1k R170k $0.471
 ```
 

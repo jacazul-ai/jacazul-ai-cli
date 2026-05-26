@@ -54,17 +54,29 @@ for skill_dir in "$PROJECT_ROOT/skills"/*; do
 done
 
 # 3. Link Global Extensions (Surgical)
-# Project-owned Pi extensions live in the repository and are linked into Pi's
-# global auto-discovery directory. Runtime owns the dynamic link; the repo owns
-# the source of truth.
+# Project-owned Pi extensions live under extensions/pi/. Only production
+# entrypoints are linked into Pi's global auto-discovery directory; diagnostic
+# probes must be loaded explicitly so broken helpers cannot break Pi startup.
 PI_EXTENSIONS_DIR="$HOME/.pi/agent/extensions"
-
 if [ ! -d "$PI_EXTENSIONS_DIR" ]; then
-    [ -n "$DEBUG" ] && echo "🐊 Creating pi extensions directory at $PI_EXTENSIONS_DIR..."
+    echo "🐊 Creating pi extensions directory at $PI_EXTENSIONS_DIR..."
     mkdir -p "$PI_EXTENSIONS_DIR"
 fi
 
-for extension_file in "$PROJECT_ROOT/extensions"/*.ts; do
+for legacy_name in pi-jacazul-line.ts pi-viewport-probe.ts pi-viewport-probe-impl.ts; do
+    legacy_target="$PI_EXTENSIONS_DIR/$legacy_name"
+    if [ -L "$legacy_target" ]; then
+        legacy_source=$(readlink "$legacy_target")
+        case "$legacy_source" in
+            "$PROJECT_ROOT/extensions"/*)
+                echo "🐊 Removing legacy pi extension link: $legacy_name"
+                rm -f "$legacy_target"
+                ;;
+        esac
+    fi
+done
+
+for extension_file in "$PROJECT_ROOT/extensions/pi/jacazul-line.ts"; do
     [ -f "$extension_file" ] || continue
     name=$(basename "$extension_file")
     target="$PI_EXTENSIONS_DIR/$name"
@@ -73,11 +85,11 @@ for extension_file in "$PROJECT_ROOT/extensions"/*.ts; do
         current_target=$(readlink -f "$target")
         expected_target=$(readlink -f "$extension_file")
         if [ "$current_target" != "$expected_target" ]; then
-            [ -n "$DEBUG" ] && echo "⚠️  pi extension $name points to wrong location. Re-linking..."
+            echo "🐊 Re-linking pi extension: $name"
             ln -sfn "$extension_file" "$target"
         fi
     else
-        [ -n "$DEBUG" ] && echo "🐊 Linking global pi extension: $name"
+        echo "🐊 Linking global pi extension: $name"
         ln -sfn "$extension_file" "$target"
     fi
 done

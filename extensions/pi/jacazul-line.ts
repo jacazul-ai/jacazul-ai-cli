@@ -1,5 +1,5 @@
 /**
- * pi-jacazul-line
+ * jacazul-line
  *
  * Jacazul workflow dashboard footer for Pi.
  *
@@ -296,8 +296,7 @@ export default function (pi: ExtensionAPI) {
 					if (cost) usageParts.push(`$${cost.toFixed(3)}`);
 
 					const workflowLine = [
-						accent("🐊"),
-						accent(mode),
+						accent(`🐊 ${mode}`),
 						value(projectId),
 					].join(sep());
 
@@ -316,13 +315,13 @@ export default function (pi: ExtensionAPI) {
 						const worktree = git.worktreeName ?? basename(cwd);
 						const worktreeLabel = branch ? `${worktree}(${branch})` : worktree;
 						gitLine = [
-							accent("🌿 worktree"),
+							accent(" worktree"),
 							value(repoIdentity),
 							value(worktreeLabel),
 						].join(sep());
 					} else if (git.kind === "repo") {
 						gitLine = [
-							accent("🌿 repo"),
+							accent(" repo"),
 							value(shortenHome(git.repoRoot ?? cwd)),
 							branch ? value(`branch ${branch}`) : null,
 						].filter(Boolean).join(sep());
