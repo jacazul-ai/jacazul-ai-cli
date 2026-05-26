@@ -1,4 +1,4 @@
-#!/home/fpiraz/.jacazul-ai/.venv/bin/python
+#!/usr/bin/env python3
 import os
 import shutil
 import subprocess
@@ -104,47 +104,34 @@ class TestProjectIdentity(unittest.TestCase):
         self.assertEqual(current_dir, "jacazul-ai-cli")
         self.assertEqual(project_id, "jacazul-ai_jacazul-ai-cli")
 
-    def test_project_root_env_is_preferred(self):
-        seed_repo = os.path.join(self.test_dir, "seed")
-        self.init_repo(seed_repo)
-
-        workspace_root = os.path.join(
-            self.test_dir, "jacazul-ai", "jacazul-ai-cli"
-        )
-        os.makedirs(workspace_root, exist_ok=True)
-
-        bare_repo = os.path.join(workspace_root, ".bare")
-        self.run_cmd(f'git clone --bare "{seed_repo}" "{bare_repo}"')
-        worktree_root = os.path.join(workspace_root, "master")
-        self.run_cmd(
-            f'git -C "{bare_repo}" worktree add "{worktree_root}" master'
-        )
-
-        unrelated_cwd = os.path.join(self.test_dir, "outside")
-        os.makedirs(unrelated_cwd, exist_ok=True)
+    def test_project_root_env_does_not_override_cwd(self):
+        tool_repo = os.path.join(self.test_dir, "jacazul-ai", "jacazul-ai-cli")
+        user_repo = os.path.join(self.test_dir, "jacazul-user", "zsh.config")
+        self.init_repo(tool_repo)
+        self.init_repo(user_repo)
 
         anchor, parent_dir, current_dir, project_id = self.resolve_identity(
-            unrelated_cwd,
-            env={"PROJECT_ROOT": worktree_root},
+            user_repo,
+            env={"PROJECT_ROOT": tool_repo},
         )
 
-        self.assertEqual(anchor, workspace_root)
-        self.assertEqual(parent_dir, "jacazul-ai")
-        self.assertEqual(current_dir, "jacazul-ai-cli")
-        self.assertEqual(project_id, "jacazul-ai_jacazul-ai-cli")
+        self.assertEqual(anchor, user_repo)
+        self.assertEqual(parent_dir, "jacazul-user")
+        self.assertEqual(current_dir, "zsh.config")
+        self.assertEqual(project_id, "jacazul-user_zsh.config")
 
-    def test_explicit_project_id_override_is_preserved(self):
+    def test_inherited_project_id_is_recomputed_for_cwd(self):
         repo_root = os.path.join(self.test_dir, "sample", "repo")
         self.init_repo(repo_root)
 
         _, parent_dir, current_dir, project_id = self.resolve_identity(
             repo_root,
-            env={"PROJECT_ID": "manual_override"},
+            env={"PROJECT_ID": "jacazul-ai_jacazul-ai-cli"},
         )
 
         self.assertEqual(parent_dir, "sample")
         self.assertEqual(current_dir, "repo")
-        self.assertEqual(project_id, "manual_override")
+        self.assertEqual(project_id, "sample_repo")
 
 
 if __name__ == "__main__":

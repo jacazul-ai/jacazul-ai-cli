@@ -1,12 +1,12 @@
 #!/bin/bash
 # Shared project identity resolver for Jacazul launchers.
 # Resolves PROJECT_ID against the canonical project anchor.
-# Prefer PROJECT_ROOT from the bootstrap when available, then fall back to pwd.
+# Prefer an explicit cwd argument when provided, then fall back to pwd.
 
 jacazul_resolve_project_anchor() {
     local cwd top_level git_dir common_dir common_base
 
-    cwd="${1:-${PROJECT_ROOT:-$(pwd -P)}}"
+    cwd="${1:-$(pwd -P)}"
     cwd="$(cd "$cwd" 2>/dev/null && pwd -P || printf '%s' "$cwd")"
 
     if ! command -v git >/dev/null 2>&1; then
@@ -42,7 +42,7 @@ jacazul_resolve_project_anchor() {
 jacazul_export_project_identity() {
     local anchor_dir
 
-    anchor_dir=$(jacazul_resolve_project_anchor "${1:-${PROJECT_ROOT:-$(pwd -P)}}")
+    anchor_dir=$(jacazul_resolve_project_anchor "${1:-$(pwd -P)}")
 
     PARENT_DIR=$(basename "$(dirname "$anchor_dir")")
     CURRENT_DIR=$(basename "$anchor_dir")
@@ -51,8 +51,6 @@ jacazul_export_project_identity() {
     export PARENT_DIR
     export CURRENT_DIR
 
-    if [ -z "$PROJECT_ID" ]; then
-        PROJECT_ID="${PARENT_DIR}_${CURRENT_DIR}"
-        export PROJECT_ID
-    fi
+    PROJECT_ID="${PARENT_DIR}_${CURRENT_DIR}"
+    export PROJECT_ID
 }
