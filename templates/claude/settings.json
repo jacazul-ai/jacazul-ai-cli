@@ -1,6 +1,11 @@
 {
   "permissions": {
     "allow": [
+      "Skill(git-expert)",
+      "Skill(github-expert)",
+      "Skill(jacazul-engine)",
+      "Skill(python-expert)",
+      "Skill(taskwarrior-expert)",
       "Bash(tw-flow:*)",
       "Bash(taskp:*)",
       "Bash(jacazul-broker:*)",
