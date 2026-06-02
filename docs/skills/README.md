@@ -52,6 +52,27 @@ exists.
 
 ---
 
+### Security Expert
+**Status:** ✅ Active
+**Documentation:** [`skills/security-expert/SKILL.md`](../../skills/security-expert/SKILL.md)
+
+Repository security review system for CI/CD, secrets, dependency supply chain,
+GitHub Actions, cache poisoning, and automation hardening.
+
+**Trigger → Action**
+- When reviewing GitHub Actions, activate `security-expert` and inspect triggers,
+  permissions, `actions/cache`, `restore-keys`, artifacts, and secrets.
+- When a workflow handles PRs from forks or uses `pull_request_target`, treat the
+  code path as hostile until proven otherwise.
+- When deploy/release jobs restore caches, verify the cache cannot be written by
+  untrusted workflows.
+- When secrets or credentials are involved, prefer least privilege, OIDC, and
+  short-lived tokens.
+
+**Location:** `/project/skills/security-expert/`
+
+---
+
 ## 🔜 Future Skills
 
 Skills planned for addition:

@@ -22,8 +22,9 @@ This agent delegates all technical mandates, shared protocols, and workflow logi
 **Mandatory Action:** Activate the following skills immediately to access full project intelligence:
 1. **`jacazul-engine`**: UUID protocols, Git standards, and persona rules.
 2. **`taskwarrior-expert`**: The 7-Phase Workflow Loop and task management.
-3. **`git-expert`**: (If needed) Advanced repository operations.
-4. **`python-expert`**: (If needed) PEP 8 compliance and linting.
+3. **`git-expert`**: Repository operations and commit discipline.
+4. **`security-expert`**: CI/CD, secrets, supply-chain, cache poisoning, and automation security.
+5. **`python-expert`**: (If needed) PEP 8 compliance and linting.
 
 {% include "persona/persona_handoff.md" %}
 
