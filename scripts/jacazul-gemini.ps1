@@ -112,15 +112,11 @@ $FINAL_ARGS = @()
 if ($RESUME) {
     $FINAL_ARGS = $CLEAN_ARGS
 } else {
-    if ($ONBOARD_PROMPT_ACTIVE -eq $false) {
-        $FINAL_ARGS = $CLEAN_ARGS
+    if ($CLEAN_ARGS.Count -eq 0) {
+        $FINAL_ARGS = @("-i", $ONBOARD_TEXT_FALLBACK)
     } else {
-        if ($CLEAN_ARGS.Count -eq 0) {
-            $FINAL_ARGS = @("-i", $ONBOARD_TEXT_FALLBACK)
-        } else {
-            $userPrompt = $CLEAN_ARGS -join " "
-            $FINAL_ARGS = @("-i", $ONBOARD_TEXT_FALLBACK, $userPrompt)
-        }
+        $userPrompt = $CLEAN_ARGS -join " "
+        $FINAL_ARGS = @("-i", $ONBOARD_TEXT_FALLBACK, $userPrompt)
     }
 }
 
