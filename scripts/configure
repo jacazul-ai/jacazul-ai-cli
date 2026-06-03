@@ -155,6 +155,7 @@ CLI_LINKS=(
     "jacazul-copilot:scripts/jacazul-copilot"
     "jacazul-claude:scripts/jacazul-claude"
     "jacazul-pi:scripts/jacazul-pi"
+    "jacazul-antigravity:scripts/jacazul-antigravity"
     "python:scripts/python"
     "tw-flow:$HOME/.jacazul-ai/.venv/bin/tw-flow"
     "taskp:$HOME/.jacazul-ai/.venv/bin/taskp"

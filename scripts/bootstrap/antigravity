@@ -1,0 +1,7 @@
+#!/bin/bash
+# 🐊 Jacazul - Bootstrap for Antigravity CLI
+# Empty placeholder.
+
+if [ -n "$DEBUG" ]; then
+    echo "✅ Jacazul: Antigravity bootstrap verified."
+fi
