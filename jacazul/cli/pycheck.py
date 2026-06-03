@@ -1,26 +1,41 @@
-#!/usr/bin/env python
-import subprocess
-import sys
-
 # 🐊 Jacazul py-check (v1.1.0)
 # Standard Python validation with "Error as Prompt" feedback and auto-beautify.
+import sys
+import subprocess
+import os
+
+if sys.platform == "win32":
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+        sys.stderr.reconfigure(encoding="utf-8")
+    except AttributeError:
+        pass
+
+
+def get_venv_bin(name):
+    exe_dir = os.path.dirname(sys.executable)
+    for ext in [".exe", ""] if os.name == "nt" else [""]:
+        path = os.path.join(exe_dir, name + ext)
+        if os.path.isfile(path) and os.access(path, os.X_OK):
+            return path
+    return name
 
 
 def run_beautifier(target):
     print(f"🐊 Beautifying {target} via 'ruff format'...")
-    subprocess.run(["ruff", "format", target], capture_output=True, text=True)
+    subprocess.run([get_venv_bin("ruff"), "format", target], capture_output=True, text=True)
 
 
 def run_ruff(target):
     print("🐊 Running ruff logic check...")
     # Attempt auto-fix for fixable rules
     subprocess.run(
-        ["ruff", "check", "--fix", target], capture_output=True, text=True
+        [get_venv_bin("ruff"), "check", "--fix", target], capture_output=True, text=True
     )
 
     # Final check
     res = subprocess.run(
-        ["ruff", "check", target], capture_output=True, text=True
+        [get_venv_bin("ruff"), "check", target], capture_output=True, text=True
     )
     if res.returncode != 0:
         print(res.stdout)
@@ -33,7 +48,7 @@ def run_pycodestyle(target):
     print("🐊 Running pycodestyle final validation...")
     # Use --first to avoid flooding the agent with redundant errors
     res = subprocess.run(
-        ["pycodestyle", "--first", target], capture_output=True, text=True
+        [get_venv_bin("pycodestyle"), "--first", target], capture_output=True, text=True
     )
     if res.returncode == 0:
         return True

@@ -7,7 +7,7 @@ PROJECT_ROOT = pathlib.Path(__file__).resolve().parents[1]
 
 class TestUserLaunchers(unittest.TestCase):
     def test_jacazul_github_uses_project_wrapper(self):
-        configure = (PROJECT_ROOT / "scripts" / "configure").read_text()
+        configure = (PROJECT_ROOT / "scripts" / "configure").read_text(encoding="utf-8").replace("\r\n", "\n")
 
         self.assertIn(
             "jacazul-github:scripts/jacazul-github",
@@ -22,7 +22,7 @@ class TestUserLaunchers(unittest.TestCase):
 
     def test_jacazul_github_wrapper_is_portable(self):
         launcher = PROJECT_ROOT / "scripts" / "jacazul-github"
-        content = launcher.read_text()
+        content = launcher.read_text(encoding="utf-8").replace("\r\n", "\n")
 
         self.assertTrue(content.startswith("#!/usr/bin/env bash\n"))
         self.assertNotIn("/home/fpiraz", content)

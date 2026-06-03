@@ -1,116 +1,66 @@
-import subprocess
 import unittest
+import json
+from .base import JacazulTest
 
 
-class TestBacklogFeature(unittest.TestCase):
+class TestBacklogFeature(JacazulTest):
     """Validate backlog plan state and --with-backlog flag behavior."""
 
     SANDBOX_PLAN = "test-backlog-sandbox"
 
     def setUp(self):
         """Create a temporary plan for testing."""
-        subprocess.run(
-            [
-                "tw-flow",
-                "plan",
-                self.SANDBOX_PLAN,
-                "EXECUTE|Backlog test task|testing",
-            ],
-            capture_output=True,
+        super().setUp()
+        self.run_cmd(
+            f"{self.tw_flow} plan {self.SANDBOX_PLAN} 'EXECUTE|Backlog test task|testing'"
         )
 
     def tearDown(self):
         """Discard all tasks in the sandbox plan."""
-        result = subprocess.run(
-            [
-                "taskp",
-                f'project:"{self.SANDBOX_PLAN}"',
-                "status:pending",
-                "export",
-            ],
-            capture_output=True,
-            text=True,
+        out, _, _ = self.run_cmd(
+            f"{self.taskp} project:{self.SANDBOX_PLAN} status:pending export"
         )
-        import json
-
         try:
-            tasks = json.loads(result.stdout)
+            tasks = json.loads(out)
             for t in tasks:
-                subprocess.run(
-                    ["tw-flow", "discard", t["uuid"]],
-                    capture_output=True,
-                )
+                self.run_cmd(f"{self.tw_flow} discard {t['uuid']}")
         except Exception:
             pass
+        super().tearDown()
 
     def test_backlog_hides_plan_from_plans(self):
         """Plan in backlog must not appear in tw-flow plans default view."""
-        subprocess.run(
-            ["tw-flow", "backlog", self.SANDBOX_PLAN],
-            capture_output=True,
-        )
-        result = subprocess.run(
-            ["tw-flow", "plans", "--force"],
-            capture_output=True,
-            text=True,
-        )
-        self.assertNotIn(self.SANDBOX_PLAN, result.stdout)
+        self.run_cmd(f"{self.tw_flow} backlog {self.SANDBOX_PLAN}")
+        out, _, _ = self.run_cmd(f"{self.tw_flow} plans --force")
+        self.assertNotIn(self.SANDBOX_PLAN, out)
 
     def test_with_backlog_shows_plan(self):
         """--with-backlog must reveal backlog plans with 💤 marker."""
-        subprocess.run(
-            ["tw-flow", "backlog", self.SANDBOX_PLAN],
-            capture_output=True,
-        )
-        result = subprocess.run(
-            ["tw-flow", "plans", "--with-backlog", "--force"],
-            capture_output=True,
-            text=True,
-        )
-        self.assertIn(self.SANDBOX_PLAN, result.stdout)
-        self.assertIn("💤", result.stdout)
-        self.assertIn("BACKLOG", result.stdout)
+        self.run_cmd(f"{self.tw_flow} backlog {self.SANDBOX_PLAN}")
+        out, _, _ = self.run_cmd(f"{self.tw_flow} plans --with-backlog --force")
+        self.assertIn(self.SANDBOX_PLAN, out)
+        self.assertIn("💤", out)
+        self.assertIn("BACKLOG", out)
 
     def test_activate_restores_plan_to_active(self):
         """activate must remove backlog state and restore plan to active."""
-        subprocess.run(
-            ["tw-flow", "backlog", self.SANDBOX_PLAN],
-            capture_output=True,
-        )
-        subprocess.run(
-            ["tw-flow", "activate", self.SANDBOX_PLAN],
-            capture_output=True,
-        )
-        result = subprocess.run(
-            ["tw-flow", "plans", "--force"],
-            capture_output=True,
-            text=True,
-        )
-        self.assertIn(self.SANDBOX_PLAN, result.stdout)
-        self.assertNotIn("💤", result.stdout)
+        self.run_cmd(f"{self.tw_flow} backlog {self.SANDBOX_PLAN}")
+        self.run_cmd(f"{self.tw_flow} activate {self.SANDBOX_PLAN}")
+        out, _, _ = self.run_cmd(f"{self.tw_flow} plans --force")
+        self.assertIn(self.SANDBOX_PLAN, out)
+        self.assertNotIn("💤", out)
 
     def test_backlog_command_success_message(self):
         """tw-flow backlog must emit success confirmation."""
-        result = subprocess.run(
-            ["tw-flow", "backlog", self.SANDBOX_PLAN],
-            capture_output=True,
-            text=True,
-        )
-        self.assertIn("moved to backlog", result.stdout)
-        self.assertIn("💤", result.stdout)
+        out, _, _ = self.run_cmd(f"{self.tw_flow} backlog {self.SANDBOX_PLAN}")
+        self.assertIn("moved to backlog", out)
+        self.assertIn("💤", out)
 
     def test_activate_command_success_message(self):
         """tw-flow activate must emit success confirmation."""
-        subprocess.run(
-            ["tw-flow", "backlog", self.SANDBOX_PLAN],
-            capture_output=True,
-        )
-        result = subprocess.run(
-            ["tw-flow", "activate", self.SANDBOX_PLAN],
-            capture_output=True,
-            text=True,
-        )
-        self.assertIn("activated", result.stdout)
+        self.run_cmd(f"{self.tw_flow} backlog {self.SANDBOX_PLAN}")
+        out, _, _ = self.run_cmd(f"{self.tw_flow} activate {self.SANDBOX_PLAN}")
+        self.assertIn("activated", out)
 
 
 if __name__ == "__main__":

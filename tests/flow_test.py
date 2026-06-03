@@ -371,6 +371,11 @@ class FlowTest(JacazulTest):
 
     def test_vaccinated_done_enforces_python_quality(self):
         """Quality Gate: 'tw-flow done' must block if Python files fail."""
+        # Initialize a temporary git repository for the quality gate check
+        self.run_cmd("git init -b master")
+        self.run_cmd('git config user.name "Test User"')
+        self.run_cmd('git config user.email "test@example.com"')
+
         # 1. Create a task and add outcome
         self.run_cmd(
             f"{self.tw_flow} ini quality_test 'Check Quality|r|today'"
@@ -382,7 +387,7 @@ class FlowTest(JacazulTest):
         self.run_cmd(f"{self.tw_flow} outcome {uuid} 'Testing blocking'")
 
         # 2. Introduce a syntax error in a .py file
-        dirty_file = os.path.join(self.project_root, "dirty_test.py")
+        dirty_file = os.path.join(self.test_dir, "dirty_test.py")
         with open(dirty_file, "w") as f:
             f.write("def broken_syntax(:\n    pass\n")
 

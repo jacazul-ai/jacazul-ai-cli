@@ -1,23 +1,20 @@
 import unittest
-import subprocess
-import os
 import json
+from .base import JacazulTest
 
 
-class TestBitbucketDetection(unittest.TestCase):
+class TestBitbucketDetection(JacazulTest):
     def setUp(self):
+        super().setUp()
         self.project = "test-bitbucket-detection"
-        os.environ["PROJECT_ID"] = self.project
         # Create a dummy task
-        subprocess.run(
-            ["tw-flow", "plan", self.project, "Test task"], capture_output=True
+        self.run_cmd(
+            f"{self.tw_flow} plan {self.project} 'Test task'"
         )
-        res = subprocess.run(
-            ["taskp", "project:" + self.project, "export"],
-            capture_output=True,
-            text=True,
+        out, _, _ = self.run_cmd(
+            f"{self.taskp} project:{self.project} export"
         )
-        tasks = json.loads(res.stdout)
+        tasks = json.loads(out)
         self.uuid = tasks[0]["uuid"]
 
     def test_bitbucket_pattern_detected_now(self):
@@ -25,32 +22,28 @@ class TestBitbucketDetection(unittest.TestCase):
         Verify that a Bitbucket-style ticket (PROJ-123) NOW triggers
         the validation protocol and calls the Bitbucket mock.
         """
-        res = subprocess.run(
-            ["tw-flow", "ticket", self.uuid, "BTBKR-123"],
-            capture_output=True,
-            text=True,
+        out, _, _ = self.run_cmd(
+            f"{self.tw_flow} ticket {self.uuid} BTBKR-123"
         )
         # Check for the Protocol alert
         self.assertIn(
-            "The Protocol: Validating ticket BTBKR-123...", res.stdout
+            "The Protocol: Validating ticket BTBKR-123...", out
         )
         # Check for Bitbucket mock output
         self.assertIn(
-            "🐊 [Bitbucket/Jira] Mock Syncing ticket BTBKR-123...", res.stdout
+            "🐊 [Bitbucket/Jira] Mock Syncing ticket BTBKR-123...", out
         )
-        self.assertIn("linked to ticket: BTBKR-123", res.stdout)
+        self.assertIn("linked to ticket: BTBKR-123", out)
 
     def test_github_still_works(self):
         """
         Verify that GitHub-style ticket (#123) still triggers the Protocol.
         """
-        res = subprocess.run(
-            ["tw-flow", "ticket", self.uuid, "#456"],
-            capture_output=True,
-            text=True,
+        out, _, _ = self.run_cmd(
+            f"{self.tw_flow} ticket {self.uuid} #456"
         )
-        self.assertIn("The Protocol: Validating ticket #456...", res.stdout)
-        self.assertIn("Syncing issue #456", res.stdout)
+        self.assertIn("The Protocol: Validating ticket #456...", out)
+        self.assertIn("Syncing issue #456", out)
 
 
 if __name__ == "__main__":

@@ -2,6 +2,14 @@
 import os
 import subprocess
 import sys
+
+if sys.platform == "win32":
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+        sys.stderr.reconfigure(encoding="utf-8")
+    except AttributeError:
+        pass
+
 import json
 import re
 import time
@@ -27,8 +35,13 @@ class GitHubBroker:
         self.vault_file = os.path.join(self.vault_dir, "vault.json")
         self.github_vault_legacy = os.path.join(self.vault_dir, "github.enc")
         self.cache_dir = os.path.join(self.vault_dir, "cache", "github")
-        self.cryptozoid_bin = cryptozoid_bin or os.path.expanduser(
-            "~/go/bin/cryptozoid"
+        import shutil
+
+        cz_bin = "cryptozoid.exe" if os.name == "nt" else "cryptozoid"
+        self.cryptozoid_bin = (
+            cryptozoid_bin
+            or shutil.which(cz_bin)
+            or os.path.expanduser(f"~/go/bin/{cz_bin}")
         )
 
     def _ensure_cache_dir(self, repo: str):
@@ -529,6 +542,7 @@ class GitHubBroker:
             print(
                 f"❌ Failed to list issues: {result.stderr}", file=sys.stderr
             )
+            sys.exit(result.returncode)
 
 
 def error(msg: str):

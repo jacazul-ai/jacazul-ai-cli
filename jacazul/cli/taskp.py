@@ -1,6 +1,14 @@
 #!/usr/bin/env python
 import sys
 import os
+
+if sys.platform == "win32":
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+        sys.stderr.reconfigure(encoding="utf-8")
+    except AttributeError:
+        pass
+
 import re
 from typing import List
 from jacazul.taskwarrior.core import TaskWrapper

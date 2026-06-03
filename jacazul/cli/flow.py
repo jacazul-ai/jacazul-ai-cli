@@ -1,6 +1,14 @@
 #!/usr/bin/env python
 import sys
 import os
+
+if sys.platform == "win32":
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+        sys.stderr.reconfigure(encoding="utf-8")
+    except AttributeError:
+        pass
+
 import re
 import io
 import orjson
@@ -504,8 +512,9 @@ class FlowManager:
                     "skills/python-expert/scripts/py-check",
                 )
 
+            # Run py-check via the current Python interpreter for cross-platform execution
             check_res = subprocess.run(
-                [pycheck_bin] + modified_py,
+                [sys.executable, pycheck_bin] + modified_py,
                 capture_output=False,  # Allow it to print its own beauty
                 text=True,
                 check=False,

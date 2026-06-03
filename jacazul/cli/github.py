@@ -1,6 +1,14 @@
 #!/usr/bin/env python
 import os
 import sys
+
+if sys.platform == "win32":
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+        sys.stderr.reconfigure(encoding="utf-8")
+    except AttributeError:
+        pass
+
 import json
 import subprocess
 import argparse
@@ -15,7 +23,9 @@ class GitHubManager:
         self.vault_dir = os.path.expanduser("~/.jacazul-ai")
         self.vault_file = os.path.join(self.vault_dir, "vault.json")
         self.vault_name = "jacazul-vault"
-        self.cryptozoid_bin = os.path.expanduser("~/go/bin/cryptozoid")
+        import shutil
+        cz_bin = "cryptozoid.exe" if os.name == "nt" else "cryptozoid"
+        self.cryptozoid_bin = shutil.which(cz_bin) or os.path.expanduser(f"~/go/bin/{cz_bin}")
 
     def _ensure_vault_dir(self):
         if not os.path.exists(self.vault_dir):

@@ -1,6 +1,14 @@
 #!/usr/bin/env python
 import os
 import sys
+
+if sys.platform == "win32":
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+        sys.stderr.reconfigure(encoding="utf-8")
+    except AttributeError:
+        pass
+
 import re
 from datetime import datetime
 from typing import Dict, Any, Optional, List

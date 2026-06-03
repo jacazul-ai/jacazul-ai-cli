@@ -95,8 +95,87 @@ class Environment:
         return os.environ.get("JACAZUL_MODE", "SANDBOXED")
 
     @staticmethod
+    def resolve_project_anchor(cwd: Optional[str] = None) -> str:
+        if cwd is None:
+            cwd = os.getcwd()
+        cwd = os.path.abspath(cwd)
+
+        git_bin = shutil.which("git")
+        if not git_bin:
+            return cwd
+
+        try:
+            res = subprocess.run(
+                ["git", "rev-parse", "--is-inside-work-tree"],
+                cwd=cwd,
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            if res.returncode != 0 or res.stdout.strip() != "true":
+                return cwd
+
+            top_level = subprocess.run(
+                ["git", "rev-parse", "--show-toplevel"],
+                cwd=cwd,
+                capture_output=True,
+                text=True,
+                check=False,
+            ).stdout.strip()
+
+            git_dir = subprocess.run(
+                ["git", "rev-parse", "--path-format=absolute", "--git-dir"],
+                cwd=cwd,
+                capture_output=True,
+                text=True,
+                check=False,
+            ).stdout.strip()
+
+            common_dir = subprocess.run(
+                [
+                    "git",
+                    "rev-parse",
+                    "--path-format=absolute",
+                    "--git-common-dir",
+                ],
+                cwd=cwd,
+                capture_output=True,
+                text=True,
+                check=False,
+            ).stdout.strip()
+
+            if (
+                top_level
+                and git_dir
+                and common_dir
+                and git_dir != common_dir
+            ):
+                common_base = os.path.basename(common_dir)
+                if common_base in [".git", ".bare"]:
+                    return os.path.dirname(common_dir)
+
+            if top_level:
+                return top_level
+        except Exception:
+            pass
+
+        return cwd
+
+    @staticmethod
     def get_project_id() -> str:
-        return os.environ.get("PROJECT_ID", "global")
+        if "PROJECT_ID" in os.environ:
+            return os.environ["PROJECT_ID"]
+
+        anchor = Environment.resolve_project_anchor()
+        parent_dir = os.path.basename(os.path.dirname(anchor))
+        current_dir = os.path.basename(anchor)
+
+        if not parent_dir:
+            parent_dir = "root"
+        if not current_dir:
+            current_dir = "root"
+
+        return f"{parent_dir}_{current_dir}"
 
     @staticmethod
     def get_jacazul_home() -> str:
@@ -127,20 +206,40 @@ class Environment:
             return os.environ["JACAZUL_REAL_TASK"]
 
         try:
-            # We want to avoid our own scripts/task wrapper
-            res = subprocess.run(
-                ["which", "-a", "task"],
-                capture_output=True,
-                text=True,
-                check=False,
-            )
-            bins = res.stdout.strip().split("\n")
-            for b in bins:
-                if "scripts/task" not in b:
-                    return b
+            # Iterate over all PATH entries to find the real task binary,
+            # skipping our own scripts/task obfuscator wrapper
+            path_env = os.environ.get("PATH", "")
+            for path_dir in path_env.split(os.pathsep):
+                for ext in [".exe", ""] if os.name == "nt" else [""]:
+                    task_path = os.path.join(path_dir, "task" + ext)
+                    if os.path.isfile(task_path) and os.access(task_path, os.X_OK):
+                        normalized = os.path.normpath(task_path)
+                        if ("scripts" + os.sep + "task") not in normalized:
+                            return task_path
         except Exception:
             pass
-        return "/usr/bin/task"
+
+        # Fallbacks if not found in PATH
+        if os.name == "nt":
+            fallbacks = [
+                r"C:\Program Files\Taskwarrior\task.exe",
+                r"C:\Program Files (x86)\Taskwarrior\task.exe",
+                r"C:\ProgramData\chocolatey\bin\task.exe",
+            ]
+            for p in fallbacks:
+                if os.path.exists(p):
+                    return p
+            return "task.exe"
+        else:
+            fallbacks = [
+                "/usr/bin/task",
+                "/usr/local/bin/task",
+                "/opt/homebrew/bin/task",
+            ]
+            for p in fallbacks:
+                if os.path.exists(p):
+                    return p
+            return "/usr/bin/task"
 
 
 class TaskWrapper:
@@ -206,7 +305,8 @@ class GitHubBroker:
         self.vault_dir = os.environ.get(
             "JACAZUL_HOME", os.path.expanduser("~/.jacazul-ai")
         )
-        self.cryptozoid_bin = os.path.expanduser("~/go/bin/cryptozoid")
+        cz_bin = "cryptozoid.exe" if os.name == "nt" else "cryptozoid"
+        self.cryptozoid_bin = shutil.which(cz_bin) or os.path.expanduser(f"~/go/bin/{cz_bin}")
 
     def sync_issue(self, issue_id: str, repo: Optional[str] = None):
         # Implementation delegated to the broker binary for security

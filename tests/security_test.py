@@ -56,7 +56,7 @@ class SecurityTest(JacazulTest):
     def test_raw_task_binary_restricted_via_wrapper(self):
         """Obfuscation: The 'task' wrapper must prevent raw binary usage."""
         scripts_dir = os.path.join(self.project_root, "scripts")
-        self.env["PATH"] = f"{scripts_dir}:{self.env['PATH']}"
+        self.env["PATH"] = f"{scripts_dir}{os.pathsep}{self.env['PATH']}"
         out, err, code = self.run_cmd("task")
         self.assertNotEqual(code, 0)
         self.assertIn("ERROR: Direct usage of 'task' is restricted", out + err)

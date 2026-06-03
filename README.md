@@ -39,18 +39,37 @@ For detailed persona guides and switching examples, see the **[Documentation Cen
 - **GitHub CLI (gh)**
 
 ### 2. Quick Install
+
+On Linux/macOS:
 ```bash
 make configure
 make github
 ```
 
+On Windows (PowerShell):
+```powershell
+.\scripts\configure.ps1
+```
+
 ### 3. Run Your Engine
+
+On Linux/macOS:
 ```bash
 jacazul-gemini      # Gemini CLI
 jacazul-claude      # Claude CLI
 jacazul-opencode    # Opencode CLI
 jacazul-copilot     # Copilot CLI
-jacazul-pi          # Pi CLI with Jacazul footer/dashboard integration
+jacazul-pi          # Pi CLI
+```
+
+On Windows (PowerShell):
+Add `~/bin` to your environment path, then you can run:
+```powershell
+jacazul-gemini
+jacazul-claude
+jacazul-opencode
+jacazul-copilot
+jacazul-pi
 ```
 
 For Pi footer/dashboard behavior, see [pi-jacazul-line](docs/pi-jacazul-line.md).
