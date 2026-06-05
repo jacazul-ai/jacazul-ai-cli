@@ -13,7 +13,10 @@ license: MIT
 3. **Context Resolution:** Infer repository context (Org/Repo) from the local `git remote` before acting.
 4. **Issue Synchronization:** Use `sync_issue` to bridge Taskwarrior states with GitHub Issue states.
 5. **Error as Prompt:** Respect non-zero exit codes from the broker and follow the provided `ACTION:` hints.
-6. **Full Output Display (MANDATORY):** After running `jacazul-broker view`, ALWAYS reproduce the FULL issue content in your response text — title, labels, assignees, and complete body. NEVER let the terminal output collapse. The user must see all information without expanding anything.
+6. **Broker-First Communication:** NEVER tell the user to run raw `gh` commands. The user-facing interface is always `jacazul-broker`; GitHub CLI is an internal implementation detail only.
+7. **Comment Protocol:** To comment on an issue, use `jacazul-broker comment '<issue_id>' body="..." [repo="org/repo"]` or `body_file="..."`. Quote IDs containing `#` (`'#20'`) because unquoted `#` becomes a shell comment. Comments MUST support the same file-body workflow as issue descriptions: prefer `body_file="/path/comment.md"` for Markdown, multiline text, quotes, or backticks.
+8. **Sandbox Mandate:** All real POC/smoke operations against GitHub MUST target `jacazul-ai/jacazul-ai-sandbox` unless the user explicitly authorizes a production repository.
+9. **Full Output Display (MANDATORY):** After running `jacazul-broker view`, ALWAYS reproduce the FULL issue content in your response text — title, labels, assignees, and complete body. NEVER let the terminal output collapse. The user must see all information without expanding anything.
 
 ## Commands You Can Suggest
 
@@ -21,10 +24,11 @@ license: MIT
 - **"list issues"** - Lista as issues abertas ou fechadas no repositório.
 - **"list labels"** - Lista as labels disponíveis no repositório (via cache).
 - **"open issue"** - Cria um novo ticket usando argumentos nomeados (`title=`, `body=`, etc.).
+- **"comment issue #X"** - Comenta em um ticket via `jacazul-broker comment`, nunca via comando `gh` exposto ao usuário.
 
 ## jacazul-broker CLI Reference
 
-**CRITICAL:** Commands `open` and `edit` use **keyword arguments** (`key=val`). Other commands use positional arguments.
+**CRITICAL:** Commands `open`, `edit`, and `comment` use **keyword arguments** (`key=val`). Other commands use positional arguments.
 
 ```bash
 # List issues
@@ -42,6 +46,10 @@ jacazul-broker open title="..." [body="..."] [repo="..."] [assignee="..."] [labe
 # Edit issue (id + kwargs)
 jacazul-broker edit <id> [title="..."] [body="..."] [repo="..."] [assignee="..."] [add_labels="l1"]
 
+# Comment issue (id + kwargs; quote # IDs in shell)
+# Use body_file= for Markdown/multiline comments, same as issue bodies.
+jacazul-broker comment '<id>' [body="..."] [body_file="..."] [repo="..."]
+
 # Close issue (positional)
 jacazul-broker close <id> [repo] [comment]
 
@@ -55,7 +63,10 @@ jacazul-broker sync <issue_id> [repo]
 jacazul-broker open title="feat: my feature" body="Body text here" labels="enhancement"
 
 # Edit issue with kwargs
-jacazul-broker edit #30 title="Refactored Title" add_labels="bug"
+jacazul-broker edit '#30' title="Refactored Title" add_labels="bug"
+
+# Comment issue with kwargs
+jacazul-broker comment '#30' body="Smoke comment" repo="jacazul-ai/jacazul-ai-sandbox"
 
 # List closed issues
 jacazul-broker list - closed

@@ -117,6 +117,57 @@ class TestBrokerKwargs(unittest.TestCase):
         finally:
             os.unlink(tmp_path)
 
+    def test_comment_issue_requires_id(self):
+        """Verify that 'comment' without issue ID returns error."""
+        res = subprocess.run(
+            ["jacazul-broker", "comment"],
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(res.returncode, 1)
+        self.assertIn(
+            "ACTION: Use 'jacazul-broker comment #123 body=\"My comment\"'",
+            res.stderr,
+        )
+
+    def test_comment_issue_requires_body(self):
+        """Verify that 'comment' requires body= or body_file=."""
+        res = subprocess.run(
+            ["jacazul-broker", "comment", "#1"],
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(res.returncode, 1)
+        self.assertIn(
+            "ACTION: Use 'jacazul-broker comment #123 body=\"My comment\"'",
+            res.stderr,
+        )
+
+    def test_comment_issue_body_file_parser(self):
+        """Verify that body_file= kwarg is accepted by comment command."""
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=".md", delete=False
+        ) as f:
+            f.write('## Comment\n\nWith `special` chars and "quotes".')
+            tmp_path = f.name
+
+        try:
+            res = subprocess.run(
+                [
+                    "jacazul-broker",
+                    "comment",
+                    "#1",
+                    f"body_file={tmp_path}",
+                    "repo=jacazul-ai/jacazul-ai-sandbox",
+                ],
+                capture_output=True,
+                text=True,
+            )
+            self.assertNotIn("body_file", res.stderr)
+            self.assertNotIn("Comment body required", res.stderr)
+        finally:
+            os.unlink(tmp_path)
+
     def test_view_issue_requires_id(self):
         """Verify that 'view' without issue ID returns error."""
         res = subprocess.run(

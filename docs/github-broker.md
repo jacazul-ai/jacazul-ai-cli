@@ -47,7 +47,7 @@ The Broker is the engine that performs the actual synchronization.
 
 ### CLI Commands (Direct Use)
 
-**CRITICAL:** Commands `open` and `edit` use **keyword arguments** (`key=val`). Other commands use positional arguments.
+**CRITICAL:** Commands `open`, `edit`, and `comment` use **keyword arguments** (`key=val`). Other commands use positional arguments.
 
 ```bash
 # Sync local tasks with GitHub status (positional)
@@ -61,6 +61,10 @@ jacazul-broker open title="Issue Title" [body="Description"] [repo="org/repo"] [
 
 # Edit an existing issue (ID + kwargs)
 jacazul-broker edit <id> [title="New Title"] [body="New body"] [add_labels="enhancement"]
+
+# Comment on an existing issue (ID + kwargs)
+# Use body_file= for Markdown/multiline comments, same as issue descriptions.
+jacazul-broker comment '<id>' [body="Comment"] [body_file="/path/comment.md"] [repo="org/repo"]
 
 # Close an issue (positional)
 jacazul-broker close <id> [repo] [comment]

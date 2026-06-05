@@ -27,7 +27,8 @@ class TestBrokerV2(unittest.TestCase):
         )
         self.assertEqual(res.returncode, 1)
         self.assertIn(
-            "ACTION: Use 'jacazul-broker open \"My title\"'", res.stderr
+            "ACTION: Use 'jacazul-broker open title=\"My title\"'",
+            res.stderr,
         )
 
     def test_list_command_execution(self):

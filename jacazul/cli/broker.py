@@ -433,6 +433,30 @@ class GitHubBroker:
                 f"❌ Failed to update issue: {result.stderr}", file=sys.stderr
             )
 
+    def comment_issue(
+        self,
+        issue_id: str,
+        body: Optional[str] = None,
+        body_file: Optional[str] = None,
+        repo: Optional[str] = None,
+    ):
+        """Adds a comment to an existing GitHub issue."""
+        clean_id = issue_id.lstrip("#")
+        args = ["issue", "comment", clean_id]
+        if body_file:
+            args += ["--body-file", body_file]
+        elif body:
+            args += ["--body", body]
+
+        result = self._run_gh(args, repo=repo)
+        if result.returncode == 0:
+            print(f"✅ Comment added to issue #{clean_id}.")
+        else:
+            print(
+                f"❌ Failed to comment on issue: {result.stderr}",
+                file=sys.stderr,
+            )
+
     def close_issue(
         self,
         issue_id: str,
@@ -543,7 +567,7 @@ def main():
     if len(sys.argv) < 2:
         print(
             "Usage: jacazul-broker "
-            "<sync|view|list|labels|milestones|open|edit|close> ..."
+            "<sync|view|list|labels|milestones|open|edit|comment|close> ..."
         )
         print("\nCommands:")
         print(
@@ -571,6 +595,7 @@ def main():
             '  edit <id> [title="..."] [body="..."] [body_file="..."] '
             '[repo="..."] [assignee="..."] [add_labels="l1"]'
         )
+        print('  comment <id> [body="..."] [body_file="..."] [repo="..."]')
         print("  close <id> [repo] [comment]   Closes an issue")
         print(
             "\n💡 Tip: For complex Markdown bodies (backticks, quotes, "
@@ -652,6 +677,26 @@ def main():
             issue_id, title, body, body_file, repo, assignee, add_labels
         )
 
+    elif cmd == "comment":
+        if not args:
+            error(
+                "Issue ID required to comment.\n"
+                "   ACTION: Use 'jacazul-broker comment #123 "
+                'body="My comment"\''
+            )
+        issue_id = args[0]
+        kwargs = parse_kwargs(args[1:])
+        body = kwargs.get("body")
+        body_file = kwargs.get("body_file")
+        repo = kwargs.get("repo")
+        if not body and not body_file:
+            error(
+                "Comment body required.\n"
+                "   ACTION: Use 'jacazul-broker comment #123 "
+                'body="My comment"\''
+            )
+        broker.comment_issue(issue_id, body, body_file, repo)
+
     elif cmd == "close":
         # Syntax: broker.py close <id> [repo] [comment]
         if len(args) < 1:
@@ -668,7 +713,7 @@ def main():
         error(
             f"Unknown command: '{cmd}'.\n"
             "   ACTION: Use one of: view, sync, list, labels, milestones, "
-            "open, edit, close."
+            "open, edit, comment, close."
         )
 
 
