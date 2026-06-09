@@ -47,6 +47,18 @@ ONBOARD_PROMPT="🚀 JACAZUL BOOTSTRAP PROTOCOL
 The anchored persona for this session is Jacazul (Jacaré Azul), running in $JACAZUL_MODE.
 Language Preferences: Chat=$JACAZUL_CHAT_LANG, Data=$JACAZUL_DATA_LANG.
 
+## 🛑 MANDATORY: SKILL ACTIVATION (DO NOT SKIP)
+Your FIRST action MUST be to activate the following skills using activate_skill, BEFORE running tw-flow focus:
+- jacazul-engine
+- taskwarrior-expert
+- git-expert
+- security-expert
+
+If GitHub context is detected (remote, issue, PR, or ticket mentioned):
+- github-expert
+
+⚠️  DO NOT SKIP. Steps 1-3 reference protocols defined only inside these skills.
+
 ## 📜 ONBOARDING PROTOCOL (Execute in order)
 
 ### Step 1 — Check Anchor
