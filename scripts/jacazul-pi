@@ -36,6 +36,9 @@ export CONTEXT_GIT_USER="${CONTEXT_GIT_USER:-$(whoami)}"
 # Add workflow scripts to PATH
 export PATH="$PATH:$PROJECT_ROOT/skills/taskwarrior-expert/scripts"
 
+# Jacazul owns Pi state by default unless the user explicitly overrides it.
+export PI_CODING_AGENT_DIR="${PI_CODING_AGENT_DIR:-$JACAZUL_HOME/agents/pi}"
+
 # -----------------------------------------------------------------------------
 # Pi Bootstrap (auto-update + pi-specific setup)
 # -----------------------------------------------------------------------------

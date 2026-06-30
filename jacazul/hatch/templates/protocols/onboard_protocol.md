@@ -1,6 +1,6 @@
 ## Onboard Protocol
 
-When user types **'onboard'**, initialize session with complete context display:
+When user types **'onboard'**, something related, or the slang equivalent (see `GLOSSARY.md`), initialize session with complete context display:
 
 **🚀 Session Initialized** 
 

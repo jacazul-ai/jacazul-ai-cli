@@ -25,13 +25,22 @@ elif [ -n "$DEBUG" ]; then
     echo "✅ Jacazul: pi is up to date."
 fi
 
+PI_CODING_AGENT_DIR="${PI_CODING_AGENT_DIR:-$JACAZUL_HOME/agents/pi}"
+LEGACY_PI_AGENT_DIR="$HOME/.pi/agent"
+
+if [ "$PI_CODING_AGENT_DIR" != "$LEGACY_PI_AGENT_DIR" ] && [ -d "$LEGACY_PI_AGENT_DIR" ] && [ ! -e "$PI_CODING_AGENT_DIR" ]; then
+    echo "🐊 Migrating Pi agent directory from $LEGACY_PI_AGENT_DIR to $PI_CODING_AGENT_DIR..."
+    mkdir -p -- "$(dirname "$PI_CODING_AGENT_DIR")"
+    mv -- "$LEGACY_PI_AGENT_DIR" "$PI_CODING_AGENT_DIR"
+fi
+
 # 2. Link Global Skills (Surgical)
-# Mirror what bootstrap/claude does: link project skills to ~/.pi/agent/skills/
-PI_SKILLS_DIR="$HOME/.pi/agent/skills"
+# Mirror what bootstrap/claude does using the active Pi agent directory.
+PI_SKILLS_DIR="$PI_CODING_AGENT_DIR/skills"
 
 if [ ! -d "$PI_SKILLS_DIR" ]; then
     [ -n "$DEBUG" ] && echo "🐊 Creating pi skills directory at $PI_SKILLS_DIR..."
-    mkdir -p "$PI_SKILLS_DIR"
+    mkdir -p -- "$PI_SKILLS_DIR"
 fi
 
 for skill_dir in "$PROJECT_ROOT/skills"/*; do
@@ -45,11 +54,11 @@ for skill_dir in "$PROJECT_ROOT/skills"/*; do
         expected_target=$(readlink -f "$skill_dir")
         if [ "$current_target" != "$expected_target" ]; then
             [ -n "$DEBUG" ] && echo "⚠️  pi skill $name points to wrong location. Re-linking..."
-            ln -sfn "$skill_dir" "$target"
+            ln -sfn -- "$skill_dir" "$target"
         fi
     else
         [ -n "$DEBUG" ] && echo "🐊 Linking global pi skill: $name"
-        ln -sfn "$skill_dir" "$target"
+        ln -sfn -- "$skill_dir" "$target"
     fi
 done
 
@@ -57,10 +66,10 @@ done
 # Project-owned Pi extensions live under extensions/pi/. Only production
 # entrypoints are linked into Pi's global auto-discovery directory; diagnostic
 # probes must be loaded explicitly so broken helpers cannot break Pi startup.
-PI_EXTENSIONS_DIR="$HOME/.pi/agent/extensions"
+PI_EXTENSIONS_DIR="$PI_CODING_AGENT_DIR/extensions"
 if [ ! -d "$PI_EXTENSIONS_DIR" ]; then
     echo "🐊 Creating pi extensions directory at $PI_EXTENSIONS_DIR..."
-    mkdir -p "$PI_EXTENSIONS_DIR"
+    mkdir -p -- "$PI_EXTENSIONS_DIR"
 fi
 
 for legacy_name in pi-jacazul-line.ts pi-viewport-probe.ts pi-viewport-probe-impl.ts; do
@@ -70,7 +79,7 @@ for legacy_name in pi-jacazul-line.ts pi-viewport-probe.ts pi-viewport-probe-imp
         case "$legacy_source" in
             "$PROJECT_ROOT/extensions"/*)
                 echo "🐊 Removing legacy pi extension link: $legacy_name"
-                rm -f "$legacy_target"
+                rm -f -- "$legacy_target"
                 ;;
         esac
     fi
@@ -86,11 +95,11 @@ for extension_file in "$PROJECT_ROOT/extensions/pi/jacazul-line.ts"; do
         expected_target=$(readlink -f "$extension_file")
         if [ "$current_target" != "$expected_target" ]; then
             echo "🐊 Re-linking pi extension: $name"
-            ln -sfn "$extension_file" "$target"
+            ln -sfn -- "$extension_file" "$target"
         fi
     else
         echo "🐊 Linking global pi extension: $name"
-        ln -sfn "$extension_file" "$target"
+        ln -sfn -- "$extension_file" "$target"
     fi
 done
 
