@@ -123,12 +123,19 @@ if [ -z "$PI_BIN" ] || [ ! -x "$PI_BIN" ]; then
     exit 1
 fi
 
+PASSTHROUGH=false
+case "${CLEAN_ARGS[0]:-}" in
+    install|remove|list|update|config)
+        PASSTHROUGH=true
+        ;;
+esac
+
 [ -n "$DEBUG" ] && echo "🐊 jacazul-pi: Starting for project [$PROJECT_ID]"
 
 # DRY RUN: Exit before execution if DRY is set
 if [ -n "$DRY" ]; then
     echo "✅ Dry run complete. Pi bootstrap verified for project [$PROJECT_ID]."
-    if [ "$RESUME" = true ]; then
+    if [ "$RESUME" = true ] || [ "$PASSTHROUGH" = true ]; then
         echo "🐊 Arguments for pi: ${CLEAN_ARGS[*]}"
     else
         echo "🐊 Arguments for pi: --append-system-prompt \"[ONBOARD_PROMPT]\" ${CLEAN_ARGS[*]}"
@@ -137,17 +144,17 @@ if [ -n "$DRY" ]; then
 fi
 
 # Execute pi (no exec — shell stays alive for exit banner)
-if [ "$RESUME" = true ]; then
+if [ "$RESUME" = true ] || [ "$PASSTHROUGH" = true ]; then
     "$PI_BIN" "${CLEAN_ARGS[@]}"
 else
     "$PI_BIN" --append-system-prompt "$ONBOARD_PROMPT" "${CLEAN_ARGS[@]}"
 fi
 
 # Exit banner: only shown if an independent session file exists
-FOCUS_FILE="$JACAZUL_HOME/.task/$PROJECT_ID/focus-$JACAZUL_SESSION_ID.json"
-if [ -f "$FOCUS_FILE" ]; then
-    echo ""
-    echo "╭─ 🐊 Jacazul Pi Session ────────────────────────────────────╮"
-    echo "│  To resume: jacazul-pi --jacazul-session $JACAZUL_SESSION_ID        │"
-    echo "╰────────────────────────────────────────────────────────────╯"
+if [ -n "${JACAZUL_SESSION_ID:-}" ]; then
+    FOCUS_FILE="$JACAZUL_HOME/.task/$PROJECT_ID/focus-$JACAZUL_SESSION_ID.json"
+    if [ -f "$FOCUS_FILE" ]; then
+        printf '\n'
+        printf '🐊 Resume: jacazul-pi --jacazul-session %s\n' "$JACAZUL_SESSION_ID"
+    fi
 fi

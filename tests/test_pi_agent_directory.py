@@ -117,6 +117,40 @@ class TestPiAgentDirectory(unittest.TestCase):
             os.path.isfile(os.path.join(target_dir, "extensions", "custom.ts"))
         )
 
+    def test_launcher_passthrough_commands_skip_onboard_prompt(self):
+        result = self._run_bash(
+            f'DRY=true "{JACAZUL_PI}" install npm:pi-web-access',
+        )
+
+        self.assertEqual(result.returncode, 0, msg=result.stderr)
+        self.assertIn(
+            "🐊 Arguments for pi: install npm:pi-web-access",
+            result.stdout,
+        )
+        self.assertNotIn("--append-system-prompt", result.stdout)
+
+    def test_launcher_prints_resume_banner_for_independent_session(self):
+        session_id = "019f16d1-97b1-7c15-bced-dde88107026d"
+        focus_dir = os.path.join(
+            self.jacazul_home,
+            ".task",
+            "jacazul-ai_jacazul-ai-cli",
+        )
+        os.makedirs(focus_dir, exist_ok=True)
+        focus_file = os.path.join(focus_dir, f"focus-{session_id}.json")
+        with open(focus_file, "w", encoding="utf-8") as fh:
+            fh.write("{}\n")
+
+        result = self._run_bash(
+            f'"{JACAZUL_PI}" --jacazul-session {session_id} --help',
+        )
+
+        self.assertEqual(result.returncode, 0, msg=result.stderr)
+        self.assertIn(
+            f"🐊 Resume: jacazul-pi --jacazul-session {session_id}",
+            result.stdout,
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
