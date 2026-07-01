@@ -33,6 +33,7 @@ type GitInfo = {
 	repoRoot: string | null;
 	commonGitDir: string | null;
 	worktreeName: string | null;
+	insideBareContainer: boolean;
 };
 
 type FocusInfo = {
@@ -207,11 +208,13 @@ function findGitInfo(cwd: string): GitInfo {
 						const commonGitDir = existsSync(commonDirPath)
 							? resolve(gitDir, readFileSync(commonDirPath, "utf8").trim())
 							: gitDir;
+						const repoRoot = dirname(commonGitDir);
 						return {
 							kind: "worktree",
-							repoRoot: dir,
+							repoRoot,
 							commonGitDir,
 							worktreeName: basename(dir),
+							insideBareContainer: dir === repoRoot,
 						};
 					}
 				}
@@ -222,16 +225,17 @@ function findGitInfo(cwd: string): GitInfo {
 						repoRoot: dir,
 						commonGitDir: gitPath,
 						worktreeName: null,
+						insideBareContainer: false,
 					};
 				}
 			} catch {
-				return { kind: "none", repoRoot: null, commonGitDir: null, worktreeName: null };
+				return { kind: "none", repoRoot: null, commonGitDir: null, worktreeName: null, insideBareContainer: false };
 			}
 		}
 
 		const parent = dirname(dir);
 		if (parent === dir) {
-			return { kind: "none", repoRoot: null, commonGitDir: null, worktreeName: null };
+			return { kind: "none", repoRoot: null, commonGitDir: null, worktreeName: null, insideBareContainer: false };
 		}
 		dir = parent;
 	}
@@ -311,14 +315,20 @@ export default function (pi: ExtensionAPI) {
 
 					let gitLine: string;
 					if (git.kind === "worktree") {
-						const repoIdentity = git.commonGitDir ? shortenHome(git.commonGitDir) : "unknown-common-git";
+						const repoIdentity = shortenHome(git.repoRoot ?? git.commonGitDir ?? cwd);
 						const worktree = git.worktreeName ?? basename(cwd);
 						const worktreeLabel = branch ? `${worktree}(${branch})` : worktree;
-						gitLine = [
-							accent(" worktree"),
-							value(repoIdentity),
-							value(worktreeLabel),
-						].join(sep());
+						gitLine = git.insideBareContainer
+							? [
+								style("⚠️ ❗  bare container", "#E5C015"),
+								style(repoIdentity, "#E5C015"),
+								style(worktreeLabel, "#E5C015"),
+							].join(sep())
+							: [
+								accent(" worktree"),
+								value(repoIdentity),
+								value(worktreeLabel),
+							].join(sep());
 					} else if (git.kind === "repo") {
 						gitLine = [
 							accent(" repo"),
