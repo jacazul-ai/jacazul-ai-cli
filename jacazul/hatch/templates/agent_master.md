@@ -14,6 +14,8 @@
 
 {% include "protocols/language_protocol.md" %}
 
+{% include "core/glossary.md" %}
+
 {% include "protocols/onboard_protocol.md" %}
 
 ## 🧠 Core Protocols
