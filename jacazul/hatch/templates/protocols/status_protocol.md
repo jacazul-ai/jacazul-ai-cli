@@ -27,7 +27,8 @@
 ```
 
 **Agent Rules:**
-- When you receive a cached signal (not full output), treat the **last full output you have in context** as current and **REPRODUCE IT IN FULL for the user** — the cache is an API optimization, not a gate on user-visible information. Never acknowledge the signal without showing the actual content.
+- When you receive a cached signal (not full output), treat the **last full output you have in context** as current for your reasoning. Do **not** reproduce cached status/ponder output by default.
+- Reproduce cached output only when the user explicitly asked for `status`, `ponder`, `onboard`, project overview, full context, roadmap, or debug trace.
 - Use `--force` only when: (a) the user explicitly asks for a refresh, or (b) you have a concrete technical reason to suspect the cache is stale. Both are rare — default is to trust the cache.
 - Cache TTLs: `status` = 30s, `ponder` = 5min.
 - Cache is **session-scoped**: each session gets its own directory (`~/.jacazul-ai/cache/tw-flow/{PROJECT_ID}/{SESSION_ID}/`). Two sessions never share cache.
@@ -40,13 +41,15 @@ Always choose the right tool based on the context:
 - **tw-flow status (The "Waze" / Hands-on):** Tactical view. Use when working on a specific plan to maintain focus on active tasks and immediate blockers.
 - **tw-flow ponder (The "Horizon View"):** Strategic view. Use during onboarding or when the user needs to assess the entire project landscape and cross-plan health.
 
-## Response Format (Technical Full-Disclosure)
+## Response Format (Terminal-First + Explicit Status Views)
 
-**RULE 1:** Never summarize or compress the technical state. ALWAYS display the full roadmap and inherited intelligence returned by the tools.
-**RULE 2:** NEVER use box-drawing characters (╔, ═, ║, ┌, ─) for tables or summaries. They collapse into unreadable single lines.
-**RULE 3:** ALWAYS use **Standard Markdown Tables** for all tabular data.
-**RULE 4:** ALWAYS wrap structural ASCII (trees, maps) in **triple-backtick code blocks**.
-**RULE 5:** When interpreting CLI output (`tw-flow ponder`, `tw-flow status`, etc.), ALWAYS include the full task name, plan name, and description — NEVER refer to tasks by UUID alone. A response like "task `6640cb28`" without its name and plan is incomplete and useless to the user.
+**RULE 1:** Answer the user's actual request first. Workflow state, handoff notes, roadmap tables, pulse summaries, cache expansions, command banners, and protocol reasoning are internal by default.
+**RULE 2:** Display the full roadmap and inherited intelligence only when the user explicitly asks for `onboard`, `status`, `ponder`, project overview, full context, handoff, roadmap, or debug trace.
+**RULE 3:** Banners, tips (ℹ), warnings (⚠️), and errors from workflow tools remain operational mandates. Read them, obey them, and use them to guide the work; do not dump them into the user response unless they are directly relevant or explicitly requested.
+**RULE 4:** NEVER use box-drawing characters (╔, ═, ║, ┌, ─) for tables or summaries. They collapse into unreadable single lines.
+**RULE 5:** Use **Standard Markdown Tables** only for status/roadmap/comparison output, not for every response.
+**RULE 6:** ALWAYS wrap structural ASCII (trees, maps) in **triple-backtick code blocks**.
+**RULE 7:** When presenting CLI output (`tw-flow ponder`, `tw-flow status`, etc.) to the user, include the full task name, plan name, and description — NEVER refer to tasks by UUID alone. A response like "task `6640cb28`" without its name and plan is incomplete and useless to the user.
 
 ### 1. Emoji Pulse Summary
 A quick snapshot of the project's vital signs. Format:

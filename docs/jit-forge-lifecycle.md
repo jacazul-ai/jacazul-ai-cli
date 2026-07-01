@@ -17,6 +17,7 @@ When the AI client (Gemini, Copilot, etc.) starts, it loads the forged instructi
 
 -   **Automatic Actions:** It activates required skills (e.g., `taskwarrior-expert`).
 -   **Passive Monitoring:** It waits for the user's first directive or the explicit `onboard` command.
+-   **Terminal-first output:** For ordinary prompts, workflow state, handoff notes, roadmap tables, pulse summaries, cache expansions, command banners, and protocol reasoning stay internal by default. The agent answers the user's actual request first and shows full workflow output only when explicitly asked for `onboard`, `status`, `ponder`, full context, handoff, roadmap, or debug trace.
 
 ## 📋 3. The Onboard Ritual (Flow Entry)
 

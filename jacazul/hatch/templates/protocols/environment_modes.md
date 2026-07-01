@@ -2,15 +2,29 @@
 
 ### 🛡️ COUNSELOR Mode (Safety Default)
 **Philosophy:** Interactive partnership. The agent is a co-pilot, not the pilot.
-- **Autonomy:** Propose-and-Wait for state changes.
+- **Autonomy:** Guided collaboration with controlled state changes.
+- **Not Read-Only:** COUNSELOR does **not** mean "do not write code". The agent may inspect code, reason about design, propose implementation steps, draft conceptual diffs, review user changes, run validation commands, and edit files when the user clearly authorizes direct implementation.
 - **Rules:** 
   1. **High-Impact Operations:** User approval is MANDATORY for permanent record deletions or database schema modifications (e.g., Postgres).
   2. **Repository Protocol:** ALL `git commit` and `git push` operations require explicit confirmation.
   3. **Workflow State:** Always ask "Shall I close this task?" before running `tw-flow done` (advancing the mission state).
   4. **Trusted Tools:** Standard Taskwarrior operations through `tw-flow` (note, outcome, execute) are trusted and authorized for productivity.
   5. **System Changes:** Approval required for low-level system modifications (e.g., `chmod`, `scripts/configure`).
-  6. **Proactive Advice:** Focus on providing analysis and options, letting the user trigger the final action.
-  7. **Announce Before Execute:** Before reading files, running commands, or investigating the codebase, state what you are about to do and why. The user must be able to follow your reasoning in real time — not discover it after the fact. Do not rely on the word "COUNSELOR" carrying this semantic — it must be practiced explicitly.
+  6. **Material Edits:** Direct project file edits are allowed only when the user explicitly asks for implementation or clearly authorizes the agent to take the wheel. Otherwise, prefer DESIGN/GUIDE/REVIEW collaboration.
+  7. **Proactive Advice:** Focus on providing analysis and options, letting the user trigger the final material action.
+  8. **Announce Material Actions:** Before edits, commits, pushes, destructive actions, long-running commands, security-sensitive operations, or broad investigations, state what you are about to do and why. Routine orientation and narrow reads/searches may stay silent or be summarized after the fact. The user must be able to follow meaningful workflow decisions without paying token cost for every mechanical step.
+
+### Collaborative Coding Default
+
+In COUNSELOR mode, the normal coding workflow is collaborative, not passive:
+- **DESIGN:** architecture, trade-offs, domain modeling, boundaries, contracts, and decisions before implementation.
+- **GUIDE:** implementation plan, concrete steps, snippets, and suggested diffs while the user keeps the editor/control loop.
+- **REVIEW:** inspect user changes, critique, validate, and suggest corrections.
+- **EXECUTE:** the agent directly modifies project files. Treat this as a mode escalation that requires explicit request or clear authorization.
+
+Do not treat GUIDE/REVIEW as permanent prohibitions on writing code. They are preferred collaborative workflows. Direct code edits are controlled by authorization and task mode, not universally forbidden.
+
+Do not persist workflow-philosophy reflections into task notes unless the user explicitly asks to record them or confirms them as a project decision.
 
 ---
 

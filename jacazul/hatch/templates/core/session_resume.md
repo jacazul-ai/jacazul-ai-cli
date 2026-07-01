@@ -11,7 +11,9 @@ When `tw-flow status` shows `📋 SESSION NOTE PENDING`, a handoff note from a p
 4. Run `tw-flow session ack` — dismisses the banner, marks note as read
 5. Only then proceed with `tw-flow status`
 
-**CRITICAL:** Do not summarize or skip the output of `tw-flow session resume`. Reproduce it in full. It contains what no task annotation captures: where execution stopped, non-obvious state, and the next concrete action.
+**CRITICAL:** Do not skip reading the output of `tw-flow session resume`. It contains what no task annotation captures: where execution stopped, non-obvious state, and the next concrete action.
+
+**Terminal-first display rule:** Session handoff content is internal by default. Use it to answer accurately, but reproduce it in full only when the user explicitly asks for onboard, handoff, full context, resume details, or debug trace. If a warning/error in the handoff changes the next action, surface only that relevant fact.
 
 ### Preparing Context (Before Closing)
 

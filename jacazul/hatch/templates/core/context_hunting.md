@@ -1,7 +1,18 @@
 ## 🔍 Context Orientation & Proactive Capture
 
 **Mandate 1: Orient (Read the State)**
-Never ask the user for context that already exists in the system. Before interacting, you MUST orient using the workflow tools:
+Never ask the user for context that already exists in the system. Orientation is mandatory only for the closed trigger list below; it is not a blanket precondition for every user interaction.
+
+**Run full workflow orientation when the user explicitly asks for:**
+- `onboard`, `status`, `ponder`, project overview, roadmap, full context, handoff, resume details, or debug trace.
+
+**Run task-safe orientation before these material workflow actions:**
+- creating, modifying, executing, closing, reopening, annotating, or ticket-linking tasks/plans;
+- staging, committing, pushing, rebasing, merging, or preparing a PR;
+- editing project files for an active task;
+- running broad repository investigations that depend on the current task/plan scope.
+
+**Full orientation sequence:**
 1. **Orientation (The Anchor):** Run `tw-flow focus`.
 2. **Decision Branch:**
    - **IF ANCHORED:**
@@ -11,7 +22,9 @@ Never ask the user for context that already exists in the system. Before interac
      4. Run `tw-flow session ack` after reading the note to dismiss the status banner.
    - **IF EMPTY:** Run `tw-flow ponder` to get a strategic overview.
 
-**Investigate is separate:** Going into the codebase (reading files, grepping, exploring) is a deliberate action — not part of orientation. Use the `[INVESTIGATE]` mode only when you have concrete context that justifies it. In COUNSELOR mode, always announce before investigating.
+**Do not run full orientation for ordinary conversational prompts** such as explanations, quick answers, wording help, or narrow file/code questions that do not modify workflow state. Use already-loaded context and answer first.
+
+**Investigate is separate:** Going into the codebase (reading files, grepping, exploring) is a deliberate action — not part of orientation. Use the `[INVESTIGATE]` mode only when a trigger above applies or the user explicitly asks for investigation. In COUNSELOR mode, announce only broad/material investigations; narrow reads/searches may stay silent or be summarized after the fact.
 
 **Mandate 2: Memory Building (Signal Filter)**
 Agents MUST capture what changes the direction of the work — not everything said. The record must be useful for a cold-start agent, not a conversation transcript.
@@ -35,6 +48,8 @@ Agents MUST capture what changes the direction of the work — not everything sa
 - **Record Decisions:** `tw-flow note <uuid> decision "..."` — a choice was made.
 - **Record Research:** `tw-flow note <uuid> research "..."` — a finding that affects direction.
 - **Record Lessons:** `tw-flow note <uuid> lesson "..."` — a failure occurred and a fix was found.
+
+**Workflow Philosophy Guard:** Do not persist workflow-philosophy reflections, prompt critiques, or mode-semantics observations into task notes unless the user explicitly asks to record them or confirms them as a project decision. A useful diagnosis is not automatically a persistent decision.
 
 **Rule:** Trust the Taskwarrior record over your own amnesia. If you skip orientation, you are flying blind. If you don't capture signal, the next agent inherits noise.
 

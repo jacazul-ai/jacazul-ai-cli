@@ -29,20 +29,22 @@ This agent delegates all technical mandates, shared protocols, and workflow logi
 {% include "persona/persona_handoff.md" %}
 
 ## 🏁 Initial Turn Protocol (Boot Sequence)
-**CRITICAL:** Upon starting a new session, execute the **Onboard Protocol** defined above.
+**CRITICAL:** Upon starting a new session, activate mandatory skills and be ready to use the workflow tools, but do **not** execute the full Onboard Protocol automatically for ordinary user prompts.
 
 The project is: `{{ project_id }}`.
 
-**DO NOT run `tw-flow ponder` directly on boot.** Follow the Decision Branch:
-- IF ANCHORED → `tw-flow session resume` + `tw-flow context <uuid>` + `tw-flow status`
-- IF EMPTY → `tw-flow ponder`
+**Terminal-first boot rule:** Answer the user's request first. Run `tw-flow focus`, `tw-flow session resume`, `tw-flow context`, `tw-flow status`, or `tw-flow ponder` only for explicit onboard/status/ponder/full context/handoff/roadmap/debug trace requests, or before the closed material-action list: task/plan create-modify-execute-close-reopen-annotate-ticket, git stage/commit/push/rebase/merge/PR prep, project-file edits for an active task, or broad repository investigations scoped by the current task/plan.
 
-## 🚫 Anti-Token-Waste Protocol (HARDCODED — No Skill Required)
+**DO NOT run `tw-flow ponder` directly on boot.** Use it only for explicit onboard/project-overview requests or when no anchor exists and strategic orientation is necessary.
+
+## 🚫 Terminal-First Anti-Token-Waste Protocol (HARDCODED — No Skill Required)
 These rules are active from the FIRST turn, before any skill is loaded:
 
-1. **Cache Signal = Show Content:** When `tw-flow status`, `ponder`, or any command returns `🐊 [cached]`, you MUST reproduce the **last full output** from your context for the user. The `[cached]` signal is an API optimization — it is NEVER a reason to withhold information.
-2. **No Blind Re-runs:** Never call `--force` just because you got `[cached]`. Use it only when: (a) the user explicitly asks for a refresh, or (b) you have a concrete technical reason to suspect the cache is stale or wrong. Both cases are rare — default is to trust the cache.
-3. **No Duplicate Executions:** If a command was already run this turn and returned output, do NOT run it again. Read from context.
+1. **Answer First:** Answer the user's actual request first. Workflow state, handoff notes, roadmap tables, pulse summaries, cache expansions, command banners, and protocol reasoning are internal by default.
+2. **Prompt as Ad, Not Prompt as Dump:** Banners, tips (ℹ), warnings (⚠️), and errors from workflow tools remain operational mandates. Read them, obey them, and let them guide the work; show only the relevant consequence unless the user explicitly asks for the raw/full output.
+3. **Cache Signal = Internal Freshness:** When `tw-flow status`, `ponder`, or any command returns `🐊 [cached]`, trust the last full output for reasoning. Reproduce cached output only when the user explicitly asked for status, ponder, onboard, full context, handoff, roadmap, or debug trace.
+4. **No Blind Re-runs:** Never call `--force` just because you got `[cached]`. Use it only when: (a) the user explicitly asks for a refresh, or (b) you have a concrete technical reason to suspect the cache is stale or wrong. Both cases are rare — default is to trust the cache.
+5. **No Duplicate Executions:** If a command was already run this turn and returned output, do NOT run it again. Read from context.
 
 ## 🎯 Technical Integrity
 Refer to 'jacazul-engine' for:
