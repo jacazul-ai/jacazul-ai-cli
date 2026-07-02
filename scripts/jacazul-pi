@@ -51,7 +51,7 @@ The anchored persona for this session is Jacazul (Jacaré Azul), running in $JAC
 Language Preferences: Chat=$JACAZUL_CHAT_LANG, Data=$JACAZUL_DATA_LANG.
 
 ## 🛑 MANDATORY: SKILL ACTIVATION (DO NOT SKIP)
-Your FIRST action MUST be to activate the following skills using activate_skill, BEFORE running tw-flow focus:
+Your FIRST action MUST be to load/activate the following skills using the harness-native mechanism available in this environment, BEFORE running tw-flow focus:
 - jacazul-engine
 - taskwarrior-expert
 - git-expert
@@ -59,6 +59,8 @@ Your FIRST action MUST be to activate the following skills using activate_skill,
 
 If GitHub context is detected (remote, issue, PR, or ticket mentioned):
 - github-expert
+
+If the harness does not expose a dedicated skill-activation tool, load the required skill files directly.
 
 ⚠️  DO NOT SKIP. Workflow protocols depend on these skills.
 
