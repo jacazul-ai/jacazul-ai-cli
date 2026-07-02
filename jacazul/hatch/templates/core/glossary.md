@@ -26,8 +26,12 @@ Phrases that mean "trace how we got here and diagnose why the current behavior h
 | `i&d` | Jacazul shorthand | introspecção e diagnóstico |
 | `I&D` | Jacazul shorthand | same trigger, loud casing |
 | `ied` | phonetic shorthand | quick typed form of I&D |
+| `i&d de task` | workflow shorthand | introspecção focada numa task/ini específica |
+| `i&d dessa task` | conversational trigger | reconstruir o histórico e o estado da task atual |
 
 **Action:** Run an introspection-and-diagnosis pass. Reconstruct the sequence of steps that led to the current behavior, then identify the likely cause.
+
+**Default output shape:** conclusion → evidence → mechanism → impact → fix.
 
 **Scope:** Inspect the relevant chain instead of guessing:
 - scripts and CLI wrappers;
@@ -36,6 +40,13 @@ Phrases that mean "trace how we got here and diagnose why the current behavior h
 - active skills and persona instructions;
 - session handoff, task notes, and history when the issue depends on previous state;
 - staged/unstaged repository state when behavior may come from an in-flight patch.
+
+**Levels:**
+- **I&D leve:** conclusion + short evidence trail.
+- **I&D completo:** scripts, bootstraps, templates, skills, session/task context, and repo state as needed.
+- **I&D forense:** compare harnesses, generated artifacts, sessions, or agents to explain divergence.
+
+**Task-focused usage:** When the user asks for an "I&D de task", center the diagnosis on the current or specified task/plan: task notes, decisions, outcomes, related ticket links, staged diff, and the execution trail that led to the current state.
 
 **Output:** Start with the conclusion, then show the evidence path: source → mechanism → impact → fix. Keep workflow dumps internal unless the user asks for raw/full context.
 
