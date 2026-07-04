@@ -61,18 +61,47 @@ fi
 # -----------------------------------------------------------------------------
 # 0.2 Install Python Package (Entry Points)
 # -----------------------------------------------------------------------------
-VENV_BIN="$HOME/.jacazul-ai/.venv/bin"
-if [ ! -d "$VENV_BIN" ]; then
+VENV_ROOT="$HOME/.jacazul-ai/.venv"
+VENV_BIN="$VENV_ROOT/bin"
+
+initialize_venv() {
     echo "🐊 Initializing Python virtual environment..."
-    ./scripts/init-venv.sh
+    if ! ./scripts/init-venv.sh; then
+        echo "❌ ERROR: Failed to initialize Python virtual environment." >&2
+        exit 1
+    fi
+}
+
+if [ ! -x "$VENV_BIN/pip" ]; then
+    if [ -e "$VENV_ROOT" ]; then
+        if [ "$VENV_ROOT" = "$HOME/.jacazul-ai/.venv" ]; then
+            echo "🐊 Removing broken Python virtual environment at $VENV_ROOT..."
+            rm -rf "$VENV_ROOT"
+        else
+            echo "❌ ERROR: Refusing to remove unexpected venv path: $VENV_ROOT" >&2
+            exit 1
+        fi
+    fi
+    initialize_venv
+fi
+
+if [ ! -x "$VENV_BIN/pip" ]; then
+    echo "❌ ERROR: Expected pip at $VENV_BIN/pip, but it was not found." >&2
+    exit 1
 fi
 
 if [ -x "/usr/bin/uv" ]; then
     echo "🐊 Installing Jacazul package via 'uv'..."
-    VIRTUAL_ENV="$HOME/.jacazul-ai/.venv" /usr/bin/uv pip install -e .
+    if ! VIRTUAL_ENV="$VENV_ROOT" /usr/bin/uv pip install -e .; then
+        echo "❌ ERROR: Failed to install Jacazul package via uv." >&2
+        exit 1
+    fi
 else
     echo "🐊 Installing Jacazul package via 'pip'..."
-    "$VENV_BIN/pip" install -e .
+    if ! "$VENV_BIN/pip" install -e .; then
+        echo "❌ ERROR: Failed to install Jacazul package via pip." >&2
+        exit 1
+    fi
 fi
 
 # -----------------------------------------------------------------------------
@@ -114,16 +143,25 @@ SANDBOX_DIR="$PROJECT_ROOT/sandbox/copilot/.copilot"
 echo "Configuring sandbox directory at: $SANDBOX_DIR"
 mkdir -p "$SANDBOX_DIR"
 
-# Apply SELinux label 'container_file_t' if chcon is available
-if command -v chcon &> /dev/null; then
-    echo "Applying SELinux context (container_file_t)..."
-    if chcon -Rt container_file_t "$SANDBOX_DIR"; then
-        echo "✅ SELinux context applied successfully."
+# Apply SELinux label 'container_file_t' only when SELinux is active.
+SELINUX_STATUS="disabled"
+if command -v getenforce &> /dev/null; then
+    SELINUX_STATUS="$(getenforce 2>/dev/null || echo disabled)"
+fi
+
+if [ "$SELINUX_STATUS" = "Enforcing" ] || [ "$SELINUX_STATUS" = "Permissive" ]; then
+    if command -v chcon &> /dev/null; then
+        echo "Applying SELinux context (container_file_t)..."
+        if chcon -Rt container_file_t "$SANDBOX_DIR"; then
+            echo "✅ SELinux context applied successfully."
+        else
+            echo "⚠️  Failed to apply SELinux context. You might need to run this manually or check permissions."
+        fi
     else
-        echo "⚠️  Failed to apply SELinux context. You might need to run this manually or check permissions."
+        echo "⚠️  SELinux is active, but 'chcon' was not found. Skipping SELinux configuration."
     fi
 else
-    echo "ℹ️  'chcon' not found. Skipping SELinux configuration (not required on non-SELinux systems)."
+    echo "ℹ️  Skipping SELinux configuration (not required when SELinux is disabled or unavailable)."
 fi
 
 # -----------------------------------------------------------------------------
