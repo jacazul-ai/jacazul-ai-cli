@@ -1,543 +1,205 @@
-# 🚦 INTERACTION MODES - Task-Level Behavior Control
+# Interaction Modes
 
-> **CRITICAL DISTINCTION:** Interaction Modes are **TASK-LEVEL**, not AGENT-LEVEL. They control how the agent behaves when executing a specific task, based on a prefix in the task description.
+Interaction modes are **task-level collaboration controls**. They describe how the
+agent should work on a specific task; they are not permanent global limits on the
+agent.
 
----
+## When you want architecture before code
 
-## Overview
+Use `[DESIGN]`.
 
-Each task can be prefixed with a **MODE** that dictates the agent's autonomy level and behavior type:
+The agent should:
+- analyze requirements and constraints;
+- surface trade-offs and risks;
+- define boundaries, contracts, and decision points;
+- propose a task breakdown or implementation direction;
+- avoid direct project file edits unless you explicitly authorize them.
 
-```
-[MODE] Task Description
-       ↑
-       └─ This prefix controls agent behavior for THIS task only
-```
+Example:
 
-**Where are modes specified?**
-- In the task **description prefix**: `[PLAN] Refactor auth`, `[EXECUTE] Fix bug`, etc.
-- Agent detects the prefix and adjusts behavior accordingly
-- Each task can have a **different mode**
-
----
-
-## Mode Definitions
-
-### 1. **[PLAN]** — Conversational Design
-**Autonomy:** Low | **Interaction:** High
-
-**Behavior:**
-- Agent acts as requirements analyst
-- Breaks down task into subtasks/steps
-- Converses with user for consensus
-- **Does NOT execute** — only plans
-- Presents plan and waits for approval before proceeding
-
-**When to use:**
-- New features where approach is unclear
-- Refactoring with multiple valid strategies
-- Complex changes requiring design discussion
-
-**Example Flow:**
-```
-User: [PLAN] Redesign user authentication system
-Agent: "Here's my breakdown: 1. JWT tokens, 2. Refresh strategy, 3. Session storage. 
-        Sound good? Any changes?"
-User: "Skip JWT, use sessions directly"
-Agent: Updates plan, presents revised breakdown
-User: "Ready to execute this part" → Agent moves to EXECUTE mode
+```text
+[DESIGN] Define collaborative coding mode semantics
 ```
 
----
+## When you want the agent to take the wheel
 
-### 2. **[EXECUTE]** — Implementation with Interaction
-**Autonomy:** High | **Interaction:** Medium
+Use `[EXECUTE]`.
 
-**Behavior:**
-- Agent **implements/writes code**
-- Makes decisions autonomously on technical details
-- **Pauses periodically for feedback**
-- Shows progress, asks for direction on blockers
-- User stays engaged, not just a reviewer
+`[EXECUTE]` is the explicit signal that the agent may directly modify project
+files/code within the task scope.
 
-**When to use:**
-- Building features from approved plan
-- Bug fixes with clear root cause
-- Implementation tasks where approach is known
+The agent should:
+- inspect the relevant files;
+- edit task-scoped files directly;
+- run relevant validation;
+- report what changed;
+- still ask before high-impact operations such as commits, pushes, permanent
+  deletions, schema changes, or task closure when COUNSELOR mode requires it.
 
-**Example Flow:**
-```
-User: [EXECUTE] Implement JWT token generation
-Agent: "Writing token service... [shows code]
-        Should I add rate limiting here?"
-User: "Yes"
-Agent: "Done. Token service ready. Next: refresh endpoint?"
-User: "Go"
-Agent: Implements, shows result
+Example:
+
+```text
+[EXECUTE] Rename UNHINGED to COMPANION across codebase
 ```
 
----
+## When you are coding in your own editor
 
-### 3. **[GUIDE]** — Zero Autonomy Direction
-**Autonomy:** Zero | **Interaction:** Instructional
+Use `[GUIDE]`.
 
-**Behavior:**
-- Agent is **READ-ONLY** during execution
-- Provides step-by-step instructions
-- User executes the steps
-- Agent guides, doesn't execute
-- No code writing, only coaching
+`[GUIDE]` is not a universal ban on code. It means the user keeps the editor and
+execution loop while the agent navigates.
 
-**When to use:**
-- Infrastructure setup (Docker, K8s)
-- DevOps tasks where user needs to run commands
-- Learning/training scenarios
-- Tasks requiring manual intervention
+GUIDE is a precision co-design loop, not a mechanical instruction stream. The
+agent should answer the concept first, validate boundaries/names/responsibilities
+with the user, and only then move toward snippets or suggested diffs.
 
-**Example Flow:**
-```
-User: [GUIDE] Deploy to production
-Agent: "Step 1: Update version in package.json (line 3)"
-User: [updates]
-Agent: "Step 2: Run 'npm run build'"
-User: [runs command]
-Agent: "Step 3: Push to main branch"
-...
-```
+The agent should:
+- answer the user's question directly before suggesting code;
+- keep each response small: one concept, one decision axis, one next micro-step;
+- explain why each step matters;
+- treat questions about naming, packages, contracts, and abstractions as design
+  input;
+- validate boundaries, names, and responsibilities before implementation;
+- provide snippets or suggested diffs when useful, keeping them minimal;
+- wait for user feedback before moving to the next risky step;
+- only edit files directly if the user explicitly escalates to EXECUTE behavior.
 
----
+GUIDE output should be incremental, not overwhelming. Avoid roadmap dumps, broad
+status summaries, multi-axis explanations, and large code blocks unless the user
+explicitly asks for them. Prefer: short answer → boundary note → next
+micro-question/action.
 
-### 4. **[INVESTIGATE]** — Exploration & Findings
-**Autonomy:** High (read-only) | **Interaction:** Analytical
+GUIDE should iterate in a small micro-loop:
+1. Answer the current conceptual question.
+2. Name the active decision axis.
+3. Ask or propose the smallest next check.
+4. Let the user question, contest, or refine.
+5. Update the model.
+6. Only then provide the next snippet, diff, or test step.
 
-**Behavior:**
-- Agent **reads codebase extensively**
-- Maps relationships, traces flows
-- Identifies patterns, risks, dependencies
-- **Does NOT modify code**
-- Returns findings, context, and recommendations
+Before introducing a new interface, package, marker, or abstraction, the agent
+should check:
+- Does this have real behavior, or is it only a marker?
+- Are there at least two real consumers?
+- Does the name describe the behavior boundary instead of the current
+  implementation accident?
 
-**When to use:**
-- Understanding complex codebase sections
-- Root cause analysis of issues
-- Risk assessment before major changes
-- Technical debt exploration
+Example:
 
-**Example Flow:**
-```
-User: [INVESTIGATE] Why is auth failing for social logins?
-Agent: [Traces code] "Found it: provider.js line 42 timeout too short.
-        Also: 3 other places with same issue. Report:"
-        [Shows findings with line references and context]
-User: "Got it. [EXECUTE] Fix all three spots"
-Agent: Switches to EXECUTE mode
+```text
+[GUIDE] Apply the bootstrap configuration change manually
 ```
 
----
+## When you want critique or validation
 
-### 5. **[TEST]** — Verification & QA
-**Autonomy:** High | **Interaction:** Results-focused
+Use `[REVIEW]` or `[PR-REVIEW]`.
 
-**Behavior:**
-- Agent runs test suites
-- Creates/updates tests as needed
-- Verifies implementation against acceptance criteria
-- Reports test results and coverage
-- Suggests fixes for failing tests
+Review modes are review-first, not permanent edit prohibitions. The agent should
+inspect, critique, validate, and recommend corrections. If the user says
+"apply the fix" or otherwise clearly authorizes edits, that is an escalation to
+EXECUTE behavior for that scoped change.
 
-**When to use:**
-- Validating completed features
-- Running full test suite after changes
-- Creating test cases for edge cases
-- Verification before merge
+Examples:
 
-**Example Flow:**
-```
-User: [TEST] Verify auth implementation
-Agent: "Running tests... 
-        ✓ 47 passing
-        ✗ 2 failing (social login timeout cases)
-        Missing: 3 edge case tests
-        
-        Want me to create those tests?"
-User: "Yes"
-Agent: Writes tests, runs again, reports
+```text
+[REVIEW] Check my authentication implementation
+[PR-REVIEW] Check if PR #142 is merge-ready
 ```
 
----
+## When you need diagnosis before a fix
 
-### 6. **[DEBUG]** — Root Cause Analysis
-**Autonomy:** High (read-only) | **Interaction:** Diagnostic
+Use `[INVESTIGATE]`, `[DEBUG]`, or `[SPIKE]`.
 
-**Behavior:**
-- Agent digs into issue deeply
-- Traces execution paths
-- Identifies root cause
-- Provides diagnosis and **fix proposal** (not implementation)
-- Recommends next steps
+| Mode | Use when | Direct edits |
+|---|---|---|
+| `[INVESTIGATE]` | You need to map code, flows, or risks. | No, read-only by default. |
+| `[DEBUG]` | You need root cause and a fix proposal. | No, propose before implementing. |
+| `[SPIKE]` | You need time-boxed research or a throwaway POC. | Only if the spike explicitly allows disposable POC changes. |
 
-**When to use:**
-- Complex bugs with unclear cause
-- Performance issues
-- Mysterious crashes/errors
-- Systems behavior investigation
+## When you need verification
 
-**Example Flow:**
-```
-User: [DEBUG] Why do requests timeout after 30 min?
-Agent: [Analyzes logs, traces connections]
-       "Root cause: Session pool exhaustion.
-        Memory leak in connection handler (line 234).
-        Fix: Add connection.close() in finally block.
-        Proposal: [shows exact code change]"
-User: "Looks right. [EXECUTE] Apply that fix"
-```
+Use `[TEST]`.
 
----
+The agent may run validation commands and, when task-scoped or requested, add or
+update tests. Test mode should report evidence: commands, pass/fail output, and
+remaining gaps.
 
-### 7. **[REVIEW]** — Code Audit & Feedback
-**Autonomy:** Zero (read-only) | **Interaction:** Critical
+## Mode matrix
 
-**Behavior:**
-- Agent reads code/implementation
-- Provides critique and suggestions
-- Identifies issues: bugs, style, performance, security
-- **Does NOT modify code**
-- Reports findings and asks for user decision on fixes
+| Mode | Collaboration style | Edit authority | Output |
+|---|---|---|---|
+| `[DESIGN]` | Architecture and decisions | No direct edits unless authorized | Design proposal / decision path |
+| `[GUIDE]` | Precision co-design; user keeps the wheel | Strict read-only by default; direct edits require escalation | Concepts, decision path, snippets |
+| `[REVIEW]` | Critique and validation | Review-first; direct edits require escalation | Findings and recommendations |
+| `[PR-REVIEW]` | Merge readiness | Review-first; direct edits require escalation | Readiness assessment |
+| `[INVESTIGATE]` | Exploration | Read-only by default | Findings and context |
+| `[DEBUG]` | Root cause analysis | Read-only by default | Diagnosis and fix proposal |
+| `[SPIKE]` | Time-boxed research | Read-only unless disposable POC is explicit | Go/no-go findings |
+| `[TEST]` | Verification | Tests/validation within task scope | Test evidence |
+| `[REFINE]` | Cleanup/polish | Direct edits authorized by task or request | Improved files |
+| `[EXECUTE]` | Agent takes the wheel | Direct project file edits authorized | Modified files |
 
-**When to use:**
-- Before committing code
-- Architecture review
-- Security audit
-- Performance optimization analysis
+## Default behavior when no mode is present
 
-**Example Flow:**
-```
-User: [REVIEW] Check my authentication implementation
-Agent: "Review results:
-        ⚠️  SECURITY: Passwords logged at line 45
-        ⚠️  PERFORMANCE: Query N+1 in userDetail loop
-        ✓ Good: Input validation solid
-        
-        Want me to suggest fixes?"
-User: "Yes"
-Agent: "1. Remove console.log at line 45
-        2. Add .lean() to Query at..."
-```
+Do **not** assume `[EXECUTE]` just because a task has no prefix.
 
----
+Default to the safest collaboration style implied by the user's wording:
 
-### 8. **[PR-REVIEW]** — Merge Readiness Check
-**Autonomy:** Zero (read-only) | **Interaction:** Summary
+| User wording | Agent behavior |
+|---|---|
+| "look at", "diagnose", "review", "what do you think" | Inspect/propose; no direct edits. |
+| "walk me through", "guide me", "I'll edit" | GUIDE behavior. |
+| "implement", "fix it", "apply the change", "corrige" | EXECUTE behavior is authorized for the scoped change. |
+| Ambiguous request | Ask before direct edits. |
 
-**Behavior:**
-- Agent reviews PR diffs, changes, commits
-- Checks: compliance, coverage, standards
-- Validates against acceptance criteria
-- Reports readiness assessment
-- Flags blockers before merge
+## COUNSELOR interaction
 
-**When to use:**
-- Pre-merge verification
-- PR readiness evaluation
-- Final checks before release
-- Compliance verification
+COUNSELOR mode is not read-only. It is guided collaboration with controlled state
+changes.
 
-**Example Flow:**
-```
-User: [PR-REVIEW] Check if PR #142 is merge-ready
-Agent: "PR #142 Review:
-        ✓ All tests passing
-        ✓ Acceptance criteria met
-        ✓ Code coverage improved (89% → 92%)
-        ⚠️  1 BREAKING: Changed API return format
-        
-        Status: ⏸️  READY WITH NOTES
-        Action: Update changelog for breaking change"
-User: "Will do. Thanks"
+In COUNSELOR:
+- reading, diagnosis, design reasoning, and validation commands are allowed;
+- direct file edits are allowed when the user clearly authorizes implementation;
+- commits, pushes, task closure, permanent deletions, schema changes, and other
+  high-impact actions still require explicit confirmation.
+
+## Persistence guard
+
+Do not persist workflow-philosophy reflections into task notes unless the user
+explicitly asks to record them or confirms them as a project decision.
+
+Good:
+
+```text
+tw-flow note <uuid> decision "COUNSELOR is collaborative, not read-only; EXECUTE means direct file edits."
 ```
 
----
+Only after user confirmation.
 
-## Mode Behavior Matrix
+Bad:
 
-| Mode | Autonomy | Writes Code | Reads Code | Interaction | Output |
-|:---|:---|:---|:---|:---|:---|
-| **PLAN** | Low | ❌ | ✓ | High | Plan/breakdown |
-| **EXECUTE** | High | ✓ | ✓ | Medium | Modified files + feedback |
-| **GUIDE** | Zero | ❌ | ✓ | Instructional | Step-by-step guide |
-| **INVESTIGATE** | High* | ❌ | ✓ | Analytical | Findings + context |
-| **TEST** | High | ✓ | ✓ | Results | Test results + coverage |
-| **DEBUG** | High* | ❌ | ✓ | Diagnostic | Root cause + proposal |
-| **REVIEW** |  | Critical | Audit report + suggestions |Zero | ❌ | 
-| **PR-REVIEW** | Zero | ❌ | ✓ | Summary | Readiness check |
-
-*High autonomy in exploration, zero autonomy in decisions
-
----
-
-## How Agent Switches Modes
-
-**Detection:**
-1. Agent reads task description
-2. Looks for `[MODE]` prefix at start
-3. If found → switch to that mode's behavior
-4. If not found → use default EXECUTE mode
-
-**Example:**
-```
-Task created: "[PLAN] Refactor payment service"
-              └─ Agent detected [PLAN] → uses PLAN mode behavior
-              
-Task created: "Fix login button styling"
-              └─ No prefix detected → defaults to EXECUTE mode
+```text
+# Recording a prompt reflection just because it was discussed.
 ```
 
-**Switching During Task:**
-- Within a task: mode doesn't change unless explicitly requested
-- Between tasks: each task has its own mode
-- User can request mode change: "Switch to [REVIEW] mode and audit this"
+## Common flows
 
----
+### Collaborative coding
 
-## Interaction Pattern by Mode
-
-### Continuous Feedback Loop (EXECUTE)
-```
-User request → Agent acts → Shows progress → Asks for input → Acts again
-                                                                    ↓
- Repeats until task complete ──────────────────┘
+```text
+[DESIGN] Define the approach
+[GUIDE] User applies the first change in their editor
+[REVIEW] Agent validates the user change
+[EXECUTE] Agent applies a scoped mechanical cleanup, if authorized
+[TEST] Agent verifies behavior
 ```
 
-### One-Way Direction (GUIDE)
+### Bug fix
+
+```text
+[DEBUG] Find root cause
+[DESIGN] Choose fix direction if trade-offs exist
+[EXECUTE] Apply scoped fix
+[TEST] Verify regression coverage
+[REVIEW] Check final diff before commit
 ```
-User ready → Agent provides step → User executes → Next step → ...
-```
-
-### Analytical Report (INVESTIGATE, DEBUG)
-```
-User question → Agent analyzes → Returns findings → User decides next
-```
-
-### Decision Checkpoint (PLAN)
-```
-Agent proposes → User reviews → Approves/changes → Then proceeds to EXECUTE
-```
-
----
-
-## Key Rules
-
-1. **One mode per task** — task description has one prefix
-2. **Mode doesn't change mid-task** unless explicitly requested
-3. **Default mode is EXECUTE** if no prefix specified
-4. **Always show mode being used** in agent responses
-5. **Interaction level varies** — some modes require constant feedback, others don't
-6. **No hybrid modes** — pick one, stay consistent
-
----
-
-## Common Mode Combinations
-
-**Feature Development Flow:**
-```
-1. [PLAN] - Design approach
-2. [EXECUTE] - Build it
-3. [TEST] - Verify
-4. [REVIEW] - Audit
-5. [EXECUTE] - Address feedback
-```
-
-**Debugging Sequence:**
-```
-1. [INVESTIGATE] - What's going on?
-2. [DEBUG] - Why is it happening?
-3. [EXECUTE] - Fix it
-4. [TEST] - Verify fix
-```
-
-**Infrastructure Deployment:**
-```
-1. [GUIDE] - Setup steps
-2. [EXECUTE] - Automated parts
-3. [GUIDE] - Manual verification
-```
-
----
-
-## Agent Checklist by Mode
-
-### PLAN Mode Checklist
-- [ ] Break down task into logical steps
-- [ ] Identify dependencies and risks
-- [ ] Propose approach, explain tradeoffs
-- [ ] Wait for user consensus before proceeding
-- [ ] Show updated plan if user changes direction
-
-### EXECUTE Mode Checklist
-- [ ] Understand the goal
-- [ ] Make necessary decisions without asking
-- [ ] Write/modify code/files
-- [ ] Show progress periodically
-- [ ] Ask for direction on blockers/decisions outside scope
-- [ ] Confirm completion with user
-
-### GUIDE Mode Checklist
-- [ ] Understand what needs to happen
-- [ ] Break into numbered steps
-- [ ] Explain each step clearly
-- [ ] Provide exact commands/actions
-- [ ] Wait for user to complete step before next
-- [ ] No code writing, only coaching
-
-### INVESTIGATE Mode Checklist
-- [ ] Understand what to explore
-- [ ] Map code structure, flows, relationships
-- [ ] Identify patterns and anomalies
-- [ ] Document findings with references (file:line)
-- [ ] Don't modify anything
-- [ ] Present clear findings and recommendations
-
-### TEST Mode Checklist
-- [ ] Understand success criteria
-- [ ] Run relevant test suites
-- [ ] Report coverage and results
-- [ ] Create missing tests if needed
-- [ ] Suggest fixes for failures
-- [ ] Confirm acceptance criteria are met
-
-### DEBUG Mode Checklist
-- [ ] Understand the problem
-- [ ] Trace execution paths
-- [ ] Identify root cause
-- [ ] Propose fix (show code)
-- [ ] Don't implement yet
-- [ ] Present diagnosis clearly
-
-### REVIEW Mode Checklist
-- [ ] Read all code/changes carefully
-- [ ] Check: bugs, style, performance, security
-- [ ] Identify issues with references
-- [ ] Don't modify code
-- [ ] Ask user approval before suggesting fixes
-- [ ] Report summary assessment
-
-### PR-REVIEW Mode Checklist
-- [ ] Read PR description and files changed
-- [ ] Check tests, coverage, CI/CD status
-- [ ] Validate against acceptance criteria
-- [ ] Identify breaking changes
-- [ ] Flag blockers for merge
-- [ ] Provide readiness summary
-
----
-
-## Examples in Practice
-
-### Example 1: [PLAN] Task
-```
-Task: [PLAN] Implement two-factor authentication
-
-Agent Response:
-"I'm in PLAN mode. Here's my breakdown:
-
-1. **Setup Phase**
-   - Add 'totp' library
-   - Create secrets table
-   - API endpoint for enabling 2FA
-
-2. **Verification Phase**
-   - QR code generation
-   - Token validation logic
-   - Backup codes system
-
-3. **Integration Phase**
-   - Update login endpoint
-   - Check 2FA during auth
-   - Session handling
-
-Tradeoff: TOTP vs SMS → TOTP is more secure but user-dependent
-         We should warn users about backup codes.
-
-Sound good? Any changes to this approach?"
-```
-
-### Example 2: [EXECUTE] Task
-```
-Task: [EXECUTE] Create user preferences endpoint
-
-Agent Response:
-"In EXECUTE mode. Creating endpoint...
-
- Created models/userPreferences.js
- Added database schema
- Created routes/preferences.js
-
-[Shows code snippet]
-
-I'm adding PUT endpoint to update preferences. 
-Should I also add a DELETE endpoint to reset to defaults?"
-
-User: "Yes"
-
-Agent: "Done. Also added validation for preference values.
-        Endpoint ready at /api/users/:id/preferences
-
-        What's next?"
-```
-
-### Example 3: [GUIDE] Task
-```
-Task: [GUIDE] Deploy to production
-
-Agent Response:
-"In GUIDE mode. Follow these steps:
-
-**Step 1:** Update VERSION in package.json
-"Currently: 1.2.0 → Change to: 1.2.1"
-
-Let me know when done."
-
-User: "Done"
-
-Agent: "**Step 2:** Run 'npm run build' and wait for success message"
-```
-
-### Example 4: [INVESTIGATE] Task
-```
-Task: [INVESTIGATE] Why is database query slow?
-
-Agent Response:
-"In INVESTIGATE mode. Analyzing...
-
-**Root Cause Found:**
-- Query in controllers/user.js:45 is missing index
-- Database scanning 50k rows instead of using index
-- N+1 problem in feedList loop (services/feed.js:120)
-
-**Impact:**
-- User page load: 2.3s → should be <300ms
-- Feed generation: timeout after 30s
-
-**Recommendations:**
-1. Add index on users(email) 
-2. Use .lean() in feedList query
-3. Add database.explain() to catch similar issues
-
-**Next:** Want me to [DEBUG] the specific fixes?"
-```
-
----
-
-## When Modes Fail
-
-If agent doesn't detect mode or behaves wrong:
-
-1. **Specify mode explicitly:** "Now in [EXECUTE] mode, implement X"
-2. **Redirect agent:** "Stop. Switch to [GUIDE] mode and walk me through this"
-3. **Clarify expectations:** "This is [REVIEW] mode, so audit the code, don't modify it"
-
-
----
-
-**Last Updated:** 2026-02-21
