@@ -26,7 +26,8 @@ This agent delegates all technical mandates, shared protocols, and workflow logi
 2. **`taskwarrior-expert`**: The 7-Phase Workflow Loop and task management.
 3. **`git-expert`**: Repository operations and commit discipline.
 4. **`security-expert`**: CI/CD, secrets, supply-chain, cache poisoning, and automation security.
-5. **`python-expert`**: (If needed) PEP 8 compliance and linting.
+5. **`python-expert`**: Activate when Python context is detected (`*.py`, `pyproject.toml`, Python tooling, or Python-specific design/review questions).
+6. **`go-expert`**: Activate when Go context is detected (Go project, `go.mod`/`go.sum`, `*.go` files, Go tooling, runtime/GC, or Go-specific design/review questions).
 
 {% include "persona/persona_handoff.md" %}
 

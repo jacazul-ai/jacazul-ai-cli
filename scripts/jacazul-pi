@@ -60,6 +60,12 @@ Your FIRST action MUST be to load/activate the following skills using the harnes
 If GitHub context is detected (remote, issue, PR, or ticket mentioned):
 - github-expert
 
+If Python context is detected (*.py, pyproject.toml, Python tooling, or Python-specific design/review questions):
+- python-expert
+
+If Go context is detected (Go project, go.mod/go.sum, *.go files, Go tooling, runtime/GC, or Go-specific design/review questions):
+- go-expert
+
 If the harness does not expose a dedicated skill-activation tool, load the required skill files directly.
 
 ⚠️  DO NOT SKIP. Workflow protocols depend on these skills.

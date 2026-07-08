@@ -73,6 +73,27 @@ GitHub Actions, cache poisoning, and automation hardening.
 
 ---
 
+### Go Expert
+**Status:** ✅ Active
+**Documentation:** [`skills/go-expert/SKILL.md`](../../skills/go-expert/SKILL.md) and [Go Expert Guide](../go-expert.md)
+
+Idiomatic Go guidance with explicit distinction between project mandates and
+conventional baselines. Uses the project-preferred `gofmt` to `goimports`
+formatting sequence and applies Line of Sight readability for control flow.
+
+**Trigger → Action**
+- When Go files change, run configured repository gates first.
+- When no stronger project gate exists, use the conventional baseline:
+  `gofmt`, `goimports`, `go test ./...`, and `go vet ./...` when supported.
+- When reviewing control flow, keep the happy path left-aligned and handle
+  failures early with guard clauses.
+- When reviewing design, challenge Java-style ceremony and prefer standard
+  library patterns.
+
+**Location:** `/project/skills/go-expert/`
+
+---
+
 ## 🔜 Future Skills
 
 Skills planned for addition:
