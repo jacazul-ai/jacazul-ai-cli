@@ -43,6 +43,29 @@ Use the conventional baseline:
 2. Run `go test ./...`.
 3. Run `go vet ./...` when the module layout supports it.
 
+### When the user writes or reviews Go doc comments
+
+Write doc comments for rendered output, not just source readability.
+`go doc` and pkg.go.dev apply formatting rules that can turn a comment into a
+clean overview or a useless wall of text depending on spacing and indentation.
+
+- Package docs must sit immediately above `package <name>` with no blank line
+  between them, or they are not recognized as package documentation.
+- Indented lines (tab or at least four spaces) render as code blocks; use them
+  for examples.
+- Lines starting with `-`, `*`, `+`, or a number render as list items;
+  continuation lines must stay aligned or the rendered list breaks.
+- Lines starting with `# ` render as headings; use them sparingly in package
+  docs.
+- Doc comments for exported identifiers should start with the identifier name
+  (`// Foo does X`) so the comment follows standard Go documentation
+  conventions.
+
+Before treating Go documentation as done, run `go doc ./<package>` or
+`go doc <package>.<Symbol>` and inspect the rendered output. Source text that
+looks fine can still render as a run-on paragraph, broken list, or malformed
+example block.
+
 ## Package design
 
 Go is package-first. Keep package names short, lowercase, and meaningful. Name
@@ -250,4 +273,4 @@ marker, inspect repository conventions before editing.
 ---
 
 **Version:** 0.1.0
-**Last Updated:** 2026-07-07
+**Last Updated:** 2026-07-08
