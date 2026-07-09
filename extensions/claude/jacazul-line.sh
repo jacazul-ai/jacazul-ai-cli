@@ -5,13 +5,20 @@
 #   1. mode + project
 #   2. focus plan + task uuid + description
 #   3. git worktree/repo/path + branch
-#   4. runtime (CLAUDE_MODEL if available, else omitted)
+#   4. runtime (model, context usage, session cost — each omitted if unavailable)
+#
+# Claude Code pipes a JSON payload on stdin for every render; see
+# https://code.claude.com/docs/en/statusline.md for the schema.
+
+INPUT_JSON="$(cat)"
 
 # --- ANSI helpers ---
 _c() { printf '\033[38;2;%s;%s;%sm%s\033[0m' "$1" "$2" "$3" "$4"; }
 lime()      { _c 152 195 121 "$1"; }  # #98C379
 lightgray() { _c 178 178 178 "$1"; }  # #B2B2B2
 gray()      { _c 140 140 140 "$1"; }  # #8C8C8C
+amber()     { _c 229 192  21 "$1"; }  # #E5C015
+red()       { _c 224 108 117 "$1"; }  # #E06C75
 sep()       { gray " | "; }
 
 NF_GIT=$'\xee\x82\xa0'  # U+E0A0 nerd font git branch icon
@@ -110,6 +117,9 @@ LINE3="$(_git_line)"
 
 # --- Line 4: Runtime ---
 _get_model() {
+    local from_payload
+    from_payload=$(printf '%s' "$INPUT_JSON" | jq -r '.model.display_name // .model.id // empty' 2>/dev/null)
+    [ -n "$from_payload" ] && { echo "$from_payload"; return; }
     [ -n "$CLAUDE_MODEL" ] && { echo "$CLAUDE_MODEL"; return; }
     local session_id="${CLAUDE_CODE_SESSION_ID}"
     [ -n "$session_id" ] || return
@@ -119,11 +129,72 @@ _get_model() {
     [ -f "$jsonl" ] || return
     grep '"model"' "$jsonl" | tail -1 | jq -r '.message.model // .model // empty' 2>/dev/null
 }
+_format_tokens() {
+    local n="$1"
+    if [ "$n" -lt 1000 ]; then
+        printf '%d' "$n"
+    elif [ "$n" -lt 10000 ]; then
+        awk -v n="$n" 'BEGIN { printf "%.1fk", n / 1000 }'
+    elif [ "$n" -lt 1000000 ]; then
+        awk -v n="$n" 'BEGIN { printf "%dk", int(n / 1000 + 0.5) }'
+    elif [ "$n" -lt 10000000 ]; then
+        awk -v n="$n" 'BEGIN { printf "%.1fM", n / 1000000 }'
+    else
+        awk -v n="$n" 'BEGIN { printf "%dM", int(n / 1000000 + 0.5) }'
+    fi
+}
+
+_ctx_part() {
+    local pct pct_int color label
+    pct=$(printf '%s' "$INPUT_JSON" | jq -r '.context_window.remaining_percentage // empty' 2>/dev/null)
+    [ -n "$pct" ] || return
+    pct_int=$(printf '%.0f' "$pct")
+    if [ "$pct_int" -le 20 ]; then
+        color=red
+    elif [ "$pct_int" -le 50 ]; then
+        color=amber
+    else
+        color=lime
+    fi
+    label="ctx ${pct_int}%"
+
+    local input_tok output_tok window_size used
+    input_tok=$(printf '%s' "$INPUT_JSON" | jq -r '.context_window.total_input_tokens // 0' 2>/dev/null)
+    output_tok=$(printf '%s' "$INPUT_JSON" | jq -r '.context_window.total_output_tokens // 0' 2>/dev/null)
+    window_size=$(printf '%s' "$INPUT_JSON" | jq -r '.context_window.context_window_size // empty' 2>/dev/null)
+    if [ -n "$window_size" ] && [ "$window_size" -gt 0 ] 2>/dev/null; then
+        used=$(( input_tok + output_tok ))
+        label="${label} $(_format_tokens "$used")/$(_format_tokens "$window_size")"
+    fi
+
+    printf '%s' "$($color "$label")"
+}
+
+_cost_part() {
+    local cost
+    cost=$(printf '%s' "$INPUT_JSON" | jq -r '.cost.total_cost_usd // empty' 2>/dev/null)
+    [ -n "$cost" ] || return
+    printf '%s' "$(lightgray "$(printf '$%.4f' "$cost")")"
+}
+
 _runtime_line() {
-    local model
+    local model parts=()
     model="$(_get_model)"
-    [ -n "$model" ] || return
-    printf '%s%s%s' "$(lime "🤖")" "$(sep)" "$(lightgray "$model")"
+    [ -n "$model" ] && parts+=("$(lime "🤖")$(sep)$(lightgray "$model")")
+
+    local ctx cost
+    ctx="$(_ctx_part)"
+    [ -n "$ctx" ] && parts+=("$ctx")
+    cost="$(_cost_part)"
+    [ -n "$cost" ] && parts+=("$cost")
+
+    [ ${#parts[@]} -eq 0 ] && return
+
+    local out="${parts[0]}" i
+    for ((i = 1; i < ${#parts[@]}; i++)); do
+        out="${out}$(sep)${parts[i]}"
+    done
+    printf '%s' "$out"
 }
 LINE4="$(_runtime_line)"
 
