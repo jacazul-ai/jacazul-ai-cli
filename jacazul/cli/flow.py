@@ -340,9 +340,11 @@ class FlowManager:
                     note_content = f.read()
                 if "injected:" not in note_content:
                     print(
-                        "📋 SESSION NOTE PENDING — run 'tw-flow session resume' "
-                        "to load previous session context before proceeding.\n"
-                        "   ACTION: Run 'tw-flow session ack' after reading to dismiss."
+                        "📋 SESSION NOTE PENDING — run 'tw-flow session "
+                        "resume' to load previous session context before "
+                        "proceeding.\n"
+                        "   ACTION: Run 'tw-flow session ack' after reading "
+                        "to dismiss."
                     )
 
         if state.focused_task_uuid:
@@ -458,6 +460,9 @@ class FlowManager:
         res = self.tw.run([uuid, "start"])
         if res.returncode == 0:
             self.success(f"Started working on task {uuid[:8]}")
+            tasks = self.tw.export([uuid])
+            project = tasks[0].get("project", "") if tasks else ""
+            self.focus.push_task(uuid, project)
             self.tw.run([uuid], capture=False)
         else:
             self.error(f"Failed to start task: {res.stderr}")
@@ -532,6 +537,13 @@ class FlowManager:
         res = self.tw.run([uuid, "done"])
         if res.returncode == 0:
             self.success(f"Task {uuid[:8]} completed!")
+
+            next_focus = self.focus.advance(uuid, self.tw)
+            if next_focus:
+                self.info(
+                    f"Focus advanced to: {next_focus['uuid'][:8]} "
+                    f"[{next_focus.get('plan')}]"
+                )
 
             # Multi-Broker Protocol Sync
             ticket = self.find_ticket(uuid)
@@ -1019,7 +1031,8 @@ class FlowManager:
         now = time.time()
 
         print(
-            "SESSION ID   PLAN                           TASK       AGE     STATUS"
+            "SESSION ID   PLAN                           TASK       "
+            "AGE     STATUS"
         )
         print("-" * 72)
         for f in session_files:
@@ -1108,7 +1121,10 @@ class FlowManager:
         self.success(f"Purged {len(orphans)} orphan session(s).")
 
     def cmd_session_ack(self):
-        """Acknowledge session handoff note — marks it as read, dismisses status banner."""
+        """Acknowledge session handoff note.
+
+        Marks it as read and dismisses the status banner.
+        """
         from datetime import datetime, timezone
 
         session_id = os.environ.get("JACAZUL_SESSION_ID", "global")
@@ -1270,8 +1286,10 @@ class FlowManager:
             else:
                 self.error(
                     f"Session note already exists: {output_path}\n"
-                    "This note was written by a previous agent and already has content. "
-                    "READ IT FIRST — it has the context you are missing right now.\n"
+                    "This note was written by a previous agent and "
+                    "already has content. "
+                    "READ IT FIRST — it has the context you are missing "
+                    "right now.\n"
                     "Use --force to overwrite."
                 )
             return
@@ -1657,7 +1675,8 @@ def main():
         else:
             flow.error(
                 "Usage: tw-flow session <subcommand>\n"
-                "   ACTION: Available subcommands: list, dump, resume, ack, purge"
+                "   ACTION: Available subcommands: list, dump, resume, "
+                "ack, purge"
             )
     elif cmd == "roadmap":
         sub = args[0] if args else None

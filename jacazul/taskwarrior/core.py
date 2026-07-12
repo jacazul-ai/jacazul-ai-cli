@@ -400,3 +400,37 @@ class FocusManager:
 
         self.save(state)
         return state.task_track[0] if state.task_track else None
+
+    def advance(
+        self, completed_uuid: str, tw: "TaskWrapper"
+    ) -> Optional[Dict[str, str]]:
+        """Advance focus past a just-completed task.
+
+        No-op if `completed_uuid` isn't the current focus. Otherwise drops
+        it from the stack and walks forward, pruning any other dead
+        (non-pending) entries it finds along the way, until it lands on a
+        real pending task or the stack runs out.
+        """
+        state = self.load()
+        if state.focused_task_uuid != completed_uuid:
+            return None
+
+        state.task_track = [
+            t for t in state.task_track if t.get("uuid") != completed_uuid
+        ]
+
+        while state.task_track:
+            top = state.task_track[0]
+            exported = tw.export([top["uuid"]])
+            status = exported[0].get("status") if exported else None
+            if status == "pending":
+                state.focused_task_uuid = top["uuid"]
+                state.focused_plan = top.get("plan")
+                self.save(state)
+                return top
+            state.task_track.pop(0)
+
+        state.focused_task_uuid = None
+        state.focused_plan = None
+        self.save(state)
+        return None
