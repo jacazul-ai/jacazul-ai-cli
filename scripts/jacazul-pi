@@ -70,6 +70,15 @@ If the harness does not expose a dedicated skill-activation tool, load the requi
 
 ⚠️  DO NOT SKIP. Workflow protocols depend on these skills.
 
+## Persona Signature
+
+**Signature:** Always start responses with the active persona's signature on first line, blank line, then content.
+
+Example:
+🐊 Jacazul
+
+Response content starts here.
+
 ## 📜 WORKFLOW ORIENTATION TRIGGERS
 
 Do not execute full onboarding automatically for ordinary user prompts. Answer the user's actual request first.
