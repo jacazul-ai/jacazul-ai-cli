@@ -36,11 +36,22 @@ export CONTEXT_SYSTEM_USER="$(whoami)"
 # Add workflow scripts to PATH
 export PATH="$PATH:$PROJECT_ROOT/skills/taskwarrior-expert/scripts"
 
-# 1. Verification: Opencode installation
-OPENCODE_BIN=$(which opencode 2>/dev/null || echo "/home/fpiraz/.opencode/bin/opencode")
+# Refresh the global Opencode agent and skills before every session.
+BOOTSTRAP_OPENCODE="$PROJECT_ROOT/scripts/bootstrap/opencode"
+if [ -x "$BOOTSTRAP_OPENCODE" ]; then
+    "$BOOTSTRAP_OPENCODE"
+else
+    echo "❌ Opencode bootstrap not found or not executable at $BOOTSTRAP_OPENCODE" >&2
+    exit 1
+fi
 
-if [ ! -x "$OPENCODE_BIN" ]; then
-    echo "❌ opencode command not found or not executable at $OPENCODE_BIN" >&2
+# 1. Verification: Opencode installation
+if OPENCODE_BIN=$(command -v opencode 2>/dev/null); then
+    :
+elif [ -x "$HOME/.opencode/bin/opencode" ]; then
+    OPENCODE_BIN="$HOME/.opencode/bin/opencode"
+else
+    echo "❌ opencode command not found. Install it or add it to PATH." >&2
     exit 1
 fi
 
@@ -50,6 +61,16 @@ fi
 if [ -n "$DRY" ]; then
     echo "✅ Dry run complete. Opencode bootstrap verified for project [$PROJECT_ID]."
     exit 0
+fi
+
+# Keep the installed OpenCode version current without interrupting the session.
+# Upgrade failures are non-blocking so a temporary network issue cannot prevent
+# the user from opening the already-installed version.
+if [ -n "$DEBUG" ]; then
+    echo "🐊 jacazul-opencode: Updating OpenCode silently before session"
+    "$OPENCODE_BIN" upgrade || true
+else
+    "$OPENCODE_BIN" upgrade >/dev/null 2>&1 || true
 fi
 
 # Parse arguments — strip --jacazul-session from args passed to opencode

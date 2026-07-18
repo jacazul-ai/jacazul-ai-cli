@@ -65,6 +65,10 @@ jacazul-opencode
 jacazul-pi
 ```
 
+`jacazul-opencode` refreshes the global Jacazul agent and skills before
+starting OpenCode. It also detects the standard `~/.opencode/bin/opencode`
+installation when that directory is not on `PATH`.
+
 For Pi footer/dashboard behavior, see [pi-jacazul-line](pi-jacazul-line.md).
 
 ---
