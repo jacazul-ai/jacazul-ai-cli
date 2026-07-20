@@ -74,7 +74,8 @@ Jacazul tools are designed for natural interaction. You provide the intent; your
 
 We follow a strict **NO BULLSHIT** policy. Your navigators won't give you fake praise or fluff. 
 - **Genuine Feedback:** If a technical approach is weak, they'll say it. 
-- **Direct Action:** High-autonomy modes (like **UNHINGED**) allow the agent to fix environmental issues without asking for permission every time.
+- **Collaborative by Default:** **COUNSELOR** is not read-only; it is guided collaboration with explicit confirmation for high-impact actions.
+- **Direct Action:** Task-level **[EXECUTE]** means the agent directly edits project files; high-autonomy environment modes like **UNHINGED** reduce friction for trusted repairs.
 - **Conversational Switching:** No special syntax. Just ask for your preferred partner by name.
 
 ---
@@ -88,6 +89,9 @@ For technical details, internal architecture, and file layouts, see [Technical A
 Jacazul extends your capabilities via specialized skills:
 - **Taskwarrior Expert**: Advanced workflow persistence.
 - **Python Expert**: PEP 8 compliance and auto-beautification.
+- **Go Expert**: Idiomatic Go, gofmt-to-goimports formatting, and Line of Sight readability.
+- **Rust Expert**: Idiomatic Rust engineering, ownership, safety, async, and quality gates.
+- **Rust Tutor**: Adaptive Rust learning with learner calibration and progressive curriculum.
 - **Git Expert**: Strict conventional commit standards.
 - **GitHub Broker**: Secure, credential-less ticket synchronization.
 
