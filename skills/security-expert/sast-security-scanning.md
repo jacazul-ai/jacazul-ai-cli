@@ -2,11 +2,10 @@
 
 Catalog for Static Application Security Testing (SAST), secure code review, and framework-specific vulnerability patterns.
 
-This catalog incorporates and generalizes Snyk/PocketCmds SAST guidance as a vendor-neutral Jacazul protocol.
-
 References:
-- https://pocketcmds.com/skills/snyk/snyk-security-sast
-- Local review copy: `/home/fpiraz/Documents/snyk-security-sast.md`
+- OWASP Top 10: https://owasp.org/Top10/
+- OWASP Cheat Sheet Series: https://cheatsheetseries.owasp.org/
+- Adapted in part from PocketCmds/Snyk SAST guidance (attribution in SKILL.md).
 
 ## Use When
 

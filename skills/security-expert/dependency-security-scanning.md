@@ -2,16 +2,11 @@
 
 Catalog for dependency vulnerability analysis, SBOM generation, license risk review, and supply-chain remediation.
 
-This catalog incorporates and generalizes Snyk/PocketCmds dependency workflows as a vendor-neutral Jacazul protocol.
-
 References:
-- https://pocketcmds.com/skills/snyk/snyk-dependency-scanning
-- https://pocketcmds.com/skills/snyk/snyk-security-dependencies
-- https://pocketcmds.com/skills/snyk/snyk-fix-workflow
-- Local review copies:
-  - `/home/fpiraz/Documents/snyk-dependency-scanning.md`
-  - `/home/fpiraz/Documents/snyk-security-dependencies.md`
-  - `/home/fpiraz/Documents/snyk-fix-workflow.md`
+- OSV vulnerability database: https://osv.dev/
+- OpenSSF Scorecard: https://securityscorecards.dev/
+- CycloneDX SBOM standard: https://cyclonedx.org/
+- Adapted in part from PocketCmds/Snyk dependency workflows (attribution in SKILL.md).
 
 ## Use When
 

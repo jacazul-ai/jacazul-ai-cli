@@ -29,15 +29,19 @@ Activate this skill whenever the work involves:
 6. **Separate weak and strong contexts:** Low-trust workflows, tools, caches, artifacts, or agents must not influence privileged release/deploy/secrets-bearing paths without validation.
 7. **Prefer safe defaults:** Fail closed, deny by default, require explicit opt-in for dangerous behavior, and preserve rollback paths for hardening changes.
 
+## Policy Boundary: Convention vs. Project Mandate
+
+Repository policy overrides generic security guidance for tooling and process choices. Before prescribing a gate, scanner, or workflow, inspect CI configuration, scripts, security docs, and already-configured tooling. Distinguish clearly: (1) project-required behavior; (2) hard security boundaries — secrets exposure, privilege escalation, untrusted code in privileged contexts — which hold regardless of local policy; (3) common practice; (4) optional recommendation. Never claim a tool or gate is mandatory unless the project configures or documents it — and never soften a hard boundary because the project is silent about it.
+
 ## Security Hardening Workflow
 
-This workflow incorporates and generalizes the structure from **Security Hardening Practices** (Stack: Snyk, PocketCmds) as a vendor-neutral Jacazul security protocol.
+Use this workflow when coordinating more than a quick check. It is vendor-neutral: use whatever approved tooling is available in the target environment.
 
-Reference:
-- Source: https://pocketcmds.com/skills/snyk/snyk-security-hardening
-- Local review copy: `/home/fpiraz/Documents/snyk-security-hardening.md`
-
-Use this workflow when coordinating more than a quick check. The workflow does **not** require Snyk specifically; use whatever approved tooling is available in the target environment.
+References:
+- OWASP Top 10: https://owasp.org/Top10/
+- GitHub Actions security hardening: https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions
+- SLSA supply-chain framework: https://slsa.dev/
+- Adapted in part from the PocketCmds/Snyk hardening workflow: https://pocketcmds.com/skills/snyk/snyk-security-hardening
 
 ### Phase 1: Baseline Assessment
 
@@ -46,7 +50,7 @@ Use this workflow when coordinating more than a quick check. The workflow does *
   - SAST/code review for injection, auth, crypto, and unsafe APIs.
   - DAST/API testing where there is an authorized running target.
   - Dependency audit for CVEs and malicious package risk.
-  - Secrets scan for committed or generated credentials.
+  - Secrets scan for committed or generated credentials (e.g. gitleaks, trufflehog).
   - IaC/container/config review where applicable.
   - SBOM generation for supply-chain inventory where applicable.
 - Record findings with evidence and affected paths.

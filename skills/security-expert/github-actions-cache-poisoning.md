@@ -2,6 +2,8 @@
 
 Catalog for reviewing GitHub Actions cache poisoning, also known as Actions Cache Blasting.
 
+Reference: https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions
+
 ## Risk Summary
 
 GitHub Actions caches are not a security boundary. A low-privilege workflow that can write a predictable cache may poison dependencies, binaries, or generated files later restored by a privileged workflow with secrets, release permissions, or cloud credentials.
@@ -73,6 +75,9 @@ Safer patterns:
 - Keep permissions minimal.
 - Use `persist-credentials: false` when checkout is necessary.
 - Avoid secrets and cache writes in workflows touching untrusted code.
+- Pin third-party actions to a full commit SHA
+  (`uses: owner/action@<full-sha> # vX`) so a moved tag cannot rotate
+  code into a privileged workflow.
 
 ## Permission Baseline
 
@@ -98,6 +103,8 @@ Inspect each workflow for:
 7. Dependency install steps that execute lifecycle scripts.
 8. Generated files persisted across jobs or workflows.
 9. Release/deploy jobs restoring dependencies or binaries from cache.
+10. Third-party actions pinned to full commit SHAs instead of mutable
+    tags.
 
 ## Finding Template
 
