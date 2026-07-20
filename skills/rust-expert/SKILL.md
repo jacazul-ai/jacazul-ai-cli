@@ -64,6 +64,36 @@ Always distinguish:
 Never claim a tool or convention is mandatory unless the repository configures
 or documents it.
 
+## 🚧 Gate Adoption (Own Projects)
+
+Policy Boundary reads existing repository policy; this section creates it.
+Adopting community defaults requires no Rust pedigree — deviating from them
+does.
+
+**Layer 1 — community floor, day zero:**
+
+- `rustfmt` with no `rustfmt.toml`: zero config is the community position;
+  creating the file is the opinionated act.
+- `cargo clippy -- -D warnings` with the default lint groups.
+- `cargo test`, `cargo doc --no-deps`, and an explicit `rust-version` (MSRV)
+  in `Cargo.toml`.
+- Contributors find exactly what they expect; custom lints the maintainer
+  cannot defend in an issue thread are friction, not quality.
+
+**Layer 2 — opinions stay off until earned.** `clippy::pedantic`,
+`clippy::nursery`, `clippy::unwrap_used` and friends are opinions. Each
+candidate runs as an experiment:
+
+1. enable as `"warn"` locally or in the `[lints]` table of `Cargo.toml`
+   (Rust 1.74+) — never straight to CI deny;
+2. observe across real coding: did it catch something that mattered, or only
+   produce noise?
+3. promote to `"deny"` in a dedicated commit recording the scar that
+   justified it — or discard it and note why.
+
+The `[lints]` table becomes a decision log: `git blame` on any lint line must
+reach a commit that explains its origin.
+
 ## 🛠 Formatting and Verification
 
 When direct implementation is authorized:
@@ -117,12 +147,24 @@ interior mutability moves some checks to runtime and must be justified.
 ```rust
 struct AccountId(String);
 struct Cents(u64);
+struct Receipt;
+
+enum ChargeError {
+    Declined,
+}
 
 fn charge(account: &AccountId, amount: Cents) -> Result<Receipt, ChargeError> {
-    // Domain types carry meaning; Result carries the failure contract.
-    todo!()
+    let _account = account;
+    if amount.0 == 0 {
+        return Err(ChargeError::Declined);
+    }
+
+    Ok(Receipt)
 }
 ```
+
+This example is intentionally complete enough to compile: domain types carry
+meaning, while `Result` carries the failure contract.
 
 ## 👁 Legible Control Flow
 
@@ -130,6 +172,7 @@ Keep the happy path visible and failures early. Rust's native tools are `?`,
 `let else`, and a final successful expression.
 
 ```rust
+// API sketch: supporting domain definitions are omitted for focus.
 fn run(path: &Path) -> Result<Summary, RunError> {
     let raw = fs::read_to_string(path)?;
 
@@ -140,6 +183,10 @@ fn run(path: &Path) -> Result<Summary, RunError> {
     Ok(execute(&config))
 }
 ```
+
+The sketch highlights the control-flow shape. A real documentation example
+should provide compilable definitions for `Summary`, `RunError`, `parse`, and
+`execute`.
 
 Review `?` chains for useful error types and boundary context rather than
 assuming that a visually short function is automatically clear.
@@ -229,6 +276,37 @@ References:
 - Rust API Guidelines: https://rust-lang.github.io/api-guidelines/
 - Clippy: https://rust-lang.github.io/rust-clippy/master/
 - Edition Guide: https://doc.rust-lang.org/edition-guide/
+
+## 🕳 Known Pitfalls (Sourced or Experienced)
+
+Every entry either cites a community source or records a dated real
+incident. Never invent experience.
+
+- **Edition 2024** (Rust 1.85): return-position `impl Trait` captures all
+  in-scope lifetimes by default (`use<..>` opts into precision); references
+  to `static mut` become hard errors; `extern` blocks and attributes like
+  `no_mangle` require `unsafe`; `if let` and tail-expression temporaries
+  drop earlier. Migrate with `cargo fix --edition` and the guide.
+  https://doc.rust-lang.org/edition-guide/rust-2024/
+- **`let else`** stabilized in Rust 1.65; MSRV decides whether it may be
+  used. https://blog.rust-lang.org/2022/11/03/Rust-1.65.0.html
+- **`async fn` in traits** stabilized in Rust 1.75, but such traits are not
+  dyn-compatible without boxing or helper crates.
+  https://blog.rust-lang.org/2023/12/21/async-fn-rpit-in-traits.html
+- **Guard across `.await`:** a `std::sync::MutexGuard` held across `.await`
+  makes the future `!Send` and invites deadlock; keep std-mutex critical
+  sections await-free, or use `tokio::sync::Mutex` when holding across
+  await points is unavoidable.
+  https://docs.rs/tokio/latest/tokio/sync/struct.Mutex.html
+- **`select!` cancellation safety:** losing branches are dropped mid-poll;
+  futures that buffer state can silently lose data.
+  https://docs.rs/tokio/latest/tokio/macro.select.html
+- **Blocking in async:** synchronous I/O or CPU-heavy work on a runtime
+  worker starves other tasks; route it through `spawn_blocking` or a
+  dedicated thread.
+
+New incidents are appended as dated entries: symptom, wrong assumption,
+correct model, source.
 
 ## 🔍 Review Output
 

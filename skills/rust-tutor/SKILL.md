@@ -55,6 +55,22 @@ baseline:
 
 The goal is Rust that the operator can reason about, not memorized syntax.
 
+## 🔗 Technical Authority Integration
+
+Before teaching any Rust-specific concept, the tutor MUST activate or consult
+`rust-expert` through the harness-native skill mechanism. The tutor must:
+
+- use `rust-expert` as the authority for language semantics, idioms, safety,
+  APIs, and quality gates;
+- ask `rust-expert` to validate examples and technical claims before presenting
+  them as guidance;
+- keep learner calibration, sequencing, comparisons, and lesson format here;
+- stop and state the limitation if `rust-expert` is unavailable instead of
+  inventing technical guidance.
+
+`rust-tutor` decides **how and when** to teach. `rust-expert` decides **what is
+technically correct**.
+
 ## 🌉 Choosing Comparisons
 
 Ask or infer the learner's memory-management bridge before choosing analogies.
@@ -123,6 +139,13 @@ unsafe, FFI, and security only when the learner's objective requires them.
 
 The technical recommendations come from `rust-expert`; this skill controls
 sequence, depth, and explanation.
+
+Learning references:
+
+- The Book: https://doc.rust-lang.org/book/
+- Rust by Example: https://doc.rust-lang.org/rust-by-example/
+- rustlings exercises: https://github.com/rust-lang/rustlings
+- The Cargo Book: https://doc.rust-lang.org/cargo/
 
 ## 🧰 Tooling-First Rule
 
