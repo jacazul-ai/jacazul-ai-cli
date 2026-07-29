@@ -34,6 +34,22 @@ class TestHatchEngine(unittest.TestCase):
         except Exception as e:
             self.fail(f"Hatching failed: {e}")
 
+    def test_hatch_includes_active_persona_authority(self):
+        hatch_prompt("gemini", persona_override="arnalbam")
+
+        skill_path = os.path.join(
+            self.script_dir,
+            "skills",
+            "jacazul-engine",
+            "SKILL.md",
+        )
+        with open(skill_path, encoding="utf-8") as skill_file:
+            rendered_skill = skill_file.read()
+
+        self.assertIn("## Active Persona Authority", rendered_skill)
+        self.assertIn("JACAZUL_PERSONA", rendered_skill)
+        self.assertIn("never blend their voices", rendered_skill)
+
 
 if __name__ == "__main__":
     unittest.main()

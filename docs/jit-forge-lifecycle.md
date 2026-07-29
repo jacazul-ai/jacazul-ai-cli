@@ -7,16 +7,18 @@ This document details the dynamic initialization process of the Jacazul AI CLI e
 Every session begins with the **Hatch** process. Unlike traditional static prompts, Jacazul instructions are forged just-in-time to reflect the current project state and selected persona.
 
 1.  **Trigger:** Running a CLI wrapper (e.g., `jacazul-gemini`) executes the `scripts/bootstrap/hatch` script.
-2.  **Engine:** The `scripts/jacazul/hatch.py` engine is invoked.
-3.  **Templating:** The engine reads categorized fragments (`.md`) from specialized subdirectories in `scripts/jacazul/templates/` (`core/`, `front/`, `persona/`, `protocols/`) and assembles them into a unified `SKILL.md` (for Gemini) or individual agent files (for Copilot/Opencode).
-4.  **Persona Anchoring:** The engine consults `persona.json` to determine which identity (Jacazul or Codana) should be marked as **ANCHORED**.
+2.  **Engine:** The `jacazul-hatch` engine under `jacazul/hatch/` is invoked.
+3.  **Templating:** The engine reads categorized fragments (`.md`) from `jacazul/hatch/templates/` (`core/`, `front/`, `persona/`, `protocols/`) and assembles a unified `SKILL.md` or client-specific agent files.
+4.  **Persona Anchoring:** The engine consults the project-scoped `persona.json` and generates the selected persona artifacts.
+5.  **Runtime Injection:** Each launcher resolves the same anchor and injects one active persona into the client. Other persona specifications may remain available for explicit handoff, but their voices must not blend.
 
 ## 🚀 2. The Initialization (Wake Up)
 
 When the AI client (Gemini, Copilot, etc.) starts, it loads the forged instructions. At this stage, the agent is in a **Standby State**:
 
--   **Automatic Actions:** It activates required skills (e.g., `taskwarrior-expert`).
+-   **Automatic Actions:** It activates required skills (e.g., `taskwarrior-expert`) and loads the anchored persona.
 -   **Passive Monitoring:** It waits for the user's first directive or the explicit `onboard` command.
+-   **Session Boundary:** `jacazul-persona <name>` changes the anchor for the next client session; an already-running client keeps its current prompt unless it performs an explicit handoff.
 -   **Terminal-first output:** For ordinary prompts, workflow state, handoff notes, roadmap tables, pulse summaries, cache expansions, command banners, and protocol reasoning stay internal by default. The agent answers the user's actual request first and shows full workflow output only when explicitly asked for `onboard`, `status`, `ponder`, full context, handoff, roadmap, or debug trace.
 
 ## 📋 3. The Onboard Ritual (Flow Entry)

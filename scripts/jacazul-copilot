@@ -28,6 +28,15 @@ else
     exit 1
 fi
 
+# Resolve the project-anchored persona for runtime injection.
+BOOTSTRAP_PERSONA="$PROJECT_ROOT/scripts/bootstrap/persona"
+if [ -f "$BOOTSTRAP_PERSONA" ]; then
+    source "$BOOTSTRAP_PERSONA"
+else
+    echo "❌ Jacazul persona bootstrap not found at $BOOTSTRAP_PERSONA" >&2
+    exit 1
+fi
+
 # Export all context variables
 export PROJECT_ID="$PROJECT_ID"
 export CONTEXT_REAL_PATH="$(pwd)"
@@ -40,7 +49,7 @@ export COPILOT_CUSTOM_INSTRUCTIONS_DIRS="$HOME/.copilot:$HOME/.github/instructio
 export PATH="$PATH:$PROJECT_ROOT/skills/taskwarrior-expert/scripts"
 
 # Base Onboard Prompt for Jacazul (Copilot)
-ONBOARD_PROMPT="The anchored persona for this session is Jacazul (Jacaré Azul). Activate 'jacazul-engine', 'taskwarrior-expert', and 'git-expert' skills immediately. Perform tactical discovery via 'tw-flow ponder'. IMPORTANT: Closely follow all banners, tips, warnings, and errors emitted by tw-flow and ponder as behavioral guidance. CACHE PROTOCOL: When any command returns [cached], REPRODUCE the last full output for the user — never hide info behind the signal. Use --force ONLY when the user asks or you have concrete reason to suspect stale cache."
+ONBOARD_PROMPT="The anchored persona for this session is ${JACAZUL_PERSONA_DISPLAY} (${JACAZUL_PERSONA_SIGNATURE}). Follow the ${JACAZUL_PERSONA} persona specification from jacazul-engine, including its signature, voice, and behavior. Activate 'jacazul-engine', 'taskwarrior-expert', and 'git-expert' skills immediately. Perform tactical discovery via 'tw-flow ponder'. IMPORTANT: Closely follow all banners, tips, warnings, and errors emitted by tw-flow and ponder as behavioral guidance. CACHE PROTOCOL: When any command returns [cached], REPRODUCE the last full output for the user — never hide info behind the signal. Use --force ONLY when the user asks or you have concrete reason to suspect stale cache."
 
 # Parse arguments for --resume and --jacazul-session
 RESUME=false
@@ -66,10 +75,10 @@ if [ "$RESUME" = true ]; then
 else
     # If no arguments provided, default to deterministic onboarding with agent
     if [ ${#CLEAN_ARGS[@]} -eq 0 ]; then
-        set -- --agent jacazul -i "$ONBOARD_PROMPT"
+        set -- --agent "$JACAZUL_PERSONA" -i "$ONBOARD_PROMPT"
     else
         USER_PROMPT="${CLEAN_ARGS[*]}"
-        set -- --agent jacazul -i "$ONBOARD_PROMPT" "$USER_PROMPT"
+        set -- --agent "$JACAZUL_PERSONA" -i "$ONBOARD_PROMPT" "$USER_PROMPT"
     fi
 fi
 

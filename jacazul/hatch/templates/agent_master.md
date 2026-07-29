@@ -8,6 +8,8 @@
 {% include "persona/persona_codama.md" %}
 {% elif persona_id == "arnalbam" %}
 {% include "persona/persona_arnalbam.md" %}
+{% elif persona_id == "atena" %}
+{% include "persona/persona_atena.md" %}
 {% end %}
 
 {% include "core/logic.md" %}

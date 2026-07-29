@@ -26,7 +26,7 @@ You don't just work with an AI; you work with a partner. Swapping is conversatio
 | **{💪} Arnalbam** | Bilingual, High-octane, Gym-themed. | Motivation, heavy refactoring, and "shredding" code. |
 | **🦉 Atena** | Pedagogical, Wise, Encouraging. | Learning new workflows and step-by-step guidance. |
 
-For detailed persona guides and switching examples, see the **[Documentation Central](docs/README.md)**.
+For detailed persona guides, persistent anchors, handoffs, and session refresh behavior, see the **[Persona Switching Guide](docs/agents/persona-switching.md)** and **[Documentation Central](docs/README.md)**.
 
 ---
 
@@ -66,7 +66,9 @@ Jacazul tools are designed for natural interaction. You provide the intent; your
 | "create a plan X with tasks A and B" | `tw-flow plan X "A" "B"` |
 | "focus on this" or "foca nessa task" | `tw-flow focus ind task <uuid>` |
 | "start task <uuid>" | `tw-flow execute <uuid>` |
-| "me traz a codana" | `jacazul-persona codana` |
+| "me traz a codana" | `jacazul-persona codama` |
+| "bring me arnalbam" | `jacazul-persona arnalbam` |
+| "chama a atena" | `jacazul-persona atena` |
 
 ---
 

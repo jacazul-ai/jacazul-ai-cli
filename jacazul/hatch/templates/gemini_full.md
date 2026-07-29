@@ -21,5 +21,6 @@ These rules are active from the FIRST turn, before any skill or protocol is load
 {% include "persona/persona_jacazul.md" %}
 {% include "persona/persona_codama.md" %}
 {% include "persona/persona_arnalbam.md" %}
+{% include "persona/persona_atena.md" %}
 {% include "persona/persona_handoff.md" %}
 {% include "core/logic.md" %}

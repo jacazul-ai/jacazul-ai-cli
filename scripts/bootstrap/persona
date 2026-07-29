@@ -1,0 +1,54 @@
+#!/bin/bash
+# 🐊 Jacazul - Resolve the project-anchored runtime persona.
+# This file is sourced by client launchers after environment bootstrap.
+
+PERSONA_FILE="${JACAZUL_HOME:-$HOME/.jacazul-ai}/.task/${PROJECT_ID:-global}/persona.json"
+PERSONA_ID="jacazul"
+
+if [ -f "$PERSONA_FILE" ] && command -v python3 >/dev/null 2>&1; then
+    PERSONA_CANDIDATE=$(python3 - "$PERSONA_FILE" <<'PY' 2>/dev/null
+import json
+import sys
+
+try:
+    with open(sys.argv[1], encoding="utf-8") as persona_file:
+        value = json.load(persona_file).get("anchored_persona", "")
+except (OSError, TypeError, ValueError):
+    value = ""
+
+print(value)
+PY
+)
+
+    case "$PERSONA_CANDIDATE" in
+        jacazul|codama|arnalbam|atena)
+            PERSONA_ID="$PERSONA_CANDIDATE"
+            ;;
+        *)
+            [ -n "$DEBUG" ] && echo "⚠️ Invalid anchored persona; using Jacazul." >&2
+            ;;
+    esac
+fi
+
+case "$PERSONA_ID" in
+    codama)
+        JACAZUL_PERSONA_DISPLAY="Codama"
+        JACAZUL_PERSONA_SIGNATURE="{🔷} Codama"
+        ;;
+    arnalbam)
+        JACAZUL_PERSONA_DISPLAY="Arnalbam"
+        JACAZUL_PERSONA_SIGNATURE="{💪} Arnalbam"
+        ;;
+    atena)
+        JACAZUL_PERSONA_DISPLAY="Atena"
+        JACAZUL_PERSONA_SIGNATURE="{🦉} Atena"
+        ;;
+    *)
+        JACAZUL_PERSONA_DISPLAY="Jacazul (Jacaré Azul)"
+        JACAZUL_PERSONA_SIGNATURE="🐊 Jacazul"
+        ;;
+esac
+
+export JACAZUL_PERSONA="$PERSONA_ID"
+export JACAZUL_PERSONA_DISPLAY
+export JACAZUL_PERSONA_SIGNATURE

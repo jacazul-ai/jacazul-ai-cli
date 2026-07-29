@@ -28,6 +28,15 @@ else
     exit 1
 fi
 
+# Resolve the project-anchored persona for runtime injection.
+BOOTSTRAP_PERSONA="$PROJECT_ROOT/scripts/bootstrap/persona"
+if [ -f "$BOOTSTRAP_PERSONA" ]; then
+    source "$BOOTSTRAP_PERSONA"
+else
+    echo "❌ Jacazul persona bootstrap not found at $BOOTSTRAP_PERSONA" >&2
+    exit 1
+fi
+
 # Export all context variables
 export PROJECT_ID="$PROJECT_ID"
 export CONTEXT_REAL_PATH="$(pwd)"

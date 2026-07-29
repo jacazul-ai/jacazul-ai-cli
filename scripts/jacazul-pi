@@ -27,6 +27,15 @@ else
     exit 1
 fi
 
+# Resolve the project-anchored persona for runtime injection.
+BOOTSTRAP_PERSONA="$PROJECT_ROOT/scripts/bootstrap/persona"
+if [ -f "$BOOTSTRAP_PERSONA" ]; then
+    source "$BOOTSTRAP_PERSONA"
+else
+    echo "❌ Jacazul persona bootstrap not found at $BOOTSTRAP_PERSONA" >&2
+    exit 1
+fi
+
 # Export all context variables
 export PROJECT_ID="$PROJECT_ID"
 export CONTEXT_REAL_PATH="$(pwd)"
@@ -47,7 +56,8 @@ source "$PROJECT_ROOT/scripts/bootstrap/pi"
 # High-Attitude Onboard Prompt for Jacazul (Pi Edition)
 ONBOARD_PROMPT="🚀 JACAZUL BOOTSTRAP PROTOCOL
 
-The anchored persona for this session is Jacazul (Jacaré Azul), running in $JACAZUL_MODE.
+The anchored persona for this session is $JACAZUL_PERSONA_DISPLAY ($JACAZUL_PERSONA_SIGNATURE), running in $JACAZUL_MODE.
+Follow the $JACAZUL_PERSONA persona specification from jacazul-engine, including its signature, voice, and behavior. Do not substitute Jacazul when another persona is anchored.
 Language Preferences: Chat=$JACAZUL_CHAT_LANG, Data=$JACAZUL_DATA_LANG.
 
 ## 🛑 MANDATORY: SKILL ACTIVATION (DO NOT SKIP)
@@ -96,7 +106,7 @@ Do not execute full onboarding automatically for ordinary user prompts. Answer t
 
 ## 📜 SESSION DIRECTIVES
 1. Follow all banners, tips (ℹ), warnings (⚠️), and errors from tw-flow/ponder as OPERATIONAL MANDATES. They guide the workflow internally; do not dump them into the response unless directly relevant or explicitly requested.
-2. Respond in persona (signature: 🐊 Jacazul). Be sharp, direct, street-smart, and answer the user's actual request before workflow exposition.
+2. Respond in the active persona (signature: $JACAZUL_PERSONA_SIGNATURE). Preserve its voice while answering the user's actual request before workflow exposition.
 3. Keep the data in English (en) and chat in your anchored language ($JACAZUL_CHAT_LANG).
 4. NEVER invoke raw 'task'. Use ONLY 'tw-flow' or 'taskp'.
 5. NEVER use 'git add .' or 'git add -A'. Stage only task-relevant files.

@@ -28,6 +28,15 @@ else
     exit 1
 fi
 
+# Resolve the project-anchored persona for runtime injection.
+BOOTSTRAP_PERSONA="$PROJECT_ROOT/scripts/bootstrap/persona"
+if [ -f "$BOOTSTRAP_PERSONA" ]; then
+    source "$BOOTSTRAP_PERSONA"
+else
+    echo "❌ Jacazul persona bootstrap not found at $BOOTSTRAP_PERSONA" >&2
+    exit 1
+fi
+
 # Export context for TUI
 export PROJECT_ID="$PROJECT_ID"
 export CONTEXT_REAL_PATH="$(pwd)"
@@ -88,10 +97,10 @@ for arg in "$@"; do
     fi
 done
 
-# Prepare arguments: ensure --agent jacazul is present if not specified
+# Prepare arguments: ensure the anchored persona is present if not specified
 ARGS=("${CLEAN_ARGS[@]}")
 if [[ "${CLEAN_ARGS[*]}" != *"--agent"* ]]; then
-    ARGS=("--agent" "jacazul" "${ARGS[@]}")
+    ARGS=("--agent" "$JACAZUL_PERSONA" "${ARGS[@]}")
 fi
 
 # Execute opencode directly to preserve TUI interactivity.

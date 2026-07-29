@@ -4,6 +4,14 @@
 
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 OPENCODE_GLOBAL_DIR="$HOME/.config/opencode"
+
+BOOTSTRAP_PERSONA="$PROJECT_ROOT/scripts/bootstrap/persona"
+if [ -f "$BOOTSTRAP_PERSONA" ]; then
+    source "$BOOTSTRAP_PERSONA"
+else
+    echo "❌ Jacazul persona bootstrap not found at $BOOTSTRAP_PERSONA" >&2
+    return 1 2>/dev/null || exit 1
+fi
 TEMPLATES_DIR="$PROJECT_ROOT/templates"
 
 # 1. Ensure global directories exist
@@ -20,14 +28,17 @@ done
 # Wipe existing agent links to ensure a fresh, consistent state
 find "$OPENCODE_GLOBAL_DIR/agents" -maxdepth 1 -type l -delete
 
-AGENT_SRC="$PROJECT_ROOT/agents/jacazul-opencode.md"
-AGENT_TARGET="$OPENCODE_GLOBAL_DIR/agents/jacazul.md"
+AGENT_SRC="$PROJECT_ROOT/agents/${JACAZUL_PERSONA}-opencode.md"
+AGENT_TARGET="$OPENCODE_GLOBAL_DIR/agents/${JACAZUL_PERSONA}.md"
 
 if [ -e "$AGENT_SRC" ]; then
     if [ -n "$DEBUG" ]; then
-        echo "🐊 Linking global Opencode agent: jacazul -> $AGENT_SRC"
+        echo "🐊 Linking global Opencode agent: $JACAZUL_PERSONA -> $AGENT_SRC"
     fi
     ln -sf "$AGENT_SRC" "$AGENT_TARGET"
+else
+    echo "❌ Anchored persona agent not found at $AGENT_SRC" >&2
+    return 1 2>/dev/null || exit 1
 fi
 
 # 3. Link Global Skills (Surgical & Clean)
