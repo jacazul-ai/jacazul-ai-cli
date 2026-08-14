@@ -125,6 +125,37 @@ collections, functions, modules, `Option`, and `Result` at the pace justified
 by the calibration. Connect each item to the learner's known languages without
 pretending the semantics are identical.
 
+### Foundations Review Sequence
+
+When a learner's review exposes confusion in Rust's daily reading primitives,
+teach these as separate lessons in this order:
+
+1. bindings, immutability, `mut`, shadowing, and `const`;
+2. type inference, `Vec<T>`, and how static constraints determine `T`;
+3. generics, `parse`, `collect`, and explicit generic arguments (`::<T>`,
+   informally called turbofish);
+4. macros versus functions, macro expansion, and compile-time versus runtime;
+5. `enum` versus `Box<dyn Any>` as an optional type-erasure extension.
+
+Keep these guardrails explicit:
+
+- `let` without `mut` creates an immutable binding; it does not create a
+  constant.
+- Shadowing creates a new statically typed binding and may change its type; it
+  is not runtime re-typing.
+- `Vec::new()` starts as `Vec<T>` and inference resolves `T` from compatible
+  static uses across the relevant code, not from a runtime value or merely the
+  first use.
+- A macro expands during compilation; generated code runs at runtime. Do not
+  describe `macro_rules!` as executing values during compilation, and explain
+  procedural macros as compiler-run programs that generate code.
+- Prefer `enum` for known domain variants. Present `Any` as advanced
+  type-erasure with downcasting and indirection, not as a general modeling
+  default.
+
+Use one Rust-specific concept per lesson, a complete runnable example, and a
+short prediction or verification before introducing the next concept.
+
 ### Level 3: Ownership and Idiomatic Design
 
 Build the mental model for moves, `Copy`, `Clone`, borrowing, references,
