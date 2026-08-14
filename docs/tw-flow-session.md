@@ -166,25 +166,28 @@ Appends "injected: <timestamp>" to the file immediately
         ↓
 Agent initializes — runs tw-flow focus (onboard protocol)
         ↓
-tw-flow detects injected: flag → archives to session-notes/
+tw-flow keeps the note pending until explicit session ack
+        ↓
+tw-flow session ack appends "acknowledged: <timestamp>"
 ```
 
-The file is **never deleted immediately** — the `injected:` flag is
-written first. If power is lost before archival, the flag prevents
-double injection on the next startup. The content is preserved in the
-file until the first `tw-flow` command confirms the handshake.
+The `injected:` marker records delivery only; it does not prove that the
+agent read or understood the handoff. If the process crashes after injection,
+`tw-flow session resume` can replay the note until explicit acknowledgement.
+The `acknowledged:` marker is the durable confirmation state.
 
-The first `tw-flow focus` call in the onboard protocol acts as the
-implicit handshake — no explicit `tw-flow session ack` command needed.
-The existing onboard protocol guarantees this call happens.
+The first `tw-flow focus` call in the onboard protocol reports the note as
+pending. The agent must read it and run `tw-flow session ack` after the
+handoff has been surfaced and understood.
 
 ---
 
 ## tw-flow session resume
 
 Prints the handoff note left by the previous session. It remains silent when
-no note exists. When bootstrap already injected the note, it reports that the
-session note is acknowledged without replaying its contents.
+no note exists. An injected but unacknowledged note is replayed for recovery;
+a note with an `acknowledged:` marker reports its state without replaying
+contents.
 
 ```bash
 tw-flow session resume

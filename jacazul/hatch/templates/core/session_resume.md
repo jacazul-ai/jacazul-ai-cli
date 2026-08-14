@@ -13,6 +13,10 @@ When `tw-flow status` shows `📋 SESSION NOTE PENDING`, a handoff note from a p
 
 **CRITICAL:** Do not skip reading the output of `tw-flow session resume`. It contains what no task annotation captures: where execution stopped, non-obvious state, and the next concrete action.
 
+The `injected:` marker records bootstrap delivery only. The `acknowledged:`
+marker is written only after the agent reads the handoff and runs `tw-flow
+session ack`.
+
 **Terminal-first display rule:** Session handoff content is internal during ordinary prompts. For explicit onboard, handoff, full context, resume details, status, or debug trace requests, apply the visibility contract below and report the relevant operational context.
 
 ## HANDOFF VISIBILITY CONTRACT

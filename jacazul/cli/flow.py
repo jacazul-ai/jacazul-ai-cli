@@ -338,7 +338,7 @@ class FlowManager:
             if os.path.exists(note_path):
                 with open(note_path) as f:
                     note_content = f.read()
-                if "injected:" not in note_content:
+                if "acknowledged:" not in note_content:
                     print(
                         "📋 SESSION NOTE PENDING — run 'tw-flow session "
                         "resume' to load previous session context before "
@@ -1137,12 +1137,12 @@ class FlowManager:
             return
         with open(note_path) as f:
             content = f.read()
-        if "injected:" in content:
+        if "acknowledged:" in content:
             self.info("Session note already acknowledged.")
             return
         ts = datetime.now(timezone.utc).isoformat()
         with open(note_path, "a") as f:
-            f.write(f"\ninjected: {ts}\n")
+            f.write(f"\nacknowledged: {ts}\n")
         self.success("Session note acknowledged. Context loaded.")
 
     def cmd_session_resume(self):
@@ -1156,7 +1156,7 @@ class FlowManager:
             return
         with open(note_path) as f:
             content = f.read()
-        if "injected:" in content:
+        if "acknowledged:" in content:
             self.info(
                 f"Session note already acknowledged: {note_path}. "
                 "Context will not be replayed."
@@ -1287,13 +1287,29 @@ class FlowManager:
                     "fill it in, don't regenerate.\n"
                     "Use --force to overwrite."
                 )
+            elif "acknowledged:" in existing:
+                self.error(
+                    f"Session note already exists: {output_path}\n"
+                    "This note is already acknowledged by the "
+                    "acknowledged: marker and contains previous session "
+                    "context. READ IT FIRST — it has the context you are "
+                    "missing right now.\n"
+                    "Use --force to overwrite."
+                )
+            elif "injected:" in existing:
+                self.error(
+                    f"Session note already exists: {output_path}\n"
+                    "This note was injected but is not acknowledged; the "
+                    "injected: marker records delivery only. READ IT FIRST "
+                    "and acknowledge it before replacing it.\n"
+                    "Use --force to overwrite."
+                )
             else:
                 self.error(
                     f"Session note already exists: {output_path}\n"
-                    "This note is already acknowledged by the injected: "
-                    "marker and contains previous session context. "
-                    "READ IT FIRST — it has the context you are missing "
-                    "right now.\n"
+                    "This note was written by a previous agent and "
+                    "already has content. READ IT FIRST — it has the "
+                    "context you are missing right now.\n"
                     "Use --force to overwrite."
                 )
             return
