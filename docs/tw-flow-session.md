@@ -182,13 +182,31 @@ The existing onboard protocol guarantees this call happens.
 
 ## tw-flow session resume
 
-Prints the handoff note left by the previous session. Silent if no note exists or if it was already injected by bootstrap.
+Prints the handoff note left by the previous session. It remains silent when
+no note exists. When bootstrap already injected the note, it reports that the
+session note is acknowledged without replaying its contents.
 
 ```bash
 tw-flow session resume
 ```
 
-Called as **step 1 of the onboard protocol when anchored**. The agent cannot miss what is already printed on screen.
+Called as **step 1 of the onboard protocol when anchored**. The agent cannot miss what is already printed on screen, and an acknowledged note remains visible as a diagnostic signal.
+
+### Handoff visibility during onboard
+
+When an explicit onboard, handoff, resume, or status request finds relevant
+session context, the agent must report the operational facts in the next
+response, including:
+
+- focused plan and task;
+- relevant decisions, research, and outcomes;
+- repository and worktree state;
+- blockers, risks, and concrete next actions.
+
+A confirmation such as `context loaded` is not sufficient. Secrets,
+credentials, host details, and private lab evidence remain redacted. Casual
+greetings do not trigger this reporting contract; a follow-up asking whether
+the handoff was read does.
 
 ---
 

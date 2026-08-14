@@ -50,6 +50,22 @@ class TestHatchEngine(unittest.TestCase):
         self.assertIn("JACAZUL_PERSONA", rendered_skill)
         self.assertIn("never blend their voices", rendered_skill)
 
+    def test_hatch_includes_handoff_visibility_contract(self):
+        hatch_prompt("gemini", persona_override="arnalbam")
+
+        skill_path = os.path.join(
+            self.script_dir,
+            "skills",
+            "jacazul-engine",
+            "SKILL.md",
+        )
+        with open(skill_path, encoding="utf-8") as skill_file:
+            rendered_skill = skill_file.read()
+
+        self.assertIn("## HANDOFF VISIBILITY CONTRACT", rendered_skill)
+        self.assertIn("focused plan and task", rendered_skill)
+        self.assertIn("Never say only `context loaded`", rendered_skill)
+
 
 if __name__ == "__main__":
     unittest.main()

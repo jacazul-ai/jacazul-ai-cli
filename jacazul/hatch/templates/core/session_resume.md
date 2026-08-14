@@ -13,7 +13,30 @@ When `tw-flow status` shows `📋 SESSION NOTE PENDING`, a handoff note from a p
 
 **CRITICAL:** Do not skip reading the output of `tw-flow session resume`. It contains what no task annotation captures: where execution stopped, non-obvious state, and the next concrete action.
 
-**Terminal-first display rule:** Session handoff content is internal by default. Use it to answer accurately, but reproduce it in full only when the user explicitly asks for onboard, handoff, full context, resume details, or debug trace. If a warning/error in the handoff changes the next action, surface only that relevant fact.
+**Terminal-first display rule:** Session handoff content is internal during ordinary prompts. For explicit onboard, handoff, full context, resume details, status, or debug trace requests, apply the visibility contract below and report the relevant operational context.
+
+## HANDOFF VISIBILITY CONTRACT
+
+When a session handoff exists, whether `tw-flow session resume` prints it or
+bootstrap has already marked it with `injected:`, the agent MUST:
+
+1. Read it completely before taking any other action.
+2. Treat it as mandatory operational context.
+3. In the next user-facing response for an explicit onboarding request,
+   summarize:
+   - focused plan and task;
+   - relevant decisions, research, and outcomes;
+   - current repository and work state;
+   - blockers and risks;
+   - concrete next actions.
+4. Never say only `context loaded`, `handoff acknowledged`, or an equivalent
+   confirmation without the operational summary.
+5. When the user asks about onboarding, handoff, resume, or status, show all
+   relevant operational context, not merely a confirmation.
+6. Keep secrets, credentials, host details, and private lab evidence hidden.
+
+A casual greeting does not trigger onboarding. Any follow-up asking whether
+onboarding or handoff was read immediately triggers this visibility contract.
 
 ### Preparing Context (Before Closing)
 

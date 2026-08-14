@@ -1146,7 +1146,7 @@ class FlowManager:
         self.success("Session note acknowledged. Context loaded.")
 
     def cmd_session_resume(self):
-        """Print session handoff note if it exists. Silent if not."""
+        """Print a pending handoff or report an acknowledged note."""
         session_id = os.environ.get("JACAZUL_SESSION_ID", "global")
         note_path = os.path.join(
             self.focus.data_dir,
@@ -1157,6 +1157,10 @@ class FlowManager:
         with open(note_path) as f:
             content = f.read()
         if "injected:" in content:
+            self.info(
+                f"Session note already acknowledged: {note_path}. "
+                "Context will not be replayed."
+            )
             return
         print(f"📋 SESSION HANDOFF — {note_path}")
         print("")
@@ -1286,8 +1290,8 @@ class FlowManager:
             else:
                 self.error(
                     f"Session note already exists: {output_path}\n"
-                    "This note was written by a previous agent and "
-                    "already has content. "
+                    "This note is already acknowledged by the injected: "
+                    "marker and contains previous session context. "
                     "READ IT FIRST — it has the context you are missing "
                     "right now.\n"
                     "Use --force to overwrite."
