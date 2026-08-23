@@ -7,10 +7,10 @@ Modes define the **Agent's Behavior** for a given task. Explicitly setting a mod
 | **`[DESIGN]`** | Architecture, requirements, trade-offs, boundaries, contracts, and task breakdown. | No direct edits unless explicitly authorized. | Design proposal / decision path. |
 | **`[INVESTIGATE]`** | Codebase diving and de-risking. | Read-only by default. | Findings & Context. |
 | **`[GUIDE]`** | Precision co-design for users coding in their own editor. Answers concepts first, validates boundaries/names/responsibilities, then provides steps, snippets, and suggested diffs. | User keeps the wheel; strict read-only by default; direct edits require explicit escalation. | Conceptual answer + decision path + suggested diffs. |
-| **`[EXECUTE]`** | Builder. The agent directly modifies project files/code. | Direct edits authorized by the task or explicit user request. | Modified files. |
+| **`[EXECUTE]`** | Builder. The agent directly modifies project files/code. | Direct edits, tests, and required docs authorized by an active anchored task or explicit user request. | Modified files. |
 | **`[TEST]`** | Verification and QA. | May run tests and add/update tests when requested or task-scoped. | Test results. |
 | **`[DEBUG]`** | Root cause analysis. | Read-only by default; proposes fixes before implementation. | Diagnosis & fix proposal. |
-| **`[REFINE]`** | Polish, cleanup, or incremental improvement. | Direct edits authorized by the task or explicit user request. | Improved files. |
+| **`[REFINE]`** | Polish, cleanup, or incremental improvement. | Direct edits, tests, and required docs authorized by an active anchored task or explicit user request. | Improved files. |
 | **`[REVIEW]`** | Code audit and feedback. | Review-first; direct edits require explicit escalation. | Suggestions/Critique. |
 | **`[PR-REVIEW]`** | Prepare/check PR or diffs. | Review-first; direct edits require explicit escalation. | Summary & readiness check. |
 | **`[SPIKE]`** | Time-boxed research or proof-of-concept. | Read-only unless the spike explicitly authorizes a disposable POC. | Findings & Go/No-Go. |

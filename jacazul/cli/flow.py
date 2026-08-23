@@ -86,6 +86,13 @@ class FlowManager:
                     return t["uuid"]
         return input_val
 
+    def invalidate_task_cache(self, input_id: str):
+        """Invalidate derived views for a task mutation."""
+        uuid = self.resolve_uuid(input_id)
+        tasks = self.tw.export([uuid])
+        plan = tasks[0].get("project") if tasks else None
+        self.cache.bust(ini_name=plan)
+
     def verify_not_completed(self, uuid: str):
         tasks = self.tw.export([uuid])
         if tasks and tasks[0].get("status") == "completed":
@@ -664,6 +671,19 @@ class FlowManager:
         self.tw.run([uuid, "modify", f"externalid:{ticket}"])
         self.success(f"Task {uuid[:8]} linked to ticket: {ticket}")
 
+    def commit_footer_type(self, ticket: str, is_fix: bool = False) -> str:
+        """Select Fixes only when no pending task remains for a ticket."""
+        if is_fix:
+            return "Fixes"
+
+        pending_tasks = self.tw.export(["status:pending"])
+        has_pending = any(
+            task.get("status") == "pending"
+            and task.get("externalid") == ticket
+            for task in pending_tasks
+        )
+        return "Refs" if has_pending else "Fixes"
+
     def cmd_commit(self, is_fix: bool = False):
         state = self.focus.load()
         uuid = state.focused_task_uuid
@@ -705,7 +725,7 @@ class FlowManager:
 
         if mode != "UNHINGED":
             if ticket:
-                ref_type = "Fixes" if is_fix else "Refs"
+                ref_type = self.commit_footer_type(ticket, is_fix)
                 print(f"\n{ref_type}: {ticket}")
             print("═══════════════════════════════")
             print("\n🛡️  SAFETY GATE: Manual Confirmation Required.")
@@ -714,15 +734,22 @@ class FlowManager:
                 "   The 'git commit' command must not be executed "
                 "automatically."
             )
+            print(
+                "   MESSAGE: Use 'git commit -F <file>' for bodies; "
+                "reserve -m for title-only commits."
+            )
             return
 
         print("\n[Body: explain what and why...]")
 
         if ticket:
-            ref_type = "Fixes" if is_fix else "Refs"
+            ref_type = self.commit_footer_type(ticket, is_fix)
             print(f"\n{ref_type}: {ticket}")
         print("═══════════════════════════════")
-        self.info("Copy the draft above and use 'git commit -m \"...\"'")
+        self.info(
+            "Write the body to a message file and use "
+            "'git commit -F <file>'; do not pass body text through -m."
+        )
 
     def cmd_context(self, input_id: str):
         uuid = self.resolve_uuid(input_id)
@@ -1595,10 +1622,13 @@ def main():
         flow.cache.bust(ini_name=_ini)
     elif cmd == "handoff":
         flow.cmd_handoff(args[0], " ".join(args[1:]))
+        flow.invalidate_task_cache(args[0])
     elif cmd == "reopen":
         flow.cmd_reopen(args[0])
+        flow.invalidate_task_cache(args[0])
     elif cmd == "amend":
         flow.cmd_amend(args[0], args[1:])
+        flow.invalidate_task_cache(args[0])
     elif cmd == "notes":
         flow.cmd_notes(args[0])
     elif cmd == "note":
@@ -1608,6 +1638,7 @@ def main():
         flow.cache.bust(ini_name=_ini)
     elif cmd == "ticket":
         flow.cmd_ticket(args[0], args[1])
+        flow.invalidate_task_cache(args[0])
     elif cmd == "commit":
         flow.cmd_commit(is_fix="--fix" in args)
     elif cmd == "context":
@@ -1665,12 +1696,16 @@ def main():
         flow.cmd_overdue()
     elif cmd == "urgent":
         flow.cmd_urgent(args[0], args[1] if len(args) > 1 else "15.0")
+        flow.invalidate_task_cache(args[0])
     elif cmd == "block":
         flow.cmd_block(args[0], args[1])
+        flow.invalidate_task_cache(args[0])
     elif cmd == "unblock":
         flow.cmd_unblock(args[0], args[1])
+        flow.invalidate_task_cache(args[0])
     elif cmd == "wait":
         flow.cmd_wait(args[0], args[1])
+        flow.invalidate_task_cache(args[0])
     elif cmd == "discard":
         flow.cmd_discard(args[0])
         flow.cache.bust()
@@ -1912,6 +1947,7 @@ def main():
                     flow.focus.load().to_dict(), option=orjson.OPT_INDENT_2
                 ).decode()
             )
+        flow.cache.bust(focus_change=True)
     elif cmd == "cache":
         sub = args[0] if args else "info"
         if sub == "clear":

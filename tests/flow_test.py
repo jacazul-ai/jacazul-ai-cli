@@ -135,6 +135,7 @@ class FlowTest(JacazulTest):
         out, _, _ = self.run_cmd(f"{self.tw_flow} commit")
         self.assertIn("══ DRAFT CONVENTIONAL COMMIT ══", out)
         self.assertIn("Refs: #JAC-789", out)
+        self.assertIn("git commit -F <file>", out)
 
         # Test fix flag
         out, _, _ = self.run_cmd(f"{self.tw_flow} commit --fix")

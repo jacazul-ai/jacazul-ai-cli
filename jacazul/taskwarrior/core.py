@@ -60,17 +60,15 @@ class CacheManager:
             )
 
     def bust(self, ini_name: Optional[str] = None, focus_change: bool = False):
+        """Invalidate every derived workflow view after state changes."""
+        del ini_name, focus_change
         if not os.path.exists(self.cache_dir):
             return
-        for key in ["status", "ponder", "plans", "plans_all", "plans_closed"]:
-            p = self._path(key)
-            if os.path.exists(p):
-                os.remove(p)
-        if ini_name and not focus_change:
-            for key in [f"status_{ini_name}", f"ponder_{ini_name}"]:
-                p = self._path(key)
-                if os.path.exists(p):
-                    os.remove(p)
+
+        cache_prefixes = ("status", "ponder", "plans")
+        for filename in os.listdir(self.cache_dir):
+            if filename.startswith(cache_prefixes) and filename.endswith(".json"):
+                os.remove(os.path.join(self.cache_dir, filename))
 
     def clear(self, scope: Optional[str] = None):
         if not os.path.exists(self.cache_dir):
@@ -404,32 +402,46 @@ class FocusManager:
     def advance(
         self, completed_uuid: str, tw: "TaskWrapper"
     ) -> Optional[Dict[str, str]]:
-        """Advance focus past a just-completed task.
+        """Advance focus within the completed task's plan only.
 
         No-op if `completed_uuid` isn't the current focus. Otherwise drops
-        it from the stack and walks forward, pruning any other dead
-        (non-pending) entries it finds along the way, until it lands on a
-        real pending task or the stack runs out.
+        it from the stack and inspects pending entries from the same plan.
+        Entries from another plan are discarded so completion can never
+        silently move the anchor into a different plan.
         """
         state = self.load()
         if state.focused_task_uuid != completed_uuid:
             return None
 
-        state.task_track = [
-            t for t in state.task_track if t.get("uuid") != completed_uuid
+        completed_entry = next(
+            (
+                entry
+                for entry in state.task_track
+                if entry.get("uuid") == completed_uuid
+            ),
+            None,
+        )
+        plan = state.focused_plan or (
+            completed_entry.get("plan") if completed_entry else None
+        )
+        same_plan = [
+            entry
+            for entry in state.task_track
+            if entry.get("uuid") != completed_uuid
+            and entry.get("plan") == plan
         ]
 
-        while state.task_track:
-            top = state.task_track[0]
-            exported = tw.export([top["uuid"]])
+        for entry in same_plan:
+            exported = tw.export([entry["uuid"]])
             status = exported[0].get("status") if exported else None
             if status == "pending":
-                state.focused_task_uuid = top["uuid"]
-                state.focused_plan = top.get("plan")
+                state.task_track = same_plan
+                state.focused_task_uuid = entry["uuid"]
+                state.focused_plan = plan
                 self.save(state)
-                return top
-            state.task_track.pop(0)
+                return entry
 
+        state.task_track = []
         state.focused_task_uuid = None
         state.focused_plan = None
         self.save(state)

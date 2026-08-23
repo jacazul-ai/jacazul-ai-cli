@@ -26,12 +26,15 @@ Example:
 Use `[EXECUTE]`.
 
 `[EXECUTE]` is the explicit signal that the agent may directly modify project
-files/code within the task scope.
+files/code within the task scope. When the task is anchored, the mode also
+authorizes the agent to run tests and update documentation required by the
+change.
 
 The agent should:
 - inspect the relevant files;
 - edit task-scoped files directly;
 - run relevant validation;
+- update docs when behavior or documented findings change;
 - report what changed;
 - still ask before high-impact operations such as commits, pushes, permanent
   deletions, schema changes, or task closure when COUNSELOR mode requires it.
@@ -137,7 +140,7 @@ remaining gaps.
 | `[SPIKE]` | Time-boxed research | Read-only unless disposable POC is explicit | Go/no-go findings |
 | `[TEST]` | Verification | Tests/validation within task scope | Test evidence |
 | `[REFINE]` | Cleanup/polish | Direct edits authorized by task or request | Improved files |
-| `[EXECUTE]` | Agent takes the wheel | Direct project file edits authorized | Modified files |
+| `[EXECUTE]` | Agent takes the wheel | Anchored task authorizes project edits, tests, and required docs | Modified files |
 
 ## Default behavior when no mode is present
 
@@ -159,7 +162,8 @@ changes.
 
 In COUNSELOR:
 - reading, diagnosis, design reasoning, and validation commands are allowed;
-- direct file edits are allowed when the user clearly authorizes implementation;
+- an active, anchored `[EXECUTE]` or `[REFINE]` task authorizes direct project
+  edits, tests, and required documentation;
 - commits, pushes, task closure, permanent deletions, schema changes, and other
   high-impact actions still require explicit confirmation.
 

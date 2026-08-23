@@ -35,9 +35,10 @@ tw-flow note <uuid> decision "Using library Y."
 ### Phase 5: Review (Verify)
 **CRITICAL:** Never close a task silently.
 1.  **Linting & Quality**: Ensure all code passes the project's quality gates.
-2.  **Summary**: Summarize the work performed.
-3.  **Demonstration**: Show the result (code, file, output, tests).
-4.  **Consent**: Ask: "Shall I close this?"
+2.  **Documentation Gate**: If the change affects user-facing behavior or resolves a documented finding, update the relevant documentation before recording the outcome. If no doc change is needed, record why in the task context.
+3.  **Summary**: Summarize the work performed.
+4.  **Demonstration**: Show the result (code, file, output, tests).
+5.  **Consent**: Ask: "Shall I close this?"
 
 ### Phase 6: Outcome (Capture)
 Upon user approval ("looks good", "yes"), you **MUST** record the final result.
@@ -50,3 +51,4 @@ Only after recording the outcome.
 ```bash
 tw-flow done <uuid>
 ```
+After `done`, re-read `tw-flow focus` and re-anchor to the next pending task in the same plan. If the plan has no pending tasks, clear the focus. Never leave next-task resolution to the global urgency heap.
