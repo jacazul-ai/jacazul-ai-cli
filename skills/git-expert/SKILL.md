@@ -97,6 +97,17 @@ Use standard prefixes:
 Treat commit messages as technical artifacts, not chat prose. Before proposing
 or creating a commit, perform this checklist:
 
+**File-based message mandate:**
+
+- A commit that includes a body MUST be created with `git commit -F <file>`
+  or `git commit -F -` with a single-quoted heredoc.
+- `git commit -m` is permitted only for a single-line, title-only commit.
+- Never put `\n` escape sequences in a `-m` argument. Double-quoted shell
+  strings do not expand them, and Git stores them literally in the commit.
+- The message source must contain real newline characters. A quoted heredoc
+  delimiter (`<<'EOF'`) prevents shell expansion of `$`, backticks, and
+  backslashes.
+
 1. **Classify the changed area:** Read the staged diff and name the actual
    area touched, such as `configure`, `bootstrap`, `broker`, `docs`, or
    `tests`. Do not name only the visible symptom.
@@ -129,6 +140,10 @@ or creating a commit, perform this checklist:
 - If an external ticket exists, is the ticket footer the final line?
 - If no external ticket exists, did you omit the footer entirely?
 - Are you avoiding internal Taskwarrior UUIDs and local task IDs in the footer?
+- Does the commit have a body? If yes, was it delivered through `-F` rather
+  than `-m`?
+- Does the message source contain real newlines rather than literal `\n`
+  separators?
 - Do not include Copilot trailers.
 
 ## 📋 Operational Standards
@@ -137,6 +152,8 @@ or creating a commit, perform this checklist:
    - Run `git status` to verify staged files.
    - Run `git diff HEAD` (or `--staged`) to review changes.
    - Run `git log -n 3` to match project style.
+   - After committing, run `git log -1 --format=%b | cat -A`. Confirm that
+     body lines end with `$` and that no literal `\n` appears.
 2. **No Auto-Commit:** Do not stage or commit unless the user explicitly requests it.
 3. **Selective Staging (MANDATORY):** NEVER use `git add .` or `git add -A`. ALWAYS stage only files directly relevant to the current task. Cross-reference with `tw-flow status` to understand scope. Only stage files unrelated to the task if the user explicitly requests it.
 4. **Error as Prompt:** If a Git command fails (e.g., merge conflict, dirty worktree), transform the error into a clear prompt for the user.

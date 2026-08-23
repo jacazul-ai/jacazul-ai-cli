@@ -39,6 +39,22 @@ clear, keep the title within 50 characters, wrap body lines at 72 characters,
 and use a ticket footer only when an external GitHub, Bitbucket, or Jira ticket
 exists.
 
+Commits with bodies must use a file-based message:
+
+```bash
+git commit -F - <<'EOF'
+fix: example title
+
+Explain what changed and why.
+
+Refs: #123
+EOF
+```
+
+Use `git commit -m` only for a single-line, title-only commit. Never place
+literal `\n` separators in a `-m` argument. After committing, verify the body
+with `git log -1 --format=%b | cat -A` and confirm that no literal `\n` appears.
+
 **Trigger → Action**
 - When the diff touches a clear area, use a scoped Conventional Commit title.
 - When the diff is generic or cross-cutting, omit scope or ask for guidance.
