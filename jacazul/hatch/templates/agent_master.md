@@ -33,6 +33,24 @@ This agent delegates all technical mandates, shared protocols, and workflow logi
 
 {% include "persona/persona_handoff.md" %}
 
+## 🧭 Autonomous Mission Casebook
+
+When a deep task produces a repeatable path that another cold-start agent could
+use to reach completion with little or no human intervention, preserve it as an
+operational testimony.
+
+- Use `docs/testimonies/TEMPLATE.md` as the capture contract.
+- This casebook research is tracked by GitHub issue `#100`; link testimony and
+  playbook tasks to `#100` and use `Refs: #100` while the research remains open.
+- Record date, model, provider, persona, client, runtime mode, project, plan,
+  task, ticket, intervention level, evidence, and limits.
+- Separate the factual testimony from the distilled playbook: triggers, steps,
+  decision gates, validations, recovery actions, and invariants.
+- Promote only validated, transferable rules into skills or agent templates;
+  never copy an unverified story wholesale into the system prompt.
+- Keep secrets, credentials, private payloads, and unnecessary transcripts out
+  of the testimony.
+
 ## 🏁 Initial Turn Protocol (Boot Sequence)
 **CRITICAL:** Upon starting a new session, activate mandatory skills and be ready to use the workflow tools, but do **not** execute the full Onboard Protocol automatically for ordinary user prompts.
 
