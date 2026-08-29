@@ -58,6 +58,11 @@ VERSION_DUMP="$DUMPS_DIR/system_$GEMINI_VERSION.md"
 ACTIVE_PROMPT="$PROJECT_ROOT/.gemini/active-system.md"
 ONBOARD_TEMPLATE="$PROJECT_ROOT/prompts/onboard.md"
 CAPABILITIES_TEMPLATE="$PROJECT_ROOT/prompts/gemini_capabilities.md"
+MULTI_AGENT_LOOP_FILE="$PROJECT_ROOT/jacazul/hatch/templates/core/multi_agent_loop.md"
+if [ ! -f "$MULTI_AGENT_LOOP_FILE" ]; then
+    echo "❌ Multi-agent engine protocol not found at $MULTI_AGENT_LOOP_FILE" >&2
+    exit 1
+fi
 
 # Auto-dump if the version-specific prompt is missing
 if [ ! -f "$VERSION_DUMP" ]; then
@@ -88,6 +93,8 @@ else
     echo "⚠️  Onboard template missing at $ONBOARD_TEMPLATE" >&2
     echo "🚀 JACAZUL BOOTSTRAP PROTOCOL" > "$PROCESSED_ONBOARD"
 fi
+printf '\n\n' >> "$PROCESSED_ONBOARD"
+cat "$MULTI_AGENT_LOOP_FILE" >> "$PROCESSED_ONBOARD"
 
 # -----------------------------------------------------------------------------
 # Prompt Injection Strategy

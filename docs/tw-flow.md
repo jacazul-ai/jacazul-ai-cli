@@ -108,6 +108,22 @@ The suffix is added to `note`, `outcome`, `handoff`, optional `done` notes,
 and automatic discard audit annotations.
 The conversational prompt keeps only the active persona's visual signature.
 
+## Multi-Agent Continuity
+
+When another agent or session continues work, the existing solo workflow remains
+the default path. The incoming agent runs the normal `tw-flow focus`, context,
+and status checks before acting; no solo command or completion gate changes.
+
+Use `tw-flow note`, `tw-flow outcome`, and `tw-flow handoff` to persist decisions,
+results, and the next action. These annotations carry the active persona,
+model, harness, and short session ID so the next agent can distinguish task
+history from chat history.
+
+Taskwarrior remains the source of truth for the project, focused task,
+dependencies, blockers, and completion state. The multi-agent feature adds
+continuity around the solo workflow; it does not spawn agents automatically or
+change autonomy and project-isolation rules.
+
 ### Status & Visibility
 
 ```bash
