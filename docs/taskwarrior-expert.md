@@ -56,6 +56,17 @@ tw-flow note <uuid> <type> <message>
 ```
 Types: `research` (r), `decision` (d), `blocked` (b), `lesson` (l), `question` (q), `hypothesis` (y), `outcome` (o), `note` (n), `link`.
 
+`tw-flow` automatically appends a provenance signature to persistent agent
+communication:
+
+```text
+— <Active Persona> (<Current Model>; harness: <Harness>; session: <Session>)
+```
+
+This task signature is used for notes, outcomes, handoffs, optional
+completion notes, and automatic discard audits. It is separate from the visual
+signature used in prompts.
+
 ---
 
 ### Phase 5: Review (Verify)

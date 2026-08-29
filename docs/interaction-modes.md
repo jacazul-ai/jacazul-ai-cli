@@ -4,6 +4,29 @@ Interaction modes are **task-level collaboration controls**. They describe how t
 agent should work on a specific task; they are not permanent global limits on the
 agent.
 
+## Persona signature and task provenance
+
+Every response starts with the active persona's visual signature:
+
+```text
+{💪} Arnalbam
+```
+
+The active persona is authoritative for identity, voice, handoff, and language
+behavior. Model, harness, and session metadata do not replace the prompt
+signature.
+
+Persistent Taskwarrior communication uses a separate task signature. `tw-flow`
+automatically appends it to notes, outcomes, handoffs, and optional completion
+notes:
+
+```text
+— <Active Persona> (<Current Model>; harness: <Harness>; session: <Session>)
+```
+
+The task signature preserves provenance for another agent without polluting the
+conversational persona signature.
+
 ## When you want architecture before code
 
 Use `[DESIGN]`.

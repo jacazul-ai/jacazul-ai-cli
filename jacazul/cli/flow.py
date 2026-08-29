@@ -66,6 +66,76 @@ class FlowManager:
     def info(self, msg: str):
         print(f"ℹ {msg}")
 
+    @staticmethod
+    def _known_value(value: Optional[str]) -> Optional[str]:
+        """Return a non-empty runtime value, excluding sentinels."""
+        if not value:
+            return None
+        value = value.strip()
+        if value.lower() in {"unspecified", "unknown", "none", "null"}:
+            return None
+        return value
+
+    @classmethod
+    def task_signature(cls) -> str:
+        """Build the provenance signature for persistent task annotations."""
+        configured = cls._known_value(os.environ.get("JACAZUL_TASK_SIGNATURE"))
+        if configured:
+            return configured
+
+        persona_names = {
+            "jacazul": "Jacazul",
+            "codama": "Codama",
+            "codana": "Codama",
+            "arnalbam": "Arnalbam",
+            "atena": "Atena",
+        }
+        persona = cls._known_value(
+            os.environ.get("JACAZUL_PERSONA_NAME")
+        ) or persona_names.get(
+            os.environ.get("JACAZUL_PERSONA", "jacazul").lower(),
+            "Jacazul",
+        )
+        model = next(
+            (
+                candidate
+                for candidate in (
+                    os.environ.get("JACAZUL_MODEL"),
+                    os.environ.get("PI_MODEL"),
+                    os.environ.get("CLAUDE_MODEL"),
+                    os.environ.get("ANTHROPIC_MODEL"),
+                    os.environ.get("MODEL"),
+                )
+                if cls._known_value(candidate)
+            ),
+            "unspecified",
+        )
+        harness = (
+            cls._known_value(os.environ.get("JACAZUL_HARNESS")) or "unknown"
+        )
+        session = (
+            cls._known_value(os.environ.get("JACAZUL_SESSION_ID")) or "global"
+        )
+        return (
+            f"— {persona} ({model}; harness: {harness}; "
+            f"session: {session[:8]})"
+        )
+
+    @classmethod
+    def signed_annotation(cls, prefix: str, message: str) -> str:
+        """Append the runtime provenance to a task annotation."""
+        annotation = f"{prefix}: {message}"
+        signature = cls.task_signature()
+        if not annotation.rstrip().endswith(signature):
+            annotation = f"{annotation.rstrip()} {signature}"
+        return annotation
+
+    def annotate(self, uuid: str, prefix: str, message: str):
+        """Record a signed annotation through the Taskwarrior wrapper."""
+        self.tw.run(
+            [uuid, "annotate", self.signed_annotation(prefix, message)]
+        )
+
     def warning(self, msg: str):
         print(f"⚠ {msg}")
 
@@ -539,7 +609,7 @@ class FlowManager:
                 f'Use: tw-flow outcome {uuid[:8]} "your result"'
             )
         if note:
-            self.tw.run([uuid, "annotate", f"DONE: {note}"])
+            self.annotate(uuid, "DONE", note)
         os.environ["TW_FLOW_INTERNAL"] = "true"
         res = self.tw.run([uuid, "done"])
         if res.returncode == 0:
@@ -581,14 +651,14 @@ class FlowManager:
     def cmd_outcome(self, input_id: str, msg: str):
         uuid = self.resolve_uuid(input_id)
         self.verify_not_completed(uuid)
-        self.tw.run([uuid, "annotate", f"OUTCOME: {msg}"])
+        self.annotate(uuid, "OUTCOME", msg)
         self.success(f"Recorded outcome for task {uuid[:8]}")
 
     def cmd_handoff(self, input_id: str, msg: str):
         uuid = self.resolve_uuid(input_id)
         self.verify_not_completed(uuid)
         self.cmd_execute(uuid)
-        self.tw.run([uuid, "annotate", f"HANDOFF: {msg}"])
+        self.annotate(uuid, "HANDOFF", msg)
         self.success(f"Handoff to task {uuid[:8]} with note")
 
     def cmd_notes(self, input_id: str):
@@ -652,7 +722,7 @@ class FlowManager:
                 f"Invalid note type: '{note_type}'.\n   "
                 f"ACTION: Use one of the allowed semantic types: {allowed}"
             )
-        self.tw.run([uuid, "annotate", f"{prefix}: {msg}"])
+        self.annotate(uuid, prefix, msg)
         self.success(f"Added {prefix} note to task {uuid[:8]}")
 
     def cmd_ticket(self, input_id: str, ticket: str):
@@ -1499,9 +1569,7 @@ class FlowManager:
         archive = f"{ini.split(':_archive')[0]}:_archive"
         os.environ["TW_FLOW_INTERNAL"] = "true"
         self.tw.run([uuid, "modify", f'project:"{archive}"', "+DISCARDED"])
-        self.tw.run(
-            [uuid, "annotate", "OUTCOME: Task discarded and moved to archive."]
-        )
+        self.annotate(uuid, "OUTCOME", "Task discarded and moved to archive.")
         self.tw.run([uuid, "done"])
         self.success(f"Task {uuid[:8]} moved to archive and marked done.")
 

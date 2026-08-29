@@ -4,6 +4,7 @@
 # Get the absolute path to the script's directory
 SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
 PROJECT_ROOT="$(readlink -f "$SCRIPT_DIR/..")"
+export JACAZUL_HARNESS="${JACAZUL_HARNESS:-gemini}"
 
 # -----------------------------------------------------------------------------
 # Session Restore: parse --jacazul-session BEFORE bootstrap sources

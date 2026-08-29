@@ -6,6 +6,7 @@
 # Get the absolute path to the script's directory
 SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
 PROJECT_ROOT="$(readlink -f "$SCRIPT_DIR/..")"
+export JACAZUL_HARNESS="${JACAZUL_HARNESS:-gemini-sandboxed}"
 TEMPLATES_TASKRC="$PROJECT_ROOT/templates/.taskrc"
 
 # Define host directories
@@ -46,6 +47,12 @@ fi
 
 # Set JACAZUL_MODE to CAGED for this script
 export JACAZUL_MODE="CAGED"
+
+# Resolve the project-anchored persona for task annotation provenance.
+BOOTSTRAP_PERSONA="$PROJECT_ROOT/scripts/bootstrap/persona"
+if [ -f "$BOOTSTRAP_PERSONA" ]; then
+    source "$BOOTSTRAP_PERSONA"
+fi
 
 # Initialize Taskwarrior Bootstrap
 BOOTSTRAP_TW="$PROJECT_ROOT/scripts/bootstrap/taskwarrior"
@@ -88,6 +95,12 @@ podman run -it --rm \
   ${DEBUG:+--log-level debug} \
   --userns=keep-id \
   -e "JACAZUL_MODE=$JACAZUL_MODE" \
+  -e "JACAZUL_PERSONA=$JACAZUL_PERSONA" \
+  -e "JACAZUL_PERSONA_NAME=$JACAZUL_PERSONA_NAME" \
+  -e "JACAZUL_MODEL=$JACAZUL_MODEL" \
+  -e "JACAZUL_HARNESS=$JACAZUL_HARNESS" \
+  -e "JACAZUL_SESSION_ID=$JACAZUL_SESSION_ID" \
+  -e "JACAZUL_TASK_SIGNATURE=$JACAZUL_TASK_SIGNATURE" \
   -e "PROJECT_ID=$PROJECT_ID" \
   -e "CONTEXT_REAL_PATH=$REAL_PATH" \
   -e "CONTEXT_SYSTEM_USER=$SYSTEM_USER" \

@@ -33,22 +33,69 @@ fi
 case "$PERSONA_ID" in
     codama)
         JACAZUL_PERSONA_DISPLAY="Codama"
+        JACAZUL_PERSONA_NAME="Codama"
         JACAZUL_PERSONA_SIGNATURE="{🔷} Codama"
         ;;
     arnalbam)
         JACAZUL_PERSONA_DISPLAY="Arnalbam"
+        JACAZUL_PERSONA_NAME="Arnalbam"
         JACAZUL_PERSONA_SIGNATURE="{💪} Arnalbam"
         ;;
     atena)
         JACAZUL_PERSONA_DISPLAY="Atena"
+        JACAZUL_PERSONA_NAME="Atena"
         JACAZUL_PERSONA_SIGNATURE="{🦉} Atena"
         ;;
     *)
         JACAZUL_PERSONA_DISPLAY="Jacazul (Jacaré Azul)"
+        JACAZUL_PERSONA_NAME="Jacazul"
         JACAZUL_PERSONA_SIGNATURE="🐊 Jacazul"
         ;;
 esac
 
+_jacazul_unknown_model() {
+    case "${1,,}" in
+        ""|unspecified|unknown|none|null)
+            return 0
+            ;;
+        *)
+            return 1
+            ;;
+    esac
+}
+
+if _jacazul_unknown_model "${JACAZUL_MODEL:-}"; then
+    for _jacazul_candidate in \
+        "${PI_MODEL:-}" \
+        "${CLAUDE_MODEL:-}" \
+        "${ANTHROPIC_MODEL:-}" \
+        "${MODEL:-}"; do
+        if ! _jacazul_unknown_model "$_jacazul_candidate"; then
+            JACAZUL_MODEL="$_jacazul_candidate"
+            break
+        fi
+    done
+fi
+if _jacazul_unknown_model "${JACAZUL_MODEL:-}"; then
+    JACAZUL_MODEL="unspecified"
+fi
+unset -f _jacazul_unknown_model
+
+JACAZUL_HARNESS="${JACAZUL_HARNESS:-unknown}"
+JACAZUL_SESSION_SHORT="${JACAZUL_SESSION_ID:-global}"
+JACAZUL_SESSION_SHORT="${JACAZUL_SESSION_SHORT:0:8}"
+
+# Prompt responses use the persona's visual signature only. Persistent task
+# annotations carry runtime provenance through the separate task signature.
+JACAZUL_RESPONSE_SIGNATURE="$JACAZUL_PERSONA_SIGNATURE"
+JACAZUL_TASK_SIGNATURE="— ${JACAZUL_PERSONA_NAME} (${JACAZUL_MODEL}; harness: ${JACAZUL_HARNESS}; session: ${JACAZUL_SESSION_SHORT})"
+
 export JACAZUL_PERSONA="$PERSONA_ID"
 export JACAZUL_PERSONA_DISPLAY
+export JACAZUL_PERSONA_NAME
 export JACAZUL_PERSONA_SIGNATURE
+export JACAZUL_MODEL
+export JACAZUL_HARNESS
+export JACAZUL_SESSION_SHORT
+export JACAZUL_RESPONSE_SIGNATURE
+export JACAZUL_TASK_SIGNATURE

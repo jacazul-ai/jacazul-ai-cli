@@ -98,6 +98,16 @@ tw-flow amend <uuid> description="..." ticket="..."  # Fix metadata
 
 Note types: `research` (r), `decision` (d), `blocked` (b), `lesson` (l), `question` (q), `hypothesis` (y), `outcome` (o), `note` (n), `link`.
 
+Every persistent agent annotation receives a provenance suffix automatically:
+
+```text
+— <Active Persona> (<Current Model>; harness: <Harness>; session: <Session>)
+```
+
+The suffix is added to `note`, `outcome`, `handoff`, optional `done` notes,
+and automatic discard audit annotations.
+The conversational prompt keeps only the active persona's visual signature.
+
 ### Status & Visibility
 
 ```bash

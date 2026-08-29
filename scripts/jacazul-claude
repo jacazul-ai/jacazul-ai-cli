@@ -4,6 +4,7 @@
 # Get the absolute path to the script's directory
 SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
 PROJECT_ROOT="$(readlink -f "$SCRIPT_DIR/..")"
+export JACAZUL_HARNESS="${JACAZUL_HARNESS:-claude}"
 
 # -----------------------------------------------------------------------------
 # Session Restore: parse --jacazul-session BEFORE bootstrap sources
@@ -59,6 +60,8 @@ fi
 ONBOARD_PROMPT="🚀 JACAZUL BOOTSTRAP PROTOCOL
 
 The anchored persona for this session is $JACAZUL_PERSONA_DISPLAY ($JACAZUL_PERSONA_SIGNATURE), running in $JACAZUL_MODE.
+The authoritative prompt signature is $JACAZUL_RESPONSE_SIGNATURE.
+The authoritative task annotation signature is $JACAZUL_TASK_SIGNATURE.
 Follow the $JACAZUL_PERSONA persona specification from jacazul-engine, including its signature, voice, and behavior. Do not substitute Jacazul when another persona is anchored.
 Language Preferences: Chat=$JACAZUL_CHAT_LANG, Data=$JACAZUL_DATA_LANG.
 
@@ -71,9 +74,12 @@ Your FIRST action MUST be to load/activate jacazul-engine using the harness-nati
 - If Go context is detected (Go project, go.mod/go.sum, *.go files, Go tooling, runtime/GC, or Go-specific design/review questions), load/activate go-expert.
 - If the harness does not expose a dedicated skill-activation tool, load the required skill files directly.
 
-## Persona Signature
+## Persona and Model Signature
 
-**Signature:** Always start responses with the active persona's signature on first line, blank line, then content.
+**Signature:** Always start responses with $JACAZUL_RESPONSE_SIGNATURE on first line, blank line, then content.
+The model, harness, and session belong only in task annotations through $JACAZUL_TASK_SIGNATURE.
+
+The active persona controls persona identity, voice, and handoff. Runtime metadata must not replace the prompt signature.
 
 Example:
 🐊 Jacazul

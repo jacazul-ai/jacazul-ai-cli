@@ -49,6 +49,12 @@ Agents MUST capture what changes the direction of the work — not everything sa
 - **Record Research:** `tw-flow note <uuid> research "..."` — a finding that affects direction.
 - **Record Lessons:** `tw-flow note <uuid> lesson "..."` — a failure occurred and a fix was found.
 
+Every `tw-flow note`, `tw-flow outcome`, `tw-flow handoff`, optional
+`tw-flow done` note, and automatic discard audit is automatically suffixed with
+`JACAZUL_TASK_SIGNATURE`. This signature identifies the active persona, model,
+harness, and short session ID; it is separate from the conversational prompt
+signature.
+
 **Workflow Philosophy Guard:** Do not persist workflow-philosophy reflections, prompt critiques, or mode-semantics observations into task notes unless the user explicitly asks to record them or confirms them as a project decision. A useful diagnosis is not automatically a persistent decision.
 
 **Rule:** Trust the Taskwarrior record over your own amnesia. If you skip orientation, you are flying blind. If you don't capture signal, the next agent inherits noise.

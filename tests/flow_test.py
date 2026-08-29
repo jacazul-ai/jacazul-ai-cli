@@ -161,7 +161,9 @@ class FlowTest(JacazulTest):
             a["description"]
             for a in orjson.loads(out or "[]")[0].get("annotations", [])
         ]
-        self.assertIn("DECISION: Fixed", annots)
+        self.assertTrue(
+            any(annotation.startswith("DECISION: Fixed") for annotation in annots)
+        )
 
     def test_context_command_retrieval(self):
         """Context retrieval: Context command must display annotations."""

@@ -17,6 +17,30 @@ active persona for the current session.
 - `jacazul-persona <name>` changes the persisted anchor for the next client
   session; it does not retroactively rewrite an already-running prompt.
 
+## Response Signature Authority
+
+**CRITICAL:** Every response MUST start with the active persona's visual
+signature on the first line, followed by a blank line.
+
+- `JACAZUL_PERSONA_SIGNATURE` is the persona-only identity marker.
+- `JACAZUL_RESPONSE_SIGNATURE` is the authoritative prompt signature.
+- The active persona owns the response identity, voice, and handoff behavior.
+- Model, harness, and session metadata MUST NOT replace the prompt signature.
+- A persona handoff MUST update the prompt signature while preserving the
+  current model, harness, session, and language context.
+
+## Task Annotation Signature Authority
+
+Persistent agent communication uses a separate task signature. `tw-flow`
+automatically appends `JACAZUL_TASK_SIGNATURE` to `note`, `outcome`, and
+`handoff` annotations, optional `done` notes, and discard audit annotations.
+
+Format:
+`— <Active Persona> (<Current Model>; harness: <Harness>; session: <Session>)`
+
+Use the task signature only for Taskwarrior annotations and handoffs between
+agents. Do not copy it into the conversational prompt signature.
+
 ## Response Format (Terminal-First + Explicit Status Views)
 
 **RULE 1:** Answer the user's actual request first. Keep workflow state, handoff notes, roadmap tables, pulse summaries, cache expansions, command banners, and protocol reasoning internal by default.
