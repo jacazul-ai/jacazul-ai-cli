@@ -24,6 +24,9 @@ class MultiAgentLoopContractTest(unittest.TestCase):
         self.assertIn("existing solo workflow", protocol)
         self.assertIn("Taskwarrior", protocol)
         self.assertIn("remove or change existing solo behavior", protocol)
+        self.assertIn("## Consensus Review Protocol", protocol)
+        self.assertIn("single-persona review", protocol)
+        self.assertIn("signed `DECISION`", protocol)
 
     def test_user_docs_describe_additive_continuity(self):
         docs = self._read("docs/tw-flow.md")
@@ -31,6 +34,8 @@ class MultiAgentLoopContractTest(unittest.TestCase):
         self.assertIn("## Multi-Agent Continuity", docs)
         self.assertIn("solo workflow remains", docs.lower())
         self.assertIn("Taskwarrior remains the source of truth", docs)
+        self.assertIn("When to use consensus review", docs)
+        self.assertIn("single-persona review", docs)
 
     def test_hatch_renders_protocol_into_engine_skill(self):
         previous_project_id = os.environ.get("PROJECT_ID")
@@ -48,6 +53,7 @@ class MultiAgentLoopContractTest(unittest.TestCase):
         self.assertIn(
             "existing solo workflow remains unchanged", rendered.lower()
         )
+        self.assertIn("## Consensus Review Protocol", rendered)
 
     def test_hatch_renders_protocol_into_agent_prompt(self):
         for client in ("copilot", "opencode"):
@@ -59,6 +65,7 @@ class MultiAgentLoopContractTest(unittest.TestCase):
                 "existing solo workflow remains unchanged",
                 rendered.lower(),
             )
+            self.assertIn("## Consensus Review Protocol", rendered)
 
     def test_direct_harness_prompts_load_protocol(self):
         for launcher in (

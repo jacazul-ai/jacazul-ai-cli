@@ -124,6 +124,24 @@ dependencies, blockers, and completion state. The multi-agent feature adds
 continuity around the solo workflow; it does not spawn agents automatically or
 change autonomy and project-isolation rules.
 
+### When to use consensus review
+
+Use consensus review when a decision is contested, cross-cutting, security
+sensitive, irreversible, or explicitly requires a second perspective. Use a
+single-persona review for routine implementation, straightforward tests or
+documentation, and narrow fixes with clear evidence.
+
+During consensus review, each relevant persona reviews from its own lens. The
+agents cross-check findings, expose disagreements and missing evidence, verify
+material claims against authoritative sources, and present the result as a
+verdict table. Record the final decision with `tw-flow note <uuid> decision
+"..."`; the task signature preserves persona, model, harness, and session
+provenance automatically.
+
+The current protocol uses an in-context persona handoff. It does not spawn
+agents automatically or change the solo workflow, autonomy gates, or project
+isolation.
+
 ### Status & Visibility
 
 ```bash
