@@ -1,0 +1,10 @@
+{
+  "$schema": "https://opencode.ai/tui.json",
+  "plugin": [
+    "./extensions/opencode/jacazul-line.tsx"
+  ],
+  "keybinds": {
+    "messages_page_up": "pageup",
+    "messages_page_down": "pagedown"
+  }
+}

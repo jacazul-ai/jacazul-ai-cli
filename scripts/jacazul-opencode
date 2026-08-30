@@ -104,6 +104,14 @@ if [[ "${CLEAN_ARGS[*]}" != *"--agent"* ]]; then
     ARGS=("--agent" "$JACAZUL_PERSONA" "${ARGS[@]}")
 fi
 
+# OpenCode discovers the project TUI configuration from its project path. When
+# the launcher is called outside this repository, pass the project explicitly
+# so tui.json and the local TUI extension are still loaded.
+case "$(pwd)/" in
+    "$PROJECT_ROOT"/*) ;;
+    *) ARGS=("$PROJECT_ROOT" "${ARGS[@]}") ;;
+esac
+
 # Execute opencode directly to preserve TUI interactivity.
 # The 'Initial Turn Protocol' in the JIT agent will guide the LLM.
 "$OPENCODE_BIN" "${ARGS[@]}"

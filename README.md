@@ -54,6 +54,7 @@ jacazul-pi          # Pi CLI with Jacazul footer/dashboard integration
 ```
 
 For Pi footer/dashboard behavior, see [pi-jacazul-line](docs/pi-jacazul-line.md).
+For OpenCode TUI behavior, see [opencode-jacazul-line](docs/opencode-jacazul-line.md).
 
 ### 4. The First Set (Conversational Flow)
 
