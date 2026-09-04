@@ -63,8 +63,7 @@ class TestSessionResume(unittest.TestCase):
     def test_ack_marks_injected_note_as_acknowledged(self):
         """session ack must record a separate acknowledgement marker."""
         self._write_note(
-            "# Session Handoff Note\n\n"
-            "injected: 2026-04-02T00:00:00+00:00\n"
+            "# Session Handoff Note\n\ninjected: 2026-04-02T00:00:00+00:00\n"
         )
 
         result = self._run("session", "ack")
@@ -92,8 +91,7 @@ class TestSessionResume(unittest.TestCase):
     def test_dump_explains_unacknowledged_note(self):
         """dump must explain why an injected note cannot be replaced."""
         self._write_note(
-            "# Session Handoff Note\n\n"
-            "injected: 2026-04-02T00:00:00+00:00\n"
+            "# Session Handoff Note\n\ninjected: 2026-04-02T00:00:00+00:00\n"
         )
 
         result = self._run("session", "dump")

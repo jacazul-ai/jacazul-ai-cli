@@ -67,7 +67,9 @@ class CacheManager:
 
         cache_prefixes = ("status", "ponder", "plans")
         for filename in os.listdir(self.cache_dir):
-            if filename.startswith(cache_prefixes) and filename.endswith(".json"):
+            if filename.startswith(cache_prefixes) and filename.endswith(
+                ".json"
+            ):
                 os.remove(os.path.join(self.cache_dir, filename))
 
     def clear(self, scope: Optional[str] = None):
@@ -275,18 +277,21 @@ class BrokerFactory:
             except Exception:
                 pass
 
-        # 2. Project Anchor (Git Context)
-        # If we are in a Git repo, the remote provider should dictate the
-        # broker, ensuring project-level consistency.
-        git_broker = BrokerFactory._infer_broker_from_git()
-        if git_broker:
-            return git_broker
-
-        # 3. Hardcoded Fallbacks (Pattern Matching)
+        # 2. Ticket identity
+        # Provider-specific ticket formats are more authoritative than the
+        # current repository remote. A project may track work in an external
+        # Bitbucket/Jira system while its local mirror lives on GitHub.
         if ticket.startswith("#"):
             return GitHubBroker()
         if re.match(r"^[A-Z0-9]+-[0-9]+$", ticket):
             return BitbucketBroker()
+
+        # 3. Project anchor (Git context)
+        # Use the remote only when the ticket itself does not identify a
+        # provider.
+        git_broker = BrokerFactory._infer_broker_from_git()
+        if git_broker:
+            return git_broker
 
         return None
 

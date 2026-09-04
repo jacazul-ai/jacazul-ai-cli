@@ -64,15 +64,12 @@ class TaskAnnotationSignatureTest(JacazulTest):
         self.env.update(
             {
                 "JACAZUL_TASK_SIGNATURE": (
-                    "— Arnalbam (gpt-5.6-luna; harness: pi; "
-                    "session: abcdef12)"
+                    "— Arnalbam (gpt-5.6-luna; harness: pi; session: abcdef12)"
                 )
             }
         )
         self.run_cmd(f"{self.tw_flow} ini signature_test 'Task|research'")
-        out, _, _ = self.run_cmd(
-            f"{self.taskp} project:signature_test export"
-        )
+        out, _, _ = self.run_cmd(f"{self.taskp} project:signature_test export")
         self.task_uuid = orjson.loads(out)[0]["uuid"]
 
     def test_note_outcome_and_handoff_append_task_signature(self):
@@ -81,9 +78,7 @@ class TaskAnnotationSignatureTest(JacazulTest):
             f"{self.tw_flow} note {self.task_uuid} decision 'Decision'"
         )
         self.run_cmd(f"{self.tw_flow} outcome {self.task_uuid} 'Outcome'")
-        self.run_cmd(
-            f"{self.tw_flow} handoff {self.task_uuid} 'Next action'"
-        )
+        self.run_cmd(f"{self.tw_flow} handoff {self.task_uuid} 'Next action'")
 
         out, _, _ = self.run_cmd(f"{self.taskp} {self.task_uuid} export")
         annotations = orjson.loads(out)[0]["annotations"]

@@ -96,7 +96,9 @@ class FlowTest(JacazulTest):
         self.assertIn("[TACTICAL READOUT]", out)
 
     def test_cool_down_protocol_and_hyphen_fix(self):
-        """Standardization: 'tw-flow plan' must not add default due/priority and must support hyphens (Fix #37)."""
+        """Standardization: 'tw-flow plan' must not add default
+        due/priority and must support hyphens (Fix #37).
+        """
         # 1. Test hyphenated plan name (Fix #37)
         plan_name = "cool-down-test"
         out, _, _ = self.run_cmd(
@@ -162,7 +164,10 @@ class FlowTest(JacazulTest):
             for a in orjson.loads(out or "[]")[0].get("annotations", [])
         ]
         self.assertTrue(
-            any(annotation.startswith("DECISION: Fixed") for annotation in annots)
+            any(
+                annotation.startswith("DECISION: Fixed")
+                for annotation in annots
+            )
         )
 
     def test_context_command_retrieval(self):
@@ -355,7 +360,9 @@ class FlowTest(JacazulTest):
         self.assertFalse(os.path.exists(session_file))
 
     def test_focus_back_falls_back_to_global_focus(self):
-        """Independent Focus: after focus back, SESSION_ID set but file deleted falls back to global."""
+        """Independent Focus: after focus back, SESSION_ID set but file
+        deleted falls back to global.
+        """
         session_id = "testsession2"
         session_env = {"JACAZUL_SESSION_ID": session_id}
         # Set a plan in global focus first

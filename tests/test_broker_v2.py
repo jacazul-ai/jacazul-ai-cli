@@ -4,7 +4,9 @@ import subprocess
 
 class TestBrokerV2(unittest.TestCase):
     def test_invalid_command_error_as_prompt(self):
-        """Verify that an invalid command returns exit 1 and contains ACTION: hint."""
+        """Verify that an invalid command returns exit 1 and contains
+        ACTION: hint.
+        """
         res = subprocess.run(
             ["jacazul-broker", "invalidcmd"], capture_output=True, text=True
         )
@@ -13,13 +15,15 @@ class TestBrokerV2(unittest.TestCase):
         self.assertIn("ACTION: Use one of:", res.stderr)
 
     def test_missing_args_error_as_prompt(self):
-        """Verify that commands missing mandatory args return exit 1 and ACTION: hint."""
+        """Verify that commands missing mandatory args return exit 1 and
+        ACTION: hint.
+        """
         # Test 'sync' without issue ID
         res = subprocess.run(
             ["jacazul-broker", "sync"], capture_output=True, text=True
         )
         self.assertEqual(res.returncode, 1)
-        self.assertIn('ACTION: Use \'jacazul-broker sync "#123"\'', res.stderr)
+        self.assertIn("ACTION: Use 'jacazul-broker sync \"#123\"'", res.stderr)
 
         # Test 'open' without title
         res = subprocess.run(

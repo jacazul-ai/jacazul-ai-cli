@@ -1,6 +1,7 @@
 import os
 import unittest
 import json
+from unittest.mock import patch
 from jacazul.taskwarrior.core import (
     BrokerFactory,
     GitHubBroker,
@@ -26,6 +27,15 @@ class TestBrokerOverride(unittest.TestCase):
         self.assertIsInstance(
             BrokerFactory.get_broker("PROJ-123"), BitbucketBroker
         )
+
+    @patch.object(BrokerFactory, "_infer_broker_from_git")
+    def test_ticket_pattern_precedes_git_remote(self, infer_broker):
+        infer_broker.return_value = GitHubBroker()
+
+        broker = BrokerFactory.get_broker("BTBKR-123")
+
+        self.assertIsInstance(broker, BitbucketBroker)
+        infer_broker.assert_not_called()
 
     def test_config_override_pattern(self):
         # Config override for a pattern not accepted today

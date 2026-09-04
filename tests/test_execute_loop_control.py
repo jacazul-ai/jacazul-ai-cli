@@ -152,8 +152,7 @@ class CacheInvalidationTest(JacazulTest):
 
     def test_amend_invalidates_plan_status_cache(self):
         self.run_cmd(
-            f"{self.tw_flow} plan cache-control "
-            "'Original task|implementation'"
+            f"{self.tw_flow} plan cache-control 'Original task|implementation'"
         )
         exported, _, _ = self.run_cmd(
             f"{self.taskp} project:cache-control export"
@@ -165,9 +164,7 @@ class CacheInvalidationTest(JacazulTest):
         )
         self.assertIn("Original task", first_status)
 
-        self.run_cmd(
-            f'{self.tw_flow} amend {uuid} description="Updated task"'
-        )
+        self.run_cmd(f'{self.tw_flow} amend {uuid} description="Updated task"')
         second_status, _, _ = self.run_cmd(
             f"{self.tw_flow} status cache-control"
         )
