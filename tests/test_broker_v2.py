@@ -19,7 +19,7 @@ class TestBrokerV2(unittest.TestCase):
             ["jacazul-broker", "sync"], capture_output=True, text=True
         )
         self.assertEqual(res.returncode, 1)
-        self.assertIn("ACTION: Use 'jacazul-broker sync #123'", res.stderr)
+        self.assertIn('ACTION: Use \'jacazul-broker sync "#123"\'', res.stderr)
 
         # Test 'open' without title
         res = subprocess.run(

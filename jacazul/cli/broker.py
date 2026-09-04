@@ -13,6 +13,15 @@ from jacazul.taskwarrior.core import TaskWrapper
 
 DEFAULT_DECRYPT_TIMEOUT = 30
 
+# A token is a keyword argument only when it looks like `key=value` with a
+# lowercase identifier key. Anything else stays positional, so ordinary values
+# carrying '=' keep working. A keyword-shaped token with an unknown key is an
+# error rather than a positional: guessing is what let arguments land in the
+# wrong slot in the first place.
+KWARG_PATTERN = re.compile(r"^([a-z][a-z0-9_]*)=(.*)$", re.DOTALL)
+
+REPO_PATTERN = re.compile(r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$")
+
 
 def _split_list(raw: Optional[str]) -> list:
     """Expands a comma-separated option into a list of trimmed values."""
@@ -607,155 +616,277 @@ def error(msg: str):
     sys.exit(1)
 
 
+def warn(msg: str):
+    """Emits a non-fatal deprecation or advisory notice to stderr."""
+    print(f"⚠️ {msg}", file=sys.stderr)
+
+
+USAGE = """Usage: jacazul-broker <command> [args...] [key="value"...]
+
+Commands:
+  view <id> [repo=]             Shows full issue details and body
+  sync <id> [repo=]             Syncs issue status to local tasks
+  list [repo=] [state=]         Lists issues (state: open|closed|all)
+       [milestone=]
+  labels [repo=]                Lists repository labels (cached)
+  milestones [repo=]            Lists repository milestones (cached)
+  open title= [body=]           Creates a new issue
+       [body_file=] [repo=]
+       [assignee=] [labels=]
+  edit <id> [title=] [body=]    Updates an existing issue
+       [body_file=] [repo=]
+       [assignee=]
+       [remove_assignee=]
+       [add_labels=]
+       [remove_labels=]
+  comment <id> body= | body_file=
+                                Adds a comment to an issue
+       [repo=]
+  close <id> [repo=]            Closes an issue
+        [comment=]
+
+Repository:
+  Every command accepts repo="org/name". When omitted, the repository is
+  inferred from the current git remote.
+  view, sync, list, labels, milestones and close still accept the repository
+  as a positional argument, but that form is deprecated and warns.
+
+Lists:
+  labels=, add_labels=, remove_labels=, assignee= and remove_assignee= accept
+  comma-separated values, e.g. labels="bug,enhancement". Use "@me" or
+  "@copilot" for assignee logins.
+
+Positional placeholder:
+  Use "-" to skip a positional argument, e.g. 'jacazul-broker list - closed'.
+
+Shell quoting:
+  Quote issue ids that carry '#', otherwise the shell treats the rest of the
+  line as a comment: jacazul-broker view '#106'
+
+Examples:
+  jacazul-broker view '#106'
+  jacazul-broker list repo="jacazul-ai/jacazul-ai-sandbox" state="closed"
+  jacazul-broker open title="Broken flag" labels="bug" \\
+    repo="jacazul-ai/jacazul-ai-sandbox"
+  jacazul-broker edit '#106' assignee="@me"
+  jacazul-broker comment '#106' body_file="/tmp/comment.md"
+
+💡 Tip: For complex Markdown bodies (backticks, quotes, newlines), prefer
+   body_file="/path/to/body.md" over body="..."."""
+
+
+def print_usage():
+    print(USAGE)
+
+
+def split_args(
+    cmd: str, args: list, slots: list, allowed: set, hint: str = ""
+) -> Tuple:
+    """Splits argv into positional slots and validated keyword arguments.
+
+    Fails closed: unknown keyword keys and positional tokens beyond the
+    declared slots abort with an ACTION hint instead of being dropped.
+    """
+    kwargs = {}
+    positionals = []
+
+    for arg in args:
+        match = KWARG_PATTERN.match(arg)
+        if match:
+            key, value = match.group(1), match.group(2)
+            if key not in allowed:
+                accepted = ", ".join(f"{k}=" for k in sorted(allowed))
+                error(
+                    f"Unknown argument '{key}=' for '{cmd}'.\n"
+                    f"   ACTION: Accepted keywords: {accepted or 'none'}."
+                )
+            kwargs[key] = value
+        else:
+            positionals.append(arg)
+
+    values = {}
+    for index, name in enumerate(slots):
+        raw = positionals[index] if index < len(positionals) else None
+        values[name] = None if raw == "-" else raw
+
+    declared = len(slots)
+    extra = positionals[declared:]
+    if extra:
+        guidance = hint or (
+            f"'{cmd}' takes {declared} positional argument(s). "
+            'Pass the repository as repo="org/name".'
+        )
+        error(
+            f"Unexpected argument '{extra[0]}' for '{cmd}'.\n"
+            f"   ACTION: {guidance}"
+        )
+
+    return values, kwargs
+
+
+def pick(cmd: str, name: str, positional: Optional[str], kwargs: dict):
+    """Resolves a value that accepts both a deprecated positional and a
+    keyword form. Supplying both is an error."""
+    keyword = kwargs.get(name)
+    if positional is None:
+        return keyword
+    if keyword is not None:
+        error(
+            f"'{name}' given twice for '{cmd}'.\n"
+            f'   ACTION: Use only {name}="{keyword}".'
+        )
+    warn(
+        f"Positional '{name}' is deprecated for '{cmd}'.\n"
+        f'   ACTION: Use {name}="{positional}" instead.'
+    )
+    return positional
+
+
+def validate_repo(repo: Optional[str]) -> Optional[str]:
+    """Rejects malformed repository values before gh is invoked."""
+    if repo is None:
+        return None
+    if not REPO_PATTERN.match(repo):
+        error(
+            f"Invalid repository '{repo}'.\n"
+            '   ACTION: Use repo="org/name", e.g. '
+            'repo="jacazul-ai/jacazul-ai-sandbox".'
+        )
+    return repo
+
+
+def require_id(cmd: str, issue_id: Optional[str], example: str = "") -> str:
+    """Enforces the issue id positional shared by most commands.
+
+    The example keeps the id quoted, because an unquoted '#' turns the rest
+    of the shell line into a comment.
+    """
+    if not issue_id:
+        usage = example or f'jacazul-broker {cmd} "#123"'
+        error(f"Issue ID required for '{cmd}'.\n   ACTION: Use '{usage}'")
+    return issue_id
+
+
 def main():
-    # Quick CLI for testing the broker directly
     broker = GitHubBroker()
-    if len(sys.argv) < 2:
-        print(
-            "Usage: jacazul-broker "
-            "<sync|view|list|labels|milestones|open|edit|comment|close> ..."
-        )
-        print("\nCommands:")
-        print(
-            "  view <issue_id> [repo]        Shows full issue details and body"
-        )
-        print(
-            "  sync <issue_id> [repo]        Syncs issue status to local tasks"
-        )
-        print(
-            "  list [repo] [state] [ms]      Lists issues "
-            "(state: open|closed|all)"
-        )
-        print(
-            "  labels [repo]                 Lists repository labels (cached)"
-        )
-        print(
-            "  milestones [repo]             Lists repository "
-            "milestones (cached)"
-        )
-        print(
-            '  open title="..." [body="..."] [body_file="..."] [repo="..."] '
-            '[assignee="..."] [labels="l1,l2"]'
-        )
-        print(
-            '  edit <id> [title="..."] [body="..."] [body_file="..."] '
-            '[repo="..."] [assignee="..."] [add_labels="l1"]'
-        )
-        print('  comment <id> [body="..."] [body_file="..."] [repo="..."]')
-        print("  close <id> [repo] [comment]   Closes an issue")
-        print(
-            "\n💡 Tip: For complex Markdown bodies (backticks, quotes, "
-            'newlines), prefer body_file="/path/to/body.md" over body="..."'
-        )
+
+    if len(sys.argv) < 2 or sys.argv[1] in ("--help", "-h", "help"):
+        print_usage()
         sys.exit(0)
 
     cmd = sys.argv[1]
     args = sys.argv[2:]
 
-    def parse_kwargs(args_list):
-        kwargs = {}
-        for arg in args_list:
-            if "=" in arg:
-                key, val = arg.split("=", 1)
-                kwargs[key] = val
-        return kwargs
-
-    if cmd == "view":
-        if not args:
-            error(
-                "Issue ID required.\n   ACTION: Use 'jacazul-broker view #123'"
-            )
-        broker.view_issue(args[0], args[1] if len(args) > 1 else None)
-
-    elif cmd == "sync":
-        if not args:
-            error(
-                "Issue ID required for sync.\n"
-                "   ACTION: Use 'jacazul-broker sync #123'"
-            )
-        broker.sync_issue(args[0], args[1] if len(args) > 1 else None)
+    if cmd in ("view", "sync"):
+        slots, allowed = ["issue_id", "repo"], {"repo"}
+        pos, kwargs = split_args(cmd, args, slots, allowed)
+        issue_id = require_id(cmd, pos["issue_id"])
+        repo = validate_repo(pick(cmd, "repo", pos["repo"], kwargs))
+        if cmd == "view":
+            broker.view_issue(issue_id, repo)
+        else:
+            broker.sync_issue(issue_id, repo)
 
     elif cmd == "list":
-        # Syntax: broker.py list [repo] [state] [milestone]
-        repo = args[0] if len(args) > 0 and args[0] != "-" else None
-        state = args[1] if len(args) > 1 and args[1] != "-" else "open"
-        milestone = args[2] if len(args) > 2 and args[2] != "-" else None
+        slots = ["repo", "state", "milestone"]
+        allowed = {"repo", "state", "milestone"}
+        pos, kwargs = split_args(cmd, args, slots, allowed)
+        repo = validate_repo(pick(cmd, "repo", pos["repo"], kwargs))
+        state = pick(cmd, "state", pos["state"], kwargs) or "open"
+        milestone = pick(cmd, "milestone", pos["milestone"], kwargs)
         broker.list_issues(repo, state, milestone)
 
-    elif cmd == "labels":
-        broker.list_labels(args[0] if args else None)
-
-    elif cmd == "milestones":
-        broker.list_milestones(args[0] if args else None)
+    elif cmd in ("labels", "milestones"):
+        pos, kwargs = split_args(cmd, args, ["repo"], {"repo"})
+        repo = validate_repo(pick(cmd, "repo", pos["repo"], kwargs))
+        if cmd == "labels":
+            broker.list_labels(repo)
+        else:
+            broker.list_milestones(repo)
 
     elif cmd == "open":
-        kwargs = parse_kwargs(args)
+        allowed = {
+            "title",
+            "body",
+            "body_file",
+            "repo",
+            "assignee",
+            "labels",
+        }
+        _, kwargs = split_args(
+            cmd,
+            args,
+            [],
+            allowed,
+            hint=(
+                "Use 'jacazul-broker open title=\"My title\"'. "
+                "'open' takes no positional arguments."
+            ),
+        )
         title = kwargs.get("title")
         if not title:
             error(
                 "Title required to open issue.\n"
                 "   ACTION: Use 'jacazul-broker open title=\"My title\"'"
             )
-        body = kwargs.get("body")
-        body_file = kwargs.get("body_file")
-        repo = kwargs.get("repo")
-        assignee = kwargs.get("assignee")
-        labels_raw = kwargs.get("labels")
-        labels = labels_raw.split(",") if labels_raw else None
-        broker.open_issue(title, body, body_file, repo, assignee, labels)
+        broker.open_issue(
+            title,
+            kwargs.get("body"),
+            kwargs.get("body_file"),
+            validate_repo(kwargs.get("repo")),
+            kwargs.get("assignee"),
+            _split_list(kwargs.get("labels")) or None,
+        )
 
     elif cmd == "edit":
-        if not args:
-            error(
-                "Issue ID required to edit.\n"
-                "   ACTION: Use 'jacazul-broker edit #123 title=\"New Title\"'"
-            )
-        issue_id = args[0]
-        kwargs = parse_kwargs(args[1:])
-        title = kwargs.get("title")
-        body = kwargs.get("body")
-        body_file = kwargs.get("body_file")
-        repo = kwargs.get("repo")
-        assignee = kwargs.get("assignee")
-        add_labels_raw = kwargs.get("add_labels")
-        add_labels = add_labels_raw.split(",") if add_labels_raw else None
+        allowed = {
+            "title",
+            "body",
+            "body_file",
+            "repo",
+            "assignee",
+            "remove_assignee",
+            "add_labels",
+            "remove_labels",
+        }
+        pos, kwargs = split_args(cmd, args, ["issue_id"], allowed)
+        issue_id = require_id(cmd, pos["issue_id"])
         broker.edit_issue(
-            issue_id, title, body, body_file, repo, assignee, add_labels
+            issue_id,
+            kwargs.get("title"),
+            kwargs.get("body"),
+            kwargs.get("body_file"),
+            validate_repo(kwargs.get("repo")),
+            kwargs.get("assignee"),
+            _split_list(kwargs.get("add_labels")) or None,
+            _split_list(kwargs.get("remove_labels")) or None,
+            kwargs.get("remove_assignee"),
         )
 
     elif cmd == "comment":
-        if not args:
-            error(
-                "Issue ID required to comment.\n"
-                "   ACTION: Use 'jacazul-broker comment #123 "
-                'body="My comment"\''
-            )
-        issue_id = args[0]
-        kwargs = parse_kwargs(args[1:])
+        allowed = {"body", "body_file", "repo"}
+        pos, kwargs = split_args(cmd, args, ["issue_id"], allowed)
+        example = 'jacazul-broker comment "#123" body="My comment"'
+        issue_id = require_id(cmd, pos["issue_id"], example)
         body = kwargs.get("body")
         body_file = kwargs.get("body_file")
-        repo = kwargs.get("repo")
         if not body and not body_file:
-            error(
-                "Comment body required.\n"
-                "   ACTION: Use 'jacazul-broker comment #123 "
-                'body="My comment"\''
-            )
-        broker.comment_issue(issue_id, body, body_file, repo)
+            error(f"Comment body required.\n   ACTION: Use '{example}'")
+        broker.comment_issue(
+            issue_id, body, body_file, validate_repo(kwargs.get("repo"))
+        )
 
     elif cmd == "close":
-        # Syntax: broker.py close <id> [repo] [comment]
-        if len(args) < 1:
-            error(
-                "Issue ID required to close.\n"
-                "   ACTION: Use 'jacazul-broker close #123'"
-            )
-        issue_id = args[0]
-        repo = args[1] if len(args) > 1 and args[1] != "-" else None
-        comment = args[2] if len(args) > 2 else None
+        slots = ["issue_id", "repo", "comment"]
+        allowed = {"repo", "comment"}
+        pos, kwargs = split_args(cmd, args, slots, allowed)
+        issue_id = require_id(cmd, pos["issue_id"])
+        repo = validate_repo(pick(cmd, "repo", pos["repo"], kwargs))
+        comment = pick(cmd, "comment", pos["comment"], kwargs)
         broker.close_issue(issue_id, repo, comment)
 
     else:
+        print(USAGE, file=sys.stderr)
         error(
             f"Unknown command: '{cmd}'.\n"
             "   ACTION: Use one of: view, sync, list, labels, milestones, "

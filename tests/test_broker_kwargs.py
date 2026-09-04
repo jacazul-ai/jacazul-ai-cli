@@ -126,7 +126,7 @@ class TestBrokerKwargs(unittest.TestCase):
         )
         self.assertEqual(res.returncode, 1)
         self.assertIn(
-            "ACTION: Use 'jacazul-broker comment #123 body=\"My comment\"'",
+            'ACTION: Use \'jacazul-broker comment "#123" body="My comment"\'',
             res.stderr,
         )
 
@@ -139,7 +139,7 @@ class TestBrokerKwargs(unittest.TestCase):
         )
         self.assertEqual(res.returncode, 1)
         self.assertIn(
-            "ACTION: Use 'jacazul-broker comment #123 body=\"My comment\"'",
+            'ACTION: Use \'jacazul-broker comment "#123" body="My comment"\'',
             res.stderr,
         )
 
@@ -176,7 +176,7 @@ class TestBrokerKwargs(unittest.TestCase):
             text=True,
         )
         self.assertEqual(res.returncode, 1)
-        self.assertIn("ACTION: Use 'jacazul-broker view #123'", res.stderr)
+        self.assertIn('ACTION: Use \'jacazul-broker view "#123"\'', res.stderr)
 
     def test_view_issue_calls_gh(self):
         """Verify that 'view' reaches gh (not blocked by our parser)."""
@@ -186,7 +186,7 @@ class TestBrokerKwargs(unittest.TestCase):
             capture_output=True,
             text=True,
         )
-        self.assertNotIn("ACTION: Use 'jacazul-broker view #123'", res.stderr)
+        self.assertNotIn('ACTION: Use \'jacazul-broker view "#123"\'', res.stderr)
 
 
 if __name__ == "__main__":
