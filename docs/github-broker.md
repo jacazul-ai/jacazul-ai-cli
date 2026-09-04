@@ -47,28 +47,72 @@ The Broker is the engine that performs the actual synchronization.
 
 ### CLI Commands (Direct Use)
 
-**CRITICAL:** Commands `open`, `edit`, and `comment` use **keyword arguments** (`key=val`). Other commands use positional arguments.
+Every command accepts the repository as `repo="org/name"`. When you omit it,
+the Broker infers the repository from the current git remote.
 
 ```bash
-# Sync local tasks with GitHub status (positional)
-jacazul-broker sync <issue_id> [repo]
+# Show an issue with its full body
+jacazul-broker view '<id>' [repo="org/repo"]
 
-# List issues (positional)
-jacazul-broker list [repo] [state] [milestone]
+# Sync local tasks with GitHub status
+jacazul-broker sync '<id>' [repo="org/repo"]
 
-# Open a new issue (kwargs)
-jacazul-broker open title="Issue Title" [body="Description"] [repo="org/repo"] [labels="bug,ui"]
+# List issues
+jacazul-broker list [repo="org/repo"] [state="open|closed|all"] \
+  [milestone="name"]
 
-# Edit an existing issue (ID + kwargs)
-jacazul-broker edit <id> [title="New Title"] [body="New body"] [add_labels="enhancement"]
+# List repository labels and milestones (cached)
+jacazul-broker labels [repo="org/repo"]
+jacazul-broker milestones [repo="org/repo"]
 
-# Comment on an existing issue (ID + kwargs)
+# Open a new issue
+jacazul-broker open title="Issue Title" [body="Description"] \
+  [body_file="/path/body.md"] [repo="org/repo"] [assignee="@me"] \
+  [labels="bug,ui"]
+
+# Edit an existing issue
+jacazul-broker edit '<id>' [title="New Title"] [body="New body"] \
+  [body_file="/path/body.md"] [repo="org/repo"] [assignee="@me"] \
+  [remove_assignee="login"] [add_labels="enhancement"] \
+  [remove_labels="bug"]
+
+# Comment on an existing issue
 # Use body_file= for Markdown/multiline comments, same as issue descriptions.
-jacazul-broker comment '<id>' [body="Comment"] [body_file="/path/comment.md"] [repo="org/repo"]
+jacazul-broker comment '<id>' [body="Comment"] \
+  [body_file="/path/comment.md"] [repo="org/repo"]
 
-# Close an issue (positional)
-jacazul-broker close <id> [repo] [comment]
+# Close an issue
+jacazul-broker close '<id>' [repo="org/repo"] [comment="Reason"]
 ```
+
+Run `jacazul-broker --help` for the same reference in the terminal.
+
+### Argument rules
+
+| Trigger | What happens |
+|---|---|
+| You want a specific repository | Pass `repo="org/name"` — works on every command |
+| You omit the repository | It is inferred from the current git remote |
+| You pass the repository positionally to a read command | Accepted, but prints a deprecation warning |
+| You pass the repository positionally to `open`, `edit` or `comment` | Rejected with an `ACTION:` hint |
+| You misspell a keyword | Rejected with the list of accepted keywords |
+| You pass a malformed repository | Rejected before `gh` runs |
+| You want to skip a positional argument | Use `-`, e.g. `jacazul-broker list - closed` |
+| Your issue id starts with `#` | Quote it: `'#106'` — an unquoted `#` starts a shell comment |
+
+Multi-value options (`labels`, `add_labels`, `remove_labels`, `assignee`,
+`remove_assignee`) accept comma-separated values. Assignee logins may be
+`@me` or `@copilot`.
+
+Nothing is dropped silently: an unrecognized or misplaced argument always
+fails with a non-zero exit code, never a quiet fallback to the inferred
+repository.
+
+### Token resolution timeout
+
+Token decryption is bounded. If `cryptozoid` does not answer within 30
+seconds, the Broker aborts with an `ACTION:` hint instead of hanging the
+caller. Override the bound with `JACAZUL_BROKER_DECRYPT_TIMEOUT` (seconds).
 
 ## 🧪 IdZoid Security Integration
 
@@ -78,5 +122,5 @@ All tokens are processed via `cryptozoid`.
 - **Cleaning:** The Broker automatically strips trailing newlines (`\n`) from decrypted tokens to ensure API compatibility.
 
 ---
-**Version:** 1.1.0  
-**Last Updated:** 2026-03-26
+**Version:** 1.2.0  
+**Last Updated:** 2026-09-04

@@ -28,39 +28,51 @@ license: MIT
 
 ## jacazul-broker CLI Reference
 
-**CRITICAL:** Commands `open`, `edit`, and `comment` use **keyword arguments** (`key=val`). Other commands use positional arguments.
+**CRITICAL:** The repository is `repo="org/name"` on **every** command. Omit it and the Broker infers it from the current git remote. Read commands still accept a positional repository, but that form is deprecated and warns; on `open`, `edit` and `comment` it is rejected outright.
 
 ```bash
 # List issues
-jacazul-broker list [repo] [state] [milestone]
+jacazul-broker list [repo="..."] [state="open|closed|all"] [milestone="..."]
 
 # List labels (cached)
-jacazul-broker labels [repo]
+jacazul-broker labels [repo="..."]
 
 # List milestones (cached)
-jacazul-broker milestones [repo]
+jacazul-broker milestones [repo="..."]
 
-# Create issue (kwargs)
-jacazul-broker open title="..." [body="..."] [repo="..."] [assignee="..."] [labels="l1,l2"]
+# Create issue
+jacazul-broker open title="..." [body="..."] [body_file="..."] [repo="..."] [assignee="@me"] [labels="l1,l2"]
 
-# Edit issue (id + kwargs)
-jacazul-broker edit <id> [title="..."] [body="..."] [repo="..."] [assignee="..."] [add_labels="l1"]
+# Edit issue
+jacazul-broker edit '<id>' [title="..."] [body="..."] [body_file="..."] [repo="..."] [assignee="@me"] [remove_assignee="..."] [add_labels="l1"] [remove_labels="l2"]
 
-# Comment issue (id + kwargs; quote # IDs in shell)
+# Comment issue (quote # IDs in shell)
 # Use body_file= for Markdown/multiline comments, same as issue bodies.
 jacazul-broker comment '<id>' [body="..."] [body_file="..."] [repo="..."]
 
-# Close issue (positional)
-jacazul-broker close <id> [repo] [comment]
+# Close issue
+jacazul-broker close '<id>' [repo="..."] [comment="..."]
 
 # Sync GitHub issue state → Taskwarrior
-jacazul-broker sync <issue_id> [repo]
+jacazul-broker sync '<issue_id>' [repo="..."]
+
+# Show an issue with its full body
+jacazul-broker view '<issue_id>' [repo="..."]
+
+# Full reference in the terminal
+jacazul-broker --help
 ```
+
+**Fail-closed parsing:** An unknown keyword or a misplaced positional argument aborts with a non-zero exit code and an `ACTION:` hint. Nothing falls back silently to the inferred repository, so a sandbox-targeted command can never land in production by accident.
+
+**Multi-value options:** `labels`, `add_labels`, `remove_labels`, `assignee` and `remove_assignee` accept comma-separated values. Assignee logins may be `@me` or `@copilot`.
+
+**Positional placeholder:** Use `-` to skip a positional argument, e.g. `jacazul-broker list - closed`.
 
 **Examples:**
 ```bash
-# Create issue with kwargs
-jacazul-broker open title="feat: my feature" body="Body text here" labels="enhancement"
+# Create issue with kwargs (plain human title — no Conventional Commit prefix)
+jacazul-broker open title="Add my feature" body="Body text here" labels="enhancement"
 
 # Edit issue with kwargs
 jacazul-broker edit '#30' title="Refactored Title" add_labels="bug"
