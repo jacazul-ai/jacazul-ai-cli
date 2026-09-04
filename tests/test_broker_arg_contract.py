@@ -29,6 +29,91 @@ def run_broker(*args):
     )
 
 
+class TestAssigneeLifecycle(unittest.TestCase):
+    """Assignee handling must use the flags gh actually accepts."""
+
+    def test_edit_uses_add_assignee_flag(self):
+        """Regression: edit_issue emitted --assignee, which gh rejects."""
+        sys.path.insert(0, PROJECT_ROOT)
+        from jacazul.cli.broker import GitHubBroker
+
+        captured = {}
+
+        class FakeResult:
+            returncode = 0
+            stdout = ""
+            stderr = ""
+
+        broker = GitHubBroker()
+
+        def fake_run_gh(args, repo=None, use_repo_flag=True):
+            captured["args"] = args
+            return FakeResult()
+
+        broker._run_gh = fake_run_gh
+        broker._invalidate_cache = lambda *a, **k: None
+        broker.edit_issue("#106", assignee="@me")
+
+        self.assertIn("--add-assignee", captured["args"])
+        self.assertNotIn("--assignee", captured["args"])
+        self.assertIn("@me", captured["args"])
+
+    def test_edit_supports_remove_and_multiple_assignees(self):
+        sys.path.insert(0, PROJECT_ROOT)
+        from jacazul.cli.broker import GitHubBroker
+
+        captured = {}
+
+        class FakeResult:
+            returncode = 0
+            stdout = ""
+            stderr = ""
+
+        broker = GitHubBroker()
+
+        def fake_run_gh(args, repo=None, use_repo_flag=True):
+            captured["args"] = args
+            return FakeResult()
+
+        broker._run_gh = fake_run_gh
+        broker._invalidate_cache = lambda *a, **k: None
+        broker.edit_issue(
+            "#106", assignee="alice, bob", remove_assignee="carol"
+        )
+
+        args = captured["args"]
+        self.assertEqual(args.count("--add-assignee"), 2)
+        self.assertIn("alice", args)
+        self.assertIn("bob", args)
+        self.assertIn("--remove-assignee", args)
+        self.assertIn("carol", args)
+
+    def test_open_keeps_create_assignee_flag(self):
+        """'gh issue create' does accept --assignee; keep it there."""
+        sys.path.insert(0, PROJECT_ROOT)
+        from jacazul.cli.broker import GitHubBroker
+
+        captured = {}
+
+        class FakeResult:
+            returncode = 0
+            stdout = "https://example.invalid/1"
+            stderr = ""
+
+        broker = GitHubBroker()
+
+        def fake_run_gh(args, repo=None, use_repo_flag=True):
+            captured["args"] = args
+            return FakeResult()
+
+        broker._run_gh = fake_run_gh
+        broker._invalidate_cache = lambda *a, **k: None
+        broker.open_issue("Title", assignee="@me", repo=SANDBOX)
+
+        self.assertIn("--assignee", captured["args"])
+        self.assertNotIn("--add-assignee", captured["args"])
+
+
 class TestDecryptTimeout(unittest.TestCase):
     """Token resolution must be bounded and instructional on expiry."""
 

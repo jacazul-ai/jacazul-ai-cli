@@ -14,6 +14,13 @@ from jacazul.taskwarrior.core import TaskWrapper
 DEFAULT_DECRYPT_TIMEOUT = 30
 
 
+def _split_list(raw: Optional[str]) -> list:
+    """Expands a comma-separated option into a list of trimmed values."""
+    if not raw:
+        return []
+    return [item.strip() for item in raw.split(",") if item.strip()]
+
+
 def _env_timeout(name: str, default: int) -> int:
     """Reads a positive integer timeout from the environment."""
     raw = os.environ.get(name)
@@ -318,8 +325,9 @@ class GitHubBroker:
             args += ["--body-file", body_file]
         elif body:
             args += ["--body", body]
-        if assignee:
-            args += ["--assignee", assignee]
+        # 'gh issue create' takes --assignee; 'gh issue edit' does not.
+        for login in _split_list(assignee):
+            args += ["--assignee", login]
         if labels:
             for label in labels:
                 args += ["--label", label]
@@ -432,6 +440,7 @@ class GitHubBroker:
         assignee: Optional[str] = None,
         add_labels: Optional[list] = None,
         remove_labels: Optional[list] = None,
+        remove_assignee: Optional[str] = None,
     ):
         """Edits an existing GitHub issue."""
         clean_id = issue_id.lstrip("#")
@@ -442,8 +451,12 @@ class GitHubBroker:
             args += ["--body-file", body_file]
         elif body:
             args += ["--body", body]
-        if assignee:
-            args += ["--assignee", assignee]
+        # 'gh issue edit' only knows --add-assignee / --remove-assignee.
+        # '@me' and '@copilot' pass through to gh untouched.
+        for login in _split_list(assignee):
+            args += ["--add-assignee", login]
+        for login in _split_list(remove_assignee):
+            args += ["--remove-assignee", login]
         if add_labels:
             for label in add_labels:
                 args += ["--add-label", label]
