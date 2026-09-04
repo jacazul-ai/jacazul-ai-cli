@@ -11,6 +11,20 @@ from jacazul.taskwarrior.core import TaskWrapper
 # 🐊 Jacazul GitHub Broker (The Protocol)
 # Handles synchronization between Taskwarrior and GitHub via IdZoid security.
 
+DEFAULT_DECRYPT_TIMEOUT = 30
+
+
+def _env_timeout(name: str, default: int) -> int:
+    """Reads a positive integer timeout from the environment."""
+    raw = os.environ.get(name)
+    if not raw:
+        return default
+    try:
+        value = int(raw)
+    except ValueError:
+        return default
+    return value if value > 0 else default
+
 
 class GitHubBroker:
     def __init__(
@@ -29,6 +43,9 @@ class GitHubBroker:
         self.cache_dir = os.path.join(self.vault_dir, "cache", "github")
         self.cryptozoid_bin = cryptozoid_bin or os.path.expanduser(
             "~/go/bin/cryptozoid"
+        )
+        self.decrypt_timeout = _env_timeout(
+            "JACAZUL_BROKER_DECRYPT_TIMEOUT", DEFAULT_DECRYPT_TIMEOUT
         )
 
     def _ensure_cache_dir(self, repo: str):
@@ -86,22 +103,38 @@ class GitHubBroker:
         if not os.path.exists(self.cryptozoid_bin):
             return None
 
-        try:
-            cmd = [
-                self.cryptozoid_bin,
-                "ec",
-                "decrypt",
-                "-n",
-                self.vault_name,
-                "-p",
-                self.vault_dir,
-                encrypted_blob,
-            ]
+        cmd = [
+            self.cryptozoid_bin,
+            "ec",
+            "decrypt",
+            "-n",
+            self.vault_name,
+            "-p",
+            self.vault_dir,
+            encrypted_blob,
+        ]
 
+        try:
             result = subprocess.run(
-                cmd, capture_output=True, text=True, check=True
+                cmd,
+                capture_output=True,
+                text=True,
+                check=True,
+                timeout=self.decrypt_timeout,
             )
             return result.stdout.strip()
+        except subprocess.TimeoutExpired:
+            # 🐊 Error as Prompt: a silent hang teaches nothing. A stuck
+            # decrypt used to block the calling agent forever with no output.
+            print(
+                f"⏱️ Token decryption timed out after "
+                f"{self.decrypt_timeout}s.\n"
+                "   ACTION: Another process may hold the vault. Retry; if it "
+                "persists, check for stuck 'cryptozoid ec decrypt' processes "
+                "or raise JACAZUL_BROKER_DECRYPT_TIMEOUT.",
+                file=sys.stderr,
+            )
+            return None
         except Exception:
             return None
 
