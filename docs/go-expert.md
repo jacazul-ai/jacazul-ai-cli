@@ -5,6 +5,26 @@ Guide for the go-expert skill: idiomatic Go, explicit quality-gate boundaries,
 
 ## Trigger → Action
 
+### When the user asks for a Go code review
+
+Use the implementation guidance in
+[`skills/go-expert/PLAYBOOK.md`](../skills/go-expert/PLAYBOOK.md) when writing
+Go. Use the separate scenario-based directives in
+[`skills/go-expert/CODE-REVIEW.md`](../skills/go-expert/CODE-REVIEW.md) when
+reviewing it. Start with the `go` directive in `go.mod` before judging
+version-sensitive behavior.
+
+The main skill page provides both entry points:
+[`skills/go-expert/SKILL.md`](../skills/go-expert/SKILL.md). Repository
+configuration takes precedence over optional checks.
+
+Classify each review finding using the global
+[`code-review` scale](../skills/code-review/SKILL.md): technical level, impact
+area, evidence, and advisory. A non-blocking `FIX-OR-TECH-DEBT` finding must be
+corrected or converted into a linked `TECH-DEBT` task with context and
+acceptance criteria; it must not silently become “later.” Time-dependent tests
+using `time.Now()` or mixed UTC/timezone semantics are a standard example.
+
 ### When the user asks for Go formatting
 
 Run `gofmt` first, then run `goimports` if available. This is the preferred

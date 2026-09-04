@@ -39,6 +39,20 @@ Do not present inferred Go practices as project-specific rules.
 If no repository-specific Go gate exists, say so clearly and apply the
 conventional baseline below.
 
+## 🔎 Go Engineering References
+
+- [`PLAYBOOK.md`](PLAYBOOK.md) — implementation guidance for writing Go:
+  design, ownership, errors, concurrency, security, tests, and tooling.
+- [`CODE-REVIEW.md`](CODE-REVIEW.md) — Go-specific scenario-based review
+  directives: risky code shape, context, runtime sequence, failure modes,
+  evidence, and acceptable correction.
+- [`../code-review/SKILL.md`](../code-review/SKILL.md) — global technical-level
+  and advisory scales used by all language-specific review skills.
+
+Before judging version-sensitive behavior, read the `go` directive in
+`go.mod`. Treat both documents as engineering guidance, not automatic project
+policy; repository-configured gates always take precedence.
+
 ## 🛠 Formatting and Imports
 
 - When writing or editing Go code, proactively run **`gofmt` first**, then

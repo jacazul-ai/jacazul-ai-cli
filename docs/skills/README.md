@@ -89,6 +89,25 @@ GitHub Actions, cache poisoning, and automation hardening.
 
 ---
 
+### Code Review
+**Status:** ✅ Active
+**Documentation:** [`skills/code-review/SKILL.md`](../../skills/code-review/SKILL.md)
+
+Global code-review vocabulary and policy. Separates technical finding levels
+from reviewer advisory outcomes, evidence, and tech-debt handling. Language
+skills add scenarios and reference this shared scale.
+
+**Trigger → Action**
+- When reviewing any code, classify technical level and advisory separately.
+- When a non-blocking finding is actionable, fix it now or create a linked
+  tech-debt task with context and acceptance criteria.
+- When a language-specific review skill exists, use its scenarios with this
+  global scale instead of redefining labels.
+
+**Location:** `/project/skills/code-review/`
+
+---
+
 ### Go Expert
 **Status:** ✅ Active
 **Documentation:** [`skills/go-expert/SKILL.md`](../../skills/go-expert/SKILL.md) and [Go Expert Guide](../go-expert.md)
