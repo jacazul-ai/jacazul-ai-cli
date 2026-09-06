@@ -72,7 +72,7 @@ if [ ! -d "$PI_EXTENSIONS_DIR" ]; then
     mkdir -p -- "$PI_EXTENSIONS_DIR"
 fi
 
-for legacy_name in pi-jacazul-line.ts pi-viewport-probe.ts pi-viewport-probe-impl.ts; do
+for legacy_name in pi-jacazul-line.ts pi-viewport-probe.ts pi-viewport-probe-impl.ts jacazul-ui.ts; do
     legacy_target="$PI_EXTENSIONS_DIR/$legacy_name"
     if [ -L "$legacy_target" ]; then
         legacy_source=$(readlink "$legacy_target")
@@ -85,7 +85,9 @@ for legacy_name in pi-jacazul-line.ts pi-viewport-probe.ts pi-viewport-probe-imp
     fi
 done
 
-for extension_file in "$PROJECT_ROOT/extensions/pi/jacazul-line.ts"; do
+for extension_file in \
+    "$PROJECT_ROOT/extensions/pi/jacazul-line.ts" \
+    "$PROJECT_ROOT/extensions/pi/jacazul-ui.ts"; do
     [ -f "$extension_file" ] || continue
     name=$(basename "$extension_file")
     target="$PI_EXTENSIONS_DIR/$name"

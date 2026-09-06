@@ -5,6 +5,30 @@ SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
 PROJECT_ROOT="$(readlink -f "$SCRIPT_DIR/..")"
 export JACAZUL_HARNESS="${JACAZUL_HARNESS:-pi}"
 
+# RPC mode requires stdout to remain a strict JSONL stream. Keep launcher
+# bootstrap messages and exit banners on stderr when pi is used as a child.
+RPC_MODE=false
+_mode_value_pending=false
+for arg in "$@"; do
+    if [[ "$_mode_value_pending" == "true" ]]; then
+        [ "$arg" = "rpc" ] && RPC_MODE=true
+        _mode_value_pending=false
+    elif [[ "$arg" == "--mode" ]]; then
+        _mode_value_pending=true
+    elif [[ "$arg" == "--mode=rpc" ]]; then
+        RPC_MODE=true
+    fi
+done
+unset _mode_value_pending
+
+source_bootstrap() {
+    if [ "$RPC_MODE" = true ]; then
+        source "$1" >&2
+    else
+        source "$1"
+    fi
+}
+
 # -----------------------------------------------------------------------------
 # Session Restore: parse --jacazul-session BEFORE bootstrap sources
 # -----------------------------------------------------------------------------
@@ -22,7 +46,7 @@ done
 # -----------------------------------------------------------------------------
 BOOTSTRAP_ENV="$PROJECT_ROOT/scripts/bootstrap/environment"
 if [ -f "$BOOTSTRAP_ENV" ]; then
-    source "$BOOTSTRAP_ENV"
+    source_bootstrap "$BOOTSTRAP_ENV"
 else
     echo "❌ Jacazul runtime environment not found at $BOOTSTRAP_ENV" >&2
     exit 1
@@ -31,7 +55,7 @@ fi
 # Resolve the project-anchored persona for runtime injection.
 BOOTSTRAP_PERSONA="$PROJECT_ROOT/scripts/bootstrap/persona"
 if [ -f "$BOOTSTRAP_PERSONA" ]; then
-    source "$BOOTSTRAP_PERSONA"
+    source_bootstrap "$BOOTSTRAP_PERSONA"
 else
     echo "❌ Jacazul persona bootstrap not found at $BOOTSTRAP_PERSONA" >&2
     exit 1
@@ -52,7 +76,7 @@ export PI_CODING_AGENT_DIR="${PI_CODING_AGENT_DIR:-$JACAZUL_HOME/agents/pi}"
 # -----------------------------------------------------------------------------
 # Pi Bootstrap (auto-update + pi-specific setup)
 # -----------------------------------------------------------------------------
-source "$PROJECT_ROOT/scripts/bootstrap/pi"
+source_bootstrap "$PROJECT_ROOT/scripts/bootstrap/pi"
 
 MULTI_AGENT_LOOP_FILE="$PROJECT_ROOT/jacazul/hatch/templates/core/multi_agent_loop.md"
 if [ ! -f "$MULTI_AGENT_LOOP_FILE" ]; then
@@ -177,7 +201,13 @@ case "${CLEAN_ARGS[0]:-}" in
         ;;
 esac
 
-[ -n "$DEBUG" ] && echo "🐊 jacazul-pi: Starting for project [$PROJECT_ID]"
+if [ -n "$DEBUG" ]; then
+    if [ "$RPC_MODE" = true ]; then
+        echo "🐊 jacazul-pi: Starting for project [$PROJECT_ID]" >&2
+    else
+        echo "🐊 jacazul-pi: Starting for project [$PROJECT_ID]"
+    fi
+fi
 
 # DRY RUN: Exit before execution if DRY is set
 if [ -n "$DRY" ]; then
@@ -201,7 +231,12 @@ fi
 if [ -n "${JACAZUL_SESSION_ID:-}" ]; then
     FOCUS_FILE="$JACAZUL_HOME/.task/$PROJECT_ID/focus-$JACAZUL_SESSION_ID.json"
     if [ -f "$FOCUS_FILE" ]; then
-        printf '\n'
-        printf '🐊 Resume: jacazul-pi --jacazul-session %s\n' "$JACAZUL_SESSION_ID"
+        if [ "$RPC_MODE" = true ]; then
+            printf '\n' >&2
+            printf '🐊 Resume: jacazul-pi --jacazul-session %s\n' "$JACAZUL_SESSION_ID" >&2
+        else
+            printf '\n'
+            printf '🐊 Resume: jacazul-pi --jacazul-session %s\n' "$JACAZUL_SESSION_ID"
+        fi
     fi
 fi

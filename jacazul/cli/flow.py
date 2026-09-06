@@ -1607,7 +1607,7 @@ class FlowManager:
             children = [
                 c["uuid"]
                 for c in self.tw.export(
-                    [f"depends.contains:{uuid}", "status:pending"]
+                    [f"depends.contains:{uuid}"]
                 )
                 if "_archive" not in c.get("project", "")
             ]
