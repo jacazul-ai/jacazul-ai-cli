@@ -527,6 +527,52 @@ contract.
 or offset risk, the expected time contract, the deterministic correction, and
 an acceptance test. “Use a clock later” is not sufficient context.
 
+### Init-time environment changes and helper-process tests
+
+**Avoid:** Calling `t.Setenv` in the parent test and expecting an
+already-loaded package or `sync.Once` path to observe a fresh environment.
+Also avoid using `os.Args[0]` as the re-executable when a test may change its
+working directory.
+
+**Context:** Environment-sensitive behavior can be fixed during package
+initialization or the first call guarded by `sync.Once`. The parent test shares
+that process state across subtests, so changing `TZ` or another variable after
+initialization does not provide an isolated case.
+
+**Runtime sequence:** The parent test starts a fresh copy of the current test
+binary with `os.Executable()`, sets a guard such as `GO_WANT_EPOCH_HELPER=1`
+and the case-specific environment (for example, `TZ=America/New_York`), then
+selects only the helper with `-test.run=^TestName$`. The child starts with that
+environment, runs initialization, prints the observed value, and exits; the
+parent asserts the captured result.
+
+**Failure modes:** The test can report a false pass because the parent retained
+its original timezone, miss a date boundary, recurse by spawning children
+without a guard, or fail only after `os.Chdir` makes `os.Args[0]` unresolvable.
+A shell-based re-exec also adds quoting and injection risk.
+
+**Review directive:** Treat the helper-process approach as a valid
+standard-library testing idiom when environment must be changed before
+initialization. Require a dedicated guard, direct `exec.Command`,
+`os.Executable()`, a narrowly scoped `-test.run`, explicit child environment,
+and assertions over captured output or exit status. For date/timezone coverage,
+require at least one fixed epoch and the relevant UTC/local or DST boundary.
+Be precise: the standard library validates the helper-process pattern, while
+using it for our timezone/date behavior is an application-specific adaptation,
+not a claim about the stdlib `time` test suite.
+
+**Acceptable correction:** Follow the detailed implementation pattern in the
+[Go playbook][go-helper-playbook]. Use a pure function or injected clock when
+environment initialization is not part of the contract; use a helper process
+when testing that initialization contract itself.
+
+[go-helper-playbook]: PLAYBOOK.md#process-isolated-tests-for-initialization-time-environment
+
+**Classification:** Usually `WARNING` / `FIX-OR-TECH-DEBT` / `TEMPORAL` /
+`REPRODUCED` when the test demonstrably reads stale environment state. Promote
+to `BLOCKER` only when the test controls a critical expiration,
+authentication, or merge-gate contract.
+
 ## Expert: systems, contracts, and performance
 
 These require reasoning about contracts, the memory model, trust boundaries,

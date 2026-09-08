@@ -133,6 +133,61 @@ Write tests around the contract, not only the happy path:
 - concurrent completion, failure propagation, and bounded resources;
 - security boundaries and resource cleanup.
 
+### Process-isolated tests for initialization-time environment
+
+An environment-guarded helper process is a valid Go standard-library idiom,
+not an improvised workaround. Use it when a test must vary an environment
+variable before package initialization or one-time setup runs. Changing the
+parent process after the package has loaded cannot replay `init` or reset a
+`sync.Once` decision.
+
+The standard library uses guards such as `GO_WANT_HELPER_PROCESS` across
+multiple packages. For a project-specific case, use a precise guard such as
+`GO_WANT_EPOCH_HELPER`, re-execute the current test binary, and select only the
+helper test with `-test.run=^TestName$`:
+
+```go
+func TestEpochDateInZone(t *testing.T) {
+	if os.Getenv("GO_WANT_EPOCH_HELPER") == "1" {
+		fmt.Fprintln(os.Stdout, dateFromEpoch(testEpoch))
+		return
+	}
+
+	for _, zone := range []string{"UTC", "America/New_York", "Asia/Tokyo"} {
+		t.Run(zone, func(t *testing.T) {
+			exe, err := os.Executable()
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			cmd := exec.Command(exe, "-test.run=^TestEpochDateInZone$")
+			cmd.Env = append(
+				os.Environ(),
+				"GO_WANT_EPOCH_HELPER=1",
+				"TZ="+zone,
+			)
+			out, err := cmd.Output()
+			if err != nil {
+				t.Fatalf("zone %s: %v", zone, err)
+			}
+			assertDateForZone(t, zone, strings.TrimSpace(string(out)))
+		})
+	}
+}
+```
+
+This is especially useful for date and timezone tests: each child starts with a
+fresh environment, so `TZ=UTC`, `TZ=America/New_York`, and `TZ=Asia/Tokyo` can
+exercise the same epoch against different local-date interpretations. The
+helper-process pattern is standard-library-backed; applying it specifically to
+our timezone/date behavior is a project test design, not a claim that the
+stdlib `time` tests use this exact scenario.
+
+Use `os.Executable()` rather than `os.Args[0]`. The public API resolves the
+running binary robustly when a test changes its working directory; `os.Args[0]`
+may be relative. Invoke the child directly with `exec.Command`, never through a
+shell, and make the guard branch terminate before the parent-only assertions.
+
 Run repository-configured checks first. If no stronger gate exists, use this
 conventional baseline and label it as such:
 
@@ -168,3 +223,8 @@ profiles before changing architecture to explain a performance regression.
 - [Go security](https://go.dev/security/)
 - [Go release history](https://go.dev/doc/devel/release)
 - [Go Code Review Directives](CODE-REVIEW.md)
+- [Go helper-process test guard][stdlib-helper-process]
+- [Go environment test coverage][stdlib-environment-tests]
+
+[stdlib-helper-process]: https://cs.opensource.google/go/go/+/go1.27.0:src/testing/helper_test.go
+[stdlib-environment-tests]: https://cs.opensource.google/go/go/+/go1.27.0:src/os/os_test.go

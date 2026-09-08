@@ -25,6 +25,24 @@ corrected or converted into a linked `TECH-DEBT` task with context and
 acceptance criteria; it must not silently become “later.” Time-dependent tests
 using `time.Now()` or mixed UTC/timezone semantics are a standard example.
 
+### When Go tests must vary environment before initialization
+
+Use an environment-guarded helper process when a variable such as `TZ` must be
+set before package initialization or `sync.Once` setup. This is a valid
+standard-library Go idiom: re-execute the test binary with `os.Executable()`,
+set a guard such as `GO_WANT_EPOCH_HELPER=1`, pass the selected environment,
+and limit the child with `-test.run=^TestName$`. It lets date tests run a fixed
+epoch under multiple timezone interpretations without reusing the parent's
+initialized state. The helper-process pattern is standard-library-backed; the
+timezone/date scenario is our application-specific use of it.
+
+See the [process-isolated test guidance][go-helper-tests] and the [review
+directive][go-helper-review] for the guard, `os.Executable()`, direct
+`exec.Command`, and evidence rules.
+
+[go-helper-tests]: ../skills/go-expert/PLAYBOOK.md#process-isolated-tests-for-initialization-time-environment
+[go-helper-review]: ../skills/go-expert/CODE-REVIEW.md#init-time-environment-changes-and-helper-process-tests
+
 ### When the user asks for Go formatting
 
 Run `gofmt` first, then run `goimports` if available. This is the preferred
