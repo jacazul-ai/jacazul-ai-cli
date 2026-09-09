@@ -35,6 +35,26 @@ jacazul-github auth --org jacazul-ai --project jacazul-ai-cli
 jacazul-github auth --classic
 ```
 
+### Fine-grained PAT permissions for private repositories
+
+When using GitHub fine-grained PATs with private repositories, select the target
+repository and grant at least:
+
+| Permission | Access |
+|---|---|
+| Metadata | Read |
+| Contents | Read |
+| Issues | Read and Write |
+| Pull requests | Read and Write, only if PR automation is needed |
+
+`Contents: Read` is required even for issue creation because GitHub CLI's
+`gh issue create` queries repository metadata such as `repository.defaultBranchRef`.
+Without it, `jacazul-broker open` may fail with:
+
+```text
+GraphQL: Resource not accessible by personal access token (repository.defaultBranchRef)
+```
+
 ## 🚀 GitHub Broker (The Protocol)
 
 The Broker is the engine that performs the actual synchronization.
@@ -44,6 +64,19 @@ The Broker is the engine that performs the actual synchronization.
 - **Hierarchical Decryption:** Resolves and decrypts the best token from the vault.
 - **Killer Sync:** Automatically closes Taskwarrior tasks if the corresponding GitHub issue is marked as `CLOSED`.
 - **Error as Prompt:** The Broker provides `ACTION:` hints and returns non-zero exit codes on failure.
+
+### Provider selection
+
+Broker selection follows this precedence:
+
+1. An explicit pattern in `~/.jacazul-ai/brokers.json`.
+2. The ticket identifier format: `#123` selects GitHub and `ORG-123`
+   selects Bitbucket/Jira.
+3. The current Git remote as a fallback when the ticket does not identify a
+   provider.
+
+This allows a project hosted on GitHub to track an external Bitbucket/Jira
+ticket without routing the external ticket to `GitHubBroker`.
 
 ### CLI Commands (Direct Use)
 

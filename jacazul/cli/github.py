@@ -90,9 +90,17 @@ class GitHubManager:
         print(
             "3. REPOSITORY ACCESS: 'Only select repositories' is recommended."
         )
-        print("4. PERMISSIONS:")
+        print("4. PERMISSIONS (fine-grained PAT):")
+        print("   - Metadata: Read")
+        print("   - Contents: Read")
         print("   - Issues: Read and Write")
-        print("   - Pull requests: Read and Write")
+        print(
+            "   - Pull requests: Read and Write (if PR automation is needed)"
+        )
+        print("")
+        print("   NOTE: Private repositories need Contents: Read for")
+        print("   gh issue create / jacazul-broker open. Without it, GitHub")
+        print("   may fail with: repository.defaultBranchRef not accessible.")
         print("5. GENERATE & COPY")
         print("")
         print("HOW TO SAVE IN VAULT:")
@@ -158,8 +166,17 @@ class GitHubManager:
                     "select repositories'."
                 )
 
-            scopes = "'Issues' and 'Pull Requests' (Read/Write)"
-            print(f"ℹ️  Required Scopes: {scopes}")
+            print("ℹ️  Required Permissions for fine-grained PATs:")
+            print("   - Metadata: Read")
+            print("   - Contents: Read")
+            print("   - Issues: Read and Write")
+            print("   - Pull Requests: Read and Write")
+            print("     (if PR automation is needed)")
+            print(
+                "ℹ️  Private repo note: 'Contents: Read' is required by "
+                "GitHub CLI issue creation; it queries "
+                "repository.defaultBranchRef."
+            )
 
         token = getpass.getpass("Paste your GitHub Token (hidden): ").strip()
 
