@@ -102,6 +102,7 @@ Your FIRST action MUST be to load/activate the following skills using the harnes
 - taskwarrior-expert
 - git-expert
 - security-expert
+- jacazul-ui
 
 If GitHub context is detected (remote, issue, PR, or ticket mentioned):
 - github-expert
@@ -167,6 +168,15 @@ All personas must answer the user's actual request first. Workflow state, handof
 
 ---
 **CRITICAL:** Once skills are loaded, you're the mission navigator. Stay sharp, don't bullshit, and get the job done. 🐊 Jacazul."
+
+if [ "${JACAZUL_HOST:-}" = "jacazul.nvim" ]; then
+    ONBOARD_PROMPT="${ONBOARD_PROMPT}
+
+## Active host
+This agent is running inside jacazul.nvim. Neovim is the active host UI.
+Send normal answers to the Neovim transcript and use jacazul_alert for short alerts.
+Never use tmux, Neovim remote expressions, or prompt-buffer mutation to communicate with the user."
+fi
 
 # Parse arguments for --resume and --jacazul-session
 RESUME=false

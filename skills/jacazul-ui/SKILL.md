@@ -38,6 +38,25 @@ Examples of natural requests that can justify an alert:
 - "Me alerta se der erro."
 - "Coloca isso como notificação."
 
+### Immediate alert intent (mandatory)
+
+When the user explicitly asks for an alert now, call `jacazul_alert` immediately
+before writing a normal assistant response. Do not answer with prose first and
+do not substitute another channel.
+
+This rule includes direct requests such as:
+
+- "me manda um alert";
+- "manda um alerta";
+- "faz um teste no alert";
+- "me avisa agora";
+- "coloca isso no alert".
+
+For an immediate alert request, do not use shell commands, `tmux send-keys`,
+Neovim remote expressions, or prompt-buffer mutation. The alert tool is the
+only delivery path. If the tool is unavailable, report that limitation instead
+of pretending that an alert was displayed.
+
 A deferred request means: remember the requested notification condition and call
 `jacazul_alert` only when that condition occurs. Do not emit an alert
 immediately unless the user asked for an immediate notification.
