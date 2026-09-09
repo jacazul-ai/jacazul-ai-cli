@@ -1,6 +1,7 @@
 #!/bin/bash
-# 🐊 Jacazul - Bootstrap for Copilot (Global UNHINGED Mode)
+# 🐊 Jacazul - Bootstrap for Copilot (Native Global Integration)
 # Sets up global agents and skills for native Copilot CLI execution.
+# Autonomy is controlled at runtime by JACAZUL_MODE, not by this linker.
 
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 COPILOT_GLOBAL_DIR="$HOME/.copilot"

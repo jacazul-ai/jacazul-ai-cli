@@ -1,51 +1,80 @@
 # Environment Modes: COUNSELOR vs UNHINGED
 
-This project supports two primary interaction modes that dictate how the environment is bootstrapped and how much autonomy the AI agent has.
+Environment modes define the agent's autonomy baseline for a session. They do
+not replace task-level interaction modes such as `[DESIGN]`, `[GUIDE]`,
+`[REVIEW]`, or `[EXECUTE]`.
 
-## 🛡️ COUNSELOR Mode (Safety Default)
+## When you want safe collaborative work
 
-**Purpose:** Interactive partnership. This is the default mode for all sessions. It ensures that the AI agent acts as a co-pilot, requiring user consent for significant system changes.
+Use **COUNSELOR** mode. This is the default when `JACAZUL_MODE` is unset.
 
-### 📍 Key Locations (UNHINGED/Native Baseline)
+COUNSELOR is **not read-only**. It means guided collaboration with controlled
+state changes.
 
-| Component | Path |
-| :--- | :--- |
-| **JACAZUL_HOME** | `~/.jacazul-ai` |
-| **Taskwarrior Config** | `~/.jacazul-ai/.taskrc` |
-| **Taskwarrior Data** | `~/.jacazul-ai/.task/$PROJECT_ID` |
-| **Python VENV** | `~/.jacazul-ai/.venv` |
+The agent may:
+- inspect code and configuration;
+- reason about design and trade-offs;
+- propose implementation steps;
+- draft snippets or suggested diffs;
+- review user changes;
+- run validation commands when appropriate;
+- directly edit files when the user clearly asks for implementation or approves
+  the agent taking the wheel.
 
-### 🧠 Behavior & Autonomy
-- **Autonomy:** Propose-and-Wait.
-- **Rules:**
-  - **System Changes:** Requires explicit user approval for `chmod`, `rm`, `scripts/configure`, or editing bootstrap files.
-  - **Git Commits:** Must present a draft and wait for an "OK" before committing to the `master` branch.
-  - **Task Closure:** Must ask before running `tw-flow done`.
+The agent must ask before:
+- `git commit` or `git push`;
+- `tw-flow done` / task closure;
+- permanent deletions;
+- database schema changes;
+- low-level system changes such as `chmod` or `scripts/configure`;
+- any other high-impact operation.
 
----
+## When you want guided coding in your own editor
 
-## 🔓 UNHINGED Mode (Active High-Autonomy)
+Use task modes such as `[DESIGN]`, `[GUIDE]`, and `[REVIEW]` inside COUNSELOR.
 
-**Purpose:** Rapid execution and automated environment stabilization. Designed for experienced users who trust the AI to "clean the swamp" without constant micro-management.
+| Task mode | What it means in COUNSELOR |
+|---|---|
+| `[DESIGN]` | Architecture, trade-offs, boundaries, and decision path before implementation. |
+| `[GUIDE]` | User keeps the editor/control loop; agent gives steps, snippets, and suggested diffs. |
+| `[REVIEW]` | Agent critiques and validates user changes before fixes are applied. |
+| `[EXECUTE]` | Agent directly modifies project files for the scoped task. |
 
-### 🧠 Behavior & Autonomy
-- **Autonomy:** Execute-and-Report.
-- **Rules:**
-  - **Direct Action:** Authorized to fix environmental issues, create directories, and update internal configurations autonomously.
-  - **Workflow Momentum:** May close tasks or execute commits once the technical approach is clear.
-  - **Transparency:** All actions must be reported immediately after execution.
+GUIDE and REVIEW are collaboration preferences, not permanent prohibitions on
+writing code. Direct file edits are a mode escalation: the user must explicitly
+request or clearly authorize them.
 
----
+## When you want high-autonomy environment repair
 
-## 🔒 CAGED Mode (Containerized)
+Use **UNHINGED** mode.
 
-**Purpose:** Fully isolated execution inside a Podman/Docker container. 
+UNHINGED is for trusted, high-autonomy native sessions where the agent may fix
+environmental issues and internal configuration with less interruption.
 
-### 🚀 Bootstrap Dynamics
-- **Script:** `scripts/bootstrap/environment`
-- **Default Baseline:** If `JACAZUL_MODE` is unset, the system defaults to **COUNSELOR**.
-- **Switching:** Set the `JACAZUL_MODE` environment variable to `UNHINGED` to enable high-autonomy mode.
+The agent may:
+- create missing directories;
+- repair internal configuration;
+- move faster on workflow momentum;
+- report actions after execution instead of asking before every low-risk repair.
 
----
+Even in UNHINGED, repository history still matters. Commits and pushes should be
+handled according to the Git protocol for the current branch and task context.
 
-**Last Updated:** 2026-03-04
+## When you want isolation
+
+Use **CAGED** mode/containerized launchers when available.
+
+CAGED describes execution isolation, not interaction behavior. A caged session
+can still use COUNSELOR-style collaboration or task-level modes.
+
+## Runtime defaults
+
+- Bootstrap script: `scripts/bootstrap/environment`
+- Default: `JACAZUL_MODE=COUNSELOR`
+- Switch autonomy baseline: set `JACAZUL_MODE=UNHINGED`
+
+## Persistence guard
+
+Do not store workflow-philosophy reflections in task notes just because they were
+discussed. Persist them only when the user explicitly asks to record them or
+confirms them as a project decision.

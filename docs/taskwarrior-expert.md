@@ -94,16 +94,16 @@ Checks for newly unblocked tasks and updates initiative progress.
 
 ## 🚦 Interaction Modes
 
-| Mode | Behavior | Autonomy | Use When |
+| Mode | Behavior | Edit Authority | Use When |
 |---|---|---|---|
-| **[PLAN]** | Analysis & breakdown | Low | Need requirements consensus |
-| **[INVESTIGATE]** | Code exploration | High (Read) | Unknown codebase |
-| **[GUIDE]** | Step-by-step instructions | Zero | User wants manual control |
-| **[EXECUTE]** | Building/Coding | High | Approach is clear |
-| **[TEST]** | QA & Verification | High | Need validation |
-| **[DEBUG]** | Root cause analysis | High (Read) | Something is broken |
-| **[REVIEW]** | Code audit | Read-only | Quality check needed |
-| **[PR-REVIEW]** | Readiness check | Read-only | Before merging |
+| **[DESIGN]** | Architecture, trade-offs, boundaries, and breakdown | No direct edits unless authorized | Need requirements consensus |
+| **[INVESTIGATE]** | Code exploration | Read-only by default | Unknown codebase |
+| **[GUIDE]** | Step-by-step guidance, snippets, and suggested diffs | User keeps the wheel; direct edits require escalation | User wants manual control |
+| **[EXECUTE]** | Building/Coding | Direct file edits authorized by task or request | Approach is clear |
+| **[TEST]** | QA & Verification | Tests/validation within task scope | Need validation |
+| **[DEBUG]** | Root cause analysis | Read-only by default; proposes fixes | Something is broken |
+| **[REVIEW]** | Code audit | Review-first; direct edits require escalation | Quality check needed |
+| **[PR-REVIEW]** | Readiness check | Review-first; direct edits require escalation | Before merging |
 
 ---
 
@@ -139,8 +139,9 @@ Commands that modify task state (`execute`, `done`, `note`, `ticket`, `outcome`,
 1. **Use UUIDs:** Always refer to tasks by their 8-character UUID. Never show numeric IDs.
 2. **One Active Task:** Avoid multiple active tasks in the same initiative.
 3. **Structured Notes:** Use prefixes (`RESEARCH:`, `DECISION:`) for easy context retrieval.
-4. **Never Bypass Abstractions:** Use `taskp` or `tw-flow`. Never invoke raw `task` directly.
-5. **Urgency Calibration:** Only set `due` for real deadlines. Reserve `priority:H` for tasks that are blocking others or have external commitments.
+4. **Persistence Guard:** Do not store workflow-philosophy reflections in task notes unless the user explicitly asks to record them or confirms them as a project decision.
+5. **Never Bypass Abstractions:** Use `taskp` or `tw-flow`. Never invoke raw `task` directly.
+6. **Urgency Calibration:** Only set `due` for real deadlines. Reserve `priority:H` for tasks that are blocking others or have external commitments.
 
 ---
 
