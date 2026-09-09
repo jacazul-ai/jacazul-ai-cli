@@ -52,4 +52,24 @@ Phrases that mean "trace how we got here and diagnose why the current behavior h
 
 ---
 
+## Consensus Review / Review de Consenso
+
+Phrases that mean "run a multi-persona convergent review — cross-check findings across personas before locking a decision":
+
+| Trigger | Origin | Vibe |
+|---|---|---|
+| `consensus review` | EN shorthand | full phrase, formal |
+| `review de consenso` | PT-BR shorthand | full phrase, formal |
+| `manda um consensus` | conversational trigger | "roda a revisão cruzada agora" |
+| `revc` | typed shorthand | quick-fire trigger |
+| `crev` | typed shorthand | alt quick-fire trigger |
+
+**Action:** Run the persona consensus review protocol: each relevant persona reviews with its own lens (e.g. Jacazul: workflow/policy, Codama: technical precision), findings are cross-checked, disagreements are resolved explicitly, and claims are verified against authoritative sources before closing. Present the result as a verdict table and record it as a signed `DECISION` note (`— <Persona(s)> (<Model>)`) on the active task.
+
+**Current mechanism:** in-context persona handoff within the same conversation (single agent, shared context window), not a separate subagent spawn. Whether consensus reviews should move to isolated agents is still an open SPIKE (plan `multi-agent-loop`) — until that resolves, this trigger stays in-context only.
+
+**Scope:** Use for design reviews, technical audits, or contested decisions where a single-persona pass risks blind spots — not for routine task execution.
+
+---
+
 > This glossary is a living document. Add new triggers as they emerge naturally in conversation.
