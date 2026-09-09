@@ -58,7 +58,12 @@ class MultiAgentLoopContractTest(unittest.TestCase):
     def test_hatch_renders_protocol_into_agent_prompt(self):
         for client in ("copilot", "opencode"):
             hatch_prompt(client, persona_override="arnalbam")
-            rendered = self._read(f"agents/arnalbam-{client}.md")
+            agent_name = (
+                "jacazul-opencode.md"
+                if client == "opencode"
+                else "arnalbam-copilot.md"
+            )
+            rendered = self._read(f"agents/{agent_name}")
 
             self.assertIn("## Multi-Agent Continuity Extension", rendered)
             self.assertIn(

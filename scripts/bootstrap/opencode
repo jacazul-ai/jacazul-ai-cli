@@ -1,6 +1,7 @@
 #!/bin/bash
-# 🐊 Jacazul - Bootstrap for Opencode (Global UNHINGED Mode)
+# 🐊 Jacazul - Bootstrap for Opencode (Native Global Integration)
 # Sets up global agents and skills for native Opencode CLI execution.
+# Autonomy is controlled at runtime by JACAZUL_MODE, not by this linker.
 
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 OPENCODE_GLOBAL_DIR="$HOME/.config/opencode"
@@ -28,12 +29,12 @@ done
 # Wipe existing agent links to ensure a fresh, consistent state
 find "$OPENCODE_GLOBAL_DIR/agents" -maxdepth 1 -type l -delete
 
-AGENT_SRC="$PROJECT_ROOT/agents/${JACAZUL_PERSONA}-opencode.md"
-AGENT_TARGET="$OPENCODE_GLOBAL_DIR/agents/${JACAZUL_PERSONA}.md"
+AGENT_SRC="$PROJECT_ROOT/agents/jacazul-opencode.md"
+AGENT_TARGET="$OPENCODE_GLOBAL_DIR/agents/jacazul.md"
 
 if [ -e "$AGENT_SRC" ]; then
     if [ -n "$DEBUG" ]; then
-        echo "🐊 Linking global Opencode agent: $JACAZUL_PERSONA -> $AGENT_SRC"
+        echo "🐊 Linking global Opencode agent: jacazul -> $AGENT_SRC"
     fi
     ln -sf "$AGENT_SRC" "$AGENT_TARGET"
 else

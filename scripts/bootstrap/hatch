@@ -5,21 +5,18 @@
 # Determine the absolute project root directory
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 HATCH_BIN="$HOME/.jacazul-ai/.venv/bin/jacazul-hatch"
+HATCH_TARGET="${1:-${JACAZUL_HARNESS:-all}}"
+
+# Sandboxed Gemini uses the same prompt contract as Gemini.
+[ "$HATCH_TARGET" = "gemini-sandboxed" ] && HATCH_TARGET="gemini"
 
 if [ -x "$HATCH_BIN" ]; then
-    # Hatch all clients to ensure total swamp alignment
-    "$HATCH_BIN" --client gemini
-    "$HATCH_BIN" --client copilot
-    "$HATCH_BIN" --client opencode
-    "$HATCH_BIN" --client claude
+    "$HATCH_BIN" --target "$HATCH_TARGET"
 else
     echo "⚠️  Hatch entry point not found at $HATCH_BIN. Falling back to direct script..."
     HATCH_ENGINE="$PROJECT_ROOT/jacazul/cli/hatch.py"
     if [ -x "$HATCH_ENGINE" ]; then
-        "$HATCH_ENGINE" --client gemini
-        "$HATCH_ENGINE" --client copilot
-        "$HATCH_ENGINE" --client opencode
-        "$HATCH_ENGINE" --client claude
+        "$HATCH_ENGINE" --target "$HATCH_TARGET"
     else
         echo "❌ Hatch engine not found."
     fi

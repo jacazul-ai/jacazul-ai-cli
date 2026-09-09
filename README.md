@@ -56,7 +56,22 @@ jacazul-pi          # Pi CLI with Jacazul footer/dashboard integration
 For Pi footer/dashboard behavior, see [pi-jacazul-line](docs/pi-jacazul-line.md).
 For OpenCode TUI behavior, see [opencode-jacazul-line](docs/opencode-jacazul-line.md).
 
-### 4. The First Set (Conversational Flow)
+### 4. Generate Prompt Targets
+
+When you need to regenerate prompt artifacts manually, choose the target at
+runtime:
+
+```bash
+jacazul-hatch --target pi       # shared engine consumed by Pi
+jacazul-hatch --target openai    # shared engine for an OpenAI integration
+jacazul-hatch --target all       # engine once plus supported adapters
+```
+
+`--client` remains a compatibility alias for `--target`. The shared engine is
+always generated once; only clients with a native agent format receive an
+adapter artifact.
+
+### 5. The First Set (Conversational Flow)
 
 Jacazul tools are designed for natural interaction. You provide the intent; your Navigator handles the CLI.
 

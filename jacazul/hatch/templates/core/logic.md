@@ -116,6 +116,12 @@ Ask a specific, tactical question based on the state above.
 - **Profanity Censorship:** All profanity must be censored with asterisks (e.g., po***, car****). Maintain persona style but filter the impact.
 - **Allowed:** shit, damn, bastard, dick, foda.
 
+### 6. Broker Routing and Vault Safety
+- Use `jacazul-broker` or `GitHubBroker` for GitHub operations; never raw `gh`.
+- Explicit ticket format (`#123` or `ORG-123`) takes precedence over git remote inference.
+- Quote issue IDs containing `#` and pass explicit repositories as `repo="org/name"`.
+- If token decryption times out, follow the `ACTION:` hint; do not bypass the vault.
+
 ## 🚀 CLI Quick Reference
 1. **`tw-flow status [plan]`** → Workflow state and progress tracking.
 2. **`tw-flow tree [plan]`** → Recursive context & visual dependencies.
@@ -125,6 +131,7 @@ Ask a specific, tactical question based on the state above.
 5. **`tw-flow backlog <plan>`** → Move a plan to backlog state (hidden from default views, 💤).
 6. **`tw-flow activate <plan>`** → Restore a backlog plan to active state.
 7. **`jacazul-broker [cmd]`** → Secure GitHub Broker (sync, list, open, edit).
-8. **`jacazul-hatch --client [c]`** → JIT Prompt Forge manual trigger.
+8. **`jacazul-hatch --target [target]`** → JIT Prompt Forge manual trigger.
+   Targets include `pi`, `openai`, and `all`; `--client` remains a legacy alias.
 9. **`jacazul-persona [name]`** → Persist Jacazul, Codama, Arnalbam, or Atena as the next session's active persona.
 10. **`tw-flow help`** → Full command reference.

@@ -67,11 +67,11 @@ class TestPersonaRuntime(unittest.TestCase):
         )
         fake_opencode.chmod(stat.S_IRWXU)
 
-        self.generated_agent = PROJECT_ROOT / "agents" / "arnalbam-opencode.md"
+        self.generated_agent = PROJECT_ROOT / "agents" / "jacazul-opencode.md"
         self.created_agent = not self.generated_agent.exists()
         if self.created_agent:
             self.generated_agent.write_text(
-                "# Test generated Arnalbam agent\n",
+                "# Test generated canonical OpenCode agent\n",
                 encoding="utf-8",
             )
 
@@ -143,7 +143,17 @@ class TestPersonaRuntime(unittest.TestCase):
         result, captured = self._run_launcher(OPENCODE_LAUNCHER, dry=False)
 
         self.assertEqual(result.returncode, 0, msg=result.stderr)
-        self.assertEqual(captured.splitlines()[:2], ["--agent", "arnalbam"])
+        self.assertEqual(captured.splitlines()[:2], ["--agent", "jacazul"])
+        agent_link = (
+            self.home / ".config" / "opencode" / "agents" / "jacazul.md"
+        )
+        self.assertTrue(agent_link.is_symlink())
+        self.assertEqual(agent_link.resolve(), self.generated_agent.resolve())
+        self.assertFalse(
+            (
+                self.home / ".config" / "opencode" / "agents" / "arnalbam.md"
+            ).exists()
+        )
 
 
 if __name__ == "__main__":

@@ -29,6 +29,26 @@ The following commands are automatically installed into the environment:
 - `py-check`: PEP 8 quality gate and auto-beautifier.
 - `jacazul-claude`: Claude CLI (Native) integration.
 
+## 🧩 Prompt Generation Ownership
+
+Prompt generation has one neutral core and target-specific adapters:
+
+- `jacazul/hatch/templates/gemini_full.md` is the canonical shared engine
+  template.
+- `jacazul/hatch/templates/agent_master.md` is rendered only for targets with
+  a native agent format, currently Copilot and Opencode.
+- `jacazul-hatch --target pi` and `--target openai` generate the shared engine
+  without inventing client-specific agent files.
+- `jacazul-hatch --target all` expands the supported target allowlist, writes
+  the shared engine once, and then renders eligible adapters.
+- `scripts/bootstrap/hatch` selects the runtime target from its argument or
+  `JACAZUL_HARNESS`; client bootstraps remain responsible for linking and
+  runtime configuration.
+
+The `--client` option remains a compatibility alias for `--target`. Provider
+names such as OpenAI are treated as prompt consumers, not launcher-specific
+filesystem layouts.
+
 ## 🔒 Security & Isolation
 
 - **Per-project task databases**: Taskwarrior data is stored in isolated directories per `PROJECT_ID`.

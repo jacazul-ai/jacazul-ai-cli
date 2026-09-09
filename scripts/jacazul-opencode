@@ -101,7 +101,7 @@ done
 # Prepare arguments: ensure the anchored persona is present if not specified
 ARGS=("${CLEAN_ARGS[@]}")
 if [[ "${CLEAN_ARGS[*]}" != *"--agent"* ]]; then
-    ARGS=("--agent" "$JACAZUL_PERSONA" "${ARGS[@]}")
+    ARGS=("--agent" "jacazul" "${ARGS[@]}")
 fi
 
 # OpenCode discovers the project TUI configuration from its project path. When

@@ -53,10 +53,17 @@ usability and focus.
   NEVER edit generated files directly.
 - **Source of Truth:** All skill and agent prompt updates MUST be made in
   `jacazul/hatch/templates/`. The templates are the canonical source.
-- **Regeneration:** After editing templates, regenerate with `jacazul-hatch
-  --client <client>` to propagate changes.
+- **Regeneration:** After editing templates, regenerate with
+  `jacazul-hatch --target <target>` to propagate changes. The `--client`
+  option remains a compatibility alias.
+- **Targets:** `pi`, `openai`, and `all` are supported alongside the native
+  launcher targets. `all` generates the shared engine once and then renders
+  only eligible adapters.
 - **Generated Locations:** `skills/jacazul-engine/SKILL.md` (from
-  `gemini_full.md`), `agents/{persona}-{client}.md` (from `agent_master.md`).
+  `gemini_full.md`), `agents/{persona}-{client}.md` (from `agent_master.md`)
+  for Copilot and Opencode only.
+- **Ownership:** `scripts/bootstrap/hatch` selects the runtime target;
+  client bootstraps remain responsible for linking and runtime configuration.
 
 ### 3. Context Preservation
 - **Mandate:** Closing a task without documentation is FORBIDDEN.
