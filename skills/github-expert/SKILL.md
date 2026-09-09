@@ -17,6 +17,7 @@ license: MIT
 7. **Comment Protocol:** To comment on an issue, use `jacazul-broker comment '<issue_id>' body="..." [repo="org/repo"]` or `body_file="..."`. Quote IDs containing `#` (`'#20'`) because unquoted `#` becomes a shell comment. Comments MUST support the same file-body workflow as issue descriptions: prefer `body_file="/path/comment.md"` for Markdown, multiline text, quotes, or backticks.
 8. **Sandbox Mandate:** All real POC/smoke operations against GitHub MUST target `jacazul-ai/jacazul-ai-sandbox` unless the user explicitly authorizes a production repository.
 9. **Full Output Display (MANDATORY):** After running `jacazul-broker view`, ALWAYS reproduce the FULL issue content in your response text — title, labels, assignees, and complete body. NEVER let the terminal output collapse. The user must see all information without expanding anything.
+10. **Issue Title Format:** Default to plain human titles — do NOT prefix them with Conventional Commit types (`fix:`, `feat:`, `chore:`, etc.) unless the user explicitly asks for that format. That prefix is exclusive to git commit messages (see `git-expert`). Example: `Prevent observer remap loops in wrapper components`, not `fix: prevent observer remap loops`. If the user states a preferred title format for a given issue, honor it as-is — this is a default, not a hard override of explicit user intent.
 
 ## Commands You Can Suggest
 
