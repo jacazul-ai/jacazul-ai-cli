@@ -17,7 +17,9 @@ Welcome to the Jacazul AI CLI documentation. This project is built around the co
 
 ### 🛠️ Expert Skills
 - [Taskwarrior Expert](taskwarrior-expert.md) - Mastering the 7-phase workflow.
+- [Interaction Modes](interaction-modes.md) - DESIGN/GUIDE/REVIEW/EXECUTE collaboration semantics.
 - [Python Expert](python-expert.md) - PEP 8 and quality gates.
+- [Go Expert](go-expert.md) - Idiomatic Go, gofmt-to-goimports formatting, and Line of Sight readability.
 - [GitHub Broker](github-broker.md) - Secure issue and ticket synchronization.
 
 ### 🔒 Advanced Concepts
