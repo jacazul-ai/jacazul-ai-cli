@@ -57,6 +57,61 @@ filesystem layouts.
     - **CAGED**: High-isolation Docker/Podman containers.
     - **COUNSELOR**: High-performance native host execution.
 
+## 🧭 Agent Config Anchorage
+
+Every supported coding agent keeps its own state directory — settings, skills,
+extensions, sessions and credentials. By default each CLI resolves that
+directory under `$HOME`, which leaves Jacazul-managed state scattered across
+unrelated locations and invisible to the project.
+
+Jacazul anchors that state under `$JACAZUL_HOME/agents/<agent>` instead. The
+contract is identical for every agent:
+
+| Agent | Variable | Anchored default | Legacy location |
+|---|---|---|---|
+| pi | `PI_CODING_AGENT_DIR` | `$JACAZUL_HOME/agents/pi` | `~/.pi/agent` |
+| Claude | `CLAUDE_CONFIG_DIR` | `$JACAZUL_HOME/agents/claude` | `~/.claude` |
+
+**Why the variable name matters.** The anchorage variable must be the one the
+agent's own CLI reads. An internal bootstrap variable only controls where the
+bootstrap writes; the CLI keeps using its own default, and the two silently
+diverge. `CLAUDE_CONFIG_DIR` is the variable the Claude CLI honors, which is
+why the earlier bootstrap-local `CLAUDE_DIR` was retired.
+
+**Resolution order**, highest priority first:
+
+1. An explicit `PI_CODING_AGENT_DIR` / `CLAUDE_CONFIG_DIR` exported by the
+   user — always wins.
+2. The Jacazul default under `$JACAZUL_HOME/agents/`.
+
+The launcher exports the variable *before* sourcing the agent bootstrap, and
+the bootstrap re-applies the same default so it stays correct when sourced
+directly.
+
+### Legacy migration
+
+A pre-anchorage tree is moved into the anchored location exactly once, gated
+on three conditions: the anchored path differs from the legacy one, the legacy
+tree exists as a real directory, and the anchored target does not exist yet.
+Existing anchored state is never merged into.
+
+The tree is **moved, never copied**. These directories hold live credentials,
+and a copy would leave a second readable secret on disk while splitting state
+across two locations.
+
+Claude adds one precondition with no pi equivalent: it writes `history.jsonl`,
+`sessions/` and a daemon lock continuously. If another Claude session is
+running, the migration refuses and prints the required action instead of
+moving the tree out from under it.
+
+### Accepted constraint
+
+After migration, `~/.claude` no longer exists. The `claude` binary invoked
+directly — outside `jacazul-claude` — resolves its own default, finds nothing,
+and starts unauthenticated with no history. This is accepted by design: a
+compatibility symlink was rejected in favour of a single unambiguous state
+location. **Always launch through `jacazul-claude`.**
+
 ## 🚀 Versioning & Parity
 
 The project maintains strict version parity across all components (`tw-flow`, `hatch`, `skills`) to ensure instruction-engine alignment.

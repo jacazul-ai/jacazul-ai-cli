@@ -1,20 +1,47 @@
 #!/bin/bash
 # 🐊 Jacazul - Bootstrap for Claude CLI Settings
-# Manages settings.json and symlinking of project skills to ~/.claude/skills.
+# Manages settings.json and symlinking of project skills into the anchored config dir.
 
 # Locate the project root directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
-CLAUDE_DIR="${CLAUDE_DIR:-$HOME/.claude}"
-SETTINGS_FILE="$CLAUDE_DIR/settings.json"
+CLAUDE_CONFIG_DIR="${CLAUDE_CONFIG_DIR:-${JACAZUL_HOME:-$HOME/.jacazul-ai}/agents/claude}"
+SETTINGS_FILE="$CLAUDE_CONFIG_DIR/settings.json"
 TEMPLATE_SETTINGS="$PROJECT_ROOT/templates/claude/settings.json"
-SKILLS_DIR="$CLAUDE_DIR/skills"
+SKILLS_DIR="$CLAUDE_CONFIG_DIR/skills"
+
+# Legacy migration (mirrors scripts/bootstrap/pi)
+# Moves the pre-anchorage ~/.claude tree into the anchored location exactly
+# once. Gated the same way pi is: the anchored path must differ from the legacy
+# one, the legacy tree must exist as a real directory, and the anchored target
+# must not exist yet. The tree is moved, never copied — .credentials.json is a
+# live secret and must not be duplicated on disk.
+LEGACY_CLAUDE_DIR="$HOME/.claude"
+
+if [ "$CLAUDE_CONFIG_DIR" != "$LEGACY_CLAUDE_DIR" ] \
+    && [ -d "$LEGACY_CLAUDE_DIR" ] \
+    && [ ! -L "$LEGACY_CLAUDE_DIR" ] \
+    && [ ! -e "$CLAUDE_CONFIG_DIR" ]; then
+
+    # Claude-specific precondition with no pi equivalent: history.jsonl,
+    # sessions/ and the daemon are written live. Moving the tree under a
+    # running session corrupts it, so refuse instead of forcing the move.
+    if pgrep -u "$USER" -x claude >/dev/null 2>&1; then
+        echo "⚠️  Jacazul: another Claude session is running." >&2
+        echo "   Legacy config at $LEGACY_CLAUDE_DIR was NOT migrated." >&2
+        echo "   ACTION: close every Claude session, then start jacazul-claude again." >&2
+    else
+        echo "🐊 Migrating Claude config from $LEGACY_CLAUDE_DIR to $CLAUDE_CONFIG_DIR..."
+        mkdir -p -- "$(dirname "$CLAUDE_CONFIG_DIR")"
+        mv -- "$LEGACY_CLAUDE_DIR" "$CLAUDE_CONFIG_DIR"
+    fi
+fi
 
 # 1. Ensure the Claude directory exists
-if [ ! -d "$CLAUDE_DIR" ]; then
-    echo "🐊 Creating Claude directory at $CLAUDE_DIR..."
-    mkdir -p -- "$CLAUDE_DIR"
+if [ ! -d "$CLAUDE_CONFIG_DIR" ]; then
+    echo "🐊 Creating Claude directory at $CLAUDE_CONFIG_DIR..."
+    mkdir -p -- "$CLAUDE_CONFIG_DIR"
 fi
 
 # 2. Ensure settings.json exists (use template if available)
@@ -50,7 +77,7 @@ if [ ! -d "$SKILLS_DIR" ]; then
 fi
 
 # 5. Link Global Skills (Surgical)
-# Link valid skill directories from the project root to ~/.claude/skills.
+# Link valid skill directories from the project root into the anchored skills dir.
 for skill_dir in "$PROJECT_ROOT/skills"/*; do
     [ -d "$skill_dir" ] || continue
     [ -f "$skill_dir/SKILL.md" ] || continue

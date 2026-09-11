@@ -47,6 +47,9 @@ export CONTEXT_GIT_USER="${CONTEXT_GIT_USER:-$(whoami)}"
 # Add workflow scripts to PATH
 export PATH="$PATH:$PROJECT_ROOT/skills/taskwarrior-expert/scripts"
 
+# Jacazul owns Claude state by default unless the user explicitly overrides it.
+export CLAUDE_CONFIG_DIR="${CLAUDE_CONFIG_DIR:-$JACAZUL_HOME/agents/claude}"
+
 # Claude Bootstrap (settings + skill links)
 BOOTSTRAP_CLAUDE="$PROJECT_ROOT/scripts/bootstrap/claude"
 if [ -f "$BOOTSTRAP_CLAUDE" ]; then
