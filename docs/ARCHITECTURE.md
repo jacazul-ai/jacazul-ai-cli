@@ -88,29 +88,40 @@ The launcher exports the variable *before* sourcing the agent bootstrap, and
 the bootstrap re-applies the same default so it stays correct when sourced
 directly.
 
-### Legacy migration
+### Legacy trees: the two agents differ deliberately
 
-A pre-anchorage tree is moved into the anchored location exactly once, gated
-on three conditions: the anchored path differs from the legacy one, the legacy
-tree exists as a real directory, and the anchored target does not exist yet.
-Existing anchored state is never merged into.
+| Agent | Pre-existing tree | Behaviour |
+|---|---|---|
+| pi | `~/.pi/agent` | moved into the anchored dir once |
+| Claude | `~/.claude` | left untouched; the anchor starts clean |
 
-The tree is **moved, never copied**. These directories hold live credentials,
-and a copy would leave a second readable secret on disk while splitting state
-across two locations.
+pi migrates because its agent directory holds configuration and extensions, and
+nothing writes to it continuously.
 
-Claude adds one precondition with no pi equivalent: it writes `history.jsonl`,
-`sessions/` and a daemon lock continuously. If another Claude session is
-running, the migration refuses and prints the required action instead of
-moving the tree out from under it.
+Claude does not migrate. Its directory holds live credentials alongside
+`history.jsonl`, `sessions/` and a daemon that write continuously, so a move
+can only be attempted while no session is open. A migration that is refused
+halfway — because a session still holds the tree — leaves state split across
+two locations, which is worse than starting clean. Carrying anything across is
+therefore a deliberate manual step, not something the bootstrap decides.
 
-### Accepted constraint
+The practical consequence: the first Claude session under a new anchor
+authenticates again and starts with no prior conversation history. What the
+bootstrap does provide there is everything Jacazul owns — `settings.json`
+seeded from the project template, project skills symlinked into `skills/`, and
+project extensions symlinked into `extensions/`.
 
-After migration, `~/.claude` no longer exists. The `claude` binary invoked
-directly — outside `jacazul-claude` — resolves its own default, finds nothing,
-and starts unauthenticated with no history. This is accepted by design: a
-compatibility symlink was rejected in favour of a single unambiguous state
-location. **Always launch through `jacazul-claude`.**
+### Rollback
+
+Because the legacy Claude tree is never touched, reverting costs nothing:
+
+```bash
+export CLAUDE_CONFIG_DIR="$HOME/.claude"
+```
+
+The previous state — credentials, history and per-project memory — is still
+there, and the bootstrap links the Jacazul-owned artifacts into it just the
+same.
 
 ## 🚀 Versioning & Parity
 

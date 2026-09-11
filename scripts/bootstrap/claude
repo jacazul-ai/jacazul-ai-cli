@@ -11,33 +11,6 @@ SETTINGS_FILE="$CLAUDE_CONFIG_DIR/settings.json"
 TEMPLATE_SETTINGS="$PROJECT_ROOT/templates/claude/settings.json"
 SKILLS_DIR="$CLAUDE_CONFIG_DIR/skills"
 
-# Legacy migration (mirrors scripts/bootstrap/pi)
-# Moves the pre-anchorage ~/.claude tree into the anchored location exactly
-# once. Gated the same way pi is: the anchored path must differ from the legacy
-# one, the legacy tree must exist as a real directory, and the anchored target
-# must not exist yet. The tree is moved, never copied — .credentials.json is a
-# live secret and must not be duplicated on disk.
-LEGACY_CLAUDE_DIR="$HOME/.claude"
-
-if [ "$CLAUDE_CONFIG_DIR" != "$LEGACY_CLAUDE_DIR" ] \
-    && [ -d "$LEGACY_CLAUDE_DIR" ] \
-    && [ ! -L "$LEGACY_CLAUDE_DIR" ] \
-    && [ ! -e "$CLAUDE_CONFIG_DIR" ]; then
-
-    # Claude-specific precondition with no pi equivalent: history.jsonl,
-    # sessions/ and the daemon are written live. Moving the tree under a
-    # running session corrupts it, so refuse instead of forcing the move.
-    if pgrep -u "$USER" -x claude >/dev/null 2>&1; then
-        echo "⚠️  Jacazul: another Claude session is running." >&2
-        echo "   Legacy config at $LEGACY_CLAUDE_DIR was NOT migrated." >&2
-        echo "   ACTION: close every Claude session, then start jacazul-claude again." >&2
-    else
-        echo "🐊 Migrating Claude config from $LEGACY_CLAUDE_DIR to $CLAUDE_CONFIG_DIR..."
-        mkdir -p -- "$(dirname "$CLAUDE_CONFIG_DIR")"
-        mv -- "$LEGACY_CLAUDE_DIR" "$CLAUDE_CONFIG_DIR"
-    fi
-fi
-
 # 1. Ensure the Claude directory exists
 if [ ! -d "$CLAUDE_CONFIG_DIR" ]; then
     echo "🐊 Creating Claude directory at $CLAUDE_CONFIG_DIR..."

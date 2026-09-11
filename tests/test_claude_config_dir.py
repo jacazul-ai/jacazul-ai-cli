@@ -17,38 +17,16 @@ class TestClaudeConfigDir(unittest.TestCase):
         self.test_dir = tempfile.mkdtemp(prefix="jacazul_claude_cfg_")
         self.home = os.path.join(self.test_dir, "home")
         self.jacazul_home = os.path.join(self.home, ".jacazul-ai")
-        self.bin_dir = os.path.join(self.test_dir, "bin")
         os.makedirs(self.home, exist_ok=True)
         os.makedirs(self.jacazul_home, exist_ok=True)
-        os.makedirs(self.bin_dir, exist_ok=True)
-        self._write_fake_pgrep(session_running=False)
 
     def tearDown(self):
         shutil.rmtree(self.test_dir)
 
-    def _write_fake_pgrep(self, session_running):
-        """Shadow pgrep so the live-session guard is deterministic.
-
-        The real pgrep would see the developer's own Claude sessions and
-        make the migration branch untestable on a working machine.
-        """
-        fake = os.path.join(self.bin_dir, "pgrep")
-        exit_code = 0 if session_running else 1
-        with open(fake, "w", encoding="utf-8") as fh:
-            fh.write("#!/usr/bin/env bash\n")
-            fh.write(f"exit {exit_code}\n")
-        os.chmod(fake, stat.S_IRWXU)
-
     def _source_bootstrap(self, extra_env=None):
         env = os.environ.copy()
         env.pop("CLAUDE_CONFIG_DIR", None)
-        env.update(
-            {
-                "HOME": self.home,
-                "JACAZUL_HOME": self.jacazul_home,
-                "PATH": f"{self.bin_dir}:{env.get('PATH', '')}",
-            }
-        )
+        env.update({"HOME": self.home, "JACAZUL_HOME": self.jacazul_home})
         if extra_env:
             env.update(extra_env)
         return subprocess.run(
@@ -83,7 +61,6 @@ class TestClaudeConfigDir(unittest.TestCase):
 
         self.assertEqual(result.returncode, 0, msg=result.stderr)
         self.assertTrue(os.path.isdir(os.path.join(custom_dir, "skills")))
-        self.assertTrue(os.path.isdir(os.path.join(custom_dir, "extensions")))
         self.assertFalse(os.path.exists(os.path.join(self.home, ".claude")))
 
     def test_bootstrap_defaults_under_jacazul_home(self):
@@ -93,51 +70,63 @@ class TestClaudeConfigDir(unittest.TestCase):
 
         self.assertEqual(result.returncode, 0, msg=result.stderr)
         self.assertTrue(os.path.isdir(os.path.join(default_dir, "skills")))
-        self.assertTrue(os.path.isdir(os.path.join(default_dir, "extensions")))
-        self.assertFalse(os.path.exists(os.path.join(self.home, ".claude")))
+        self.assertTrue(
+            os.path.isfile(os.path.join(default_dir, "settings.json"))
+        )
 
-    def test_bootstrap_migrates_legacy_tree_once(self):
-        legacy = self._make_legacy_tree()
-        target = os.path.join(self.jacazul_home, "agents", "claude")
+    def test_anchored_dir_starts_clean_and_links_project_skills(self):
+        default_dir = os.path.join(self.jacazul_home, "agents", "claude")
 
         result = self._source_bootstrap()
 
         self.assertEqual(result.returncode, 0, msg=result.stderr)
-        self.assertFalse(os.path.exists(legacy))
-        moved_creds = os.path.join(target, ".credentials.json")
-        self.assertTrue(os.path.isfile(moved_creds))
-        self.assertTrue(os.path.isfile(os.path.join(target, "history.jsonl")))
-        mode = stat.S_IMODE(os.stat(moved_creds).st_mode)
-        self.assertEqual(mode, stat.S_IRUSR | stat.S_IWUSR)
+        skills_dir = os.path.join(default_dir, "skills")
+        linked = sorted(os.listdir(skills_dir))
+        self.assertIn("jacazul-engine", linked)
+        for name in linked:
+            entry = os.path.join(skills_dir, name)
+            self.assertTrue(os.path.islink(entry), msg=f"{name} is not a link")
+            self.assertEqual(
+                os.path.realpath(entry),
+                str(PROJECT_ROOT / "skills" / name),
+            )
+        # A fresh anchored dir carries no credential or history.
+        self.assertFalse(
+            os.path.exists(os.path.join(default_dir, ".credentials.json"))
+        )
+        self.assertFalse(
+            os.path.exists(os.path.join(default_dir, "history.jsonl"))
+        )
 
-    def test_migration_never_merges_into_existing_target(self):
+    def test_legacy_tree_is_never_touched(self):
         legacy = self._make_legacy_tree()
-        target = os.path.join(self.jacazul_home, "agents", "claude")
-        os.makedirs(target, exist_ok=True)
+        creds = os.path.join(legacy, ".credentials.json")
+        before = os.stat(creds)
 
         result = self._source_bootstrap()
 
         self.assertEqual(result.returncode, 0, msg=result.stderr)
         self.assertTrue(os.path.isdir(legacy))
-        self.assertFalse(
-            os.path.exists(os.path.join(target, ".credentials.json"))
+        self.assertTrue(os.path.isfile(creds))
+        self.assertTrue(os.path.isfile(os.path.join(legacy, "history.jsonl")))
+        after = os.stat(creds)
+        self.assertEqual(before.st_mtime, after.st_mtime)
+        self.assertEqual(
+            stat.S_IMODE(after.st_mode), stat.S_IRUSR | stat.S_IWUSR
         )
 
-    def test_migration_aborts_while_a_claude_session_runs(self):
-        self._write_fake_pgrep(session_running=True)
+    def test_legacy_dir_is_usable_as_an_explicit_rollback_target(self):
         legacy = self._make_legacy_tree()
-        target = os.path.join(self.jacazul_home, "agents", "claude")
 
-        result = self._source_bootstrap()
+        result = self._source_bootstrap(
+            extra_env={"CLAUDE_CONFIG_DIR": legacy}
+        )
 
         self.assertEqual(result.returncode, 0, msg=result.stderr)
+        self.assertTrue(os.path.isdir(os.path.join(legacy, "skills")))
         self.assertTrue(
             os.path.isfile(os.path.join(legacy, ".credentials.json"))
         )
-        self.assertFalse(
-            os.path.exists(os.path.join(target, ".credentials.json"))
-        )
-        self.assertIn("another Claude session is running", result.stderr)
 
     def test_statusline_is_rehomed_instead_of_frozen(self):
         target = os.path.join(self.jacazul_home, "agents", "claude")
