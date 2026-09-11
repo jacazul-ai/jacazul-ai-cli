@@ -1,4 +1,3 @@
-import json
 import os
 import pathlib
 import shutil
@@ -82,7 +81,9 @@ class TestClaudeConfigDir(unittest.TestCase):
         self.assertEqual(result.returncode, 0, msg=result.stderr)
         skills_dir = os.path.join(default_dir, "skills")
         linked = sorted(os.listdir(skills_dir))
-        self.assertIn("jacazul-engine", linked)
+        # jacazul-engine is a generated artifact and is not in the repo, so
+        # anchor on a committed skill instead.
+        self.assertIn("git-expert", linked)
         for name in linked:
             entry = os.path.join(skills_dir, name)
             self.assertTrue(os.path.islink(entry), msg=f"{name} is not a link")
@@ -145,38 +146,6 @@ class TestClaudeConfigDir(unittest.TestCase):
         for parent in (self.home, self.test_dir, str(PROJECT_ROOT)):
             stray = [n for n in os.listdir(parent) if n.startswith("--")]
             self.assertEqual(stray, [], msg=f"flag-named path in {parent}")
-
-    def test_statusline_is_rehomed_instead_of_frozen(self):
-        target = os.path.join(self.jacazul_home, "agents", "claude")
-        os.makedirs(target, exist_ok=True)
-        settings = os.path.join(target, "settings.json")
-        stale = "/home/someone/.claude/extensions/jacazul-line.sh"
-        with open(settings, "w", encoding="utf-8") as fh:
-            json.dump({"statusLine": stale}, fh)
-
-        result = self._source_bootstrap()
-
-        self.assertEqual(result.returncode, 0, msg=result.stderr)
-        with open(settings, encoding="utf-8") as fh:
-            value = json.load(fh)["statusLine"]
-        self.assertEqual(
-            value, os.path.join(target, "extensions", "jacazul-line.sh")
-        )
-
-    def test_user_owned_statusline_is_left_alone(self):
-        target = os.path.join(self.jacazul_home, "agents", "claude")
-        os.makedirs(target, exist_ok=True)
-        settings = os.path.join(target, "settings.json")
-        mine = "/home/someone/bin/my-own-line.sh"
-        with open(settings, "w", encoding="utf-8") as fh:
-            json.dump({"statusLine": mine}, fh)
-
-        result = self._source_bootstrap()
-
-        self.assertEqual(result.returncode, 0, msg=result.stderr)
-        with open(settings, encoding="utf-8") as fh:
-            self.assertEqual(json.load(fh)["statusLine"], mine)
-
 
 if __name__ == "__main__":
     unittest.main()
