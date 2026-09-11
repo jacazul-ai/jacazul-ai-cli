@@ -11,9 +11,12 @@
  */
 
 import type { AssistantMessage } from "@earendil-works/pi-ai";
-import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import type {
+	ExtensionAPI,
+	ExtensionContext,
+} from "@earendil-works/pi-coding-agent";
 import { truncateToWidth } from "@earendil-works/pi-tui";
-import { execFile } from "node:child_process";
+import { execFile, execFileSync } from "node:child_process";
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
 
@@ -249,8 +252,115 @@ function fit(line: string, width: number): string {
 	return truncateToWidth(line, width, style("…", PALETTE.gray));
 }
 
+function getGitBranch(cwd: string): string | undefined {
+	try {
+		const branch = execFileSync("git", ["branch", "--show-current"], {
+			cwd,
+			encoding: "utf8",
+			timeout: 1000,
+		}).trim();
+		return branch || undefined;
+	} catch {
+		return undefined;
+	}
+}
+
+function collectAgentInfoLines(
+	ctx: ExtensionContext,
+	pi: ExtensionAPI,
+	onTaskResolved: () => void,
+): string[] {
+	let input = 0;
+	let output = 0;
+	let cacheRead = 0;
+	let cacheWrite = 0;
+	let cost = 0;
+
+	for (const entry of ctx.sessionManager.getEntries()) {
+		if (entry.type === "message" && entry.message.role === "assistant") {
+			const message = entry.message as AssistantMessage;
+			input += message.usage.input;
+			output += message.usage.output;
+			cacheRead += message.usage.cacheRead;
+			cacheWrite += message.usage.cacheWrite;
+			cost += message.usage.cost.total;
+		}
+	}
+
+	const cwd = ctx.sessionManager.getCwd();
+	const git = findGitInfo(cwd);
+	const branch = getGitBranch(cwd);
+	const focus = getFocusInfo();
+	const projectId = process.env.PROJECT_ID || basename(cwd);
+	const mode = process.env.JACAZUL_MODE || "COUNSELOR";
+	const contextUsage = ctx.getContextUsage();
+	const model = ctx.model;
+	const contextWindow = contextUsage?.contextWindow ?? model?.contextWindow ?? 0;
+	const contextPercent = contextUsage?.percent;
+	const contextLabel = contextPercent === null || contextPercent === undefined
+		? `ctx ?/${formatTokens(contextWindow)}`
+		: `ctx ${contextPercent.toFixed(1)}%/${formatTokens(contextWindow)}`;
+	const thinking = model?.reasoning ? pi.getThinkingLevel() : null;
+	const modelLabel = [model?.id ?? "no-model", thinking, contextLabel]
+		.filter(Boolean)
+		.join(" · ");
+	const usageParts = [];
+	if (input) usageParts.push(`↑${formatTokens(input)}`);
+	if (output) usageParts.push(`↓${formatTokens(output)}`);
+	if (cacheRead) usageParts.push(`R${formatTokens(cacheRead)}`);
+	if (cacheWrite) usageParts.push(`W${formatTokens(cacheWrite)}`);
+	if (cost) usageParts.push(`$${cost.toFixed(3)}`);
+
+	const focusLabel = focus.independent ? "focus (independent)" : "focus";
+	const focusLine = focus.plan || focus.taskUuid
+		? [
+			focusLabel,
+			focus.plan,
+			focus.taskUuid
+				? formatFocusedTask(projectId, focus.taskUuid, onTaskResolved)
+				: null,
+		].filter(Boolean).join(" | ")
+		: `${focusLabel} | none`;
+
+	const gitLabel = git.kind === "worktree"
+		? `worktree | ${shortenHome(git.repoRoot ?? git.commonGitDir ?? cwd)} | ${git.worktreeName ?? basename(cwd)}${branch ? `(${branch})` : ""}`
+		: git.kind === "repo"
+			? `repo | ${shortenHome(git.repoRoot ?? cwd)}${branch ? ` | branch ${branch}` : ""}`
+			: `path | ${shortenHome(cwd)}`;
+
+	return [
+		`${mode} | ${projectId}`,
+		focusLine,
+		gitLabel,
+		`path | ${shortenHome(cwd)}`,
+		`model | ${modelLabel}`,
+		`usage | ${usageParts.length ? usageParts.join(" ") : "none"}`,
+		`session | ${ctx.sessionManager.getSessionId()}${ctx.sessionManager.getSessionName() ? ` | ${ctx.sessionManager.getSessionName()}` : ""}`,
+		`state | ${ctx.isIdle() ? "idle" : "busy"}${ctx.hasPendingMessages() ? " | queued" : ""}`,
+	];
+}
+
 export default function (pi: ExtensionAPI) {
+	let publishAgentInfo: () => void = () => {};
+
+	pi.on("agent_start", () => publishAgentInfo());
+	pi.on("agent_settled", () => publishAgentInfo());
+	pi.on("turn_end", () => publishAgentInfo());
+	pi.on("tool_execution_end", () => publishAgentInfo());
+	pi.on("session_info_changed", () => publishAgentInfo());
+	pi.on("model_select", () => publishAgentInfo());
+	pi.on("thinking_level_select", () => publishAgentInfo());
+
 	pi.on("session_start", (_event, ctx) => {
+		publishAgentInfo = () => {
+			if (ctx.mode !== "rpc") return;
+			ctx.ui.setWidget(
+				"jacazul-agent-info",
+				collectAgentInfoLines(ctx, pi, publishAgentInfo),
+				{ placement: "belowEditor" },
+			);
+		};
+		publishAgentInfo();
 		ctx.ui.setFooter((tui, theme, footerData) => {
 			const unsubscribe = footerData.onBranchChange(() => tui.requestRender());
 
