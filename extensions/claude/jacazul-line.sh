@@ -121,14 +121,16 @@ _get_model() {
     from_payload=$(printf '%s' "$INPUT_JSON" | jq -r '.model.display_name // .model.id // empty' 2>/dev/null)
     [ -n "$from_payload" ] && { echo "$from_payload"; return; }
     [ -n "$CLAUDE_MODEL" ] && { echo "$CLAUDE_MODEL"; return; }
-    local session_id="${CLAUDE_CODE_SESSION_ID}"
-    [ -n "$session_id" ] || return
-    local proj_slug
-    proj_slug=$(echo "$PWD" | sed 's|/|-|g')
-    local jsonl="${HOME}/.claude/projects/${proj_slug}/${session_id}.jsonl"
-    [ -f "$jsonl" ] || return
-    grep '"model"' "$jsonl" | tail -1 | jq -r '.message.model // .model // empty' 2>/dev/null
+
+    # Last resort: read the transcript Claude Code points at. Never derive the
+    # config dir here — it is anchored under $JACAZUL_HOME and is no longer
+    # guaranteed to be ~/.claude.
+    local transcript
+    transcript=$(printf '%s' "$INPUT_JSON" | jq -r '.transcript_path // empty' 2>/dev/null)
+    [ -n "$transcript" ] && [ -f "$transcript" ] || return
+    grep '"model"' "$transcript" | tail -1 | jq -r '.message.model // .model // empty' 2>/dev/null
 }
+
 _format_tokens() {
     local n="$1"
     if [ "$n" -lt 1000 ]; then
