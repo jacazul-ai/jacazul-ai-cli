@@ -23,14 +23,14 @@ class TestClaudeConfigDir(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree(self.test_dir)
 
-    def _source_bootstrap(self, extra_env=None):
+    def _source_bootstrap(self, extra_env=None, command_suffix=""):
         env = os.environ.copy()
         env.pop("CLAUDE_CONFIG_DIR", None)
         env.update({"HOME": self.home, "JACAZUL_HOME": self.jacazul_home})
         if extra_env:
             env.update(extra_env)
         return subprocess.run(
-            f'source "{BOOTSTRAP_CLAUDE}"',
+            f'source "{BOOTSTRAP_CLAUDE}" {command_suffix}'.strip(),
             cwd=str(PROJECT_ROOT),
             env=env,
             shell=True,
@@ -127,6 +127,24 @@ class TestClaudeConfigDir(unittest.TestCase):
         self.assertTrue(
             os.path.isfile(os.path.join(legacy, ".credentials.json"))
         )
+
+    def test_wrapper_flags_are_never_read_as_a_config_dir(self):
+        """Regression for #65.
+
+        The bootstrap is sourced by jacazul-claude, so any argument the
+        wrapper received is still visible as $1. It must resolve the config
+        dir from the environment only, never from a positional argument.
+        """
+        flags = "--resume --jacazul-session abc123 --dangerously-skip"
+        default_dir = os.path.join(self.jacazul_home, "agents", "claude")
+
+        result = self._source_bootstrap(command_suffix=flags)
+
+        self.assertEqual(result.returncode, 0, msg=result.stderr)
+        self.assertTrue(os.path.isdir(os.path.join(default_dir, "skills")))
+        for parent in (self.home, self.test_dir, str(PROJECT_ROOT)):
+            stray = [n for n in os.listdir(parent) if n.startswith("--")]
+            self.assertEqual(stray, [], msg=f"flag-named path in {parent}")
 
     def test_statusline_is_rehomed_instead_of_frozen(self):
         target = os.path.join(self.jacazul_home, "agents", "claude")
