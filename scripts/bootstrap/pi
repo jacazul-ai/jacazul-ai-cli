@@ -75,13 +75,12 @@ fi
 for legacy_name in pi-jacazul-line.ts pi-viewport-probe.ts pi-viewport-probe-impl.ts jacazul-ui.ts; do
     legacy_target="$PI_EXTENSIONS_DIR/$legacy_name"
     if [ -L "$legacy_target" ]; then
-        legacy_source=$(readlink "$legacy_target")
-        case "$legacy_source" in
-            "$PROJECT_ROOT/extensions"/*)
-                echo "🐊 Removing legacy pi extension link: $legacy_name"
-                rm -f -- "$legacy_target"
-                ;;
-        esac
+        legacy_source=$(readlink -f "$legacy_target")
+        legacy_path=$(readlink -f "$PROJECT_ROOT/extensions/$legacy_name")
+        if [ "$legacy_source" = "$legacy_path" ]; then
+            echo "🐊 Removing legacy pi extension link: $legacy_name"
+            rm -f -- "$legacy_target"
+        fi
     fi
 done
 

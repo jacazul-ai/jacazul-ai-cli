@@ -18,8 +18,10 @@ On startup, the Pi bootstrap links the production footer extension from
 ```
 
 Pi can then load or reload the footer extension with its normal extension flow.
-Diagnostic Pi probes may also live under `extensions/pi/`, but they are not
-linked automatically; load them explicitly only while investigating.
+The bootstrap preserves valid production links on subsequent runs and removes
+only links to obsolete root-level extension paths. Diagnostic Pi probes may also
+live under `extensions/pi/`, but they are not linked automatically; load them
+explicitly only while investigating.
 
 If Pi is already running, use:
 

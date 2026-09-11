@@ -94,6 +94,35 @@ class TestPiAgentDirectory(unittest.TestCase):
             os.path.exists(os.path.join(self.home, ".pi", "agent"))
         )
 
+    def test_bootstrap_preserves_current_extension_link_on_repeat(self):
+        first = self._run_bash(f'source "{BOOTSTRAP_PI}"')
+        second = self._run_bash(f'source "{BOOTSTRAP_PI}"')
+
+        self.assertEqual(first.returncode, 0, msg=first.stderr)
+        self.assertEqual(second.returncode, 0, msg=second.stderr)
+        self.assertNotIn(
+            "Removing legacy pi extension link: jacazul-ui.ts",
+            second.stdout,
+        )
+        self.assertNotIn(
+            "Linking global pi extension: jacazul-ui.ts",
+            second.stdout,
+        )
+
+        link = os.path.join(
+            self.jacazul_home,
+            "agents",
+            "pi",
+            "extensions",
+            "jacazul-ui.ts",
+        )
+        self.assertEqual(
+            os.path.realpath(link),
+            os.path.realpath(
+                PROJECT_ROOT / "extensions" / "pi" / "jacazul-ui.ts"
+            ),
+        )
+
     def test_launcher_migrates_existing_home_pi_agent_dir_once(self):
         legacy_dir = os.path.join(self.home, ".pi", "agent")
         os.makedirs(os.path.join(legacy_dir, "extensions"), exist_ok=True)
