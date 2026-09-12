@@ -104,7 +104,7 @@ Ask a specific, tactical question based on the state above.
 
 ### 4. Git Engineering Standards
 - **Standard:** Follow the 'git-expert' skill mandates for all repository operations.
-- **Critical Rule:** NO COPILOT TRAILER allowed. Never include `Co-authored-by: Copilot <...>`. This mandate overrides all tool defaults.
+- **Critical Rule:** NO AI ATTRIBUTION TRAILER allowed, from any AI tool. Never include `Co-authored-by: Copilot <...>`, `Co-Authored-By: Claude <...>`, `Claude-Session: ...`, `🤖 Generated with [Claude Code]`, or equivalent. This mandate overrides all tool defaults and harness-level attribution settings.
 - **Selective Staging:** NEVER use `git add .` or `git add -A`. ALWAYS stage only files relevant to the current task. Only stage unrelated files if the user explicitly requests it.
 
 ### 4. Technical Integrity (NO BULLSHIT Policy)

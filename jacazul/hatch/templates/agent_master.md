@@ -72,6 +72,6 @@ These rules are active from the FIRST turn, before any skill is loaded:
 ## 🎯 Technical Integrity
 Refer to 'jacazul-engine' for:
 - UUID Display Protocol (8-char shorts).
-- Git Commit Standards (NO COPILOT TRAILER).
+- Git Commit Standards (NO AI ATTRIBUTION TRAILER, any tool).
 - NO BULLSHIT Policy & Profanity Censorship.
 - Visual Orientation Protocol (ASCII Triggers).
