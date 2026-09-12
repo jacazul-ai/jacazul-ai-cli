@@ -71,6 +71,7 @@ contract is identical for every agent:
 |---|---|---|---|
 | pi | `PI_CODING_AGENT_DIR` | `$JACAZUL_HOME/agents/pi` | `~/.pi/agent` |
 | Claude | `CLAUDE_CONFIG_DIR` | `$JACAZUL_HOME/agents/claude` | `~/.claude` |
+| OpenCode | `XDG_CONFIG_HOME` | `$JACAZUL_HOME/agents/opencode` | `~/.config/opencode` |
 
 **Why the variable name matters.** The anchorage variable must be the one the
 agent's own CLI reads. An internal bootstrap variable only controls where the
@@ -94,6 +95,7 @@ directly.
 |---|---|---|
 | pi | `~/.pi/agent` | moved into the anchored dir once |
 | Claude | `~/.claude` | left untouched; the anchor starts clean |
+| OpenCode | `~/.config/opencode` | moved into the anchored dir once |
 
 pi migrates because its agent directory holds configuration and extensions, and
 nothing writes to it continuously.
@@ -104,6 +106,10 @@ can only be attempted while no session is open. A migration that is refused
 halfway — because a session still holds the tree — leaves state split across
 two locations, which is worse than starting clean. Carrying anything across is
 therefore a deliberate manual step, not something the bootstrap decides.
+
+OpenCode migrates its legacy global directory once when the anchored destination
+is absent. An explicit `XDG_CONFIG_HOME` remains authoritative, so users can
+select another configuration root without the launcher overriding it.
 
 The practical consequence: the first Claude session under a new anchor
 authenticates again and starts with no prior conversation history. What the

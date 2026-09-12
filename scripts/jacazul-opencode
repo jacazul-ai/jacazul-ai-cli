@@ -43,6 +43,10 @@ export PROJECT_ID="$PROJECT_ID"
 export CONTEXT_REAL_PATH="$(pwd)"
 export CONTEXT_SYSTEM_USER="$(whoami)"
 
+# Keep OpenCode's global state inside the project-scoped Jacazul home unless
+# the caller explicitly selected another XDG configuration directory.
+export XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$JACAZUL_HOME/agents}"
+
 # Add workflow scripts to PATH
 export PATH="$PATH:$PROJECT_ROOT/skills/taskwarrior-expert/scripts"
 
@@ -103,14 +107,6 @@ ARGS=("${CLEAN_ARGS[@]}")
 if [[ "${CLEAN_ARGS[*]}" != *"--agent"* ]]; then
     ARGS=("--agent" "jacazul" "${ARGS[@]}")
 fi
-
-# OpenCode discovers the project TUI configuration from its project path. When
-# the launcher is called outside this repository, pass the project explicitly
-# so tui.json and the local TUI extension are still loaded.
-case "$(pwd)/" in
-    "$PROJECT_ROOT"/*) ;;
-    *) ARGS=("$PROJECT_ROOT" "${ARGS[@]}") ;;
-esac
 
 # Execute opencode directly to preserve TUI interactivity.
 # The 'Initial Turn Protocol' in the JIT agent will guide the LLM.

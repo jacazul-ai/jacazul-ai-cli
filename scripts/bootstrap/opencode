@@ -4,7 +4,25 @@
 # Autonomy is controlled at runtime by JACAZUL_MODE, not by this linker.
 
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-OPENCODE_GLOBAL_DIR="$HOME/.config/opencode"
+XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-${JACAZUL_HOME:-$HOME/.jacazul-ai}/agents}"
+OPENCODE_GLOBAL_DIR="$XDG_CONFIG_HOME/opencode"
+LEGACY_OPENCODE_DIR="$HOME/.config/opencode"
+
+# Migrate the old global directory only when the anchored destination does
+# not exist. This preserves existing user state while making the new location
+# the sole source of truth for subsequent sessions.
+if [ "$OPENCODE_GLOBAL_DIR" != "$LEGACY_OPENCODE_DIR" ] \
+    && [ ! -e "$OPENCODE_GLOBAL_DIR" ] \
+    && [ -d "$LEGACY_OPENCODE_DIR" ]; then
+    mkdir -p "$(dirname "$OPENCODE_GLOBAL_DIR")"
+    if ! mv -- "$LEGACY_OPENCODE_DIR" "$OPENCODE_GLOBAL_DIR"; then
+        echo "❌ Failed to migrate OpenCode config from $LEGACY_OPENCODE_DIR" >&2
+        return 1 2>/dev/null || exit 1
+    fi
+    if [ -n "$DEBUG" ]; then
+        echo "🐊 Migrated OpenCode config to $OPENCODE_GLOBAL_DIR"
+    fi
+fi
 
 BOOTSTRAP_PERSONA="$PROJECT_ROOT/scripts/bootstrap/persona"
 if [ -f "$BOOTSTRAP_PERSONA" ]; then
