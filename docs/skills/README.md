@@ -237,6 +237,28 @@ mutable defaults, `is` versus `==`, iterator exhaustion and exceptions.
 
 ---
 
+### JS/TS Expert
+**Status:** ✅ Active
+**Documentation:** [`skills/js-ts-expert/SKILL.md`](../../skills/js-ts-expert/SKILL.md) and [JS/TS Expert Guide](../js-ts-expert.md)
+
+JavaScript and TypeScript across browser and Node, framework-neutral.
+`js-mode` names the tree legacy, greenfield or migration without Node;
+`js-check` runs only what the tree declares with the explicit 4-space
+preference, a check-only mode and a guard for legacy trees. Serves the
+operator who keeps JavaScript thin at the edge of a Go/Rust/Zig backend
+and the one who chose full-stack JavaScript.
+
+**Trigger → Action**
+- When touching JS/TS, run `js-mode <root>` and state the mode.
+- When adding logic, answer the boundary question once (edge, backend,
+  WebAssembly, or full-stack JavaScript) and record it.
+- When the tree is legacy, run `js-check --check` and match the local style.
+- When reviewing, use `CODE-REVIEW.md` scenarios with the shared scale.
+
+**Location:** `/project/skills/js-ts-expert/`
+
+---
+
 ## 🔜 Future Skills
 
 Skills planned for addition:

@@ -108,6 +108,7 @@ Jacazul extends your capabilities via specialized skills:
 - **Taskwarrior Expert**: Advanced workflow persistence.
 - **Python Expert**: Legacy, greenfield and migration modes, PEP 8 with the explicit 79-column preference, review on the shared scale.
 - **Python Tutor**: Adaptive Python learning on the tutor core, including legacy reading and modernization.
+- **JS/TS Expert**: Framework-neutral JavaScript and TypeScript in legacy, greenfield and migration modes; keeps JavaScript thin at the edge unless you choose full-stack.
 - **Go Expert**: Idiomatic Go, gofmt-to-goimports formatting, and Line of Sight readability.
 - **Rust Expert**: Idiomatic Rust engineering, ownership, safety, async, and quality gates.
 - **Rust Tutor**: Adaptive Rust learning with learner calibration and progressive curriculum.
