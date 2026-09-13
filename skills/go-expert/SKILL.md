@@ -332,5 +332,8 @@ editing.
    service layers must earn their existence through real behavior.
 7. **Validate before finality:** run the configured project gates, or the
    conventional baseline when no project gate exists.
+8. **Self-review before done:** walk the scenarios of the touched track in
+   `CODE-REVIEW.md` and fix in the change; findings are for reviews of
+   others' code.
 
 </agent_instructions>

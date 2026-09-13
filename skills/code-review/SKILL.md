@@ -284,6 +284,58 @@ skills active: this core, the language expert, and its `CODE-REVIEW.md`.
 Never review a language with the core alone when its extension exists; the
 scenarios are where the failure modes live.
 
+## Bizus (tips that fire by situation)
+
+These are short prompts the engine and the experts repeat at the right
+moment. They are rules, not decoration.
+
+- 💡 **Coding in a language?** The expert is active, so its
+  `CODE-REVIEW.md` is loaded. Before calling the change done, walk the
+  scenarios of the track you touched (Foundations for values and errors,
+  Boundaries for resources and lifecycle, Systems for contracts and
+  security) as a self-review. No finding is written; the fix lands in the
+  change.
+- 💡 **Loaded this core?** Go to the language: detect it, activate the
+  expert, read its review file. The core alone has no failure modes.
+- 💡 **Being reviewed?** Report and read findings on this scale: level,
+  advisory, area, evidence. A finding without an advisory is not
+  actionable; ask for one.
+- 💡 **Someone else's scale on the table?** Ours is the record. Map theirs
+  onto ours (table below), answer in theirs when the channel demands it,
+  and store the outcome in ours.
+
+## Scale ownership and adaptation
+
+This scale is the project's working vocabulary. When a review arrives in
+another vocabulary (a reviewer's habit, a scanner, an organization policy,
+a PR template), do not argue about labels and do not run two records:
+
+1. Map each external label onto a technical level and an advisory using
+   the table below; note the mapping once in the review.
+2. Reply in the external vocabulary when the channel requires it (their
+   PR template, their tracker), keeping our four labels in the body of
+   the finding so the record stays comparable.
+3. Store the disposition in ours: `FIX-NOW`, `FIX-OR-TECH-DEBT` with a
+   linked task, `TECH-DEBT`, or `ACCEPTED` with rationale.
+4. When an external label has no counterpart, choose by consequence, not by
+   name, and say so.
+
+Reference mappings; adjust by consequence when the source defines its
+labels differently:
+
+| External vocabulary | Technical level | Default advisory |
+|---|---|---|
+| Blocker, Critical, Severe, Must fix, P0 | `BLOCKER` | `FIX-NOW` |
+| Major, High, Important, Should fix, P1 | `WARNING` | `FIX-OR-TECH-DEBT` |
+| Medium, Moderate, Consider, P2 | `SUGGESTION` | `FIX-OR-TECH-DEBT` or `ACCEPTED` |
+| Minor, Low, Trivial, Nit, Style, Info, P3 | `NIT` | `ACCEPTED` |
+| "Request changes" (GitHub review state) | at least one `BLOCKER` or `WARNING` with `FIX-NOW` | `FIX-NOW` |
+| "Comment" (GitHub review state) | `SUGGESTION` or `NIT` | per finding |
+| Security scanners (Critical, High, Medium, Low) | see [security priority mapping](#security-priority-mapping) | per table |
+
+An external "Minor" that can corrupt data is still a `BLOCKER` here; the
+mapping is a default, and the consequence decides.
+
 ## Language-specific extensions
 
 Each `<lang>-expert` skill plugs into this core through a fixed contract:

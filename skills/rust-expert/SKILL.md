@@ -329,5 +329,7 @@ guarantee, a community convention, or an option. Findings ordered by the
 4. Make async lifecycles and unsafe invariants auditable.
 5. Prefer evidence over performance assumptions.
 6. Validate configured quality gates before finality.
+7. Self-review before done: walk the touched track in `CODE-REVIEW.md` and
+   fix in the change.
 
 </agent_instructions>

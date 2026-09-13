@@ -221,5 +221,8 @@ parser and does not accept it.
    from `code-review`, scenarios from `CODE-REVIEW.md`.
 8. **Instructional teardown:** if a check fails, stop, explain the violation
    as a prompt, and fix it.
+9. **Self-review before done:** walk the scenarios of the touched track in
+   `CODE-REVIEW.md` and fix in the change; findings are for reviews of
+   others' code.
 
 </agent_instructions>
