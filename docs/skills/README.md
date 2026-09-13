@@ -204,6 +204,39 @@ guardrails made explicit.
 
 ---
 
+### Python Expert
+**Status:** ✅ Active
+**Documentation:** [`skills/python-expert/SKILL.md`](../../skills/python-expert/SKILL.md) and [Python Expert Guide](../python-expert.md)
+
+Python engineering in three modes. `py-mode` names the tree legacy,
+greenfield or migration from its markers; `py-check` is the house gate with
+the explicit 79-column preference, a check-only mode and a guard that never
+reformats a legacy tree. Playbook and review scenarios on the shared scale.
+
+**Trigger → Action**
+- When touching Python, run `py-mode <root>` and state the mode.
+- When the tree is legacy, run `py-check --check` and match the local style.
+- When migrating, follow the playbook sequence one commit per step.
+- When reviewing, use `CODE-REVIEW.md` scenarios with the shared scale.
+
+**Location:** `/project/skills/python-expert/`
+
+---
+
+### Python Tutor
+**Status:** ✅ Active
+**Documentation:** [`skills/python-tutor/SKILL.md`](../../skills/python-tutor/SKILL.md)
+
+Python curriculum on the shared tutor core, paired with `python-expert`:
+bridges from compiled, ownership, class-based and scripting backgrounds;
+five levels from environment to production Python, including reading and
+modernizing legacy code; a foundations review sequence on references,
+mutable defaults, `is` versus `==`, iterator exhaustion and exceptions.
+
+**Location:** `/project/skills/python-tutor/`
+
+---
+
 ## 🔜 Future Skills
 
 Skills planned for addition:

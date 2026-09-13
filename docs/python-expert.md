@@ -1,93 +1,95 @@
 # Python Expert Skill
 
-Guide for the python-expert skill - a toolset and set of standards for high-quality Python development following PEP 8 and project-specific mandates.
+Guide for the python-expert skill: Python engineering in legacy, greenfield
+and migration trees, with the house `py-check` gate and review on the shared
+`code-review` scale.
 
-## 🎯 Overview
+## Trigger → Action
 
-The python-expert skill enforces strict engineering standards for Python 3.13+ development using:
-- **py-check**: A mandatory quality gate tool.
-- **Ruff**: The formatter *and* linter. `ruff format` rewrites files; `ruff check` reports and auto-fixes logic issues.
-- **Pycodestyle**: For strict adherence to the PEP 8 style guide.
-- **Error as Prompt**: Transforming linter failures into actionable instructions.
+### When you touch any Python tree
 
----
+Run `py-mode <root>` first. It prints the mode and the evidence behind it:
 
-## 🛠 The py-check Tool
-
-The `py-check` command is the central gateway for Python quality in the Jacazul ecosystem.
-
-### Usage
-```bash
-py-check <path>
+```text
+🐊 PY_MODE: migration (source: scan)
+  - floor 3.13 from requires-python
+  - modern packaging: pyproject [project] or lockfile
+  - legacy code: os.path string surgery x303
+  - annotated defs: 168/536
 ```
 
-**Always pass an explicit path.** With no argument the target defaults to `.`,
-which reformats every Python file in the repository.
+| Mode | Meaning | What the expert does |
+|---|---|---|
+| `legacy` | Python 2 remnants, `setup.py`-only, untyped, old floor | Preserves behavior. No reformat of untouched files, no new tooling, fixes match the surrounding style. |
+| `greenfield` | Modern packaging, 3.10+ floor, typed, formatter configured | Applies the full modern baseline. |
+| `migration` | Mixed markers | Incremental ordered steps, one commit each, suite green before and after. |
 
-### What it does:
-1.  **Auto-Beautify**: Runs `ruff format` to align code with the project's style (79-character lines). **This writes to disk.**
-2.  **Logic Check**: Runs `ruff check --fix` to catch and fix common programming errors.
-3.  **Style Validation**: Runs `pycodestyle --first` to ensure 100% PEP 8 compliance.
-4.  **Instructional Feedback**: If any check fails, it outputs a `💡 PROMPT` with specific instructions on how to fix the violation.
+Override the scan with `JACAZUL_PY_MODE=legacy|greenfield|migration` or with
+`[tool.jacazul] py_mode = "..."` in `pyproject.toml`. The expert states the
+mode in its first Python response and records a decision when you override.
 
----
+### When you want the migration path for an old codebase
 
-## ⚠️ Two Behaviors That Surprise People
+The expert follows the sequence in
+[`skills/python-expert/PLAYBOOK.md`](../skills/python-expert/PLAYBOOK.md):
+interpreter floor, packaging metadata, formatter (one commit, added to
+`.git-blame-ignore-revs`), linter, typing at boundaries, test runner,
+dependencies, idiom sweep. A step that changes behavior is a bug, not a
+step.
 
-### 1. py-check modifies your working tree
+### When you ask for a Python code review
 
-`py-check` is not a read-only gate. It formats before it validates, and it
-saves the result. Running it with no path reformats the whole repository and
-can dirty files that have nothing to do with your task.
+Findings use the shared [`code-review` scale](../skills/code-review/SKILL.md)
+(level, advisory, area, evidence) with the Python scenarios in
+[`skills/python-expert/CODE-REVIEW.md`](../skills/python-expert/CODE-REVIEW.md).
+The mode changes what counts: a modern idiom dropped into a legacy module is
+a finding against the change; a migration commit that hides a behavior
+change is `WARNING` / `FIX-NOW`.
 
-**Trigger → Action:**
+### When you run the gate
 
-| You want to | Run |
-|---|---|
-| Check and fix one file or directory | `py-check path/to/file.py` |
-| Check without changing anything | `ruff format --check <path>` then `pycodestyle <path>` |
-| See the state before committing | `git status` after any `py-check` run |
+```bash
+py-check <path>            # greenfield and migration: format, fix, validate
+py-check --check <path>    # legacy or review: validate only, writes nothing
+py-check --all <path>      # every pycodestyle violation, not one per code
+```
 
-### 2. py-check shows one violation per error code
+`py-check` refuses to run without a path, so it never reformats the whole
+repository by accident. Without `--check` it writes: `ruff format`, then
+`ruff check --fix`, then validation with `ruff check` and `pycodestyle`.
 
-It calls `pycodestyle --first`, which prints only the *first occurrence* of
-each error code. One reported `E501` does not mean one long line — it means at
-least one.
+The banner says what it resolved:
 
-**Trigger → Action:**
+```text
+🐊 py-check: mode migration (scan), line length 79 (pyproject.toml, house preference 79), writing
+```
 
-| You want to | Run |
-|---|---|
-| Fix violations iteratively | `py-check <path>`, fix, repeat until it passes |
-| See the complete list at once | `pycodestyle <path>` |
+### When the line length is not 79
 
----
+The house preference is 79 and stays explicit. Resolution order:
+`--line-length`, `JACAZUL_PY_LINE_LENGTH`, the project's own configuration
+(`[tool.ruff]`, `[tool.black]`, `[flake8]`/`[pycodestyle]`
+`max-line-length`, `.editorconfig`), then 79. A greenfield tree that
+declares nothing gets a prompt to write `line-length = 79` under
+`[tool.ruff]`.
 
-## 📋 Engineering Standards
+### When you must not reformat a legacy tree
 
-### 1. Line Length
-- **Mandate**: All Python code MUST respect a maximum line length of **79 characters**.
-- **Reason**: PEP 8 compliance and better readability in CLI/terminal environments.
-- **Configured in**: `line-length` in `pyproject.toml`, and the `--line-length=79` flags hardcoded in the `py-check` script. Both must agree.
+Set `JACAZUL_PY_IGNORE_FORMATTING=1`, or rely on the guard: a legacy tree
+with no formatter configuration runs check-only automatically. The banner
+says `check-only` and explains why.
 
-### 2. Mandatory Verification
-- **Protocol**: You MUST run `py-check` before submitting any Python code for review or closing a task.
-- **Enforcement**: Tasks involving Python implementation will not be considered complete unless `py-check` passes.
+### When py-check shows one violation per code
 
-### 3. Error as Prompt Loop
-When a linter error occurs, do not just report the error code. Use the mapping provided by `py-check` to understand the required action:
-- **E302**: Add 2 blank lines between functions.
-- **E501**: Wrap the line at 79 characters. Inside a docstring, comment, or string, wrap the *text* across lines and preserve the original wording.
-- **W291**: Remove trailing whitespace.
+It calls `pycodestyle --first` by default. One `E501` means at least one
+long line. Re-run until it passes, or use `--all`.
 
-### 4. What the formatter cannot fix
+### When the formatter cannot fix a long line
 
-`ruff format` reflows code, but it never breaks a string literal. Every `E501`
-inside a docstring, comment, or string is a manual fix.
-
-Do not split a long string into implicitly concatenated parts and assume it
-stays split — `ruff format` rejoins adjacent string literals whenever the
-merged line fits within 79 characters. Wrap the text across lines instead:
+`ruff format` never breaks a string literal. Every `E501` inside a
+docstring, comment, or string is a manual fix: wrap the text across lines
+and keep the wording. Do not split a string into implicitly concatenated
+parts; the formatter rejoins them when the merged line fits.
 
 ```python
 # Undone by the next py-check run: the parts fit on one line when merged.
@@ -101,36 +103,41 @@ def test_cool_down(self):
     """
 ```
 
----
+### When tests must vary the environment before import
 
-## 🐊 The Python Policy Sentinel
+Values read at import time or cached in `functools.cache` cannot be changed
+by `monkeypatch`. Run the case in a child process with `sys.executable`, a
+guard variable, a narrow test filter, an explicit environment and a
+timeout; read the first line of its output. See the
+[playbook](../skills/python-expert/PLAYBOOK.md#process-isolated-tests-for-import-time-environment).
+
+### When you want to learn Python
+
+Ask for a tutorial. The engine activates `tutor`, `python-tutor` and
+`python-expert` together; see [Tutors](tutor.md).
+
+## The Python Policy Sentinel
 
 `scripts/python` wraps the interpreter and prints the JACAZUL PYTHON POLICY
-ALERT banner on every invocation, reminding you to run `py-check` and load the
-skill.
-
-Silence it with `--skill-activated`, which the wrapper consumes before handing
-the remaining arguments to Python:
+ALERT banner on every invocation. Silence it with `--skill-activated`, which
+the wrapper consumes before handing the remaining arguments to Python:
 
 ```bash
 python --skill-activated script.py
 ```
 
-**The flag belongs to that wrapper only.** `py-check` performs no argument
-parsing and treats whatever you pass as the target path, so
-`py-check --skill-activated .` lints a path named `--skill-activated` and
-ignores the `.` entirely.
+The flag belongs to that wrapper only; `py-check` has its own parser and
+rejects it.
+
+## Best Practices
+
+1. Name the mode before the first edit.
+2. Scope `py-check` to the file or directory you changed.
+3. In legacy trees, use `--check` and match the local style.
+4. Migrate in separate commits; never mix a step with a behavior change.
+5. Trust the formatter for code, never for strings.
 
 ---
 
-## 💡 Best Practices
-
-1.  **Run Early, Run Often**: Run `py-check` frequently during implementation to catch issues before they accumulate.
-2.  **Scope the Path**: Point `py-check` at the file or directory you are working on, never at the bare repository root.
-3.  **Trust the Formatter for Code**: Let `ruff format` handle indentation and spacing — but expect nothing from it inside strings.
-4.  **Manual Wrapping**: Long strings, docstrings, and comments are always yours to break, with the original wording preserved.
-
----
-
-**Version:** 1.2.0
-**Last Updated:** 2026-09-04
+**Version:** 2.0.0
+**Last Updated:** 2026-09-13
