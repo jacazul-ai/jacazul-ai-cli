@@ -110,6 +110,9 @@ Jacazul extends your capabilities via specialized skills:
 - **Go Expert**: Idiomatic Go, gofmt-to-goimports formatting, and Line of Sight readability.
 - **Rust Expert**: Idiomatic Rust engineering, ownership, safety, async, and quality gates.
 - **Rust Tutor**: Adaptive Rust learning with learner calibration and progressive curriculum.
+- **Go Tutor**: Adaptive Go learning on the same tutor core, paired with the Go Expert.
+- **Tutor Core**: Shared teaching contract; a tutor decides how to teach, its expert decides what is true.
+- **Code Review**: One finding scale (level, advisory, area, evidence) shared by every language expert.
 - **Git Expert**: Strict conventional commit standards.
 - **GitHub Broker**: Secure, credential-less ticket synchronization.
 

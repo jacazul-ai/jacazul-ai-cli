@@ -20,6 +20,8 @@ Welcome to the Jacazul AI CLI documentation. This project is built around the co
 - [Interaction Modes](interaction-modes.md) - DESIGN/GUIDE/REVIEW/EXECUTE collaboration semantics.
 - [Python Expert](python-expert.md) - PEP 8 and quality gates.
 - [Go Expert](go-expert.md) - Idiomatic Go, gofmt-to-goimports formatting, and Line of Sight readability.
+- [Tutors](tutor.md) - Learning a language with a tutor paired to its expert.
+- [Skills Index](skills/README.md) - Every skill, including Rust Expert, Rust Tutor, Go Tutor, and the shared Code Review scale.
 - [GitHub Broker](github-broker.md) - Secure issue and ticket synchronization.
 
 ### 🔒 Advanced Concepts

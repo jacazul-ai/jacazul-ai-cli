@@ -93,16 +93,21 @@ GitHub Actions, cache poisoning, and automation hardening.
 **Status:** ✅ Active
 **Documentation:** [`skills/code-review/SKILL.md`](../../skills/code-review/SKILL.md)
 
-Global code-review vocabulary and policy. Separates technical finding levels
-from reviewer advisory outcomes, evidence, and tech-debt handling. Language
-skills add scenarios and reference this shared scale.
+Global code-review vocabulary and policy. Owns the review method, the
+scenario format, the tracks (Foundations, Boundaries, Systems), the areas,
+the technical levels, the advisory outcomes, the evidence labels, and the
+mapping of security priorities onto the scale. Language skills add scenarios
+in their own `CODE-REVIEW.md` and reference this shared scale.
 
 **Trigger → Action**
-- When reviewing any code, classify technical level and advisory separately.
+- When reviewing any code, activate `code-review` plus the language expert;
+  classify technical level and advisory separately and tag the area.
 - When a non-blocking finding is actionable, fix it now or create a linked
   tech-debt task with context and acceptance criteria.
-- When a language-specific review skill exists, use its scenarios with this
-  global scale instead of redefining labels.
+- When a language-specific review skill exists (`go-expert`, `rust-expert`),
+  use its scenarios with this global scale instead of redefining labels.
+- When `security-expert` reports Critical/High/Medium/Low, map them to
+  BLOCKER/BLOCKER/WARNING/SUGGESTION under area `SECURITY`.
 
 **Location:** `/project/skills/code-review/`
 
@@ -129,10 +134,79 @@ formatting sequence and applies Line of Sight readability for control flow.
 
 ---
 
+### Rust Expert
+**Status:** ✅ Active
+**Documentation:** [`skills/rust-expert/SKILL.md`](../../skills/rust-expert/SKILL.md)
+
+Idiomatic, safe, performant Rust with an explicit policy boundary between
+repository mandates, language guarantees, community convention, and options.
+Review scenarios live in
+[`skills/rust-expert/CODE-REVIEW.md`](../../skills/rust-expert/CODE-REVIEW.md)
+on the shared code-review scale.
+
+**Trigger → Action**
+- When Rust files change, run the configured gates, then the conventional
+  `cargo fmt`, `check`, `clippy`, `test`, and `doc` sequence.
+- When reviewing Rust, concentrate on what the compiler cannot see: panics on
+  runtime input, runtime borrow checks, async lifecycle, `unsafe` invariants,
+  public-API contracts, and build-time trust.
+- When a version-sensitive claim appears, read `edition`, `rust-version`, and
+  the toolchain before judging it.
+
+**Location:** `/project/skills/rust-expert/`
+
+---
+
+### Tutor (shared core)
+**Status:** ✅ Active
+**Documentation:** [`skills/tutor/SKILL.md`](../../skills/tutor/SKILL.md)
+
+Language-agnostic teaching contract: learner calibration before any
+curriculum, comparison bridges by memory-management background, the teaching
+loop, lesson format, adaptive recalibration, and the pairing rule. A tutor
+decides how and when to teach; its paired expert decides what is true.
+
+**Trigger → Action**
+- When the operator wants to learn a language, activate `tutor`, the
+  `<lang>-tutor`, and the `<lang>-expert` together.
+- When the paired expert is not active, the tutor stops and says so instead
+  of teaching from memory.
+- When a project defines lesson rules in its `AGENTS.md`, those rules win.
+
+**Location:** `/project/skills/tutor/`
+
+---
+
+### Rust Tutor
+**Status:** ✅ Active
+**Documentation:** [`skills/rust-tutor/SKILL.md`](../../skills/rust-tutor/SKILL.md)
+
+Rust curriculum on the shared tutor core, paired with `rust-expert`: bridges
+from GC, RAII, and manual-memory backgrounds; four levels from toolchain to
+production Rust; a foundations review sequence with explicit guardrails on
+bindings, inference, generics, macros, and `enum` versus `Any`.
+
+**Location:** `/project/skills/rust-tutor/`
+
+---
+
+### Go Tutor
+**Status:** ✅ Active
+**Documentation:** [`skills/go-tutor/SKILL.md`](../../skills/go-tutor/SKILL.md)
+
+Go curriculum on the shared tutor core, paired with `go-expert`: bridges from
+ownership, manual-memory, class-based, and scripting backgrounds; four levels
+from module shape to production Go; a foundations review sequence on zero
+values, slices, maps, interfaces, and errors with the aliasing and typed-nil
+guardrails made explicit.
+
+**Location:** `/project/skills/go-tutor/`
+
+---
+
 ## 🔜 Future Skills
 
 Skills planned for addition:
-- Code review automation
 - Test generation
 - Documentation generation
 - Deployment workflows
@@ -164,4 +238,4 @@ Place skill directory in `/project/skills/` and reference in agent instructions.
 
 ---
 
-**Last Updated:** 2026-01-31
+**Last Updated:** 2026-09-13

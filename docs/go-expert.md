@@ -36,6 +36,11 @@ epoch under multiple timezone interpretations without reusing the parent's
 initialized state. The helper-process pattern is standard-library-backed; the
 timezone/date scenario is our application-specific use of it.
 
+The child is a full test binary, so its stdout ends with the harness's own
+`PASS` line after the helper branch returns. Read the first line of the
+output, never the whole capture, and do not call `os.Exit(0)` from the test
+function to suppress it.
+
 See the [process-isolated test guidance][go-helper-tests] and the [review
 directive][go-helper-review] for the guard, `os.Executable()`, direct
 `exec.Command`, and evidence rules.
