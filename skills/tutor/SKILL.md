@@ -189,5 +189,6 @@ and why it is not needed yet.
 - Go: [`go-tutor`](../go-tutor/SKILL.md), paired with `go-expert`.
 - Python: [`python-tutor`](../python-tutor/SKILL.md), paired with `python-expert`.
 - Zig: [`zig-tutor`](../zig-tutor/SKILL.md), paired with `zig-expert`.
+- PHP: [`php-tutor`](../php-tutor/SKILL.md), paired with `php-expert`.
 
 </agent_instructions>
