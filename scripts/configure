@@ -205,6 +205,7 @@ CLI_LINKS=(
     "py-mode:$HOME/.jacazul-ai/.venv/bin/py-mode"
     "js-mode:$HOME/.jacazul-ai/.venv/bin/js-mode"
     "js-check:$HOME/.jacazul-ai/.venv/bin/js-check"
+    "zig-era:$HOME/.jacazul-ai/.venv/bin/zig-era"
 )
 
 for entry in "${CLI_LINKS[@]}"; do

@@ -9,7 +9,9 @@ advisories, and evidence labels are owned by the shared
 [Code Review skill](../code-review/SKILL.md). This file adds Zig scenarios
 only and never redefines those labels. Before judging version-sensitive
 code, run `zig version`, read `.minimum_zig_version` in `build.zig.zon`,
-and remember that Zig is pre-1.0: names in this file were verified on
+run `zig-era <root>` to name the era the code was written for (old names
+are read through [`VERSIONS.md`](VERSIONS.md)), and remember that Zig is
+pre-1.0: names in this file were verified on
 **0.16.0** and are marked where they moved recently.
 
 Scenarios are grouped by [track](../code-review/SKILL.md#tracks). The track

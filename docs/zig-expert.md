@@ -21,6 +21,33 @@ the standard library moves between minors, so every claim the expert makes
 names the release it was verified on, and the installed `std` is the final
 word when documentation and code disagree.
 
+### When you inherit Zig code from another era
+
+Run `zig-era <root>`. It names the newest release the code targets, the
+oldest marker still present, and the declared floor, without needing the
+toolchain:
+
+```text
+🐊 ZIG_ERA: 0.16
+   floor: 0.16.0 (build.zig.zon)
+   migration: oldest marker 0.13, newest 0.16; walk VERSIONS.md between them
+  - 0.13: std.heap.GeneralPurposeAllocator x1 (old.zig)
+  - 0.16: main(init: std.process.Init) x1 (new.zig)
+```
+
+The expert then reads the old names through
+[`skills/zig-expert/VERSIONS.md`](../skills/zig-expert/VERSIONS.md), a
+ladder from 0.11 to 0.16 checked against each release's notes, and writes
+for the project's floor.
+
+### When a new Zig release comes out
+
+Nobody re-reviews the skill by memory. `python -m unittest
+tests.test_zig_examples` fails when the installed version has no section
+in the ladder or when a playbook example stops compiling; the
+[refresh procedure](../skills/zig-expert/VERSIONS.md#refresh-procedure-one-per-zig-release)
+turns the release notes into ladder rows, era markers and fixed examples.
+
 ### When a snippet from the internet does not compile
 
 Expected. Between 0.11 and 0.16 the language removed `async`/`await`,

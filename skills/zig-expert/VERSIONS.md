@@ -122,6 +122,41 @@ target, the oldest sets what still has to move.
 | Hand-rolled task pools | `io.async`, `io.concurrent`, `Io.Group`, `Io.Future`, `Io.Batch` with `await`/`cancel` | Task-level abstraction in the library |
 | `std.testing` without an `Io` | `std.testing.io` (an `Io.Threaded`), `std.testing.fuzz` with `Smith` | |
 
+## Refresh procedure (one per Zig release)
+
+Zig is pre-1.0, so this ladder is reviewed once per release, by script,
+not by memory. The gate that says a refresh is due is
+`tests/test_zig_examples.py`: it fails when the installed `zig version`
+has no `## <minor>` section here, and it fails when any file in
+`examples/` no longer passes `zig test`.
+
+1. Install the release; `zig version`.
+2. Run `python -m unittest tests.test_zig_examples`. The failures are the
+   work list: broken examples and the missing ladder section.
+3. Read `https://ziglang.org/download/<version>/release-notes.html`.
+   Extract every old → new pair for the language, `std`, and the build
+   system into a new `## <minor>` table above, with a note per row.
+4. For each row with a syntactic signature (a renamed symbol, a changed
+   call shape), add an era marker: a row in the "Era markers" table, a
+   regex in `jacazul/zigexpert/archaeology.py` (`until` the previous
+   minor for the old form, `since` the new minor for the new form when it
+   is unmistakable), and a case in `tests/test_zig_era.py`.
+5. Run `zig init` in a scratch directory and diff the generated
+   `build.zig`, `build.zig.zon`, `main.zig` against the shapes described
+   in the playbook; update the playbook where the skeleton moved.
+6. Fix the examples in `examples/` until `zig test` passes on the new
+   release, then paste the exact file bodies back into the playbook (the
+   test checks that the playbook blocks mirror the files).
+7. Update the version ladder in the playbook, the landmarks in
+   `SKILL.md`, and the "verified on" release in the three files.
+8. Record the refresh as a task with the release in its description and
+   the release-notes URL in a `RESEARCH` note; `Refs: #117` until a
+   dedicated ticket exists.
+
+Nothing in this procedure requires remembering what changed: the test
+names the release, the notes name the changes, the examples prove the
+result.
+
 ## Stable across the ladder
 
 `defer`/`errdefer`, error sets and `try`/`catch`, optionals, slices and

@@ -86,6 +86,11 @@ the **source floor** (what the code was written against) and the
 Until the bump commit lands, the source floor rules the code and the
 target rules only the migration branch.
 
+When the toolchain itself moves to a release this skill was not verified
+on, run the [refresh procedure](VERSIONS.md#refresh-procedure-one-per-zig-release):
+`tests/test_zig_examples.py` is the gate that says it is due, and the
+procedure is a script of steps, not a memory exercise.
+
 ## 🧭 Policy Boundary: Convention vs. Project Mandate
 
 Do not present inferred Zig practices as project-specific rules.
@@ -207,6 +212,8 @@ hand; change the header, the build step, or the generator and rebuild.
 
 1. **Pin the version first:** `zig version`, `.minimum_zig_version`, and
    the release notes of the project's version.
+   Name the tree's era with `zig-era <root>` and read old names through
+   `VERSIONS.md`.
    During an update, keep both sides in view: source floor for reading,
    target for writing, one migration group per commit.
 2. **Read repository policy first:** `build.zig`, `build.zig.zon`, CI,

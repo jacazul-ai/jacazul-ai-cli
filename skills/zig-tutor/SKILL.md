@@ -104,6 +104,9 @@ Keep these guardrails explicit:
   promise is undefined behavior, not a panic.
 - The standard library moves between releases; the installed `std` is the
   reference, and every lesson names the release it was verified on.
+- Old tutorials are not wrong, they are dated: `zig-era` names the era of
+  a snippet and `zig-expert`'s `VERSIONS.md` translates it to the
+  learner's release.
 
 Use one Zig-specific concept per lesson, a complete runnable example
 compiled on the learner's toolchain, and a short prediction or

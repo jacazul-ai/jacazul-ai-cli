@@ -5,8 +5,9 @@ Zig. This file answers **how to build the change**. Scenario-based review
 directives live separately in [`CODE-REVIEW.md`](CODE-REVIEW.md).
 
 Verified on **Zig 0.16.0**. Zig is pre-1.0 and the standard library moves
-between minors; every example below compiled and passed under `zig test`
-on 0.16.0. When the project pins another release, read its release notes
+between minors; every example below lives in [`examples/`](examples/) and
+compiled and passed under `zig test` on 0.16.0 (`tests/test_zig_examples.py`
+reruns them and flags a release the ladder does not cover). When the project pins another release, read its release notes
 before trusting a name in this file. Version-sensitive claims are marked.
 
 These are defaults, not automatic repository policy. Read `build.zig`,
