@@ -186,5 +186,6 @@ and why it is not needed yet.
 ## 🧩 Language Tutors
 
 - Rust: [`rust-tutor`](../rust-tutor/SKILL.md), paired with `rust-expert`.
+- Go: [`go-tutor`](../go-tutor/SKILL.md), paired with `go-expert`.
 
 </agent_instructions>
