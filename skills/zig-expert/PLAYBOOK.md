@@ -400,6 +400,26 @@ Zig changes between minors. Before trusting a name:
 Read the release notes of the project's pinned version:
 https://ziglang.org/download/<version>/release-notes.html
 
+## Updating a project to a newer Zig
+
+An update is a migration with two pins: the source floor and the target.
+Sequence, one commit each, suite green after every step:
+
+1. Bump `.minimum_zig_version` and `zig build`; the errors are the list.
+2. Containers and allocators (unmanaged `ArrayList`, `DebugAllocator`,
+   removed `ThreadSafeAllocator`).
+3. I/O: `std.Io` threading through `main`, writers as parameters,
+   `std.Io.Dir`/`File` instead of `std.fs`.
+4. Synchronization and concurrency: `std.Io.Mutex` with `io`, tasks under
+   a `Group` or `Future`; check every `io.async` for an inline assumption.
+5. Builtins and interop: `@Type` split, `@cImport` to `addTranslateC`,
+   `{f}` for format methods.
+6. Suite under `-Doptimize=ReleaseSafe`, then the version ladder in the
+   docs.
+
+A step that changes behavior is a bug, not a step. Revert it and add the
+test that would have caught it.
+
 ## References
 
 - [Zig Language Reference 0.16.0](https://ziglang.org/documentation/0.16.0/)

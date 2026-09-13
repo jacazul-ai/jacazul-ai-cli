@@ -54,6 +54,34 @@ Landmarks that moved recently (verified on 0.16.0): all I/O goes through
 `@Int`, `@Struct`, and friends; `@cImport` is deprecated in favor of
 translate-c in the build; language-level `async`/`await` do not exist.
 
+## ⬆️ Toolchain Update Protocol
+
+When the installed `zig version` is newer than `.minimum_zig_version`, or
+the operator says the project is being upgraded, the pin has two sides:
+the **source floor** (what the code was written against) and the
+**target** (what it must build with now). Work with both:
+
+1. Read the release notes of every version between source and target, not
+   only the last one; each minor may move names.
+2. Bump `.minimum_zig_version` to the target in its own commit, then run
+   `zig build` and `zig build test`; the compile errors are the migration
+   list. Group them by the ladder in the playbook (allocators, containers,
+   `std.Io`, `std.fs`, mutexes, type builtins, `@cImport`, format
+   specifiers) and fix one group per commit, suite green after each.
+3. Treat a change that compiles but shifts semantics as the dangerous
+   case: `io.async` inline versus concurrent, `ArrayList` growth now
+   taking the allocator, mutex calls now taking `io`. Add or adjust a test
+   before trusting it.
+4. Re-run the suite under `-Doptimize=ReleaseSafe`; a migration may have
+   introduced a new safety-checked path.
+5. Update every version-sensitive claim in the project's own docs and in
+   this skill's version ladder when the target is newer than the release
+   the skill was verified on. Re-run the playbook examples with `zig test`
+   on the new toolchain before trusting them.
+
+Until the bump commit lands, the source floor rules the code and the
+target rules only the migration branch.
+
 ## 🧭 Policy Boundary: Convention vs. Project Mandate
 
 Do not present inferred Zig practices as project-specific rules.
@@ -172,6 +200,8 @@ hand; change the header, the build step, or the generator and rebuild.
 
 1. **Pin the version first:** `zig version`, `.minimum_zig_version`, and
    the release notes of the project's version.
+   During an update, keep both sides in view: source floor for reading,
+   target for writing, one migration group per commit.
 2. **Read repository policy first:** `build.zig`, `build.zig.zon`, CI,
    scripts, docs, and task context override generic convention.
 3. **Do not invent gates:** label unconfigured conventional checks as
