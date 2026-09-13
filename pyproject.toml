@@ -20,6 +20,7 @@ jacazul-persona = "jacazul.cli.persona:main"
 jacazul-github = "jacazul.cli.github:main"
 jacazul-broker = "jacazul.cli.broker:main"
 py-check = "jacazul.cli.pycheck:main"
+py-mode = "jacazul.cli.pymode:main"
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
