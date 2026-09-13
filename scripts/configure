@@ -203,6 +203,8 @@ CLI_LINKS=(
     "jacazul-broker:$HOME/.jacazul-ai/.venv/bin/jacazul-broker"
     "py-check:$HOME/.jacazul-ai/.venv/bin/py-check"
     "py-mode:$HOME/.jacazul-ai/.venv/bin/py-mode"
+    "js-mode:$HOME/.jacazul-ai/.venv/bin/js-mode"
+    "js-check:$HOME/.jacazul-ai/.venv/bin/js-check"
 )
 
 for entry in "${CLI_LINKS[@]}"; do
