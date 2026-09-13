@@ -186,7 +186,8 @@ MARKERS: tuple[Marker, ...] = (
         "typed properties",
         "7.4",
         "modern",
-        r"\b(?:public|protected|private)\s+(?:readonly\s+)?\??(?:int|string|bool|float|array|[A-Z\\]\w*)\s+\$",
+        r"\b(?:public|protected|private)\s+(?:readonly\s+)?\??"
+        r"(?:int|string|bool|float|array|[A-Z\\]\w*)\s+\$",
     ),
     _m("fn() arrow functions", "7.4", "modern", r"\bfn\s*\("),
     _m("??= null coalescing assignment", "7.4", "modern", r"\?\?="),
