@@ -111,6 +111,8 @@ Jacazul extends your capabilities via specialized skills:
 - **JS/TS Expert**: Framework-neutral JavaScript and TypeScript in legacy, greenfield and migration modes; keeps JavaScript thin at the edge unless you choose full-stack.
 - **Zig Expert**: Explicit, allocator-honest, safety-aware Zig pinned to the installed release (verified on 0.16).
 - **Zig Tutor**: Adaptive Zig learning on the tutor core; every example compiled on your toolchain.
+- **PHP Expert**: PHP as a language from 5.x legacy to modern 8.x, framework-neutral, with a census-driven 5.6 to 8.x migration method and a production-floor guard.
+- **PHP Tutor**: Adaptive PHP learning on the tutor core, including legacy reading and the migration path.
 - **Go Expert**: Idiomatic Go, gofmt-to-goimports formatting, and Line of Sight readability.
 - **Rust Expert**: Idiomatic Rust engineering, ownership, safety, async, and quality gates.
 - **Rust Tutor**: Adaptive Rust learning with learner calibration and progressive curriculum.

@@ -297,6 +297,44 @@ learner's toolchain.
 
 ---
 
+### PHP Expert
+**Status:** ✅ Active
+**Documentation:** [`skills/php-expert/SKILL.md`](../../skills/php-expert/SKILL.md) and [PHP Expert Guide](../php-expert.md)
+
+PHP as a language, from 5.x legacy through modern 8.x, framework-neutral.
+`php-mode` names the tree legacy, greenfield or migration; `php-census`
+counts removed and deprecated constructs by breaking version and, with
+`--floor`, the syntax newer than the production PHP. The playbook's
+centerpiece is a census-driven method for migrating 5.6 to 8.x while
+production still runs 5.6.
+
+**Trigger → Action**
+- When touching PHP, run `php-mode <root>` and name the floor and target.
+- When production is behind, keep `php-census --floor <prod>` at zero
+  before any deploy.
+- When migrating, one construct family per commit, ordered by breaking
+  version, idiom sweep last.
+- When reviewing, use `CODE-REVIEW.md` scenarios with the shared scale.
+
+**Location:** `/project/skills/php-expert/`
+
+---
+
+### PHP Tutor
+**Status:** ✅ Active
+**Documentation:** [`skills/php-tutor/SKILL.md`](../../skills/php-tutor/SKILL.md)
+
+PHP curriculum on the shared tutor core, paired with `php-expert`: bridges
+from compiled, scripting and ops backgrounds; five levels from runtime
+and project shape to production PHP including legacy reading and the
+migration path; a foundations review sequence on loose comparison,
+truthiness, arrays, references and errors; every example checked with
+`php -l` on the learner's floor.
+
+**Location:** `/project/skills/php-tutor/`
+
+---
+
 ## 🔜 Future Skills
 
 Skills planned for addition:
