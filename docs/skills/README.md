@@ -102,6 +102,9 @@ in their own `CODE-REVIEW.md` and reference this shared scale.
 **Trigger → Action**
 - When reviewing any code, activate `code-review` plus the language expert;
   classify technical level and advisory separately and tag the area.
+- When `code-review` is activated alone, it detects the languages in the
+  diff, activates each matching expert and reads its `CODE-REVIEW.md`; a
+  language without an extension is reviewed core-only and named as missing.
 - When a non-blocking finding is actionable, fix it now or create a linked
   tech-debt task with context and acceptance criteria.
 - When a language-specific review skill exists (`go-expert`, `rust-expert`),

@@ -260,6 +260,30 @@ clock contract and UTC/DST cases.
    the advisory.
 7. Verify the correction with the smallest useful test or tool evidence.
 
+## Two entry points
+
+A review can start from either side; both must end with the same three
+skills active: this core, the language expert, and its `CODE-REVIEW.md`.
+
+- **Language first.** The language expert is already active (Go, Rust,
+  Python, JS/TS context) and a review is requested. The expert's `SKILL.md`
+  points here for the scale; its `CODE-REVIEW.md` supplies the scenarios.
+- **Core first.** This skill is activated on its own (`[REVIEW]`,
+  `[PR-REVIEW]`, "review this diff", a consensus review) before any
+  language expert. Then:
+  1. Detect the languages in the diff or target from file extensions and
+     manifests (`go.mod`, `Cargo.toml`, `pyproject.toml`/`setup.py`,
+     `package.json`/`tsconfig.json`).
+  2. Activate the matching `<lang>-expert` for each language found and read
+     its `CODE-REVIEW.md` from the list below.
+  3. Run the expert's mode probe when it has one (`py-mode`, `js-mode`) so
+     mode-aware findings apply.
+  4. For a language with no extension yet, review with this core alone,
+     label the findings as core-only, and say which extension is missing.
+
+Never review a language with the core alone when its extension exists; the
+scenarios are where the failure modes live.
+
 ## Language-specific extensions
 
 Each `<lang>-expert` skill plugs into this core through a fixed contract:
@@ -277,3 +301,12 @@ Current extensions:
 - Rust: [Rust review directives](../rust-expert/CODE-REVIEW.md).
 - Python: [Python review directives](../python-expert/CODE-REVIEW.md).
 - JavaScript/TypeScript: [JS/TS review directives](../js-ts-expert/CODE-REVIEW.md).
+
+Detection map for the core-first entry point:
+
+| Evidence in the target | Expert to activate | Mode probe |
+|---|---|---|
+| `go.mod`, `*.go` | `go-expert` | none (read the `go` directive) |
+| `Cargo.toml`, `*.rs` | `rust-expert` | none (read `edition`, `rust-version`) |
+| `pyproject.toml`, `setup.py`, `*.py` | `python-expert` | `py-mode` |
+| `package.json`, `tsconfig.json`, `*.js`, `*.ts`, `*.tsx` | `js-ts-expert` | `js-mode` |
