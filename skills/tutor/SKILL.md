@@ -188,5 +188,6 @@ and why it is not needed yet.
 - Rust: [`rust-tutor`](../rust-tutor/SKILL.md), paired with `rust-expert`.
 - Go: [`go-tutor`](../go-tutor/SKILL.md), paired with `go-expert`.
 - Python: [`python-tutor`](../python-tutor/SKILL.md), paired with `python-expert`.
+- Zig: [`zig-tutor`](../zig-tutor/SKILL.md), paired with `zig-expert`.
 
 </agent_instructions>
