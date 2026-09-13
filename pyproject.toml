@@ -24,6 +24,8 @@ py-mode = "jacazul.cli.pymode:main"
 js-mode = "jacazul.cli.jsmode:main"
 js-check = "jacazul.cli.jscheck:main"
 zig-era = "jacazul.cli.zigera:main"
+php-mode = "jacazul.cli.phpmode:main"
+php-census = "jacazul.cli.phpcensus:main"
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
