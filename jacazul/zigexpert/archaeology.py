@@ -27,20 +27,23 @@ _MARKERS: list[tuple[str, str, re.Pattern[str]]] = [
         "0.10",
         "two-argument cast builtin (@intCast(T, x))",
         re.compile(
-            r"@(?:intCast|ptrCast|truncate|bitCast|floatCast)\s*\(\s*[\w.*\[\]]+\s*,"
+            r"@(?:intCast|ptrCast|truncate|bitCast|floatCast)"
+            r"\s*\(\s*[\w.*\[\]]+\s*,"
         ),
     ),
     (
         "0.10",
         "pre-0.11 cast name (@boolToInt, @intToFloat, ...)",
         re.compile(
-            r"@(?:boolToInt|intToFloat|floatToInt|intToPtr|ptrToInt|enumToInt|intToEnum)\b"
+            r"@(?:boolToInt|intToFloat|floatToInt|intToPtr|ptrToInt"
+            r"|enumToInt|intToEnum)\b"
         ),
     ),
     (
         "0.10",
         "for loop with implicit index capture",
-        re.compile(r"\bfor\s*\([^)]*\)\s*\|\s*\w+\s*,\s*\w+\s*\|"),
+        # A `0..` range operand inside the parentheses is the 0.11+ form.
+        re.compile(r"\bfor\s*\((?:(?!\.\.)[^)])*\)\s*\|\s*\w+\s*,\s*\w+\s*\|"),
     ),
     (
         "0.10",
@@ -53,7 +56,8 @@ _MARKERS: list[tuple[str, str, re.Pattern[str]]] = [
         "0.11",
         "std.os POSIX call (moved to std.posix in 0.12)",
         re.compile(
-            r"\bstd\.os\.(?:abort|exit|write|read|open|close|getenv|linux|windows)\b"
+            r"\bstd\.os\.(?:abort|exit|write|read|open|close|getenv"
+            r"|linux|windows)\b"
         ),
     ),
     (
@@ -104,7 +108,8 @@ _MARKERS: list[tuple[str, str, re.Pattern[str]]] = [
         "0.14",
         "std.io.getStdOut / BufferedWriter",
         re.compile(
-            r"std\.io\.getStd(?:Out|Err|In)\(|BufferedWriter\b|std\.io\.bufferedWriter\("
+            r"std\.io\.getStd(?:Out|Err|In)\(|BufferedWriter\b"
+            r"|std\.io\.bufferedWriter\("
         ),
     ),
     ("0.14", "std.BoundedArray", re.compile(r"\bstd\.BoundedArray\b")),
@@ -139,7 +144,8 @@ _MARKERS: list[tuple[str, str, re.Pattern[str]]] = [
         "0.16",
         "std.Io interface (Io.Dir, Io.File, Io.Mutex, Io.Group)",
         re.compile(
-            r"\bstd\.Io\.(?:Dir|File|Mutex|Group|Future|Batch|Writer|Reader)\b|\bIo\.(?:Group|File|Dir|Mutex)\b"
+            r"\bstd\.Io\.(?:Dir|File|Mutex|Group|Future|Batch|Writer|Reader)\b"
+            r"|\bIo\.(?:Group|File|Dir|Mutex)\b"
         ),
     ),
     (

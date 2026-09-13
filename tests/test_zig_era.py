@@ -114,6 +114,22 @@ class TestZigEraScan(unittest.TestCase):
         self.assertEqual(report.oldest, "0.13")
         self.assertTrue(report.migration)
 
+    def test_range_for_loop_is_not_a_pre_0_11_marker(self):
+        _write(
+            self.root,
+            "src/main.zig",
+            'const std = @import("std");\n'
+            "pub fn main(init: std.process.Init) !void {\n"
+            "    _ = init;\n"
+            "    for (words, 0..) |word, i| { _ = word; _ = i; }\n"
+            "}\n",
+        )
+
+        report = scan(self.root)
+
+        self.assertEqual(report.era, "0.16")
+        self.assertFalse(report.migration)
+
     def test_empty_tree_has_no_evidence(self):
         report = scan(self.root)
 
