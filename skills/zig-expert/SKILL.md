@@ -45,6 +45,10 @@ releases. Before writing or judging anything version-sensitive:
 3. Read the release notes of the project's version when it differs:
    `https://ziglang.org/download/<version>/release-notes.html`.
 4. When in doubt, `grep` the installed `std` for the symbol.
+5. Read old code through [`VERSIONS.md`](VERSIONS.md): the old name is
+   correct for its floor, and the ladder says what it became. Name the
+   era of the tree (`zig-era <root>`) in the first response that touches
+   Zig.
 
 Landmarks that moved recently (verified on 0.16.0): all I/O goes through
 `std.Io` and `main(init: std.process.Init)` receives `init.io`, `init.gpa`,
@@ -109,6 +113,9 @@ conventional baseline below.
   0.16.0.
 - [`CODE-REVIEW.md`](CODE-REVIEW.md) — Zig scenario-based review
   directives on the shared scale.
+- [`VERSIONS.md`](VERSIONS.md) — old-to-new ladder from 0.11 to 0.16 with
+  era markers, so old code is read correctly and new code targets the
+  project's floor.
 - [`../code-review/SKILL.md`](../code-review/SKILL.md) — the review method,
   tracks, areas, levels, advisories, and evidence used by every language
   expert.

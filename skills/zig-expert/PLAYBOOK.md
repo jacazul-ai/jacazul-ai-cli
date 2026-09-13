@@ -400,6 +400,10 @@ Zig changes between minors. Before trusting a name:
 Read the release notes of the project's pinned version:
 https://ziglang.org/download/<version>/release-notes.html
 
+The full old-to-new ladder with era markers is in
+[`VERSIONS.md`](VERSIONS.md); `zig-era <root>` names the era of a tree from
+those markers.
+
 ## Updating a project to a newer Zig
 
 An update is a migration with two pins: the source floor and the target.
