@@ -275,3 +275,4 @@ Current extensions:
 
 - Go: [Go review directives](../go-expert/CODE-REVIEW.md).
 - Rust: [Rust review directives](../rust-expert/CODE-REVIEW.md).
+- Python: [Python review directives](../python-expert/CODE-REVIEW.md).
