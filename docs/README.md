@@ -20,6 +20,7 @@ Welcome to the Jacazul AI CLI documentation. This project is built around the co
 - [Interaction Modes](interaction-modes.md) - DESIGN/GUIDE/REVIEW/EXECUTE collaboration semantics.
 - [Python Expert](python-expert.md) - Legacy, greenfield and migration modes, py-mode, py-check and PEP 8.
 - [JS/TS Expert](js-ts-expert.md) - Framework-neutral JavaScript and TypeScript, js-mode, js-check, thin edge or full-stack by your choice.
+- [Zig Expert](zig-expert.md) - Version-pinned Zig, allocators and errdefer, safety modes, std.Io, review on the shared scale.
 - [Go Expert](go-expert.md) - Idiomatic Go, gofmt-to-goimports formatting, and Line of Sight readability.
 - [Tutors](tutor.md) - Learning a language with a tutor paired to its expert.
 - [Skills Index](skills/README.md) - Every skill, including Rust Expert, Rust Tutor, Go Tutor, and the shared Code Review scale.

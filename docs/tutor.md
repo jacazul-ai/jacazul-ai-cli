@@ -24,6 +24,7 @@ Available pairs:
 | [`rust-tutor`](../skills/rust-tutor/SKILL.md) | `rust-expert` | Toolchain, foundations, ownership, production Rust |
 | [`go-tutor`](../skills/go-tutor/SKILL.md) | `go-expert` | Module shape, foundations, idiomatic design, production Go |
 | [`python-tutor`](../skills/python-tutor/SKILL.md) | `python-expert` | Environment, foundations, legacy reading and modernization, idiomatic design, production Python |
+| [`zig-tutor`](../skills/zig-tutor/SKILL.md) | `zig-expert` | Toolchain and build shape, foundations, allocators and ownership, comptime, production Zig with std.Io |
 
 ### When the tutor asks calibration questions first
 

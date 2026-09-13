@@ -262,6 +262,41 @@ and the one who chose full-stack JavaScript.
 
 ---
 
+### Zig Expert
+**Status:** ✅ Active
+**Documentation:** [`skills/zig-expert/SKILL.md`](../../skills/zig-expert/SKILL.md) and [Zig Expert Guide](../zig-expert.md)
+
+Explicit, allocator-honest, safety-aware Zig with a version-pinning
+protocol (Zig is pre-1.0; verified on 0.16.0), a playbook whose examples
+compiled on that release, and review scenarios on the shared scale.
+
+**Trigger → Action**
+- When touching Zig, pin the release (`zig version`, `.minimum_zig_version`)
+  and name it in every claim.
+- When a function allocates, pair it with `defer`/`errdefer` on the next
+  line and test allocation failures.
+- When shipping a release mode, run the suite under `-Doptimize=ReleaseSafe`.
+- When reviewing, use `CODE-REVIEW.md` scenarios with the shared scale.
+
+**Location:** `/project/skills/zig-expert/`
+
+---
+
+### Zig Tutor
+**Status:** ✅ Active
+**Documentation:** [`skills/zig-tutor/SKILL.md`](../../skills/zig-tutor/SKILL.md)
+
+Zig curriculum on the shared tutor core, paired with `zig-expert`: bridges
+from C, Rust, Go and Python; five levels from the `zig init` skeleton to
+production Zig with `std.Io`; a foundations review sequence on slices
+versus pointers, optionals and error unions, `defer`/`errdefer`,
+allocators as parameters and `comptime`; every example compiled on the
+learner's toolchain.
+
+**Location:** `/project/skills/zig-tutor/`
+
+---
+
 ## 🔜 Future Skills
 
 Skills planned for addition:

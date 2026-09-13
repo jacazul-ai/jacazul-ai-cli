@@ -109,6 +109,8 @@ Jacazul extends your capabilities via specialized skills:
 - **Python Expert**: Legacy, greenfield and migration modes, PEP 8 with the explicit 79-column preference, review on the shared scale.
 - **Python Tutor**: Adaptive Python learning on the tutor core, including legacy reading and modernization.
 - **JS/TS Expert**: Framework-neutral JavaScript and TypeScript in legacy, greenfield and migration modes; keeps JavaScript thin at the edge unless you choose full-stack.
+- **Zig Expert**: Explicit, allocator-honest, safety-aware Zig pinned to the installed release (verified on 0.16).
+- **Zig Tutor**: Adaptive Zig learning on the tutor core; every example compiled on your toolchain.
 - **Go Expert**: Idiomatic Go, gofmt-to-goimports formatting, and Line of Sight readability.
 - **Rust Expert**: Idiomatic Rust engineering, ownership, safety, async, and quality gates.
 - **Rust Tutor**: Adaptive Rust learning with learner calibration and progressive curriculum.
