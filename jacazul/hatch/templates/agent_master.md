@@ -31,8 +31,9 @@ This agent delegates all technical mandates, shared protocols, and workflow logi
 5. **`python-expert`**: Activate when Python context is detected (`*.py`, `pyproject.toml`, `setup.py`, Python tooling, or Python-specific design/review questions). Name the tree's mode first with `py-mode` (legacy, greenfield, migration).
 6. **`go-expert`**: Activate when Go context is detected (Go project, `go.mod`/`go.sum`, `*.go` files, Go tooling, runtime/GC, or Go-specific design/review questions).
 7. **`rust-expert`**: Activate when Rust context is detected (`Cargo.toml`, `*.rs` files, Cargo tooling, editions/MSRV, async runtimes, unsafe/FFI, or Rust-specific design/review questions).
-8. **`code-review`**: Activate for any review (`[REVIEW]`, `[PR-REVIEW]`, consensus review, diff/PR audits). It owns the finding vocabulary; the language expert supplies scenarios from its `CODE-REVIEW.md`.
-9. **`tutor` + `<lang>-tutor` (`rust-tutor`, `go-tutor`, `python-tutor`) + `<lang>-expert`**: Activate all three together when the operator wants to learn a language ("teach me", "tutorial", "me ensina", "aprender", lesson, curriculum). The tutor decides how to teach; the expert decides what is true.
+8. **`js-ts-expert`**: Activate when JavaScript or TypeScript context is detected (`package.json`, `tsconfig.json`, `*.js`/`*.ts`/`*.tsx`, Node or browser tooling). Name the tree's mode first with `js-mode` (legacy, greenfield, migration); framework-neutral.
+9. **`code-review`**: Activate for any review (`[REVIEW]`, `[PR-REVIEW]`, consensus review, diff/PR audits). It owns the finding vocabulary; the language expert supplies scenarios from its `CODE-REVIEW.md`.
+10. **`tutor` + `<lang>-tutor` (`rust-tutor`, `go-tutor`, `python-tutor`) + `<lang>-expert`**: Activate all three together when the operator wants to learn a language ("teach me", "tutorial", "me ensina", "aprender", lesson, curriculum). The tutor decides how to teach; the expert decides what is true.
 
 {% include "persona/persona_handoff.md" %}
 
