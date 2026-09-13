@@ -399,8 +399,9 @@ explicit. Miri with Stacked or Tree Borrows is the evidence tool.
 **Problem:** Mutable global state uses `static mut`, or a global is
 initialized lazily without synchronization.
 
-**What can happen:** Data races and aliasing violations. Edition 2024 makes
-references to `static mut` a hard error; earlier editions only lint. Lazy
+**What can happen:** Data races and aliasing violations. Edition 2024 turns
+the `static_mut_refs` lint deny-by-default, so the code stops compiling
+unless someone adds `#[allow]`; earlier editions only warn. Lazy
 initialization without a guard runs twice or publishes partially built data.
 
 **Safer shape:** Use `OnceLock`, `LazyLock`, `Mutex`, `RwLock`, or atomics.
@@ -452,10 +453,11 @@ claims, producing data races the borrow checker would have rejected.
 **Problem:** An `extern "C"` function or a callback passed to foreign code can
 panic, or foreign code is expected to unwind through Rust frames.
 
-**What can happen:** Since Rust 1.71 a panic that reaches an `extern "C"`
-boundary aborts the process. Before that it was undefined behavior. Foreign
-exceptions crossing Rust frames are undefined behavior unless the
-`C-unwind` ABI is used on both sides.
+**What can happen:** Since Rust 1.81 a panic that reaches an `extern "C"`
+boundary aborts the process; before that it was undefined behavior. Rust
+1.71 only added the `-unwind` ABI variants. Foreign exceptions crossing Rust
+frames are undefined behavior unless the `C-unwind` ABI is used on both
+sides.
 
 **Safer shape:** Wrap callback bodies in `catch_unwind` and convert panics to
 error codes, declare `extern "C-unwind"` only when unwinding across the
@@ -599,10 +601,11 @@ Evidence scope for the tools named there:
 - [Rust 2024 edition guide](https://doc.rust-lang.org/edition-guide/rust-2024/)
   — `static mut` references, unsafe `set_var`, temporaries, `impl Trait`
   captures.
-- [Rust 1.71 release notes](https://blog.rust-lang.org/2023/07/13/Rust-1.71.0.html)
-  — panics at `extern "C"` boundaries abort; `C-unwind` ABI.
-- [Rust 1.81 release notes](https://blog.rust-lang.org/2024/09/05/Rust-1.81.0.html)
-  — sort implementations may panic on non-total orders.
+- [Rust 1.71 release notes](https://blog.rust-lang.org/2023/07/13/Rust-1.71.0/)
+  — `C-unwind` and other `-unwind` ABIs stabilized; plain `"C"` unchanged.
+- [Rust 1.81 release notes](https://blog.rust-lang.org/2024/09/05/Rust-1.81.0/)
+  — non-unwind ABIs abort on uncaught unwinds; sort implementations may
+  panic on non-total orders.
 - [`std::io::BufWriter`](https://doc.rust-lang.org/std/io/struct.BufWriter.html)
   — flush errors are ignored on drop.
 - [`std::path::Path::join`](https://doc.rust-lang.org/std/path/struct.Path.html#method.join)

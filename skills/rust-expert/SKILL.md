@@ -283,10 +283,13 @@ Every entry either cites a community source or records a dated real
 incident. Never invent experience.
 
 - **Edition 2024** (Rust 1.85): return-position `impl Trait` captures all
-  in-scope lifetimes by default (`use<..>` opts into precision); references
-  to `static mut` become hard errors; `extern` blocks and attributes like
-  `no_mangle` require `unsafe`; `if let` and tail-expression temporaries
-  drop earlier. Migrate with `cargo fix --edition` and the guide.
+  in-scope lifetimes by default (`use<..>` opts into precision); the
+  `static_mut_refs` lint becomes deny-by-default (a lint, not a hard error;
+  `#[allow]` still compiles it); `extern` blocks and the `no_mangle`,
+  `export_name`, and `link_section` attributes require `unsafe`;
+  `std::env::set_var` and `remove_var` become `unsafe`; `if let` and
+  tail-expression temporaries drop earlier. Migrate with
+  `cargo fix --edition` and the guide.
   https://doc.rust-lang.org/edition-guide/rust-2024/
 - **`let else`** stabilized in Rust 1.65; MSRV decides whether it may be
   used. https://blog.rust-lang.org/2022/11/03/Rust-1.65.0.html
