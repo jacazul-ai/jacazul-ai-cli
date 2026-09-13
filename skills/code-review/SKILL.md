@@ -30,6 +30,85 @@ Area: TEMPORAL
 Evidence: REPRODUCED
 ```
 
+## Review method
+
+Apply this sequence to every review, whatever the language. Language skills
+add the scenarios; they do not replace these steps.
+
+1. Read the project's toolchain and language-version manifest before judging
+   version-sensitive behavior.
+2. Identify the owner and lifetime of every mutable value, resource, task or
+   thread, channel or queue, lock, transaction, and cancellation signal.
+3. Reconstruct the runtime sequence: what starts, what can return, what can
+   be canceled, and what cleanup runs at each boundary.
+4. For each risky shape, state the consequence and request the smallest safe
+   correction or a test proving the behavior is safe.
+5. Run repository-configured checks; treat conventional tools as evidence,
+   not proof that a behavior is correct.
+
+## Scenario format
+
+Language skills describe risky code shapes as scenarios. Two forms exist:
+
+- **Catalog form** for numbered entries: `Problem`, `What can happen`,
+  optional `Review questions`, and `Safer shape`.
+- **Full form** for cross-cutting directives and worked examples: `Avoid`,
+  `Context`, `Runtime sequence`, `Failure modes`, `Review directive`,
+  `Acceptable correction`, and `Classification`.
+
+Either form reports findings with the labels defined here. A language file
+must not redefine levels, advisories, areas, or evidence.
+
+### Tracks
+
+Scenarios are grouped by track, which describes the learning path, not the
+severity. A Foundations pattern can still create a critical incident.
+
+| Track | Main concern | Typical impact |
+|---|---|---|
+| Foundations | Values, control flow, errors, and collection semantics | Wrong output, crashes, lost failures, corrupted responses |
+| Boundaries | Ownership, resources, I/O, context, and concurrency lifecycle | Leaks, hangs, races, retries gone wrong, exhausted resources |
+| Systems | Memory model, unsafe code, API contracts, security, and performance | Data corruption, privilege impact, process-wide outage, silent regressions |
+
+Do not call tracks "levels". Level is reserved for the technical scale
+below.
+
+## Areas
+
+Tag each finding with one or more areas. Areas describe what is at risk, not
+how bad it is.
+
+| Area | Covers |
+|---|---|
+| `CORRECTNESS` | Wrong results, logic errors, invalid state transitions |
+| `LIFECYCLE` | Initialization, ownership, cleanup, shutdown, cancellation |
+| `CONCURRENCY` | Races, deadlocks, ordering, synchronization protocols |
+| `RESOURCE` | Memory, descriptors, connections, retention, backpressure |
+| `CONTRACT` | Public API, wire formats, error contracts, compatibility |
+| `SECURITY` | Trust boundaries, injection, secrets, randomness, privilege |
+| `TEMPORAL` | Clocks, timezones, timers, durations, time-dependent tests |
+| `PERFORMANCE` | Allocation, latency, throughput, benchmarks, runtime effects |
+| `TEST` | Weak, flaky, or missing tests and false confidence |
+| `POLICY` | Repository gates, tooling, conventions, and process |
+| `CLARITY` | Naming, readability, documentation, misleading structure |
+| `MAINTENANCE` | Duplication, drift, dead code, generated artifacts |
+
+## Security priority mapping
+
+`security-expert` reports formal audits with Critical, High, Medium, and Low.
+In a code review those map onto the technical scale under area `SECURITY`:
+
+| Security priority | Technical level | Default advisory |
+|---|---|---|
+| Critical | `BLOCKER` | `FIX-NOW` |
+| High | `BLOCKER` | `FIX-NOW` |
+| Medium | `WARNING` | `FIX-OR-TECH-DEBT` |
+| Low | `SUGGESTION` | `FIX-OR-TECH-DEBT` or `ACCEPTED` |
+
+Promote Medium to `BLOCKER` when the surface is exposed to untrusted input
+and no compensating control exists. A formal audit may report both
+vocabularies; a review comment uses the technical scale.
+
 ## Technical levels
 
 ### `BLOCKER`
@@ -183,6 +262,15 @@ clock contract and UTC/DST cases.
 
 ## Language-specific extensions
 
-Language skills should add their own runtime scenarios and point here for
-levels, advisory outcomes, evidence, and merge policy. For Go, see the
-[Go review directives](../go-expert/CODE-REVIEW.md).
+Each `<lang>-expert` skill plugs into this core through a fixed contract:
+
+- Its `SKILL.md` links this file and its own `CODE-REVIEW.md`.
+- Its `CODE-REVIEW.md` contains scenarios in the [scenario format](#scenario-format),
+  grouped by [track](#tracks), and nothing else about the scale.
+- The automated baseline lives once, in the expert `SKILL.md`; the review
+  file links it rather than repeating it.
+- Findings use the levels, advisories, areas, and evidence defined here.
+
+Current extensions:
+
+- Go: [Go review directives](../go-expert/CODE-REVIEW.md).

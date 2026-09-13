@@ -1,61 +1,21 @@
 # Go Code Review Directives
 
-A scenario-based review guide for Go. Each directive describes a code shape to
-avoid, the runtime sequence it creates, what can fail, and the evidence or
-correction a reviewer should require.
+Go-specific review scenarios: the code shape to avoid, the runtime sequence it
+creates, what can fail, and the evidence or correction a reviewer should
+require.
 
-This is not a prohibition list. The level describes the learning path, not
-severity: a beginner pattern can still create a critical security or
-availability incident. A review comment must be tied to the repository's
-contract or a credible failure mode.
+The review method, scenario format, tracks, areas, technical levels,
+advisories, and evidence labels are owned by the shared
+[Code Review skill](../code-review/SKILL.md). This file adds Go scenarios
+only and never redefines those labels. Before judging version-sensitive code,
+read the `go` directive in `go.mod`.
 
-## How to use these directives
+Scenarios are grouped by [track](../code-review/SKILL.md#tracks). The track
+describes the learning path, not the severity: a Foundations pattern can still
+create a critical security or availability incident. A review comment must be
+tied to the repository's contract or a credible failure mode.
 
-1. Read the `go` directive in `go.mod` before judging version-sensitive code.
-2. Identify the owner and lifetime of every mutable value, resource, goroutine,
-   channel, lock, transaction, and cancellation signal.
-3. Reconstruct the runtime sequence: what starts, what can return, what can be
-   canceled, and what cleanup runs at each boundary.
-4. For each risky shape, state the consequence and request the smallest safe
-   correction or a test proving the behavior is safe.
-5. Run repository-configured checks; treat conventional tools as evidence, not
-   proof that a behavior is correct.
-
-## Directive format
-
-Each directive should answer these questions:
-
-- **Avoid:** What code shape or assumption is dangerous?
-- **Context:** Under which ownership, lifetime, input, or concurrency boundary
-  does it become dangerous?
-- **Runtime sequence:** What executes first, and what may execute later or in
-  parallel?
-- **Failure modes:** What errors, panics, races, leaks, corruption, or security
-  effects can result?
-- **Review directive:** What must the author demonstrate or change?
-- **Acceptable correction:** Which ownership transfer, synchronization,
-  validation, or test makes the design safe?
-- **Classification:** Report the technical level, advisory, impact area, and
-  evidence using the shared
-  [Code Review scale](../code-review/SKILL.md#two-independent-scales). Do not
-  redefine those labels in this Go-specific document.
-
-## Shared review scale
-
-The global `code-review` skill owns the technical levels, advisory outcomes,
-evidence labels, and merge policy. This document supplies Go-specific
-scenarios only.
-
-A review comment can therefore be written as:
-
-```text
-[WARNING] [FIX-OR-TECH-DEBT] [TEMPORAL] [REPRODUCED]
-Test depends on the wall clock and local timezone. Fix by injecting a fixed
-clock or pass a timestamp explicitly; otherwise create a task with a test
-covering the UTC/DST boundary.
-```
-
-### Example: cleanup owned by a returning parent
+## Worked example (full form)
 
 ```go
 func run(resource *Resource) {
@@ -87,15 +47,9 @@ for concurrent use after the parent boundary.
 lifetime, or open and defer the resource inside the goroutine when the child
 owns it. Add a cancellation and error-propagation test.
 
-## Progression by level
+**Classification:** `WARNING` / `FIX-NOW` / `LIFECYCLE` / `TRACE`.
 
-| Level | Main concern | Typical impact |
-|---|---|---|
-| Beginner | Values, control flow, errors, and collection semantics | Wrong output, panic, lost failure, corrupted API response |
-| Intermediate | Ownership, resources, HTTP/SQL, context, and concurrency lifecycle | Leaks, hangs, races, retries gone wrong, exhausted resources |
-| Expert | Memory model, unsafe code, API contracts, security, and performance | Data corruption, privilege impact, process-wide outage, silent regressions |
-
-## Beginner: correctness foundations
+## Foundations: correctness
 
 These are the first checks for almost every Go implementation and review.
 
@@ -260,7 +214,7 @@ a length check is bypassed, or an allocation receives an unexpected value.
 **Safer shape:** Validate ranges before conversion and keep units explicit.
 Treat external numbers as untrusted input.
 
-## Intermediate: boundaries and lifecycle
+## Boundaries: resources and lifecycle
 
 These checks become important as code handles resources, requests, or
 concurrency.
@@ -475,105 +429,7 @@ and regressions pass because the test never observes the contract.
 exercise errors and cancellation, and run concurrent tests with the race
 detector when supported.
 
-## Cross-cutting directives
-
-### Time-dependent tests, UTC, timezones, and durations
-
-**Avoid:** Calling `time.Now()` directly in test expectations, deriving both
-sides of an assertion from the wall clock, mixing UTC and local time without a
-contract, comparing `time.Time` with `==`, or treating a calendar day as a
-fixed `24*time.Hour` duration.
-
-**Context:** Wall-clock time moves, two calls to `time.Now()` return different
-instants, the machine timezone may differ between developer and CI, and local
-calendar days can cross daylight-saving transitions. `time.Time` can also carry
-location and monotonic-clock data that make `==` different from instant
-comparison.
-
-**Runtime sequence:** A test obtains a time from the host clock; production
-code obtains another time, possibly in another location. Near midnight, a DST
-transition, or a clock adjustment, the date and offset can change between
-those operations. `Add(24*time.Hour)` advances an elapsed duration, while
-`AddDate(0, 0, 1)` advances a calendar date; they are not interchangeable at a
-DST boundary.
-
-**Failure modes:** The test can pass while failing to prove the contract
-(false confidence), fail only near a clock boundary, report a wrong offset or
-duration, pass in UTC but fail in a local timezone, or encode the wrong
-business meaning for “tomorrow.”
-
-**Review directive:** Classify this as `WARNING` / `FIX-OR-TECH-DEBT` /
-`TEMPORAL` / `REPRODUCED`. It is not automatically a `BLOCKER`. The author
-must either make the test deterministic in the current change or create a
-linked tech-debt task before the review is complete. Use `FIX-NOW` when the
-review requires correction in this change with no deferral. Promote it to
-`BLOCKER` only when the test can mask a production defect, controls a critical
-expiration/authentication contract, or makes the merge gate unreliable.
-
-**Acceptable correction:** Prefer a pure function that receives an explicit
-`time.Time`. Otherwise inject a small `now func() time.Time` seam when there is
-one consumer, or a clock abstraction only when multiple real consumers need
-it. Use a fixed instant and explicit `*time.Location` in tests; use
-`Time.Equal` for instants; normalize to UTC at an instant-based boundary; use
-`ParseInLocation` when local calendar input is intentional; and use `AddDate`
-for calendar arithmetic.
-
-**Evidence required:** Add a deterministic test for the relevant contract,
-including a UTC/local or DST boundary when it matters. Do not “fix” a flaky
-failure by widening tolerances or adding sleeps without proving the clock
-contract.
-
-**Tech-debt minimum:** Record the affected test or package, the false-positive
-or offset risk, the expected time contract, the deterministic correction, and
-an acceptance test. “Use a clock later” is not sufficient context.
-
-### Init-time environment changes and helper-process tests
-
-**Avoid:** Calling `t.Setenv` in the parent test and expecting an
-already-loaded package or `sync.Once` path to observe a fresh environment.
-Also avoid using `os.Args[0]` as the re-executable when a test may change its
-working directory.
-
-**Context:** Environment-sensitive behavior can be fixed during package
-initialization or the first call guarded by `sync.Once`. The parent test shares
-that process state across subtests, so changing `TZ` or another variable after
-initialization does not provide an isolated case.
-
-**Runtime sequence:** The parent test starts a fresh copy of the current test
-binary with `os.Executable()`, sets a guard such as `GO_WANT_EPOCH_HELPER=1`
-and the case-specific environment (for example, `TZ=America/New_York`), then
-selects only the helper with `-test.run=^TestName$`. The child starts with that
-environment, runs initialization, prints the observed value, and exits; the
-parent asserts the captured result.
-
-**Failure modes:** The test can report a false pass because the parent retained
-its original timezone, miss a date boundary, recurse by spawning children
-without a guard, or fail only after `os.Chdir` makes `os.Args[0]` unresolvable.
-A shell-based re-exec also adds quoting and injection risk.
-
-**Review directive:** Treat the helper-process approach as a valid
-standard-library testing idiom when environment must be changed before
-initialization. Require a dedicated guard, direct `exec.Command`,
-`os.Executable()`, a narrowly scoped `-test.run`, explicit child environment,
-and assertions over captured output or exit status. For date/timezone coverage,
-require at least one fixed epoch and the relevant UTC/local or DST boundary.
-Be precise: the standard library validates the helper-process pattern, while
-using it for our timezone/date behavior is an application-specific adaptation,
-not a claim about the stdlib `time` test suite.
-
-**Acceptable correction:** Follow the detailed implementation pattern in the
-[Go playbook][go-helper-playbook]. Use a pure function or injected clock when
-environment initialization is not part of the contract; use a helper process
-when testing that initialization contract itself.
-
-[go-helper-playbook]: PLAYBOOK.md#process-isolated-tests-for-initialization-time-environment
-
-**Classification:** Usually `WARNING` / `FIX-OR-TECH-DEBT` / `TEMPORAL` /
-`REPRODUCED` when the test demonstrably reads stale environment state. Promote
-to `BLOCKER` only when the test controls a critical expiration,
-authentication, or merge-gate contract.
-
-## Expert: systems, contracts, and performance
+## Systems: contracts and performance
 
 These require reasoning about contracts, the memory model, trust boundaries,
 or measured runtime behavior.
@@ -787,6 +643,104 @@ finding causes teams to disable useful scanning.
 version, update or mitigate the dependency, and record residual risk when a
 fix cannot land immediately. Do not claim that a clean scan proves application
 security.
+
+## Cross-cutting directives
+
+### Time-dependent tests, UTC, timezones, and durations
+
+**Avoid:** Calling `time.Now()` directly in test expectations, deriving both
+sides of an assertion from the wall clock, mixing UTC and local time without a
+contract, comparing `time.Time` with `==`, or treating a calendar day as a
+fixed `24*time.Hour` duration.
+
+**Context:** Wall-clock time moves, two calls to `time.Now()` return different
+instants, the machine timezone may differ between developer and CI, and local
+calendar days can cross daylight-saving transitions. `time.Time` can also carry
+location and monotonic-clock data that make `==` different from instant
+comparison.
+
+**Runtime sequence:** A test obtains a time from the host clock; production
+code obtains another time, possibly in another location. Near midnight, a DST
+transition, or a clock adjustment, the date and offset can change between
+those operations. `Add(24*time.Hour)` advances an elapsed duration, while
+`AddDate(0, 0, 1)` advances a calendar date; they are not interchangeable at a
+DST boundary.
+
+**Failure modes:** The test can pass while failing to prove the contract
+(false confidence), fail only near a clock boundary, report a wrong offset or
+duration, pass in UTC but fail in a local timezone, or encode the wrong
+business meaning for “tomorrow.”
+
+**Review directive:** Classify this as `WARNING` / `FIX-OR-TECH-DEBT` /
+`TEMPORAL` / `REPRODUCED`. It is not automatically a `BLOCKER`. The author
+must either make the test deterministic in the current change or create a
+linked tech-debt task before the review is complete. Use `FIX-NOW` when the
+review requires correction in this change with no deferral. Promote it to
+`BLOCKER` only when the test can mask a production defect, controls a critical
+expiration/authentication contract, or makes the merge gate unreliable.
+
+**Acceptable correction:** Prefer a pure function that receives an explicit
+`time.Time`. Otherwise inject a small `now func() time.Time` seam when there is
+one consumer, or a clock abstraction only when multiple real consumers need
+it. Use a fixed instant and explicit `*time.Location` in tests; use
+`Time.Equal` for instants; normalize to UTC at an instant-based boundary; use
+`ParseInLocation` when local calendar input is intentional; and use `AddDate`
+for calendar arithmetic.
+
+**Evidence required:** Add a deterministic test for the relevant contract,
+including a UTC/local or DST boundary when it matters. Do not “fix” a flaky
+failure by widening tolerances or adding sleeps without proving the clock
+contract.
+
+**Tech-debt minimum:** Record the affected test or package, the false-positive
+or offset risk, the expected time contract, the deterministic correction, and
+an acceptance test. “Use a clock later” is not sufficient context.
+
+### Init-time environment changes and helper-process tests
+
+**Avoid:** Calling `t.Setenv` in the parent test and expecting an
+already-loaded package or `sync.Once` path to observe a fresh environment.
+Also avoid using `os.Args[0]` as the re-executable when a test may change its
+working directory.
+
+**Context:** Environment-sensitive behavior can be fixed during package
+initialization or the first call guarded by `sync.Once`. The parent test shares
+that process state across subtests, so changing `TZ` or another variable after
+initialization does not provide an isolated case.
+
+**Runtime sequence:** The parent test starts a fresh copy of the current test
+binary with `os.Executable()`, sets a guard such as `GO_WANT_EPOCH_HELPER=1`
+and the case-specific environment (for example, `TZ=America/New_York`), then
+selects only the helper with `-test.run=^TestName$`. The child starts with that
+environment, runs initialization, prints the observed value, and exits; the
+parent asserts the captured result.
+
+**Failure modes:** The test can report a false pass because the parent retained
+its original timezone, miss a date boundary, recurse by spawning children
+without a guard, or fail only after `os.Chdir` makes `os.Args[0]` unresolvable.
+A shell-based re-exec also adds quoting and injection risk.
+
+**Review directive:** Treat the helper-process approach as a valid
+standard-library testing idiom when environment must be changed before
+initialization. Require a dedicated guard, direct `exec.Command`,
+`os.Executable()`, a narrowly scoped `-test.run`, explicit child environment,
+and assertions over captured output or exit status. For date/timezone coverage,
+require at least one fixed epoch and the relevant UTC/local or DST boundary.
+Be precise: the standard library validates the helper-process pattern, while
+using it for our timezone/date behavior is an application-specific adaptation,
+not a claim about the stdlib `time` test suite.
+
+**Acceptable correction:** Follow the detailed implementation pattern in the
+[Go playbook][go-helper-playbook]. Use a pure function or injected clock when
+environment initialization is not part of the contract; use a helper process
+when testing that initialization contract itself.
+
+[go-helper-playbook]: PLAYBOOK.md#process-isolated-tests-for-initialization-time-environment
+
+**Classification:** Usually `WARNING` / `FIX-OR-TECH-DEBT` / `TEMPORAL` /
+`REPRODUCED` when the test demonstrably reads stale environment state. Promote
+to `BLOCKER` only when the test controls a critical expiration,
+authentication, or merge-gate contract.
 
 ## Automated review baseline
 
