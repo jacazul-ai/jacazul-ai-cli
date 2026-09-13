@@ -86,7 +86,8 @@ Persona selection never becomes the OpenCode agent ID:
 
 - Hatch renders the anchored persona into the canonical
   `agents/jacazul-opencode.md` (frontmatter `name: jacazul`).
-- Bootstrap links that file to `~/.config/opencode/agents/jacazul.md`
+- Bootstrap links that file to `$JACAZUL_HOME/agents/opencode/agents/jacazul.md`
+  (or to `$XDG_CONFIG_HOME/opencode/agents/jacazul.md` when explicitly set).
   and removes stale persona-named artifacts.
 - Launcher `scripts/jacazul-opencode` always passes `--agent jacazul`.
 - Persona changes prompt content and signature only, not the agent ID.
