@@ -257,14 +257,17 @@ configures or documents it.
   `GOEXPERIMENT`, architecture, allocation profile, runtime metrics, and
   `pprof` data.
 - Green Tea GC: experimental in Go 1.25 (`GOEXPERIMENT=greenteagc`), default
-  in Go 1.26; the build-time opt-out `GOEXPERIMENT=nogreenteagc` is expected
-  to be removed in Go 1.27 per the Go 1.26 release notes.
+  since Go 1.26. The Go 1.26 notes announced that the build-time opt-out
+  `GOEXPERIMENT=nogreenteagc` was expected to go away in 1.27, but Go 1.27.0
+  still accepts it and its release notes do not mention it. Do not assume
+  either way: check `go doc internal/goexperiment` or the release notes of
+  the installed toolchain before relying on the opt-out.
 - Green Tea can reduce GC overhead for allocation-heavy, small-object
   workloads, but some workloads may not benefit or may regress. If CPU rises
   after Go 1.26 or enabling Green Tea, compare with and without
-  `GOEXPERIMENT=nogreenteagc` while the opt-out exists, then validate with
-  `runtime/metrics`, `GODEBUG=gctrace=1`, and CPU/heap profiles before
-  changing application code.
+  `GOEXPERIMENT=nogreenteagc` while the installed toolchain accepts it, then
+  validate with `runtime/metrics`, `GODEBUG=gctrace=1`, and CPU/heap
+  profiles before changing application code.
 
 References:
 - https://go.dev/blog/greenteagc

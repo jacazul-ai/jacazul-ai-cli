@@ -170,11 +170,23 @@ func TestEpochDateInZone(t *testing.T) {
 			if err != nil {
 				t.Fatalf("zone %s: %v", zone, err)
 			}
-			assertDateForZone(t, zone, strings.TrimSpace(string(out)))
+			// The child is a full test binary: after the helper branch
+			// returns, the testing package still prints "PASS". Read only
+			// the first line; never compare the whole output.
+			got, _, _ := strings.Cut(string(out), "\n")
+			assertDateForZone(t, zone, got)
 		})
 	}
 }
 ```
+
+The child output is `<value>\nPASS\n`, not the bare value, because the helper
+branch returns into the normal test flow. Parse the line you printed, or match
+with a regular expression as the standard library does. Do not call
+`os.Exit(0)` inside the test function to suppress `PASS`: since Go 1.15 the
+testing package reports that as `panic: unexpected call to os.Exit(0) during
+test`. If the helper must exit early, handle the guard in `TestMain` before
+`m.Run()`.
 
 This is especially useful for date and timezone tests: each child starts with a
 fresh environment, so `TZ=UTC`, `TZ=America/New_York`, and `TZ=Asia/Tokyo` can
@@ -188,18 +200,11 @@ running binary robustly when a test changes its working directory; `os.Args[0]`
 may be relative. Invoke the child directly with `exec.Command`, never through a
 shell, and make the guard branch terminate before the parent-only assertions.
 
-Run repository-configured checks first. If no stronger gate exists, use this
-conventional baseline and label it as such:
-
-```bash
-gofmt -d path/to/touched.go
-goimports -d path/to/touched.go
-go test ./...
-go vet ./...
-```
-
-For concurrent changes, add `go test -race ./...` when the module supports it.
-Use `staticcheck ./...` and `govulncheck ./...` when available and relevant;
+Run repository-configured checks first. If no stronger gate exists, apply
+the conventional baseline defined once in
+[`SKILL.md`](SKILL.md#-conventional-verification-baseline) and label it as
+such. `go test -race`, `staticcheck`, and `govulncheck` are complementary
+tools, described in [`CODE-REVIEW.md`](CODE-REVIEW.md#automated-review-baseline);
 they complement tests and review rather than proving correctness alone.
 
 ## Version and runtime awareness

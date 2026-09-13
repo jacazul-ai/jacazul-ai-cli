@@ -744,30 +744,20 @@ authentication, or merge-gate contract.
 
 ## Automated review baseline
 
-First obey repository-configured gates. If the repository does not define
-stronger requirements, label these as conventional checks rather than local
-policy:
+The conventional baseline (`gofmt`, `goimports`, `go test`, `go vet`) is
+defined once in [`SKILL.md`](SKILL.md#-conventional-verification-baseline).
+Repository-configured gates always take precedence over it.
 
-```bash
-gofmt -d path/to/touched.go
-goimports -d path/to/touched.go
-go vet ./...
-staticcheck ./...
-go test ./...
-go test -race ./...
-govulncheck ./...
-```
+The tools below are complementary. They are a project mandate only when the
+repository configures or documents them; otherwise label their output as
+optional evidence:
 
-Tool scope:
-
-- `gofmt` and `goimports`: mechanical formatting and import organization.
-- `go vet`: standard analyzers for likely correctness mistakes.
-- `staticcheck`: complementary correctness, performance, and simplification
-  analysis.
-- `go test`: package and behavior verification.
-- `go test -race`: evidence for data races in exercised paths, never proof of
-  race absence.
-- `govulncheck`: vulnerability analysis with dependency and call-path context.
+- `go test -race ./...`: evidence for data races in exercised paths, never
+  proof of race absence. Conventional for concurrent changes.
+- `staticcheck ./...`: complementary correctness, performance, and
+  simplification analysis.
+- `govulncheck ./...`: vulnerability analysis with dependency and call-path
+  context.
 
 ## Source index
 
