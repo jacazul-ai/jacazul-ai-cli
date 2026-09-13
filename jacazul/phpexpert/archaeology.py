@@ -172,7 +172,8 @@ MARKERS: tuple[Marker, ...] = (
         "scalar / return type declarations",
         "7.0",
         "modern",
-        r"\)\s*:\s*\??(?:int|string|bool|float|array|void|self|static|\\?[A-Z]\w*)\b",
+        r"\)\s*:\s*\??(?:int|string|bool|float|array|void|self|static"
+        r"|\\?[A-Z]\w*)\b",
     ),
     _m(
         "[$a, $b] = short list destructuring",
