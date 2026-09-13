@@ -310,17 +310,13 @@ correct model, source.
 
 ## 🔍 Review Output
 
-Separate findings into:
+Report findings with the shared [Code Review scale](../code-review/SKILL.md):
+technical level, advisory, area, and evidence. Rust scenarios live in
+[`CODE-REVIEW.md`](CODE-REVIEW.md); do not redefine the scale here.
 
-1. correctness and compiler guarantees;
-2. safety and security;
-3. idiomaticity and community conventions;
-4. API and maintainability;
-5. performance and evidence;
-6. project policy and quality gates.
-
-For each finding, explain impact, preferred pattern, and whether it is a
-project requirement, language rule, community convention, or option.
+For each finding, also state whether it is a project requirement, a language
+guarantee, a community convention, or an option. Findings ordered by the
+[review method](../code-review/SKILL.md#review-method) come before style.
 
 ## 📋 Operational Mandate
 

@@ -274,3 +274,4 @@ Each `<lang>-expert` skill plugs into this core through a fixed contract:
 Current extensions:
 
 - Go: [Go review directives](../go-expert/CODE-REVIEW.md).
+- Rust: [Rust review directives](../rust-expert/CODE-REVIEW.md).
