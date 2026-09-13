@@ -75,6 +75,56 @@ for skill_dir in "$PROJECT_ROOT/skills"/*; do
     fi
 done
 
+# 6. Link Claude Extensions (Surgical)
+# Project-owned Claude extensions live under extensions/claude/.
+CLAUDE_EXTENSIONS_DIR="$CLAUDE_CONFIG_DIR/extensions"
+if [ ! -d "$CLAUDE_EXTENSIONS_DIR" ]; then
+    if [ -n "$DEBUG" ]; then
+        echo "🐊 Creating Claude extensions directory at $CLAUDE_EXTENSIONS_DIR..."
+    fi
+    mkdir -p -- "$CLAUDE_EXTENSIONS_DIR"
+fi
+
+for extension_file in "$PROJECT_ROOT/extensions/claude/jacazul-line.sh"; do
+    [ -f "$extension_file" ] || continue
+    name=$(basename "$extension_file")
+    target="$CLAUDE_EXTENSIONS_DIR/$name"
+
+    if [ -L "$target" ]; then
+        current_target=$(readlink -f "$target")
+        expected_target=$(readlink -f "$extension_file")
+        if [ "$current_target" != "$expected_target" ]; then
+            if [ -n "$DEBUG" ]; then
+                echo "⚠️  Claude extension $name points to wrong location. Re-linking..."
+            fi
+            ln -sfn -- "$extension_file" "$target"
+        fi
+    else
+        if [ -n "$DEBUG" ]; then
+            echo "🐊 Linking Claude extension: $name"
+        fi
+        ln -sfn -- "$extension_file" "$target"
+    fi
+done
+
+# 7. Inject statusLine into settings.json (idempotent)
+# Claude Code expects an object, not a bare path. Rewrites when unset or when
+# it still points at a Jacazul-owned entrypoint, so an anchored config dir
+# never leaves a stale path behind. A user-owned statusLine is never touched.
+JACAZUL_LINE="$CLAUDE_EXTENSIONS_DIR/jacazul-line.sh"
+if [ -f "$SETTINGS_FILE" ] && command -v jq &>/dev/null && [ -f "$JACAZUL_LINE" ]; then
+    TMP_FILE=$(mktemp)
+    jq --arg path "$JACAZUL_LINE" '
+        def owned($v):
+            ($v | type) == "string" and ($v | endswith("/jacazul-line.sh"));
+        if .statusLine == null
+           or owned(.statusLine)
+           or ((.statusLine | type) == "object" and owned(.statusLine.command))
+        then .statusLine = {"type": "command", "command": $path}
+        else . end
+    ' "$SETTINGS_FILE" > "$TMP_FILE" && mv "$TMP_FILE" "$SETTINGS_FILE"
+fi
+
 # Log only in DEBUG mode
 if [ -n "$DEBUG" ]; then
     echo "✅ Jacazul: Claude configuration verified."

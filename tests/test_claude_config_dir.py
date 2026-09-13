@@ -1,3 +1,4 @@
+import json
 import os
 import pathlib
 import shutil
@@ -146,6 +147,78 @@ class TestClaudeConfigDir(unittest.TestCase):
         for parent in (self.home, self.test_dir, str(PROJECT_ROOT)):
             stray = [n for n in os.listdir(parent) if n.startswith("--")]
             self.assertEqual(stray, [], msg=f"flag-named path in {parent}")
+
+    def _write_settings(self, value):
+        target = os.path.join(self.jacazul_home, "agents", "claude")
+        os.makedirs(target, exist_ok=True)
+        settings = os.path.join(target, "settings.json")
+        with open(settings, "w", encoding="utf-8") as fh:
+            json.dump({"statusLine": value}, fh)
+        return target, settings
+
+    def _read_statusline(self, settings):
+        with open(settings, encoding="utf-8") as fh:
+            return json.load(fh)["statusLine"]
+
+    def test_statusline_is_written_as_a_command_object(self):
+        """Claude Code rejects a bare string path for statusLine."""
+        target = os.path.join(self.jacazul_home, "agents", "claude")
+
+        result = self._source_bootstrap()
+
+        self.assertEqual(result.returncode, 0, msg=result.stderr)
+        value = self._read_statusline(os.path.join(target, "settings.json"))
+        self.assertEqual(
+            value,
+            {
+                "type": "command",
+                "command": os.path.join(
+                    target, "extensions", "jacazul-line.sh"
+                ),
+            },
+        )
+
+    def test_legacy_string_statusline_is_upgraded_to_an_object(self):
+        stale = "/home/someone/.claude/extensions/jacazul-line.sh"
+        target, settings = self._write_settings(stale)
+
+        result = self._source_bootstrap()
+
+        self.assertEqual(result.returncode, 0, msg=result.stderr)
+        self.assertEqual(
+            self._read_statusline(settings),
+            {
+                "type": "command",
+                "command": os.path.join(
+                    target, "extensions", "jacazul-line.sh"
+                ),
+            },
+        )
+
+    def test_stale_object_statusline_is_rehomed(self):
+        stale = {
+            "type": "command",
+            "command": "/home/someone/.claude/extensions/jacazul-line.sh",
+        }
+        target, settings = self._write_settings(stale)
+
+        result = self._source_bootstrap()
+
+        self.assertEqual(result.returncode, 0, msg=result.stderr)
+        self.assertEqual(
+            self._read_statusline(settings)["command"],
+            os.path.join(target, "extensions", "jacazul-line.sh"),
+        )
+
+    def test_user_owned_statusline_is_left_alone(self):
+        mine = {"type": "command", "command": "/home/someone/bin/mine.sh"}
+        _, settings = self._write_settings(mine)
+
+        result = self._source_bootstrap()
+
+        self.assertEqual(result.returncode, 0, msg=result.stderr)
+        self.assertEqual(self._read_statusline(settings), mine)
+
 
 if __name__ == "__main__":
     unittest.main()

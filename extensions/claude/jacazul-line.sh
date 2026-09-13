@@ -72,38 +72,46 @@ _focus_line() {
 LINE2="$(_focus_line)"
 
 # --- Line 3: Git ---
+_resolve_common_gitdir() {
+    local gitfile="$1"
+    local raw gitdir commondir_file
+    raw=$(sed 's/^gitdir: //' "$gitfile")
+    local base="$(dirname "$gitfile")"
+    [[ "$raw" == /* ]] && gitdir="$raw" || gitdir="${base}/${raw}"
+    gitdir=$(readlink -f "$gitdir" 2>/dev/null || echo "$gitdir")
+    commondir_file="${gitdir}/commondir"
+    if [ -f "$commondir_file" ]; then
+        gitdir=$(readlink -f "${gitdir}/$(cat "$commondir_file")" 2>/dev/null || echo "$gitdir")
+    fi
+    echo "$gitdir"
+}
+
 _git_line() {
-    local dir="$PWD" branch parts common_short wt_label root_short
+    local dir="$PWD" branch wt_label repo_root repo_short
 
     while [ "$dir" != "/" ]; do
         if [ -f "${dir}/.git" ]; then
-            local raw_gitdir
-            raw_gitdir=$(sed 's/^gitdir: //' "${dir}/.git")
-            local gitdir
-            # raw_gitdir may be absolute or relative to dir
-            if [[ "$raw_gitdir" == /* ]]; then
-                gitdir=$(readlink -f "$raw_gitdir" 2>/dev/null || echo "$raw_gitdir")
-            else
-                gitdir=$(readlink -f "${dir}/${raw_gitdir}" 2>/dev/null || echo "${dir}/${raw_gitdir}")
-            fi
-            local commondir_file="${gitdir}/commondir"
-            local common_git_dir="$gitdir"
-            if [ -f "$commondir_file" ]; then
-                common_git_dir=$(readlink -f "${gitdir}/$(cat "$commondir_file")" 2>/dev/null || echo "$gitdir")
-            fi
-            common_short="${common_git_dir/#$HOME/\~}"
+            repo_root="$(dirname "$(_resolve_common_gitdir "${dir}/.git")")"
+            repo_short="${repo_root/#$HOME/\~}"
             branch=$(git -C "$dir" branch --show-current 2>/dev/null)
             wt_label="$(basename "$dir")"
             [ -n "$branch" ] && wt_label="${wt_label}(${branch})"
-            printf '%s%s%s%s%s' \
-                "$(lime "$NF_GIT worktree")" "$(sep)" \
-                "$(lightgray "$common_short")" "$(sep)" \
-                "$(lightgray "$wt_label")"
+            if [ "$dir" = "$repo_root" ]; then
+                printf '%s%s%s%s%s' \
+                    "$(amber "⚠️ ❗ $NF_GIT bare container")" "$(sep)" \
+                    "$(amber "$repo_short")" "$(sep)" \
+                    "$(amber "$wt_label")"
+            else
+                printf '%s%s%s%s%s' \
+                    "$(lime "$NF_GIT worktree")" "$(sep)" \
+                    "$(lightgray "$repo_short")" "$(sep)" \
+                    "$(lightgray "$wt_label")"
+            fi
             return
         elif [ -d "${dir}/.git" ]; then
-            root_short="${dir/#$HOME/\~}"
-            parts="$(lime "$NF_GIT repo")$(sep)$(lightgray "$root_short")"
             branch=$(git -C "$dir" branch --show-current 2>/dev/null)
+            local parts
+            parts="$(lime "$NF_GIT repo")$(sep)$(lightgray "${dir/#$HOME/\~}")"
             [ -n "$branch" ] && parts="${parts}$(sep)$(lightgray "branch $branch")"
             printf '%s' "$parts"
             return
