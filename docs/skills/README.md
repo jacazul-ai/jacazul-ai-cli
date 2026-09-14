@@ -335,6 +335,45 @@ truthiness, arrays, references and errors; every example checked with
 
 ---
 
+### Shell Expert
+**Status:** ✅ Active
+**Documentation:** [`skills/bash-expert/SKILL.md`](../../skills/bash-expert/SKILL.md) and [Shell Expert Guide](../bash-expert.md)
+
+POSIX `sh` and bash. `sh-mode` names the dialect (portable, bash, mixed)
+and the minimum bash each script implies; `sh-census` counts pitfall
+families by kind (security, correctness, portability, maintenance) and
+parses every script with its declared shell. The playbook carries the
+`set -e` truth table, quoting rules, portability across dash, busybox
+and macOS bash 3.2, and idempotent setup scripts.
+
+**Trigger → Action**
+- When touching shell, run `sh-mode <root>` and name the oldest supported
+  interpreter.
+- When a script "works here", check it is not `mixed` before it ships.
+- When reviewing, drive the security and correctness families of
+  `sh-census` to zero on touched scripts.
+- When writing setup scripts, verify quietly, log on change, honor
+  `DEBUG` and `DRY`.
+
+**Location:** `/project/skills/bash-expert/`
+
+---
+
+### Shell Tutor
+**Status:** ✅ Active
+**Documentation:** [`skills/bash-tutor/SKILL.md`](../../skills/bash-tutor/SKILL.md)
+
+Shell curriculum on the shared tutor core, paired with `bash-expert`:
+bridges from typed, scripting and ops backgrounds; five levels from
+interpreter and script shape to production shell; a foundations review
+sequence on words and quoting, exit codes, the `set -e` truth table,
+filenames as input and subshells; every example parsed and run on the
+learner's target shell.
+
+**Location:** `/project/skills/bash-tutor/`
+
+---
+
 ## 🔜 Future Skills
 
 Skills planned for addition:
