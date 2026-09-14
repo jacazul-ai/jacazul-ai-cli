@@ -26,6 +26,8 @@ js-check = "jacazul.cli.jscheck:main"
 zig-era = "jacazul.cli.zigera:main"
 php-mode = "jacazul.cli.phpmode:main"
 php-census = "jacazul.cli.phpcensus:main"
+sh-mode = "jacazul.cli.shmode:main"
+sh-census = "jacazul.cli.shcensus:main"
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
