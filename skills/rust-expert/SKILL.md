@@ -64,6 +64,19 @@ Always distinguish:
 Never claim a tool or convention is mandatory unless the repository configures
 or documents it.
 
+## 🔎 Rust Engineering References
+
+- [`PLAYBOOK.md`](PLAYBOOK.md) — implementation guidance: project shape,
+  ownership, API and type design, control flow, naming, errors, async and
+  threads, unsafe and FFI, performance, rustdoc, tests, the edition update
+  sequence, and a version ladder. Every example compiled on the installed
+  toolchain.
+- [`CODE-REVIEW.md`](CODE-REVIEW.md) — Rust scenario-based review
+  directives on the shared scale.
+- [`../code-review/SKILL.md`](../code-review/SKILL.md) — the review
+  method, tracks, areas, levels, advisories, and evidence used by every
+  language expert.
+
 ## 🚧 Gate Adoption (Own Projects)
 
 Policy Boundary reads existing repository policy; this section creates it.
@@ -123,159 +136,61 @@ failure as an actionable diagnostic.
 
 ## 🧱 Ownership and Borrowing
 
-- Transfer ownership when a callee must retain responsibility.
-- Borrow for scoped access; return owned data when that simplifies the API.
-- Introduce explicit lifetimes only when a relationship must be expressed.
-- Do not solve every borrow-checker error with `.clone()`.
-- Before choosing `Rc`, `Arc`, `RefCell`, or interior mutability, identify the
-  ownership problem and runtime/concurrency cost they solve.
-- Make ownership and invalidation behavior visible in public APIs.
-
-Rust's usual invariant is multiple shared borrows or one mutable borrow, but
-interior mutability moves some checks to runtime and must be justified.
+Borrow for scoped access, move for transfer, clone on purpose; name the
+ownership problem before reaching for `Rc`, `Arc`, or `RefCell`. Details
+and a compiled example in the [playbook](PLAYBOOK.md#ownership-and-borrowing).
 
 ## 📦 API and Type Design
 
-- Prefer enums for finite state and newtypes for meaningful identifiers or
-  units.
-- Keep traits close to their consumers and name them by capability.
-- Prefer generics for static dispatch; use `dyn Trait` when runtime
-  polymorphism is intentional and dyn compatibility is satisfied.
-- Keep the public surface small and document invariants and error contracts.
-- Avoid wrappers, managers, helpers, and macros that add no behavior.
-
-```rust
-struct AccountId(String);
-struct Cents(u64);
-struct Receipt;
-
-enum ChargeError {
-    Declined,
-}
-
-fn charge(account: &AccountId, amount: Cents) -> Result<Receipt, ChargeError> {
-    let _account = account;
-    if amount.0 == 0 {
-        return Err(ChargeError::Declined);
-    }
-
-    Ok(Receipt)
-}
-```
-
-This example is intentionally complete enough to compile: domain types carry
-meaning, while `Result` carries the failure contract.
+Enums for finite state, newtypes for identifiers and units, small traits
+near their consumers, a small public surface with `#[non_exhaustive]`
+where it may grow. Details in the [playbook](PLAYBOOK.md#api-and-type-design).
 
 ## 👁 Legible Control Flow
 
-Keep the happy path visible and failures early. Rust's native tools are `?`,
-`let else`, and a final successful expression.
-
-```rust
-// API sketch: supporting domain definitions are omitted for focus.
-fn run(path: &Path) -> Result<Summary, RunError> {
-    let raw = fs::read_to_string(path)?;
-
-    let Some(config) = parse(&raw) else {
-        return Err(RunError::InvalidConfig);
-    };
-
-    Ok(execute(&config))
-}
-```
-
-The sketch highlights the control-flow shape. A real documentation example
-should provide compilable definitions for `Summary`, `RunError`, `parse`, and
-`execute`.
-
-Review `?` chains for useful error types and boundary context rather than
-assuming that a visually short function is automatically clear.
+Happy path visible, failures early: `?`, `let else`, a final successful
+expression. Review `?` chains for the error type they produce. Example in
+the [playbook](PLAYBOOK.md#legible-control-flow).
 
 ## 🧱 Naming and Conversions
 
-Follow the Rust API Guidelines:
-
-- `snake_case` functions and modules;
-- `UpperCamelCase` types and traits;
-- `SCREAMING_SNAKE_CASE` constants;
-- `as_` for cheap borrowed views;
-- `to_` for owned or potentially expensive conversion;
-- `into_` for consuming conversion;
-- `iter`, `iter_mut`, and `into_iter` for iterator behavior;
-- no `get_` prefix for ordinary getters.
-
-Reference: https://rust-lang.github.io/api-guidelines/naming.html
+Rust API Guidelines: `snake_case`, `UpperCamelCase`, `SCREAMING_SNAKE_CASE`;
+`as_`/`to_`/`into_` by cost and ownership; `iter`/`iter_mut`/`into_iter`;
+no `get_` on plain getters. https://rust-lang.github.io/api-guidelines/naming.html
 
 ## ⚠️ Errors and Panics
 
-- Use `Result<T, E>` for recoverable failure and `Option<T>` for absence.
-- Preserve source errors and add context at meaningful boundaries.
-- Never compare error strings.
-- Avoid `unwrap` and `expect` in runtime paths unless the invariant is explicit
-  and documented.
-- Use `thiserror` for library-facing contracts and `anyhow` for application
-  propagation only when accepted by the project.
-- Treat panic behavior and process boundaries as API decisions.
+`Result` for recoverable failure, `Option` for absence, an enum error the
+caller can match on with the source preserved; `unwrap`/`expect` only on
+proven invariants; panic behavior is an API decision. Example in the
+[playbook](PLAYBOOK.md#errors-and-panics).
 
 ## ⚡ Async and Concurrency
 
-Every spawned task needs an owner, exit path, cancellation strategy, error
-observation, and shutdown contract. Review:
-
-- `Send` and `Sync` requirements;
-- locks held across `.await`;
-- unbounded queues and backpressure;
-- dropped receivers and task leaks;
-- runtime flavor assumptions;
-- cancellation safety in `select!`;
-- graceful shutdown and partial failure.
-
-Use shared ownership, channels, locks, and atomics only when required by the
-behavior. Prefer bounded and structured concurrency.
+Every task has an owner, an exit path, a cancellation strategy, error
+observation, and a shutdown contract; no guard across `.await`, no
+blocking on a runtime worker, bounded channels, scoped threads for
+borrowing work. Details in the [playbook](PLAYBOOK.md#async-and-concurrency).
 
 ## 🔒 Unsafe Rust and FFI
 
-Treat every `unsafe` block as a security and correctness boundary.
-
-- Minimize and isolate unsafe code.
-- Document the invariant beside each operation with a `// SAFETY:` comment.
-- Review validity, initialization, alignment, aliasing, lifetimes, thread
-  safety, panic behavior, and ABI assumptions.
-- Wrap unsafe internals in the smallest safe API that upholds the contract.
-- Treat FFI inputs, callbacks, and foreign ownership as untrusted boundaries.
-- Use Miri, sanitizers, or fuzzing where appropriate.
-
-Reference: https://doc.rust-lang.org/nomicon/
+Every `unsafe` block is a security and correctness boundary: minimal,
+isolated behind a safe API, `// SAFETY:` naming the invariant, Miri where
+possible; panics never cross `extern "C"`. Details in the
+[playbook](PLAYBOOK.md#unsafe-rust-and-ffi).
 
 ## 🚀 Performance and Dependencies
 
-Measure before optimizing. Investigate allocations, cloning, copies, data
-layout, lock contention, serialization, scheduling, profiles, and compiler
-configuration. Claims require evidence from benchmarks or profiles.
-
-Before recommending a crate, inspect maintenance, adoption, license,
-provenance, transitive cost, feature flags, build scripts, proc macros, and
-native code. The standard library comes first; popular crates are references,
-not automatic dependencies.
-
-Never expose credentials through Cargo commands, logs, caches, artifacts, or
-examples.
+Measure before optimizing; inspect a crate's maintenance, provenance,
+build scripts and native code before adding it; standard library first;
+no credentials through Cargo, logs or artifacts. Details in the
+[playbook](PLAYBOOK.md#performance-and-dependencies).
 
 ## 📝 Rustdoc and Generated Code
 
-- Start public documentation with a standalone summary sentence.
-- Document `# Errors`, `# Panics`, and `# Safety` where applicable.
-- Use intra-doc links such as ``[`Type`]``.
-- Treat `# Examples` as doctests and validate them with `cargo test`.
-- Inspect rendered output with `cargo doc --workspace --no-deps`.
-- Never edit generated Rust directly; update its source and regenerate.
-
-References:
-
-- The Book: https://doc.rust-lang.org/book/
-- Rust API Guidelines: https://rust-lang.github.io/api-guidelines/
-- Clippy: https://rust-lang.github.io/rust-clippy/master/
-- Edition Guide: https://doc.rust-lang.org/edition-guide/
+Summary sentence first, `# Errors`/`# Panics`/`# Safety`, doctests as
+examples, rendered output inspected; generated Rust is regenerated, never
+hand-edited. Details in the [playbook](PLAYBOOK.md#rustdoc-and-generated-code).
 
 ## 🕳 Known Pitfalls (Sourced or Experienced)
 

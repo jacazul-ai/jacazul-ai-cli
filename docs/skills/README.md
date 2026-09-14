@@ -143,7 +143,9 @@ formatting sequence and applies Line of Sight readability for control flow.
 
 Idiomatic, safe, performant Rust with an explicit policy boundary between
 repository mandates, language guarantees, community convention, and options.
-Review scenarios live in
+Implementation guidance with examples compiled on the installed toolchain
+lives in [`skills/rust-expert/PLAYBOOK.md`](../../skills/rust-expert/PLAYBOOK.md);
+review scenarios live in
 [`skills/rust-expert/CODE-REVIEW.md`](../../skills/rust-expert/CODE-REVIEW.md)
 on the shared code-review scale.
 
