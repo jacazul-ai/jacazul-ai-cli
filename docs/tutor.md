@@ -27,6 +27,7 @@ Available pairs:
 | [`zig-tutor`](../skills/zig-tutor/SKILL.md) | `zig-expert` | Toolchain and build shape, foundations, allocators and ownership, comptime, production Zig with std.Io |
 | [`php-tutor`](../skills/php-tutor/SKILL.md) | `php-expert` | Runtime and project shape, foundations, legacy reading and migration, modern PHP, production PHP |
 | [`bash-tutor`](../skills/bash-tutor/SKILL.md) | `bash-expert` | Interpreter and script shape, foundations, errors and idempotence, portability, production shell |
+| [`js-ts-tutor`](../skills/js-ts-tutor/SKILL.md) | `js-ts-expert` | Runtime and project shape, foundations, TypeScript as a contract, browser and lifecycle, the boundary, production |
 
 ### When the tutor asks calibration questions first
 

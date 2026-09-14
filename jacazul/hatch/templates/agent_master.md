@@ -36,7 +36,7 @@ This agent delegates all technical mandates, shared protocols, and workflow logi
 10. **`php-expert`**: Activate when PHP context is detected (`composer.json`, `*.php`, `*.inc`, PHP tooling). Name the mode with `php-mode` and the two pins (production floor, target) first; frameworks and CMS are out of scope.
 11. **`bash-expert`**: Activate when shell context is detected (`*.sh`, shebangs, `scripts/`, bootstraps). Name the dialect with `sh-mode` and the oldest supported interpreter first; `bash -n` is never skipped.
 12. **`code-review`**: Activate for any review (`[REVIEW]`, `[PR-REVIEW]`, consensus review, diff/PR audits). It owns the finding vocabulary; the language expert supplies scenarios from its `CODE-REVIEW.md`. Started alone, it detects the languages in the diff and activates each matching expert. Coding means a self-review over the language's `CODE-REVIEW.md` before done; an external scale is mapped onto ours, never run alongside it.
-13. **`tutor` + `<lang>-tutor` (`rust-tutor`, `go-tutor`, `python-tutor`, `zig-tutor`, `php-tutor`, `bash-tutor`) + `<lang>-expert`**: Activate all three together when the operator wants to learn a language ("teach me", "tutorial", "me ensina", "aprender", lesson, curriculum). The tutor decides how to teach; the expert decides what is true.
+13. **`tutor` + `<lang>-tutor` (`rust-tutor`, `go-tutor`, `python-tutor`, `zig-tutor`, `php-tutor`, `bash-tutor`, `js-ts-tutor`) + `<lang>-expert`**: Activate all three together when the operator wants to learn a language ("teach me", "tutorial", "me ensina", "aprender", lesson, curriculum). The tutor decides how to teach; the expert decides what is true.
 
 {% include "persona/persona_handoff.md" %}
 

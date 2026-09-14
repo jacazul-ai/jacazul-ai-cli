@@ -191,5 +191,6 @@ and why it is not needed yet.
 - Zig: [`zig-tutor`](../zig-tutor/SKILL.md), paired with `zig-expert`.
 - PHP: [`php-tutor`](../php-tutor/SKILL.md), paired with `php-expert`.
 - Shell: [`bash-tutor`](../bash-tutor/SKILL.md), paired with `bash-expert`.
+- JavaScript/TypeScript: [`js-ts-tutor`](../js-ts-tutor/SKILL.md), paired with `js-ts-expert`.
 
 </agent_instructions>

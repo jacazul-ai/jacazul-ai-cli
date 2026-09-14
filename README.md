@@ -115,6 +115,7 @@ Jacazul extends your capabilities via specialized skills:
 - **PHP Tutor**: Adaptive PHP learning on the tutor core, including legacy reading and the migration path.
 - **Shell Expert**: POSIX sh and bash with dialect detection (sh-mode), a pitfall census (sh-census), honest set -e rules and idempotent setup scripts.
 - **Shell Tutor**: Adaptive shell learning on the tutor core; every example parsed and run on your target shell.
+- **JS/TS Tutor**: Adaptive JavaScript and TypeScript learning on the tutor core, platform first, the backend boundary decided once.
 - **Go Expert**: Idiomatic Go, gofmt-to-goimports formatting, and Line of Sight readability.
 - **Rust Expert**: Idiomatic Rust engineering, ownership, safety, async, and quality gates.
 - **Rust Tutor**: Adaptive Rust learning with learner calibration and progressive curriculum.

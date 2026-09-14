@@ -374,6 +374,20 @@ learner's target shell.
 
 ---
 
+### JS/TS Tutor
+**Status:** ✅ Active
+**Documentation:** [`skills/js-ts-tutor/SKILL.md`](../../skills/js-ts-tutor/SKILL.md)
+
+JavaScript and TypeScript curriculum on the shared tutor core, paired
+with `js-ts-expert`: bridges from typed, scripting and framework-first
+backgrounds; six levels from runtime and project shape to production,
+with TypeScript as a contract, the browser lifecycle, and the backend
+boundary asked once; every example run on the learner's runtime.
+
+**Location:** `/project/skills/js-ts-tutor/`
+
+---
+
 ## 🔜 Future Skills
 
 Skills planned for addition:
