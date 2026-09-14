@@ -355,6 +355,7 @@ Current extensions:
 - JavaScript/TypeScript: [JS/TS review directives](../js-ts-expert/CODE-REVIEW.md).
 - Zig: [Zig review directives](../zig-expert/CODE-REVIEW.md).
 - PHP: [PHP review directives](../php-expert/CODE-REVIEW.md).
+- Shell: [Shell review directives](../bash-expert/CODE-REVIEW.md).
 
 Detection map for the core-first entry point:
 
@@ -366,3 +367,4 @@ Detection map for the core-first entry point:
 | `package.json`, `tsconfig.json`, `*.js`, `*.ts`, `*.tsx` | `js-ts-expert` | `js-mode` |
 | `build.zig`, `build.zig.zon`, `*.zig` | `zig-expert` | none (read `.minimum_zig_version`, `zig version`) |
 | `composer.json`, `*.php`, `*.inc`, `index.php` | `php-expert` | `php-mode`, `php-census --floor <prod>` |
+| `*.sh`, `*.bash`, shebang `#!/bin/sh` or `bash`, `scripts/` | `bash-expert` | `sh-mode`, `sh-census` |
