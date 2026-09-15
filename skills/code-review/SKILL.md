@@ -356,11 +356,14 @@ Current extensions:
 - Zig: [Zig review directives](../zig-expert/CODE-REVIEW.md).
 - PHP: [PHP review directives](../php-expert/CODE-REVIEW.md).
 - Shell: [Shell review directives](../bash-expert/CODE-REVIEW.md).
+- Git: [Git review directives](../git-expert/CODE-REVIEW.md) for commits,
+  series and history operations, alongside the language of the diff.
 
 Detection map for the core-first entry point:
 
 | Evidence in the target | Expert to activate | Mode probe |
 |---|---|---|
+| A commit range, a branch or PR to integrate, a history rewrite | `git-expert` | `git-mode`, `git-census --range <base>..<tip>` |
 | `go.mod`, `*.go` | `go-expert` | none (read the `go` directive) |
 | `Cargo.toml`, `*.rs` | `rust-expert` | none (read `edition`, `rust-version`) |
 | `pyproject.toml`, `setup.py`, `*.py` | `python-expert` | `py-mode` |
