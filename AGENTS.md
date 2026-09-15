@@ -172,6 +172,14 @@ prior failing test.
 - **Goal:** Prove the existence of the problem and verify that the solution
   actually addresses the root cause.
 
+## Git Workflow
+
+Pinned for `git-expert` and `git-mode`: topic work is rebased onto the
+reference branch and fast-forwarded, so history stays linear.
+
+- integration: linear
+- reference: master
+
 ## 📚 Documentation Mandate
 
 ### 1. Task → Test → Docs (Completion Protocol)
@@ -232,4 +240,4 @@ perspective:
   with Taskwarrior local tasks.
 
 ---
-**Last Updated:** 2026-04-02
+**Last Updated:** 2026-09-14
