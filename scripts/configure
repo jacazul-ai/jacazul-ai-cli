@@ -210,6 +210,8 @@ CLI_LINKS=(
     "php-census:$HOME/.jacazul-ai/.venv/bin/php-census"
     "sh-mode:$HOME/.jacazul-ai/.venv/bin/sh-mode"
     "sh-census:$HOME/.jacazul-ai/.venv/bin/sh-census"
+    "git-mode:$HOME/.jacazul-ai/.venv/bin/git-mode"
+    "git-census:$HOME/.jacazul-ai/.venv/bin/git-census"
 )
 
 for entry in "${CLI_LINKS[@]}"; do
