@@ -122,7 +122,7 @@ Jacazul extends your capabilities via specialized skills:
 - **Go Tutor**: Adaptive Go learning on the same tutor core, paired with the Go Expert.
 - **Tutor Core**: Shared teaching contract; a tutor decides how to teach, its expert decides what is true.
 - **Code Review**: One finding scale (level, advisory, area, evidence) shared by every language expert.
-- **Git Expert**: Strict conventional commit standards.
+- **Git Expert**: Conventional commits with no AI attribution, workflow detection and pinning (git-mode) for linear or merge teams, a pre-push commit census (git-census) and non-interactive history recipes.
 - **GitHub Broker**: Secure, credential-less ticket synchronization.
 
 ---

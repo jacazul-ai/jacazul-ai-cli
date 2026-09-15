@@ -15,7 +15,7 @@ Jacazul AI CLI is structured as a standard Python package for maximum robustness
   - `jacazul-engine/`: Core protocols (UUID, Language, Handoff, Output Caching).
   - `taskwarrior-expert/`: Workflow management and persistence.
   - `python-expert/`: PEP 8 compliance and automated linting.
-  - `git-expert/`: Conventional commits and repository integrity.
+  - `git-expert/`: Commit standards, workflow modes (`git-mode`), commit census (`git-census`), playbook and review scenarios.
 - **`tests/`**: Consolidated smoke test suite.
 - **`pyproject.toml`**: Centralized dependency and entry point configuration.
 

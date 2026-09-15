@@ -23,6 +23,7 @@ Welcome to the Jacazul AI CLI documentation. This project is built around the co
 - [Zig Expert](zig-expert.md) - Version-pinned Zig, allocators and errdefer, safety modes, std.Io, review on the shared scale.
 - [PHP Expert](php-expert.md) - PHP as a language, php-mode, php-census, the two-pin 5.6 to 8.x migration method.
 - [Shell Expert](bash-expert.md) - POSIX sh and bash, sh-mode, sh-census, set -e truth table, portability and idempotence.
+- [Git Expert](git-expert.md) - Commit standards, git-mode workflow pin and detection, git-census before push, non-interactive rebase recipes.
 - [Go Expert](go-expert.md) - Idiomatic Go, gofmt-to-goimports formatting, and Line of Sight readability.
 - [Tutors](tutor.md) - Learning a language with a tutor paired to its expert.
 - [Skills Index](skills/README.md) - Every skill, including Rust Expert, Rust Tutor, Go Tutor, and the shared Code Review scale.

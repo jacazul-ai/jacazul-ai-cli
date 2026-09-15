@@ -31,13 +31,21 @@ tw-flow initiative my-feature "EXECUTE|Build API|implementation|today"
 
 ### Git Expert
 **Status:** ✅ Active
-**Documentation:** [`skills/git-expert/SKILL.md`](../../skills/git-expert/SKILL.md)
+**Documentation:** [`skills/git-expert/SKILL.md`](../../skills/git-expert/SKILL.md) and [Git Expert Guide](../git-expert.md)
+
+Commit and history engineering for any team workflow. `git-mode` names the
+integration style (linear, merge, unknown) from the `## Git Workflow` section
+of `AGENTS.md`, local `git-expert.*` config, or a history scan, together with
+the layout (plain, worktrees, bare); `git-census` counts message and history
+families over a range. The playbook carries a non-interactive `rebase -i`
+recipe with a backup ref and `range-diff` proof; review scenarios live in
+[`skills/git-expert/CODE-REVIEW.md`](../../skills/git-expert/CODE-REVIEW.md).
 
 When preparing a commit, the agent must treat the commit message as a
 technical artifact: classify the changed area, choose a scope only when it is
 clear, keep the title within 50 characters, wrap body lines at 72 characters,
-and use a ticket footer only when an external GitHub, Bitbucket, or Jira ticket
-exists.
+and use a ticket footer only when an external GitHub, Jira, or other tracker
+ticket exists.
 
 Commits with bodies must use a file-based message:
 
@@ -56,6 +64,12 @@ literal `\n` separators in a `-m` argument. After committing, verify the body
 with `git log -1 --format=%b | cat -A` and confirm that no literal `\n` appears.
 
 **Trigger → Action**
+- When starting in a repository, run `git-mode <path>` and state the mode,
+  its source, the reference branch and the layout.
+- Before pushing, run `git-census <path>` and drive the security and policy
+  rows to zero.
+- When cleaning a series, back up, hand the full todo to
+  `GIT_SEQUENCE_EDITOR`, and prove the result with `git range-diff`.
 - When the diff touches a clear area, use a scoped Conventional Commit title.
 - When the diff is generic or cross-cutting, omit scope or ask for guidance.
 - When drafting the body, explain what changed and why with 72-column wrapping.
@@ -424,4 +438,4 @@ Place skill directory in `/project/skills/` and reference in agent instructions.
 
 ---
 
-**Last Updated:** 2026-09-13
+**Last Updated:** 2026-09-14
