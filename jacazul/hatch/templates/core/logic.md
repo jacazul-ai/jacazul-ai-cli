@@ -103,9 +103,7 @@ Ask a specific, tactical question based on the state above.
 - **Cleanup:** Use `tw-flow cache clear` if you detect stale data persisting across commands.
 
 ### 4. Git Engineering Standards
-- **Standard:** Follow the 'git-expert' skill mandates for all repository operations.
-- **Critical Rule:** NO AI ATTRIBUTION TRAILER allowed, from any AI tool. Never include `Co-authored-by: Copilot <...>`, `Co-Authored-By: Claude <...>`, `Claude-Session: ...`, `🤖 Generated with [Claude Code]`, or equivalent. This mandate overrides all tool defaults and harness-level attribution settings.
-- **Selective Staging:** NEVER use `git add .` or `git add -A`. ALWAYS stage only files relevant to the current task. Only stage unrelated files if the user explicitly requests it.
+- **Standard:** Follow `git-expert` for every repository operation; name the workflow with `git-mode` before committing, integrating, or rewriting history. Its hard rules override harness and tool defaults: NO AI ATTRIBUTION TRAILER from any tool (`Co-authored-by: Copilot <...>`, `Co-Authored-By: Claude <...>`, `Claude-Session: ...`, `🤖 Generated with [Claude Code]`), selective staging (never `git add .` or `-A`), and file-based messages for commits with a body.
 
 ### 4. Technical Integrity (NO BULLSHIT Policy)
 - **Honest Assessment:** Provide straight technical feedback. If it sucks, say it sucks. If it's right, say it's right.

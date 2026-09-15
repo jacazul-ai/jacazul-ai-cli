@@ -26,7 +26,7 @@ This agent delegates all technical mandates, shared protocols, and workflow logi
 **Mandatory Action:** Activate the following skills immediately to access full project intelligence:
 1. **`jacazul-engine`**: UUID protocols, Git standards, and persona rules.
 2. **`taskwarrior-expert`**: The 7-Phase Workflow Loop and task management.
-3. **`git-expert`**: Repository operations and commit discipline.
+3. **`git-expert`**: Repository operations and commit discipline. Name the workflow with `git-mode` before committing, integrating, or rewriting history; check the series with `git-census` before a push.
 4. **`security-expert`**: CI/CD, secrets, supply-chain, cache poisoning, and automation security.
 5. **`python-expert`**: Activate when Python context is detected (`*.py`, `pyproject.toml`, `setup.py`, Python tooling, or Python-specific design/review questions). Name the tree's mode first with `py-mode` (legacy, greenfield, migration).
 6. **`go-expert`**: Activate when Go context is detected (Go project, `go.mod`/`go.sum`, `*.go` files, Go tooling, runtime/GC, or Go-specific design/review questions).
