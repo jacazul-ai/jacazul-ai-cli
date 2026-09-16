@@ -129,6 +129,109 @@ The previous state — credentials, history and per-project memory — is still
 there, and the bootstrap links the Jacazul-owned artifacts into it just the
 same.
 
+## 🌊 Embedded Workflow Engine (`jacazul flow`)
+
+The workflow engine (developed today as `jacazul-ai/jaflow`) is moving into the
+Go `jacazul` CLI as an **embedded library**, not as an installed component.
+`jacazul` imports the engine and compiles it in. There is no separate engine
+binary to install, update, version-handshake, or discover on `PATH`: one
+`jacazul` release carries exactly one engine version, pinned by `jacazul`'s
+`go.mod`.
+
+**Status:** the names, paths and public boundary below are decided. The engine
+side (module rename, `flow.Run` extraction, schema guard) is not published
+yet, so the `jacazul` side is designed and tested against a fake runner until
+the engine tags a release with package `flow`.
+
+### Names
+
+| Item | Value |
+|---|---|
+| Go module | `github.com/jacazul-ai/flow` (repository renamed from `jaflow`) |
+| Public package | `flow`, at the module root |
+| User-facing command | `jacazul flow ...` |
+| Standalone engine binary | `jczl-flow`, built in the engine repository for tests and independent distribution; `jacazul` does not use it |
+
+### Runtime paths and environment
+
+- Database: `$JACAZUL_HOME/flow/<PROJECT_ID>/flow.sqlite3`.
+- Override: `JACAZUL_FLOW_DATABASE_PATH` (replaces `JAFLOW_DATABASE_PATH`).
+- Context variables stay: `JACAZUL_HOME`, `JACAZUL_SESSION_ID`, `PROJECT_ID`.
+
+### Public boundary
+
+```go
+import "github.com/jacazul-ai/flow"
+
+func Run(ctx context.Context, args []string, env flow.Env, streams flow.Streams) int
+
+type Env struct {
+	ProjectID    string
+	SessionID    string
+	DatabasePath string
+	Home         string
+}
+
+type Streams struct {
+	Stdin  io.Reader
+	Stdout io.Writer
+	Stderr io.Writer
+}
+
+func EnvFromOS() Env // standalone mains only; jacazul must not use it
+```
+
+`Run` never calls `os.Exit`, never reads the process environment or `os.Args`,
+and never writes to the process stdout on its own. Everything it needs arrives
+through its arguments.
+
+### Rules for the `jacazul` side
+
+1. **Build `flow.Env` explicitly.** Resolve project and session once, through
+   the existing bootstrap and worktree anchor logic, and always set `Home`.
+   The engine falls back to the user home directory when `JACAZUL_HOME` is
+   unset, which would put the database under `~/flow/...`.
+2. **Thin adapter.** `jacazul flow <args...>` strips `flow` and passes the
+   rest as `args`, the process stdio as `Streams`, and the command context as
+   `ctx`.
+3. **Exit with the returned code.** The adapter exits with the `int` returned
+   by `Run`.
+4. **Concrete function, not an interface.** A test seam lives in `jacazul`'s
+   own package, for example
+   `type flowRunner func(context.Context, []string, flow.Env, flow.Streams) int`
+   with `flow.Run` as the production value, and tests assert the `Env` and
+   `args` passed to it.
+5. **No reach into internals.** Never import
+   `github.com/jacazul-ai/flow/internal/...` (the compiler forbids it) and do
+   not depend on the engine's go-flags setup or domain types. When `jacazul`
+   needs data back, such as a structured onboard snapshot, the engine exposes
+   a new narrow exported function.
+6. **Schema guard is final.** The engine refuses to open a database whose
+   schema is newer than it supports, for example after a `jacazul` rollback,
+   and prints `ACTION:` guidance. `jacazul` surfaces that error as is; it does
+   not retry or bypass it.
+
+Any need the boundary does not cover (extra `Env` fields, returned data,
+cancellation behavior) goes back to the engine as a request instead of being
+worked around in `jacazul`.
+
+### Impact on the Go code
+
+- The `tw-flow-to-go` bootstrap stub (`cmd/tw-flow`, `internal/cli/app.go`) is
+  replaced by the `jacazul flow` adapter over `flow.Run`. A second workflow
+  engine does not grow there.
+- The engine module requires `go 1.25`; `jacazul`'s `go` directive rises from
+  1.24 when the dependency is added. Both sides already use
+  `github.com/jessevdk/go-flags v1.6.1`.
+- Until the engine publishes its tag, the current `jaflow` binary is not
+  copied, vendored, or shelled out to as a stopgap.
+
+### Open questions
+
+- Whether the engine moves a legacy `$JACAZUL_HOME/jaflow/<PROJECT_ID>/`
+  database on first open. No real user data exists there today.
+- The first engine version `jacazul` pins.
+
 ## 🚀 Versioning & Parity
 
 The project maintains strict version parity across all components (`tw-flow`, `hatch`, `skills`) to ensure instruction-engine alignment.
