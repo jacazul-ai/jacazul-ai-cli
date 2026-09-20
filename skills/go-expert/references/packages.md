@@ -15,6 +15,44 @@ the standard library as a design reference.
 5. Decide who owns every mutable value, resource, goroutine, channel, lock,
    transaction, and cancellation signal — see [values](values.md).
 
+## Size the structure to the project
+
+Architecture complexity should match project scope. Splitting a small program
+into layers costs clarity and buys nothing.
+
+| Project size | Shape |
+| --- | --- |
+| Script or small CLI, under ~500 lines | Flat `main.go` plus a few files, no layers |
+| Medium service, ~500 to 5K lines | Simple layered split by behavior |
+| Large service, 5K+ lines | Ask the team which boundary discipline it wants |
+
+A 100-line CLI does not need a domain layer, ports and adapters, or a
+dependency-injection container. Start simple and restructure when complexity
+demands it, not when a diagram suggests it.
+
+This skill does not prescribe a named architecture. Clean, hexagonal, and DDD
+are team choices with real trade-offs, not Go defaults, and adopting one is a
+project decision rather than a style correction.
+
+## Keep the dependency direction honest
+
+Domain logic should not import infrastructure. Database access, HTTP clients,
+and message queues live in packages that depend on the domain — never the
+reverse. This holds whatever the team calls its layering, and it is the part
+of "clean architecture" that survives without the ceremony.
+
+## Validate at the boundary, then trust
+
+Validate input where it enters the system: HTTP handlers, CLI argument
+parsing, message consumers, file and subprocess reads. Once data has passed
+the boundary, internal code should trust it.
+
+Do not re-validate the same value at every layer. It clutters the happy path
+and produces the same error from several places, so the caller cannot tell
+which check actually fired. This is the same rule that keeps error context
+from being restated at every level — see [errors](errors.md), and
+[security](security.md) for what boundary validation must cover.
+
 ## Package design
 
 - Package names: short, lowercase, named by the behavior or domain they
