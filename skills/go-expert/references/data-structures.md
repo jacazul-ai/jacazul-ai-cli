@@ -90,6 +90,14 @@ reach for the list only when the middle insertion is measured, not assumed.
   concatenation performs.
 - `bytes.Buffer` for bidirectional I/O, since it implements both `io.Reader`
   and `io.Writer`.
+- `+` for joining two or three known pieces. Reaching for a builder there is
+  ceremony; reaching for `+` inside a loop is a quadratic copy.
+
+For converting a single value, `strconv` says what it does and does it
+without the formatting machinery: `strconv.Itoa(n)` over `fmt.Sprintf("%d",
+n)`, `strconv.Quote` over manual escaping. Keep `fmt` for real formatting,
+and use `%q` in error messages so an empty or space-padded string is
+visible instead of invisible.
 
 ## The `slices` and `maps` packages (Go 1.21+)
 

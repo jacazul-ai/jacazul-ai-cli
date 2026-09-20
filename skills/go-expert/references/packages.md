@@ -71,6 +71,22 @@ from being restated at every level — see [errors](errors.md), and
 Do not split code into layers to look architectural. A package earns its
 boundary by owning behavior, not by occupying a position in a diagram.
 
+## Exports and imports
+
+Unexport by default. Exporting later is additive; unexporting later breaks
+every consumer, so the asymmetry should decide the default.
+
+A blank import (`_ "pkg"`) runs a package's `init` for its side effect.
+Confined to `main` and test packages, that side effect is visible at the
+root where someone can reason about it; buried in a library, it fires for
+anyone who imports the library for unrelated reasons. A dot import removes
+the one clue that says where a name came from — keep it out of library
+code entirely.
+
+Within a file, the conventional order is package doc, imports, constants,
+types, constructors, methods, then helpers, with a type and its methods
+kept together. One primary type per file once it carries real behavior.
+
 ## Standard library as design compass
 
 When unsure, look for the pattern in the standard library first — do not
