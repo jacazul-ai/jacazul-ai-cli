@@ -112,6 +112,9 @@ paid when it is actually loaded.
 | Cancel, set deadlines, propagate scope | [context](references/context.md) | [concurrency](references/concurrency.md) |
 | Write tests, decide on a seam, avoid mock ceremony | [testing](references/testing.md) | [values](references/values.md) |
 | Write doc comments; verify rendered output | [documentation](references/documentation.md) | [naming](references/naming.md) |
+| Write, run, or compare a benchmark | [benchmarks](references/benchmarks.md) | [testing](references/testing.md) |
+| Find where time, memory, or blocking actually goes | [profiling](references/profiling.md) | [benchmarks](references/benchmarks.md) |
+| Apply an optimization to a measured bottleneck | [performance](references/performance.md) | [runtime](references/runtime.md) |
 | CPU, latency, or allocation changed after a Go upgrade | [runtime](references/runtime.md) | — |
 | Emit logs or program output | [logging](references/logging.md) | — |
 | Acquire or release a resource; HTTP, SQL, JSON, file boundaries | [resources](references/resources.md) | [errors](references/errors.md) |
@@ -132,10 +135,24 @@ Two boundaries that are easy to get wrong:
   control flow; numbers owns what the conversion must check before it is
   allowed to happen.
 
+- **benchmarks vs profiling** — benchmarks produce the number to compare;
+  profiling finds where that number is spent. Both come before
+  performance, and performance is not read without them.
+- **runtime vs performance** — runtime owns the toolchain, the collector,
+  and version-sensitive behavior; performance owns what to change in the
+  code once a profile named the cost.
+
 Defensive correctness has no reference of its own. A nil trap, a silent
 truncation, or a `defer` in a loop is a property of a subject, so it is
 documented by whichever reference owns that subject — the routing table
 above is the only index.
+
+Production instrumentation has no reference either, and that is a
+boundary rather than a gap. Metric backends, tracing vendors, dashboards,
+and alerting are infrastructure the project owns; this skill stops at the
+standard library. `log/slog` is the structured option when a project has no
+convention, and [logging](references/logging.md) is clear that the
+project's existing choice wins.
 
 The review scales themselves are global:
 [`../code-review/SKILL.md`](../code-review/SKILL.md) owns technical levels,
