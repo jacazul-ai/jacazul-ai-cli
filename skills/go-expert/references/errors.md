@@ -16,6 +16,47 @@ without redundant context at every layer.
 - Prefer direct `if err != nil { return ... }` handling that preserves Line of
   Sight — see [code-style](code-style.md).
 
+## The typed nil return
+
+An interface value holds a type and a value, and it is `nil` only when both
+are. A function that declares `error` but returns a typed nil pointer hands
+back a non-nil interface, so the caller's `if err != nil` fires on success:
+
+```go
+// The caller always sees an error, even when there is none.
+func validate(s string) error {
+	var err *ValidationError
+	if s == "" {
+		err = &ValidationError{Field: "name"}
+	}
+
+	return err
+}
+```
+
+Declare the failure path and the success path separately and return the
+untyped `nil` for success:
+
+```go
+func validate(s string) error {
+	if s == "" {
+		return &ValidationError{Field: "name"}
+	}
+
+	return nil
+}
+```
+
+`errors.Is(err, nil)` does not rescue this: the interface was already
+non-nil before it reached the comparison. The same trap applies to any
+interface-typed return, not only `error` — see
+[structs-interfaces](structs-interfaces.md) for the nil receiver it pairs
+with.
+
+Default `go vet` does not catch this. `staticcheck` and the `nilerr` linter
+report some shapes; neither covers every path, so the defence is the habit
+of returning the untyped `nil` rather than a tool.
+
 ## Designing the contract
 
 - Return errors for ordinary operational failures; reserve panic for broken

@@ -107,6 +107,7 @@ paid when it is actually loaded.
 | Choose value vs pointer; decide ownership and copying | [values](references/values.md) | [code-style](references/code-style.md) |
 | Design a struct or interface; receivers, embedding, zero value | [structs-interfaces](references/structs-interfaces.md) | [naming](references/naming.md) |
 | Choose a collection; preallocate, build strings, use generics | [data-structures](references/data-structures.md) | [values](references/values.md) |
+| Convert, compare, or divide numeric values; carry a unit | [numbers](references/numbers.md) | [code-style](references/code-style.md) |
 | Start goroutines, synchronize, bound parallelism | [concurrency](references/concurrency.md) | [context](references/context.md) |
 | Cancel, set deadlines, propagate scope | [context](references/context.md) | [concurrency](references/concurrency.md) |
 | Write tests, decide on a seam, avoid mock ceremony | [testing](references/testing.md) | [values](references/values.md) |
@@ -127,6 +128,14 @@ Two boundaries that are easy to get wrong:
   and `references/packages.md` decide *what shape* it takes.
 - **structs-interfaces vs data-structures** — the first owns the shape of a
   type you declare; the second owns the collections you choose between.
+- **code-style vs numbers** — code-style owns where a conversion sits in the
+  control flow; numbers owns what the conversion must check before it is
+  allowed to happen.
+
+Defensive correctness has no reference of its own. A nil trap, a silent
+truncation, or a `defer` in a loop is a property of a subject, so it is
+documented by whichever reference owns that subject — the routing table
+above is the only index.
 
 The review scales themselves are global:
 [`../code-review/SKILL.md`](../code-review/SKILL.md) owns technical levels,

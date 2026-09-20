@@ -17,6 +17,51 @@ boundaries where a default silently changes a contract.
 - Avoid finalizers as deterministic cleanup. Make `Close`, cancellation, and
   shutdown explicit.
 
+## `defer` runs at function exit, not at the end of the block
+
+A `defer` inside a loop does not release anything per iteration. The calls
+stack up and all of them run when the *function* returns, so a loop over
+ten thousand paths holds ten thousand open files — until the file
+descriptor limit ends the program somewhere unrelated.
+
+```go
+// Every file stays open until the function returns.
+for _, path := range paths {
+	f, err := os.Open(path)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	process(f)
+}
+```
+
+The fix is to give the resource a function whose exit is the lifetime you
+actually want:
+
+```go
+for _, path := range paths {
+	if err := processOne(path); err != nil {
+		return err
+	}
+}
+
+func processOne(path string) error {
+	f, err := os.Open(path)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	return process(f)
+}
+```
+
+This is one of the few cases where extracting a function is not ceremony:
+the helper exists because the `defer` needs a scope, which is real behavior
+rather than a naming exercise.
+
 Errors returned by `Close`, `Flush`, `Commit`, `Sync`, and `Rollback` can
 change a durability or transaction contract — handle them as described in
 [errors](errors.md).

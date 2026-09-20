@@ -46,6 +46,43 @@ Keep the receiver type consistent across all methods of a type. A type with
 mixed receivers satisfies interfaces only through one of its two method sets,
 which surfaces as a confusing compile error far from the cause.
 
+## Nil receivers and nil function fields
+
+A method on a pointer receiver does not panic because the receiver is nil.
+It panics when the body dereferences it, which means the same type can have
+one method that survives a nil receiver and another that does not:
+
+```go
+func (l *Logger) Enabled() bool { return l != nil } // fine on nil
+func (l *Logger) Log(msg string) {                  // panics on nil
+	fmt.Printf("[%s] %s\n", l.prefix, msg)
+}
+```
+
+That asymmetry is a trap, not a feature. Treat a nil receiver as a bug
+unless the type documents nil as a valid state — an optional dependency is
+the usual legitimate case — and guard it explicitly when it is:
+
+```go
+func (l *Logger) Log(msg string) {
+	if l == nil {
+		return
+	}
+	...
+}
+```
+
+A nil function field has the same shape with no escape: calling it always
+panics. Either check before calling, or install a no-op default at
+construction so no call site has to remember:
+
+```go
+w := &Worker{onDone: func(string) {}}
+```
+
+Between the two, the default is usually better — it puts the decision in
+one place instead of at every call site.
+
 ## Copy safety
 
 A struct holding a mutex, a channel, or internal pointers breaks when copied:

@@ -110,6 +110,24 @@ Before treating Go documentation as done, run `go doc ./<package>` or
 looks fine can still render as a run-on paragraph, broken list, or malformed
 example block.
 
+### When a Go program panics on nil or truncates a number
+
+The skill has no "safety" page. Defensive correctness is a property of a
+subject, not a subject of its own, so each trap is documented by the
+reference that owns the thing it happens to:
+
+| Symptom | Reference |
+| --- | --- |
+| `if err != nil` fires on success | [errors](../skills/go-expert/references/errors.md) |
+| Panic on a nil receiver or a nil callback field | [structs-interfaces](../skills/go-expert/references/structs-interfaces.md) |
+| Panic writing to a map; two slices corrupting each other | [data-structures](../skills/go-expert/references/data-structures.md) |
+| A number wraps, a float comparison fails, a divide panics | [numbers](../skills/go-expert/references/numbers.md) |
+| File handles accumulate until the function returns | [resources](../skills/go-expert/references/resources.md) |
+
+The routing table in
+[`skills/go-expert/SKILL.md`](../skills/go-expert/SKILL.md) is the only
+index; there is no second one to keep in sync.
+
 ## Package design
 
 Go is package-first. Keep package names short, lowercase, and meaningful. Name
@@ -133,6 +151,23 @@ caller to act, but do not spam redundant context at every layer.
   contract.
 - Prefer direct `if err != nil { return ... }` handling that preserves Line of
   Sight.
+
+## Numeric conversion and precision
+
+Go has no implicit numeric conversion, so every conversion is deliberate —
+and every out-of-range conversion is a silent wraparound rather than an
+error. Treat a conversion as a validation boundary and check range, sign,
+unit, and precision there, once, rather than at every layer.
+
+- Narrowing a variable the compiler cannot see wraps; guard against
+  `math.MaxInt32` and friends before converting, or let
+  `strconv.ParseInt(raw, 10, 32)` enforce the width at the boundary.
+- Compare floats with a tolerance, never `==`, and keep money in integer
+  minor units or a decimal type.
+- Integer division by zero panics while float division yields `Inf` or
+  `NaN`; guard a divisor that came from data.
+- Put the unit in the type. `time.Duration(n) * time.Second` says n counted
+  seconds; `time.Duration(n)` alone silently means nanoseconds.
 
 ## Line of Sight
 

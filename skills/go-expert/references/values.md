@@ -14,6 +14,15 @@ transfer, and the nil-versus-empty decision.
 - Do not retain a large backing allocation merely to return a small subset;
   measure and copy when the lifetime justifies it.
 
+## Returning internals
+
+An exported method that returns a struct's own slice or map hands callers a
+live handle to the internals. Return `slices.Clone` or `maps.Clone` when
+later mutation by the caller would be surprising — see
+[data-structures](data-structures.md) for the aliasing mechanics and
+[packages](packages.md) for why the field stays unexported in the first
+place.
+
 Ownership is the question behind most concurrency bugs as well: see
 [concurrency](concurrency.md) for goroutine, channel, and lock ownership.
 
