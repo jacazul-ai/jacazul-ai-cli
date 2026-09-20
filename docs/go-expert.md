@@ -349,6 +349,62 @@ Do not edit generated Go files manually when they contain a marker such as
 source input instead, then regenerate. If a generated file lacks a standard
 marker, inspect repository conventions before editing.
 
+## Upstream parity de-para
+
+This skill was compared against [`samber/cc-skills-golang`][upstream], a
+46-skill Go catalogue, pinned at commit `19a0626a` for the whole comparison.
+The upstream tree is reference material only: nothing in it is executed, and
+every import is an adaptation rather than a copy, because upstream states
+universal `MUST` and `ALWAYS` rules that conflict with this skill's
+project-aware posture.
+
+Precedence when the two disagree: repository mandates first, then this
+project's Go policy, then adapted upstream guidance.
+
+The table below is the record of what was taken, what was reshaped on the
+way in, and what was refused — kept so a future re-evaluation starts from
+the decisions instead of repeating the analysis. Local content is
+authoritative throughout; upstream is fitted to it, never the reverse.
+
+### Adapted
+
+| Upstream skill | Local destination | Shape of the adaptation |
+| --- | --- | --- |
+| `golang-structs-interfaces` | `references/structs-interfaces.md` | New reference. The earlier restructure deliberately did not create it — local content was thin, and an almost-empty file is structure by prediction. The imported material is what justified it. |
+| `golang-data-structures` | `references/data-structures.md` | New reference for a confirmed gap: preallocation, capacity growth, the `slices` and `maps` packages, string building, `container/`. |
+| `golang-safety` | dissolved into five references | No safety page. Safety is a property of a subject, not a subject of its own: the typed-nil return went to `errors`, nil receivers and nil callback fields to `structs-interfaces`, nil collections and `append` aliasing to `data-structures`, `defer` in a loop to `resources`, and the numeric cluster to the new `numbers`. |
+| `golang-code-style` | `code-style.md`, `packages.md`, `data-structures.md` | Only the rules a formatter cannot decide. `gofmt` already owns everything mechanical. |
+| `golang-design-patterns` | dissolved | Rejected as a category: it mixes three altitudes and is the most connected node in the upstream graph, which is the signature of a grab bag. Only its `architecture.md` survived, into `packages.md`. |
+
+### Refused, with the reason
+
+| Upstream material | Reason |
+| --- | --- |
+| `clean-architecture.md`, `hexagonal-architecture.md`, `ddd.md` | Named architectures are team choices with real trade-offs, not Go defaults. Adopting one is a project decision, not a style correction. |
+| 12-factor guidance inside `architecture.md` | An operations concern, not a Go language concern. |
+| "Functions should be short and focused — one function, one job" | Contradicts the local principle that function scope is contract, not size. Extracting until nothing is left to extract is a gradient with no floor, and in Go it costs Line of Sight. |
+| "Slices and maps MUST be initialized explicitly, never nil" | True for maps, wrong for slices, and the two are bundled under one rule. A nil slice appends correctly and is the idiomatic accumulator. The real concern is the `null` versus `[]` wire contract, which belongs at the serialization boundary, not the declaration site. The canonical Go guidance prefers the nil slice and treats JSON as a limited exception. |
+| A third-party collection dependency for filter and group-by | The skill is standard-library-oriented; a library choice belongs to the project that makes it. |
+| Sub-agent fan-out for style review | Cascading activation is forbidden by the Horizontal Skill Architecture mandate in `AGENTS.md`. |
+
+### Not yet compared in depth
+
+| Upstream skill | Status |
+| --- | --- |
+| `golang-troubleshooting`, `golang-benchmark`, `golang-performance`, `golang-observability` | Scheduled. The production cluster, ~369 KB, and the largest remaining technical gap. |
+| `golang-security`, `golang-lint`, `golang-modernize`, `golang-refactoring`, `golang-gopls`, `golang-how-to`, `golang-cli`, `golang-database`, `golang-continuous-integration`, `golang-dependency-management`, `golang-project-layout`, `golang-pkg-go-dev`, `golang-stay-updated` | Unscheduled. A local reference may already own the topic; absence from the Adapted table means the depth comparison has not been run, not that parity was confirmed. |
+
+### Out of scope by boundary
+
+This skill is the Go language engine. Library and framework catalogues stay
+out regardless of their quality: the `samber/*` family, `spf13/cobra` and
+`spf13/viper`, `stretchr/testify`, the dependency-injection containers
+(`google-wire`, `uber-dig`, `uber-fx`), and the protocol skills (`grpc`,
+`graphql`, `swagger`). A project that adopts one of those documents it in
+its own repository, not in the language expert.
+
+[upstream]: https://github.com/samber/cc-skills-golang
+
 ## Planned distribution
 
 Not implemented. This records the intended shape so cross-references and
