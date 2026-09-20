@@ -313,7 +313,34 @@ Do not edit generated Go files manually when they contain a marker such as
 source input instead, then regenerate. If a generated file lacks a standard
 marker, inspect repository conventions before editing.
 
+## Planned distribution
+
+Not implemented. This records the intended shape so cross-references and
+skill boundaries are designed against it now instead of being retrofitted.
+
+Each skill becomes its own repository under the `jacazul-ai` organization,
+this one as `jacazul-ai/go-expert-skill`. Every skill repository carries its
+own hatch, following the pattern established by `jacazul-ai/jaflow`: the
+hatch is consumed as an embedded library rather than an installed
+component, so a consumer gets the skill without gaining a second binary to
+install, version, and keep on `PATH`.
+
+Two consumption paths are supported, and both resolve to the same source:
+
+- from this project, for anyone already running `jacazul-ai-cli`;
+- directly through the `jacazul` CLI, for anyone who wants the skill alone.
+
+### Consequence for cross-references
+
+One repository per skill supplies the `owner/repo` namespace that atomic
+leaves need to reference each other unambiguously. Leaf references use the
+upstream identifier convention — `owner/repo@skill`, written in backticks
+as a citation, never as a bare `@` mention, which some harnesses read as a
+force-load directive that pulls the whole referenced skill into context.
+
+For this skill the form is `jacazul-ai/go-expert-skill@<leaf>`.
+
 ---
 
 **Version:** 0.1.0
-**Last Updated:** 2026-07-08
+**Last Updated:** 2026-09-20
