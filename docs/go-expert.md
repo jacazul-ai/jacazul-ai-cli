@@ -148,6 +148,36 @@ unconfigured HTTP transport dwarfs anything won by removing allocations.
 Collector and toolchain knobs — `GOGC`, `GOMEMLIMIT`, `GOMAXPROCS`, PGO —
 belong to [runtime](../skills/go-expert/references/runtime.md).
 
+### When upstream publishes a new version of the Go skills
+
+The comparison is pinned, not continuous. Re-evaluate only what changed,
+and never silently re-import what was refused.
+
+```bash
+git -C <upstream-clone> fetch origin
+git -C <upstream-clone> diff --stat \
+  19a0626ae8565d27a7b7bdf59d8d99d94d7e284c..origin/main
+```
+
+Read that diff against the verdict already recorded below:
+
+| The diff touches | Do |
+| --- | --- |
+| A skill in **Adapted** | Re-read only the changed sections, adapt or ignore, then update the row |
+| A skill in **Refused** | Nothing, unless the change removes the conflict that caused the refusal. Record the re-check either way |
+| A skill in **Not yet compared** | Nothing. It was never compared, so a diff against it means nothing |
+| A skill **out of scope** | Nothing. The boundary does not move because upstream grew |
+| A **new** skill | Triage it into one of the four tables |
+
+Advance the pin in this document and in
+`tests/test_go_expert_provenance.py` only once the verdicts are updated, in
+the same change. A pin that moves ahead of its verdicts is worse than a
+stale one, because it claims a comparison that never happened.
+
+Three things force a re-check with no upstream release at all: a Go release
+that changes version-sensitive guidance, a local reference that contradicts
+a recorded verdict, and a refused rule arriving again by a different route.
+
 ## Package design
 
 Go is package-first. Keep package names short, lowercase, and meaningful. Name
@@ -385,6 +415,26 @@ The table below is the record of what was taken, what was reshaped on the
 way in, and what was refused — kept so a future re-evaluation starts from
 the decisions instead of repeating the analysis. Local content is
 authoritative throughout; upstream is fitted to it, never the reverse.
+
+### Provenance
+
+| Field | Value |
+| --- | --- |
+| Upstream | [`samber/cc-skills-golang`](https://github.com/samber/cc-skills-golang) |
+| Reviewed at | `19a0626ae8565d27a7b7bdf59d8d99d94d7e284c`, dated 2026-09-07 |
+| Reviewed on | 2026-09-20 |
+| Licence | MIT, Copyright (c) 2026 Samuel Berthe |
+
+Upstream asks to be cited through its own `CITATION.cff`:
+
+> Berthe, Samuel. *samber/cc-skills-golang: AI Agent Skills for
+> production-ready Go projects.*
+> DOI [10.5281/zenodo.21605229](https://doi.org/10.5281/zenodo.21605229).
+
+Nothing below is a copy. Every adapted item was rewritten to fit this
+skill's project-aware posture, and the tables record which conflict forced
+each change. The attribution stands regardless, because the analysis that
+found the gaps started from upstream's enumeration of the subject.
 
 ### Adapted
 
