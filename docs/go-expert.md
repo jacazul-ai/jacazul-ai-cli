@@ -128,6 +128,26 @@ The routing table in
 [`skills/go-expert/SKILL.md`](../skills/go-expert/SKILL.md) is the only
 index; there is no second one to keep in sync.
 
+### When the user asks to make Go code faster
+
+Refuse the shortcut: there is no optimization step before a measurement.
+The chain is three references and it is read in order.
+
+1. [benchmarks](../skills/go-expert/references/benchmarks.md) — write the
+   benchmark that produces a number, run it with `-count` and compare with
+   `benchstat`. One run is a sample of one.
+2. [profiling](../skills/go-expert/references/profiling.md) — find where
+   the time, the allocations, or the blocking actually are. A CPU profile
+   that looks flat while the wall clock is long means waiting; read a
+   trace.
+3. [performance](../skills/go-expert/references/performance.md) — apply
+   the pattern that matches the proven bottleneck, then measure again.
+
+Rule out the boring answer first: a missing index, a call in a loop, or an
+unconfigured HTTP transport dwarfs anything won by removing allocations.
+Collector and toolchain knobs — `GOGC`, `GOMEMLIMIT`, `GOMAXPROCS`, PGO —
+belong to [runtime](../skills/go-expert/references/runtime.md).
+
 ## Package design
 
 Go is package-first. Keep package names short, lowercase, and meaningful. Name
@@ -374,6 +394,9 @@ authoritative throughout; upstream is fitted to it, never the reverse.
 | `golang-data-structures` | `references/data-structures.md` | New reference for a confirmed gap: preallocation, capacity growth, the `slices` and `maps` packages, string building, `container/`. |
 | `golang-safety` | dissolved into five references | No safety page. Safety is a property of a subject, not a subject of its own: the typed-nil return went to `errors`, nil receivers and nil callback fields to `structs-interfaces`, nil collections and `append` aliasing to `data-structures`, `defer` in a loop to `resources`, and the numeric cluster to the new `numbers`. |
 | `golang-code-style` | `code-style.md`, `packages.md`, `data-structures.md` | Only the rules a formatter cannot decide. `gofmt` already owns everything mechanical. |
+| `golang-benchmark` | `references/benchmarks.md`, `references/profiling.md` | Split by question rather than by upstream file. Benchmarks own producing a number to compare; profiling owns finding where it is spent. |
+| `golang-performance` | `references/performance.md`, `runtime.md` | Patterns enter conditioned on a measurement, never as defaults. Collector and toolchain knobs went to runtime, which already owned that subject. |
+| `golang-troubleshooting` | dissolved into six references | Its `common-go-bugs.md` is a catalogue defined by a property, and roughly sixty percent was already owned after the previous slice. The residue went to its owners: shadowing and the `break`/`fallthrough` traps to code-style, `os.Exit` and JSON decoding to resources, closed-channel semantics and `recover`'s scope to concurrency, bytes versus runes to data-structures, `time.Time` comparison to values, and the `iota` zero value to structs-interfaces. |
 | `golang-design-patterns` | dissolved | Rejected as a category: it mixes three altitudes and is the most connected node in the upstream graph, which is the signature of a grab bag. Only its `architecture.md` survived, into `packages.md`. |
 
 ### Refused, with the reason
@@ -384,6 +407,8 @@ authoritative throughout; upstream is fitted to it, never the reverse.
 | 12-factor guidance inside `architecture.md` | An operations concern, not a Go language concern. |
 | "Functions should be short and focused — one function, one job" | Contradicts the local principle that function scope is contract, not size. Extracting until nothing is left to extract is a gradient with no floor, and in Go it costs Line of Sight. |
 | "Slices and maps MUST be initialized explicitly, never nil" | True for maps, wrong for slices, and the two are bundled under one rule. A nil slice appends correctly and is the idiomatic accumulator. The real concern is the `null` versus `[]` wire contract, which belongs at the serialization boundary, not the declaration site. The canonical Go guidance prefers the nil slice and treats JSON as a limited exception. |
+| The debugging methodology golden rules: read the error, reproduce before fixing, one hypothesis at a time, root cause over workaround | Generic engineering discipline, not Go expertise, and already mandated by the Test-First section of `AGENTS.md`. Restating it in a language skill buys tokens on every load and changes nothing. |
+| SIMD and CPU-specific instruction-set dispatch | Architecture and assembly territory rather than Go. |
 | A third-party collection dependency for filter and group-by | The skill is standard-library-oriented; a library choice belongs to the project that makes it. |
 | Sub-agent fan-out for style review | Cascading activation is forbidden by the Horizontal Skill Architecture mandate in `AGENTS.md`. |
 
@@ -391,10 +416,18 @@ authoritative throughout; upstream is fitted to it, never the reverse.
 
 | Upstream skill | Status |
 | --- | --- |
-| `golang-troubleshooting`, `golang-benchmark`, `golang-performance`, `golang-observability` | Scheduled. The production cluster, ~369 KB, and the largest remaining technical gap. |
 | `golang-security`, `golang-lint`, `golang-modernize`, `golang-refactoring`, `golang-gopls`, `golang-how-to`, `golang-cli`, `golang-database`, `golang-continuous-integration`, `golang-dependency-management`, `golang-project-layout`, `golang-pkg-go-dev`, `golang-stay-updated` | Unscheduled. A local reference may already own the topic; absence from the Adapted table means the depth comparison has not been run, not that parity was confirmed. |
 
 ### Out of scope by boundary
+
+`golang-observability` is out for a different reason than the library
+catalogues: it is infrastructure. Prometheus, OpenTelemetry, Grafana,
+Pyroscope, server-side RUM and consent-driven tracking are operational
+choices a project makes and documents, the same ruling that kept 12-factor
+out of package design. `logging.md` deliberately states that there is no
+house logger and that the repository's existing choice wins, so importing
+advocacy for one would contradict standing policy. A test asserts the
+vendor names stay absent from the skill.
 
 This skill is the Go language engine. Library and framework catalogues stay
 out regardless of their quality: the `samber/*` family, `spf13/cobra` and
