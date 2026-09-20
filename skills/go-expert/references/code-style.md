@@ -105,6 +105,12 @@ var buf bytes.Buffer // zero value is already usable
 name := "default"    // a value, not a placeholder
 ```
 
+An empty slice follows the same rule and is the case people get wrong most
+often: prefer `var t []string` over `t := []string{}`. Both have length and
+capacity zero and both append correctly; the first is the preferred style,
+and the second only earns its place where a non-nil zero-length value is
+part of a contract — see [data-structures](data-structures.md).
+
 Composite literals take field names. A positional literal compiles fine
 today and silently means something else the moment the type gains or
 reorders a field:

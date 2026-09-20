@@ -200,5 +200,7 @@ meaning, then fix or ask for the next decision when the fix changes design.
 - [Go security](https://go.dev/security/)
 - [Go release history](https://go.dev/doc/devel/release)
 - [Go Proverbs](https://go-proverbs.github.io/)
+- [Go Code Review Comments](https://go.dev/wiki/CodeReviewComments)
+- [Google Go Style Decisions](https://google.github.io/styleguide/go/decisions)
 
 </agent_instructions>

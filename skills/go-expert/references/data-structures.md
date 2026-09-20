@@ -26,6 +26,18 @@ empty mean the same thing at the boundary the value reaches. That decision
 lives in [values](values.md), and its JSON consequence — `null` versus `[]`
 — in [resources](resources.md).
 
+The stronger rule is the one that removes the question: do not design an
+API whose callers have to tell nil from empty. Test with `len(s) == 0`, not
+`s == nil`, and a caller that receives either behaves the same. Reserve the
+distinction for the rare contract where absence and emptiness genuinely
+differ, and document it there.
+
+**Sources:** [Declaring Empty Slices][cr-slices] in Go Code Review
+Comments; [Nil slices][gs-nil] in Google's Go Style Decisions.
+
+[cr-slices]: https://go.dev/wiki/CodeReviewComments#declaring-empty-slices
+[gs-nil]: https://google.github.io/styleguide/go/decisions#nil-slices
+
 ## Aliasing: append and the backing array
 
 A slice is a pointer, a length, and a capacity. Two slices can point into
