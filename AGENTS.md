@@ -65,7 +65,17 @@ usability and focus.
 - **Ownership:** `scripts/bootstrap/hatch` selects the runtime target;
   client bootstraps remain responsible for linking and runtime configuration.
 
-### 3. Context Preservation
+### 3. Skill Authoring
+- **Mandate:** Any new skill, or any change to an existing skill's
+  description, body structure, or cross-references, MUST follow
+  [`docs/skill-methodology.md`](docs/skill-methodology.md).
+- **Scope:** The methodology is subject-agnostic and applies to every skill in
+  `skills/`, not only to language experts.
+- **Boundary:** It governs how a skill is written and organized. It does not
+  override repository policy, the Taskwarrior workflow, or the Git mandates
+  above.
+
+### 4. Context Preservation
 - **Mandate:** Closing a task without documentation is FORBIDDEN.
 - **Protocol:** The `tw-flow done` command requires an `OUTCOME:` annotation.
   Discarded tasks MUST include an automatic audit record.
@@ -203,6 +213,7 @@ reference branch and fast-forwarded, so history stays linear.
 | `docs/environment-modes.md` | Users | COUNSELOR vs UNHINGED. When and why to switch. |
 | `docs/github-broker.md` | Users | Ticket sync triggers and credential-less flow. |
 | `docs/tw-flow-cache.md` | Users | Cache behavior, signals, and bypass triggers. |
+| `docs/skill-methodology.md` | Contributors / AI Agents | Subject-agnostic rules for creating and maintaining any skill: descriptions, bodies, reference-vs-skill, cross-references, evaluation. |
 | `docs/ARCHITECTURE.md` | Contributors | Internal design decisions. Not trigger-based — explains *why*, not *how to use*. |
 | `AGENTS.md` | AI Agents | Engineering standards and operational mandates. |
 

@@ -26,6 +26,7 @@ Welcome to the Jacazul AI CLI documentation. This project is built around the co
 - [Git Expert](git-expert.md) - Commit standards, git-mode workflow pin and detection, git-census before push, non-interactive rebase recipes.
 - [Go Expert](go-expert.md) - Idiomatic Go, gofmt-to-goimports formatting, and Line of Sight readability.
 - [Tutors](tutor.md) - Learning a language with a tutor paired to its expert.
+- [Skill Authoring Methodology](skill-methodology.md) - Subject-agnostic rules for writing and maintaining any skill: descriptions, bodies, reference-vs-skill, cross-references, evaluation.
 - [Skills Index](skills/README.md) - Every skill, including Rust Expert, Rust Tutor, Go Tutor, and the shared Code Review scale.
 - [GitHub Broker](github-broker.md) - Secure issue and ticket synchronization.
 
