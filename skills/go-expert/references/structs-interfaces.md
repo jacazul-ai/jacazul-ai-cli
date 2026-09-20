@@ -165,6 +165,21 @@ type Order struct {
 type OrderStatus int
 ```
 
+With `iota`, the first constant is zero, which is also the zero value of
+every unset field of that type. An enum whose first member is a real state
+means a struct nobody initialized claims to be in it. Spend the zero on the
+invalid case:
+
+```go
+type OrderStatus int
+
+const (
+	StatusUnknown OrderStatus = iota // zero value is "nobody said"
+	StatusPending
+	StatusShipped
+)
+```
+
 This is a type-system idiom, not architecture. A named type that removes a
 class of invalid values earns its existence; one that only renames a `string`
 does not — see [naming](naming.md).

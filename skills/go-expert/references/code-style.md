@@ -62,6 +62,32 @@ case verbose:
 An `else if` chain hides that there is a default at all; the reader has to
 reach the last branch to find it.
 
+## `break`, `continue`, and `fallthrough`
+
+Three keywords read like one thing and do another.
+
+`break` inside a `select` or a `switch` that sits inside a `for` breaks the
+`select` or the `switch`, not the loop. The loop keeps going, which is
+usually the opposite of what the code says it wants. Use a label when the
+loop is the target:
+
+```go
+loop:
+	for {
+		select {
+		case <-done:
+			break loop // without the label, only the select ends
+		case v := <-ch:
+			handle(v)
+		}
+	}
+```
+
+`fallthrough` transfers to the next case *unconditionally*: it does not
+evaluate that case's expression. It is not C's implicit fallthrough made
+explicit, it is a jump, and a case list (`case a, b:`) is what most code
+actually wants.
+
 ## Conditions
 
 A condition with three or more operands is business logic wearing
@@ -110,6 +136,23 @@ often: prefer `var t []string` over `t := []string{}`. Both have length and
 capacity zero and both append correctly; the first is the preferred style,
 and the second only earns its place where a non-nil zero-length value is
 part of a contract — see [data-structures](data-structures.md).
+
+`:=` also declares, which is how shadowing happens. Inside a new block,
+`:=` creates a *different* variable with the same name, and the assignment
+the author meant to make to the outer one silently does not happen:
+
+```go
+var err error
+
+if cond {
+	result, err := compute() // new err, shadows the outer one
+	use(result)
+}
+// the outer err is still nil here
+```
+
+**Diagnose:** `go vet -vettool=$(which shadow)` with the `shadow` analyzer
+from `x/tools`; it is not part of the default `go vet` set.
 
 Composite literals take field names. A positional literal compiles fine
 today and silently means something else the moment the type gains or

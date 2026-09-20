@@ -14,6 +14,19 @@ transfer, and the nil-versus-empty decision.
 - Do not retain a large backing allocation merely to return a small subset;
   measure and copy when the lifetime justifies it.
 
+## Comparing a `time.Time`
+
+`time.Time` is a struct with a wall clock, an optional monotonic reading,
+and a location pointer, so `==` compares all of that and not the instant.
+Two values naming the same moment can compare unequal because one came from
+`time.Now` and carries a monotonic reading the other lost in a round trip
+through JSON or a database.
+
+Use `t.Equal(u)`, which compares the instant. `t.Round(0)` strips the
+monotonic reading when a value must be stored or compared structurally, and
+a `time.Time` in a struct compared with `==` or used as a map key is the
+same bug wearing a different hat.
+
 ## Parameters: value or pointer
 
 This is the parameter question; the receiver question belongs to

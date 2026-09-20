@@ -39,6 +39,34 @@ unbounded goroutines or buffers.
 Prefer a mutex for a clear shared-state invariant. Use atomics only when the
 state transition and publication protocol are explicit.
 
+## Closed channels
+
+Closing is a broadcast, not a cleanup, and the asymmetry is where the
+panics come from.
+
+| Operation on a closed channel | Result |
+| --- | --- |
+| Receive | the zero value, immediately, forever |
+| Send | panic: send on closed channel |
+| Close again | panic: close of closed channel |
+
+A receive that returns immediately is what turns a `select` in a `for` into
+a busy loop burning a core: the closed case is always ready. Set the
+channel variable to `nil` once drained — a nil channel blocks forever, which
+removes that case from the `select`.
+
+The same shape appears with `default`: a `select` with a `default` branch
+inside a tight loop never blocks, so it spins. `default` means "do not
+wait", and something in the loop has to.
+
+## `recover` only covers its own goroutine
+
+A deferred `recover` catches a panic in the goroutine that deferred it.
+A panic in a goroutine started by that function crashes the whole process,
+and no amount of recovering in the parent changes it. Whatever spawns a
+goroutine owns recovering inside it — which is the ownership rule above,
+arriving as a crash instead of a leak.
+
 ## Bounding parallelism
 
 Use a buffered channel as a simple semaphore when limiting concurrency is

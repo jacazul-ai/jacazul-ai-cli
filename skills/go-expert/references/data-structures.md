@@ -111,6 +111,25 @@ n)`, `strconv.Quote` over manual escaping. Keep `fmt` for real formatting,
 and use `%q` in error messages so an empty or space-padded string is
 visible instead of invisible.
 
+## A string is bytes, not characters
+
+`len(s)` counts bytes and `s[i]` yields a byte. For anything outside ASCII
+those are not the character count and not the character:
+
+```go
+s := "café"
+len(s)                        // 5, not 4
+utf8.RuneCountInString(s)     // 4
+```
+
+Ranging over a string yields runes with their *byte* offset, which is the
+right loop for text. Index only when the data really is bytes.
+
+Two standard-library names that get confused, with different jobs:
+`strings.Trim(s, "xy")` removes any of the characters in the cutset from
+both ends, while `strings.TrimPrefix(s, "xy")` removes that exact prefix
+once. Passing a prefix to `Trim` eats characters that happen to match.
+
 ## The `slices` and `maps` packages (Go 1.21+)
 
 `slices` and `maps` cover sorting, searching, comparison, cloning, and key or
