@@ -8,7 +8,8 @@ Guide for the go-expert skill: idiomatic Go, explicit quality-gate boundaries,
 ### When the user asks for a Go code review
 
 Use the implementation guidance in
-[`skills/go-expert/PLAYBOOK.md`](../skills/go-expert/PLAYBOOK.md) when writing
+the topic references under
+[`skills/go-expert/references/`](../skills/go-expert/references/) when writing
 Go. Use the separate scenario-based directives in
 [`skills/go-expert/CODE-REVIEW.md`](../skills/go-expert/CODE-REVIEW.md) when
 reviewing it. Start with the `go` directive in `go.mod` before judging
@@ -45,7 +46,7 @@ See the [process-isolated test guidance][go-helper-tests] and the [review
 directive][go-helper-review] for the guard, `os.Executable()`, direct
 `exec.Command`, and evidence rules.
 
-[go-helper-tests]: ../skills/go-expert/PLAYBOOK.md#process-isolated-tests-for-initialization-time-environment
+[go-helper-tests]: ../skills/go-expert/references/testing.md#process-isolated-tests-for-initialization-time-environment
 [go-helper-review]: ../skills/go-expert/CODE-REVIEW.md#init-time-environment-changes-and-helper-process-tests
 
 ### When the user asks for Go formatting

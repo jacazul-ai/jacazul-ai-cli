@@ -1,0 +1,73 @@
+# Concurrency and Lifecycle
+
+Owner of: goroutine ownership, synchronization primitive choice, channel
+ownership, and bounded parallelism. Cancellation and deadlines belong to
+[context](context.md); read both when cancelling a goroutine through a
+context.
+
+## When concurrency is justified
+
+Concurrency must justify its complexity. Sequential code is the default; use
+goroutines, channels, and synchronization only when the behavior needs
+parallel I/O, cancellation, timeouts, fan-out, or explicit coordination.
+
+## Ownership
+
+- Every goroutine needs an owner, a completion or cancellation path, and an
+  observable error path. A `go` statement schedules work; it does not wait.
+- Leaks come from sends or receives on channels with no remaining counterpart.
+- Keep resource cleanup inside the lifetime of the owner. A parent that
+  returns before child goroutines finish cannot safely clean up resources
+  those children still borrow unless it first waits or transfers ownership.
+- Close channels only from the component that owns the sending side and knows
+  no more values will arrive. Use context cancellation when channel-close
+  ownership is not clear.
+
+## Choosing the primitive
+
+Use the simplest primitive that matches the behavior:
+
+- channels transfer values, ownership, or completion signals;
+- `sync.Mutex` protects small shared state when clearer than a channel;
+- `sync.WaitGroup` waits for fan-out;
+- `sync.Once` handles one-time initialization.
+
+Call `WaitGroup.Add` before starting work and pair it with `defer Done()` in
+the goroutine. Bound queues and define backpressure instead of adding
+unbounded goroutines or buffers.
+
+Prefer a mutex for a clear shared-state invariant. Use atomics only when the
+state transition and publication protocol are explicit.
+
+## Bounding parallelism
+
+Use a buffered channel as a simple semaphore when limiting concurrency is
+enough:
+
+```go
+sem := make(chan struct{}, 4)
+
+var wg sync.WaitGroup
+for _, job := range jobs {
+	sem <- struct{}{}
+	wg.Add(1)
+
+	go func() {
+		defer wg.Done()
+		defer func() { <-sem }()
+
+		run(ctx, job)
+	}()
+}
+
+wg.Wait()
+```
+
+Before Go 1.22, shadow the loop variable (`job := job`) before starting the
+goroutine to avoid closure-capture bugs.
+
+## Validation
+
+When concurrent code changes, `go test -race ./...` is a conventional baseline
+check if the module supports it — a project mandate only when the repository
+configures or documents it.

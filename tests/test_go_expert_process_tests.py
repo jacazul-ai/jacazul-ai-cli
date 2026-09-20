@@ -3,14 +3,16 @@ import unittest
 
 
 PROJECT_ROOT = pathlib.Path(__file__).resolve().parents[1]
-PLAYBOOK = PROJECT_ROOT / "skills" / "go-expert" / "PLAYBOOK.md"
+TESTING_REF = (
+    PROJECT_ROOT / "skills" / "go-expert" / "references" / "testing.md"
+)
 CODE_REVIEW = PROJECT_ROOT / "skills" / "go-expert" / "CODE-REVIEW.md"
 DOCS = PROJECT_ROOT / "docs" / "go-expert.md"
 
 
 class TestGoExpertProcessTests(unittest.TestCase):
-    def test_playbook_documents_env_guarded_helper_processes(self):
-        content = PLAYBOOK.read_text(encoding="utf-8")
+    def test_testing_reference_documents_env_guarded_helper_processes(self):
+        content = TESTING_REF.read_text(encoding="utf-8")
 
         for marker in (
             "GO_WANT_HELPER_PROCESS",

@@ -735,7 +735,7 @@ not a claim about the stdlib `time` test suite.
 environment initialization is not part of the contract; use a helper process
 when testing that initialization contract itself.
 
-[go-helper-playbook]: PLAYBOOK.md#process-isolated-tests-for-initialization-time-environment
+[go-helper-playbook]: references/testing.md#process-isolated-tests-for-initialization-time-environment
 
 **Classification:** Usually `WARNING` / `FIX-OR-TECH-DEBT` / `TEMPORAL` /
 `REPRODUCED` when the test demonstrably reads stale environment state. Promote

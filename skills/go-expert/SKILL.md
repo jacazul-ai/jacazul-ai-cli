@@ -1,6 +1,6 @@
 ---
 name: go-expert
-description: Expert system for writing idiomatic Go with explicit quality gates, gofmt-to-goimports formatting, Line of Sight readability, and standard-library-oriented design.
+description: Expert system for writing idiomatic Go with explicit quality gates, gofmt-to-goimports formatting, Line of Sight readability, and standard-library-oriented design. Use when writing, reviewing, or validating Go code, when deciding whether an abstraction has earned its existence, when judging version-sensitive runtime behavior, or when separating repository policy from Go convention.
 license: MIT
 ---
 
@@ -24,6 +24,56 @@ the behavior earns the ceremony.
 - In reviews, ask whether a type, interface, or package has real behavior or
   only architectural theater.
 
+### Abstraction is discovered, not designed
+
+The house posture is KISS. An abstraction does not exist because a design
+predicted it; it exists when the code has already shown the need. Until then
+the concrete type, the package-level function, and the duplicated shape are
+the correct answer.
+
+An abstraction is legitimate when one of these is true:
+
+- a second real consumer exists;
+- a test seam is genuinely required;
+- an independent unit of behavior has separated itself in practice.
+
+Absent one of those, introducing an interface, a factory, a manager, a base
+type, or a generic parameter is speculative. Reject it in review.
+
+### Function scope is contract, not size
+
+A function does what it must and nothing it must not. The test is whether its
+signature tells the whole truth about what it does — not whether it does "one
+thing."
+
+A function performing several coherent steps of a single operation is correct.
+A function that also logs, mutates a global, and writes a file is wrong: not
+because it is long, but because it does what it should not.
+
+Reject "extract until you cannot extract anymore." It is a gradient with no
+floor, and it produces cascades of single-call helpers that are naming
+ceremony rather than earned abstraction. In Go the cost is concrete: it breaks
+Line of Sight, forcing the reader to jump between functions to reconstruct a
+flow the body would have shown.
+
+### DRY carries less weight in Go
+
+Go has no inheritance, so deduplication costs an interface or a shared
+package — a new dependency edge. Explicit error handling makes the repeated
+`if err != nil` correct rather than a smell. The endpoint of over-applied DRY
+is the grab-bag `util` package this skill already rejects.
+
+> "A little copying is better than a little dependency."
+> — Rob Pike, Go Proverbs
+
+The boundary that keeps this honest: the proverb covers duplicated
+**structure**, not duplicated **knowledge**. Duplicating shape is cheap.
+Duplicating a fact — a business rule, a wire-format constant, a validation
+invariant — is a latent bug, because it can change in one place and not the
+other.
+
+**Duplicate shape freely. Never duplicate a fact.**
+
 ## 🧭 Policy Boundary: Convention vs. Project Mandate
 
 Do not present inferred Go practices as project-specific rules.
@@ -39,19 +89,44 @@ Do not present inferred Go practices as project-specific rules.
 If no repository-specific Go gate exists, say so clearly and apply the
 conventional baseline below.
 
-## 🔎 Go Engineering References
-
-- [`PLAYBOOK.md`](PLAYBOOK.md) — implementation guidance for writing Go:
-  design, ownership, errors, concurrency, security, tests, and tooling.
-- [`CODE-REVIEW.md`](CODE-REVIEW.md) — Go-specific scenario-based review
-  directives: risky code shape, context, runtime sequence, failure modes,
-  evidence, and acceptable correction.
-- [`../code-review/SKILL.md`](../code-review/SKILL.md) — global technical-level
-  and advisory scales used by all language-specific review skills.
-
 Before judging version-sensitive behavior, read the `go` directive in
-`go.mod`. Treat both documents as engineering guidance, not automatic project
-policy; repository-configured gates always take precedence.
+`go.mod`. Repository-configured gates always take precedence over this skill.
+
+## 🗺 Routing: which reference owns the question
+
+Each topic has exactly one owner. Load the primary reference, and the
+secondary one when the task crosses both. Read the file — a reference is only
+paid when it is actually loaded.
+
+| Task | Primary | Also read |
+| --- | --- | --- |
+| Make code readable; control flow, nesting, declarations | [code-style](references/code-style.md) | [naming](references/naming.md) |
+| Name a type, function, interface, or package | [naming](references/naming.md) | [packages](references/packages.md) |
+| Organize packages, decide the public API surface | [packages](references/packages.md) | [naming](references/naming.md) |
+| Return, wrap, or match errors; design a failure contract | [errors](references/errors.md) | [naming](references/naming.md) |
+| Choose value vs pointer; decide ownership and copying | [values](references/values.md) | [code-style](references/code-style.md) |
+| Start goroutines, synchronize, bound parallelism | [concurrency](references/concurrency.md) | [context](references/context.md) |
+| Cancel, set deadlines, propagate scope | [context](references/context.md) | [concurrency](references/concurrency.md) |
+| Write tests, decide on a seam, avoid mock ceremony | [testing](references/testing.md) | [values](references/values.md) |
+| Write doc comments; verify rendered output | [documentation](references/documentation.md) | [naming](references/naming.md) |
+| CPU, latency, or allocation changed after a Go upgrade | [runtime](references/runtime.md) | — |
+| Emit logs or program output | [logging](references/logging.md) | — |
+| Acquire or release a resource; HTTP, SQL, JSON, file boundaries | [resources](references/resources.md) | [errors](references/errors.md) |
+| Handle untrusted input, secrets, or external processes | [security](references/security.md) | [testing](references/testing.md) |
+| Touch a file marked as generated | [generated-code](references/generated-code.md) | — |
+| Review a diff or audit Go code | [`CODE-REVIEW.md`](CODE-REVIEW.md) | the reference owning the subject |
+
+Two boundaries that are easy to get wrong:
+
+- **concurrency vs context** — concurrency owns goroutine ownership and
+  primitive choice; context owns cancellation and deadlines. Read both when
+  cancelling a goroutine through a context.
+- **testing vs values** — testing decides *whether* a seam is needed; values
+  and `references/packages.md` decide *what shape* it takes.
+
+The review scales themselves are global:
+[`../code-review/SKILL.md`](../code-review/SKILL.md) owns technical levels,
+impact areas, evidence, and advisories used by every language review skill.
 
 ## 🛠 Formatting and Imports
 
@@ -81,241 +156,6 @@ When Go code changes and no stronger project gate is defined:
 Treat failures as tactical prompts: read the error, explain the actionable
 meaning, then fix or ask for the next decision when the fix changes design.
 
-## 📝 Doc Comments Protocol (Go 1.19+)
-
-Write doc comments for rendered output, not just source readability.
-`go doc` and pkg.go.dev apply formatting rules that can turn a comment into a
-clean overview or a useless wall of text depending on spacing and indentation.
-
-- **Package doc:** Place the package comment immediately above
-  `package <name>` with no blank line between them, or it will not be
-  recognized as the package documentation.
-- **Code blocks:** A line indented with a tab or at least four spaces relative
-  to the comment text renders as a code block. Use this for examples.
-- **Lists:** A line starting with `-`, `*`, `+`, or a number renders as a list
-  item. Continuation lines must stay aligned, or the rendered list breaks.
-- **Headings:** A line starting with `# ` renders as a heading. Use headings
-  sparingly in package docs and only when the overview is long enough to need
-  structure.
-- **Exported identifier convention:** Doc comments for exported identifiers
-  should start with the identifier name (`// Foo does X`). Follow standard Go
-  documentation conventions so tooling and reviewers do not treat the comment
-  as malformed.
-
-**Validation gate:** Before considering documentation done, run
-`go doc ./<package>` or `go doc <package>.<Symbol>` and inspect the rendered
-output. A comment that looks fine in source may still render as a run-on
-paragraph, broken list, or malformed example block.
-
-## 📦 Package Design
-
-- Package names: short, lowercase, named by the behavior or domain they
-  provide — not artificial layers.
-- Avoid grab-bag packages (`util`, `common`, `helpers`) unless the repository
-  already uses that convention and the package has a clear boundary.
-- Prefer a small public API; keep unexported details inside the owning
-  package.
-
-## ⚠️ Error Handling
-
-Errors are part of the API contract: enough context for the caller to act,
-without redundant context at every layer.
-
-- Wrap underlying errors with `%w` when callers may need `errors.Is` or
-  `errors.As`.
-- Match and extract with `errors.Is` / `errors.As`; do not compare error
-  strings.
-- Use sentinel errors only as a deliberate part of the package contract.
-- Prefer direct `if err != nil { return ... }` handling that preserves Line of
-  Sight.
-
-## 👁 Line of Sight Readability
-
-Mat Ryer's principle: "a straight line along which an observer has
-unobstructed vision."
-
-- Keep the happy path aligned to the left; make functions quick to scan.
-- Handle failures and edge cases early with guard clauses and early returns;
-  keep them in indented blocks and avoid deep nesting.
-- Prefer the happy successful return as the last statement when possible.
-- Flip conditionals to handle failure first instead of wrapping main logic in
-  `if/else`.
-
-```go
-func Run() error {
-	if err := validate(); err != nil {
-		return err
-	}
-
-	if !ready() {
-		return ErrNotReady
-	}
-
-	return execute()
-}
-```
-
-For functions returning only `error`, return `err` on failure and `nil` on
-success unless the function name intentionally models an inverted or negative
-condition.
-
-**Reference:** Mat Ryer, Line of Sight concept in
-https://www.youtube.com/watch?v=yeetIgNeIkc
-
-- `04:18-06:02`: introduces Line of Sight and keeping the main flow visible.
-- `06:05`: prefer the happy return as the final statement when possible.
-- `06:20`: flip logic to handle failures first and avoid unnecessary `else`.
-
-## 🧱 Naming: Types, Structs, and Interfaces
-
-Go has no classes — use Go terminology: **types**, **structs**, and
-**interfaces**.
-
-- Name concrete types by domain role or real responsibility. `Manager`,
-  `Service`, `Processor`, and `Helper` are suspect unless they describe a real
-  domain concept; avoid inheritance-shaped `BaseThing` / `AbstractThing`.
-- Keep interfaces small and behavior-based; prefer standard-library-style
-  names when they fit: `Reader`, `Writer`, `Handler`, `Closer`, `Encoder`,
-  `Decoder`, `Validator`.
-- Define interfaces near the consumer unless the repository has a clear
-  package-boundary reason not to.
-- Avoid Java-style `IThing`, `ThingInterface`, or broad service interfaces
-  created before there are real consumers.
-
-## 📚 Standard Library as Design Compass
-
-When unsure, look for the pattern in the standard library first — do not
-invent a framework pattern when a standard-library pattern is enough:
-
-- `io` for small behavior interfaces.
-- `net/http` for handlers and middleware shape.
-- `context` for cancellation and deadlines.
-- `errors` for wrapping and matching.
-- `testing` for table tests and benchmark/fuzz conventions.
-- `database/sql` for interface boundaries and explicit error handling.
-
-## 🔁 Concurrency and Lifecycle
-
-- Concurrency must justify its complexity. Sequential code is the default;
-  use goroutines, channels, and synchronization only when the behavior needs
-  parallel I/O, cancellation, timeouts, fan-out, or explicit coordination.
-- Every goroutine needs an owner and an exit path: make clear how it finishes,
-  how errors are observed, and how cancellation propagates. Leaks come from
-  sends or receives on channels with no remaining counterpart.
-- Use the simplest primitive that matches the behavior: channels to transfer
-  values, ownership, or completion signals; `sync.Mutex` for small shared
-  state when clearer than a channel; `sync.WaitGroup` for fan-out;
-  `sync.Once` for one-time initialization.
-- `context.Context` should be the first parameter after the receiver; prefer
-  passing it explicitly to each operation. Do not store context in long-lived
-  or reusable structs — it obscures lifetime, prevents per-call
-  cancellation/deadlines, and intermingles scopes. Storing is acceptable only
-  for operation-scoped structs tied to the context lifetime, or API
-  compatibility retrofits (e.g. `net/http.Request`); when in doubt, pass it
-  as an argument.
-- For external commands, prefer `exec.CommandContext(ctx, ...)` when the
-  command must respect cancellation or timeout. After `context.WithTimeout`,
-  call the cancel function, usually with `defer cancel()`.
-- Before Go 1.23, unreferenced `time.After` timers were not collected until
-  they fired. In modern Go, prefer lifecycle clarity: `context.WithTimeout`
-  for cancellation/deadlines, and `time.NewTimer` / `time.Ticker` with
-  explicit `Stop()` when timer control matters.
-
-Use a buffered channel as a simple semaphore when limiting concurrency is
-enough:
-
-```go
-sem := make(chan struct{}, 4)
-
-var wg sync.WaitGroup
-for _, job := range jobs {
-	sem <- struct{}{}
-	wg.Add(1)
-
-	go func() {
-		defer wg.Done()
-		defer func() { <-sem }()
-
-		run(ctx, job)
-	}()
-}
-
-wg.Wait()
-```
-
-Before Go 1.22, shadow the loop variable (`job := job`) before starting the
-goroutine to avoid closure-capture bugs.
-
-When concurrent code changes, `go test -race ./...` is a conventional baseline
-check if the module supports it — a project mandate only when the repository
-configures or documents it.
-
-## 🧮 Runtime and GC Diagnostics
-
-- Do not blame application logic for CPU or latency changes after a Go
-  upgrade without checking runtime changes first: compare Go version,
-  `GOEXPERIMENT`, architecture, allocation profile, runtime metrics, and
-  `pprof` data.
-- Green Tea GC: experimental in Go 1.25 (`GOEXPERIMENT=greenteagc`), default
-  since Go 1.26. The Go 1.26 notes announced that the build-time opt-out
-  `GOEXPERIMENT=nogreenteagc` was expected to go away in 1.27, but Go 1.27.0
-  still accepts it and its release notes do not mention it. Do not assume
-  either way: check `go doc internal/goexperiment` or the release notes of
-  the installed toolchain before relying on the opt-out.
-- Green Tea can reduce GC overhead for allocation-heavy, small-object
-  workloads, but some workloads may not benefit or may regress. If CPU rises
-  after Go 1.26 or enabling Green Tea, compare with and without
-  `GOEXPERIMENT=nogreenteagc` while the installed toolchain accepts it, then
-  validate with `runtime/metrics`, `GODEBUG=gctrace=1`, and CPU/heap
-  profiles before changing application code.
-
-References:
-- https://go.dev/blog/greenteagc
-- https://go.dev/doc/go1.26#runtime
-
-## 🔊 Logging and Output
-
-- Follow repository-local output and logging conventions. Do not introduce
-  `log`, `slog`, `fmt`, or a new logger abstraction as a cosmetic preference.
-- If the project defines a logging interface or output contract, program
-  against that contract and keep concrete implementations swappable.
-- Plain stdout/stderr may be the local convention for simple CLI output;
-  structured logging may be required for services or observability-heavy
-  code. Read the local pattern first, then act.
-
-## 🧪 Testing Guidance
-
-- Prefer table-driven tests when multiple cases exercise the same behavior;
-  keep tests readable before making them clever.
-- Use `t.Helper()` for helpers that should report caller lines. Use standard
-  `testing` tools first; add assertion libraries only when they improve
-  clarity and are already accepted by the project.
-- Prefer designing testable code over adding mocks: small interfaces,
-  explicit dependencies, and simple seams.
-- Do not force an interface solely because code shells out to an external
-  process. Direct shell-out can be tested through controlled external-process
-  resources: temporary filesystem fixtures, environment variables, PATH shims
-  or fake executables, local URLs or `httptest.Server`, captured
-  stdout/stderr, and controlled exit codes.
-- Choose the least artificial reliable boundary for the behavior under test.
-  Extract a seam or interface when shell-out logic becomes complex, expensive,
-  unsafe, hard to reproduce, or has multiple real consumers — not for
-  architectural purity alone.
-- When a mock is necessary, prefer a function-field mock struct: function
-  fields matching the interface methods, methods implemented by calling those
-  fields, behavior and argument capture customized per test. Do not implement
-  behavior the test does not care about — a nil panic from an unexpected call
-  is useful signal.
-- For bug fixes or behavior changes, create a failing reproduction test or
-  smoke check before implementing when practical.
-
-## 🏗 Generated Code
-
-Do not manually edit files marked `// Code generated ... DO NOT EDIT.` —
-change the generator, template, schema, or source input and regenerate. If a
-generated file lacks a standard marker, inspect repository conventions before
-editing.
-
 ## 📋 Operational Mandate
 
 1. **Read repository policy first:** CI, Makefile, scripts, docs, and task
@@ -326,14 +166,26 @@ editing.
    `gofmt` alone only when `goimports` is unavailable.
 4. **Preserve Line of Sight:** happy path left-aligned, edge cases in early
    returns.
-5. **Prefer testable design over mocks:** when needed, small function-field
+5. **Make abstraction earn its place:** a second consumer, a required test
+   seam, or behavior that separated itself — otherwise the concrete type
+   stays.
+6. **Prefer testable design over mocks:** when needed, small function-field
    mocks over heavy mock objects.
-6. **Challenge Java-like ceremony:** interfaces, factories, managers, and
+7. **Challenge Java-like ceremony:** interfaces, factories, managers, and
    service layers must earn their existence through real behavior.
-7. **Validate before finality:** run the configured project gates, or the
+8. **Validate before finality:** run the configured project gates, or the
    conventional baseline when no project gate exists.
-8. **Self-review before done:** walk the scenarios of the touched track in
-   `CODE-REVIEW.md` and fix in the change; findings are for reviews of
-   others' code.
+9. **Self-review before done:** walk the scenarios of the touched track in
+   [`CODE-REVIEW.md`](CODE-REVIEW.md) and fix in the change; findings are for
+   reviews of others' code.
+
+## 📚 Sources
+
+- [Effective Go](https://go.dev/doc/effective_go)
+- [Go specification](https://go.dev/ref/spec)
+- [Go memory model](https://go.dev/ref/mem)
+- [Go security](https://go.dev/security/)
+- [Go release history](https://go.dev/doc/devel/release)
+- [Go Proverbs](https://go-proverbs.github.io/)
 
 </agent_instructions>
