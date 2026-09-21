@@ -182,6 +182,16 @@ prior failing test.
 - **Goal:** Prove the existence of the problem and verify that the solution
   actually addresses the root cause.
 
+### Running the Suite
+- **Mandate:** The full suite has one invocation and it is `make test`. Do
+  not improvise a `python -m unittest discover` command.
+- **Why it matters:** Both flags in that target are load-bearing. Without
+  `-t .` the relative imports inside `tests/` fail; without an explicit
+  `-p '*test*.py'` the default pattern skips every file named `*_test.py`.
+  The improvised form ran 267 tests while the correct one runs 351.
+- **Guard:** `tests/test_suite_contract.py` pins the invocation and fails
+  when a new test file would not be collected by it.
+
 ## Git Workflow
 
 Pinned for `git-expert` and `git-mode`: topic work is rebased onto the

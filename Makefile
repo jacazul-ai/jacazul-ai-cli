@@ -2,7 +2,7 @@
 
 .DEFAULT_GOAL := help
 
-.PHONY: help configure sandbox language
+.PHONY: help configure sandbox language github test
 
 define PIRAZ_AI_BANNER
 	@echo "TODO"
@@ -42,3 +42,11 @@ sandbox: ## Build the Jacazul AI Sandbox container image
 	@printf "\033[1;34m=========================================\033[0m\n\n"
 	@podman build -t ai-sandbox -f Dockerfile .
 	@printf "\n\033[1;34mBuild finished.\033[0m\n"
+
+# The suite has exactly one invocation, and both flags are load-bearing.
+# -t . keeps the repository root as the top-level package, so the relative
+# imports inside tests/ resolve. The explicit pattern matches both naming
+# conventions present in tests/ (test_*.py and *_test.py); the unittest
+# default of test*.py silently skips the second group.
+test: ## Run the full test suite
+	@python3 -m unittest discover -s tests -t . -p '*test*.py'
