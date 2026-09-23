@@ -88,6 +88,12 @@ class TestGoExpertCoreSubjects(unittest.TestCase):
             ),
         )
 
+    def test_documentation_covers_the_markers_tooling_reads(self):
+        self._covers(
+            "documentation.md",
+            ("Deprecated:", "doc link", "go:generate", "why"),
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
