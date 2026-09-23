@@ -175,7 +175,83 @@ go tool trace trace.out
 
 Reach for a trace when the CPU profile looks flat but the wall clock does
 not — that gap is almost always waiting, and waiting does not appear in a
-CPU profile.
+CPU profile. From a service, `/debug/pprof/trace?seconds=5` captures one.
+Keep it to seconds: a trace records every state transition, so a busy
+process produces a file that is slow to open and hard to navigate.
+
+### Reading one
+
+What a goroutine was doing instead of running is the whole answer:
+
+| State | Means | Direction |
+| --- | --- | --- |
+| runnable, not running | ready, waiting for a `P` | CPU saturation, or a `GOMAXPROCS` that does not match the container quota — [runtime](runtime.md) |
+| waiting | blocked on I/O, a channel, a lock, a timer | what it waits on; many on one object is a serialization point |
+| mark assist | drafted to help the collector, in proportion to its allocation | allocation rate — the heap profile |
+| syscall | pinned to an OS thread | blocking syscalls or cgo |
+
+Idle processors while goroutines sit runnable is the scheduler's problem;
+idle processors with nothing runnable is the program's. The goroutine
+analysis page groups goroutines by where they start, with their running,
+scheduling and blocked totals, which is the fastest way from "slow" to a
+line of code.
+
+The trace also converts to a pprof profile of where goroutines *waited*,
+readable with every command above:
+
+```bash
+go tool trace -pprof=sched trace.out > sched.out   # also: net, sync, syscall
+go tool pprof -top sched.out
+```
+
+`sched` is the time between becoming runnable and running; `net`, `sync`
+and `syscall` are time blocked on each.
+
+### Annotating
+
+A trace of a server is every request interleaved. `runtime/trace`
+annotations name the work and follow a context across goroutines. They are
+cheap while nothing is recording, and `trace.IsEnabled` guards any message
+that is expensive to build:
+
+```go
+ctx, task := trace.NewTask(ctx, "processOrder")
+defer task.End()
+
+trace.WithRegion(ctx, "charge", func() {
+	charge(ctx, order)
+})
+trace.Log(ctx, "orderID", order.ID)
+```
+
+A task is one logical operation, a region is a phase inside it, and a log
+is a point. Add them where a latency question is open, not on every
+function — an annotation nobody filters by is noise in the viewer.
+
+### Flight recorder
+
+The problem with tracing a production latency spike is that by the time it
+is noticed, it is too late to call `trace.Start`. `trace.FlightRecorder`
+(Go 1.25+) keeps a moving window of recent trace data in memory, and
+`WriteTo` snapshots it after the fact:
+
+```go
+fr := trace.NewFlightRecorder(trace.FlightRecorderConfig{
+	MinAge:   10 * time.Second, // about twice the window being debugged
+	MaxBytes: 8 << 20,          // wins over MinAge; a hint, not a guarantee
+})
+if err := fr.Start(); err != nil {
+	return err
+}
+```
+
+Snapshot on the trigger — a request over its budget, a failed health
+check — and guard it so a burst of slow requests writes one file, not a
+hundred: only one `WriteTo` may run at a time, and a concurrent call
+returns an error. At most one flight recorder can be active in a process;
+it can run alongside `trace.Start`. An endpoint that serves the snapshot
+exposes the same material as `net/http/pprof` and gets the same admin-only
+listener.
 
 ## The race detector
 

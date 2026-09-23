@@ -122,6 +122,20 @@ class TestGoExpertCoreSubjects(unittest.TestCase):
             ),
         )
 
+    def test_profiling_teaches_reading_a_trace(self):
+        self._covers(
+            "profiling.md",
+            (
+                "runnable",
+                "mark assist",
+                "-pprof=sched",
+                "trace.NewTask",
+                "WithRegion",
+                "FlightRecorder",
+                "MaxBytes",
+            ),
+        )
+
     def test_packages_covers_the_module_mechanics(self):
         self._covers(
             "packages.md",
