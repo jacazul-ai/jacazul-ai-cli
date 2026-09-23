@@ -448,6 +448,8 @@ found the gaps started from upstream's enumeration of the subject.
 | `golang-performance` | `references/performance.md`, `runtime.md` | Patterns enter conditioned on a measurement, never as defaults. Collector and toolchain knobs went to runtime, which already owned that subject. |
 | `golang-troubleshooting` | dissolved into six references | Its `common-go-bugs.md` is a catalogue defined by a property, and roughly sixty percent was already owned after the previous slice. The residue went to its owners: shadowing and the `break`/`fallthrough` traps to code-style, `os.Exit` and JSON decoding to resources, closed-channel semantics and `recover`'s scope to concurrency, bytes versus runes to data-structures, `time.Time` comparison to values, and the `iota` zero value to structs-interfaces. |
 | `golang-security` | `references/security.md` | Only the language surface. Of twelve upstream references, seven — threat modelling, checklist, secrets, third-party, architecture, cookies, logging — are repository concerns owned by `security-expert`. The five that are Go got imported as a risk-to-stdlib-answer table plus the path, injection, crypto and transport specifics. |
+| `golang-project-layout`, `golang-dependency-management`, `golang-gopls` | `references/packages.md` | Dissolved into the reference that owns package and module boundaries: `internal/` as the only compiler-enforced boundary, `go.work`, Minimal Version Selection, `go.sum` as a tamper check, and the one thing `gopls` rename does that grep cannot. |
+| `golang-database` | `references/resources.md` | Only the three `database/sql` edges that are the language's: `rows.Err()` after the loop, the deferred `Rollback` after `Begin`, and NULL not being the zero value. Isolation levels and row locking are the database's domain. |
 | `golang-naming` | `references/naming.md` | The local file was 1.4 KB of Java-shaped anti-patterns and carried none of the conventions a reviewer cites. Two upstream rules were softened as non-canonical: boolean fields need no `is`/`has` prefix, and sentinel error strings need no package prefix. |
 | `golang-error-handling` | `references/errors.md` | Three unwritten decisions: the unexplained `_`, `%w` as an API commitment versus `%v` at a boundary, and `errors.Join` for failures that are parallel rather than chained. |
 | `golang-context` | `references/context.md` | The three mistakes that reach production: a `Background` created mid-chain, a string value key, and work that must outlive the request. |
@@ -466,15 +468,22 @@ found the gaps started from upstream's enumeration of the subject.
 | "Slices and maps MUST be initialized explicitly, never nil" | True for maps, wrong for slices, and the two are bundled under one rule. A nil slice appends correctly and is the idiomatic accumulator. The real concern is the `null` versus `[]` wire contract, which belongs at the serialization boundary, not the declaration site. The canonical Go guidance prefers the nil slice and treats JSON as a limited exception. |
 | The debugging methodology golden rules: read the error, reproduce before fixing, one hypothesis at a time, root cause over workaround | Generic engineering discipline, not Go expertise, and already mandated by the Test-First section of `AGENTS.md`. Restating it in a language skill buys tokens on every load and changes nothing. |
 | `golang-dependency-injection` as a category | Three of its four references are library-specific (`google-wire`, `uber-dig`/`uber-fx`, `samber/do`) and fall under the library boundary below. The residue, manual constructor injection, is not a Go technique — it is passing arguments to a constructor, and explicit dependencies are already owned by [packages](../skills/go-expert/references/packages.md) and [testing](../skills/go-expert/references/testing.md). A container is an abstraction that has not earned its existence. |
+| `golang-how-to` as a router | Its job is done locally by the routing table in `SKILL.md`. Upstream's is an always-triggering description plus a thirty-row prose table executed by the model, costing about 4k tokens of recurring body per Go task, with no evals. |
+| `golang-lint` and `golang-modernize` as references | Both are already the local pattern rather than a page: linters appear as a **Diagnose:** line inside the reference that owns the subject, and version-sensitive idiom is carried per reference with the `go` directive rule in `runtime.md`. A separate page would duplicate and drift. |
+| `golang-refactoring` as a category | Process rather than language — a coverage safety net and behavior-preserving discipline that belong to review and version control. Its one Go-specific fact, the `gopls` rename, was imported instead. |
 | SIMD and CPU-specific instruction-set dispatch | Architecture and assembly territory rather than Go. |
 | A third-party collection dependency for filter and group-by | The skill is standard-library-oriented; a library choice belongs to the project that makes it. |
 | Sub-agent fan-out for style review | Cascading activation is forbidden by the Horizontal Skill Architecture mandate in `AGENTS.md`. |
 
 ### Not yet compared in depth
 
-| Upstream skill | Status |
-| --- | --- |
-| `golang-lint`, `golang-modernize`, `golang-refactoring`, `golang-gopls`, `golang-how-to`, `golang-cli`, `golang-database`, `golang-continuous-integration`, `golang-dependency-management`, `golang-project-layout`, `golang-pkg-go-dev`, `golang-stay-updated` | Unscheduled. A local reference may already own the topic; absence from the Adapted table means the depth comparison has not been run, not that parity was confirmed. |
+Nothing. Every upstream skill at the recorded pin carries a verdict in
+one of the tables on this page, and a test asserts it.
+
+That is a statement about coverage, not about agreement: a verdict of
+refused or out of scope is as deliberate as an import, and the reason is
+recorded beside it so a later reader does not reopen a closed question by
+accident.
 
 ### Out of scope by boundary
 
@@ -499,6 +508,10 @@ documents it in its own repository, not in the language expert.
 | DI containers | `golang-google-wire`, `golang-uber-dig`, `golang-uber-fx` |
 | Protocols and schemas | `golang-grpc`, `golang-graphql`, `golang-swagger` |
 | Surveys | `golang-popular-libraries` |
+| Application shape | `golang-cli` |
+| Pipelines | `golang-continuous-integration` |
+| Lookup tooling | `golang-pkg-go-dev` |
+| Link lists | `golang-stay-updated` |
 
 They are named rather than described as a family, so the boundary can be
 checked by a test instead of read and trusted.
