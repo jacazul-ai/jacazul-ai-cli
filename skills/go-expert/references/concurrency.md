@@ -67,6 +67,35 @@ and no amount of recovering in the parent changes it. Whatever spawns a
 goroutine owns recovering inside it — which is the ownership rule above,
 arriving as a crash instead of a leak.
 
+## The primitives, and what bites with each
+
+| Primitive | Use for | What to watch |
+| --- | --- | --- |
+| `sync.Mutex` | A clear shared-state invariant | Keep the critical section short; never hold it across I/O |
+| `sync.RWMutex` | Many readers, rare writers | An `RLock` cannot be upgraded to a `Lock`; attempting it deadlocks |
+| `sync/atomic` | Counters and flags | Prefer the typed forms (`atomic.Int64`, `atomic.Bool`, `atomic.Pointer[T]`) over the loose functions |
+| `sync.Map` | Concurrent map, read-heavy | A plain map behind an `RWMutex` wins when writes are frequent |
+| `sync.Once` | One-time initialization | `OnceFunc`, `OnceValue` and `OnceValues` (Go 1.21+) remove the surrounding boilerplate |
+| `sync.WaitGroup` | Waiting for fan-out | `wg.Go(func(){...})` (Go 1.25+) pairs `Add` and `Done` so neither can be forgotten |
+
+Holding a lock across I/O is the one worth repeating. A mutex held while a
+request is in flight turns a slow dependency into a queue on your own
+process, and it does not look like a concurrency bug in a profile — it
+looks like the dependency being slow.
+
+## Waiting for work that can fail
+
+`sync.WaitGroup` waits; it does not carry errors, so the first failure
+either gets dropped or needs a channel bolted on beside it.
+
+The standard library has no group-with-errors primitive.
+`golang.org/x/sync/errgroup`, a Go team subrepository, is the usual
+answer: `errgroup.WithContext` cancels the siblings on the first failure,
+and `SetLimit(n)` replaces a hand-rolled worker pool. It is still a
+dependency, so adopting it is a project decision — but hand-rolling
+first-error-plus-cancel correctly is harder than it looks, which is why
+that decision usually goes the same way.
+
 ## Bounding parallelism
 
 Use a buffered channel as a simple semaphore when limiting concurrency is

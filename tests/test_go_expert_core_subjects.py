@@ -62,6 +62,19 @@ class TestGoExpertCoreSubjects(unittest.TestCase):
             ),
         )
 
+    def test_concurrency_covers_the_primitive_details(self):
+        self._covers(
+            "concurrency.md",
+            (
+                "RWMutex",
+                "atomic.Int64",
+                "errgroup",
+                "wg.Go",
+                "OnceValue",
+                "sync.Map",
+            ),
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
