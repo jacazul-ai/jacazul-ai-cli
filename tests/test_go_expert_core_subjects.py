@@ -106,6 +106,22 @@ class TestGoExpertCoreSubjects(unittest.TestCase):
             ),
         )
 
+    def test_profiling_teaches_reading_a_profile(self):
+        """The command surface alone is not the skill; reading it is."""
+        self._covers(
+            "profiling.md",
+            (
+                "flat",
+                "runtime.mallocgc",
+                "runtime.scanobject",
+                "peek",
+                "-base",
+                "goroutineleak",
+                "debug=2",
+                "pprof.Do",
+            ),
+        )
+
     def test_packages_covers_the_module_mechanics(self):
         self._covers(
             "packages.md",

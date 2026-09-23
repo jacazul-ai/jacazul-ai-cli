@@ -18,18 +18,48 @@ go test -run '^$' -bench BenchmarkEncode -cpuprofile cpu.out -memprofile mem.out
 go tool pprof cpu.out
 ```
 
-Inside `pprof`, four commands carry most of the work:
+Inside `pprof`, five commands carry most of the work:
 
 | Command | Answers |
 | --- | --- |
 | `top` | which functions hold the most self time |
 | `top -cum` | which call paths hold the most total time |
 | `list <regexp>` | which *lines* inside a function cost |
+| `peek <regexp>` | who calls it and what it calls, one hop each way |
 | `web` | the call graph, when the shape is the question |
+
+`go tool pprof -http=:8080 cpu.out` serves the same data as a browsable UI
+with a flame graph, which is the faster read on an unfamiliar call tree.
+
+### Reading `top`
+
+Every row carries two costs. **flat** is time spent in the function's own
+code; **cum** adds everything it called. The gap between them is the
+diagnosis:
+
+| Shape | Meaning | Next move |
+| --- | --- | --- |
+| flat high, cum high | the function's own work is the cost | its algorithm or data structure |
+| flat low, cum high | a coordinator whose callees cost | `peek` or `list` into the callees, or call them less often |
 
 `top` without `-cum` is the usual first mistake: a function that calls the
 expensive thing shows almost no self time, so the real path is invisible
 until the cumulative view is read.
+
+Runtime frames at the top of a CPU profile are symptoms, never targets. Each
+one names a different cause, and `top -cum` finds the application frame that
+triggers it:
+
+| Hot frame | It means | Look at |
+| --- | --- | --- |
+| `runtime.mallocgc` | allocation rate, not computation | the `alloc_objects` heap view |
+| `runtime.memmove` | large copies, usually a slice outgrowing its capacity | preallocation, buffer reuse — [data-structures](data-structures.md) |
+| `runtime.scanobject` | the collector tracing a pointer-dense heap | values instead of pointers in hot slices and maps |
+
+Optimizing `runtime.mallocgc` is not possible; allocating less in the
+function above it is.
+
+### Heap sample types
 
 A heap profile has four sample types, and picking the wrong one answers a
 different question:
@@ -42,7 +72,43 @@ different question:
 | `alloc_objects` | total allocations ever — what feeds the collector |
 
 Select with `-sample_index`, for example
-`go tool pprof -sample_index=alloc_objects mem.out`.
+`go tool pprof -sample_index=alloc_objects mem.out`. The default is
+`inuse_space`, which is why a churn problem hides in a first look.
+
+The pair is what gets read, not either number alone. `alloc_objects` high
+with `inuse_space` low is churn: cheap short-lived values, each one
+harmless, together feeding the collector. `inuse_space` that keeps growing
+is retention. A single snapshot cannot tell a leak from a large working
+set; two can:
+
+```bash
+go tool pprof -base heap-before.out heap-after.out
+```
+
+With `-base`, every value is the delta, so what grew between the snapshots
+is all that is left on screen. A running service can produce the delta
+itself: `/debug/pprof/heap?seconds=60` returns the difference over the
+window.
+
+The usual retainers are an unbounded cache, a goroutine that never exits
+and holds its references, and a map that once grew large: deleting entries
+does not release the map's memory, even in the Swiss-table implementation.
+Replacing the map with a fresh one does.
+
+### Labels
+
+A profile of a server blends every request type into one tree. Labels keep
+them apart without a separate build:
+
+```go
+pprof.Do(ctx, pprof.Labels("endpoint", "/orders"), func(ctx context.Context) {
+	handle(ctx)
+})
+```
+
+Goroutines started inside `f` inherit the labels. Filter afterwards with
+`-tagfocus=endpoint=/orders`, or break the tree down by label with
+`-tagroot=endpoint`.
 
 ## Profiling a running service
 
@@ -66,6 +132,35 @@ Turn them on deliberately, with a sampling rate rather than a full capture:
 runtime.SetBlockProfileRate(1_000_000)  // sample blocking events, in ns
 runtime.SetMutexProfileFraction(100)    // sample 1 of every 100 contentions
 ```
+
+A hot mutex or block profile means the goroutines are waiting, not working:
+narrow the critical section or split the lock before touching the code
+inside it — see [concurrency](concurrency.md).
+
+Goroutine counts that only climb are read from two profiles:
+
+- `/debug/pprof/goroutine?debug=2` dumps every stack in the format of an
+  unrecovered panic, with the creating call site. Hundreds of goroutines
+  parked on the same line is the leak, located.
+- `goroutineleak` runs a collection that proves which goroutines are
+  blocked on a channel or `sync` primitive that nothing runnable can still
+  reach. A goroutine blocked on network I/O is never a candidate, so an
+  empty report is not proof of a clean program. It is listed by
+  `go doc runtime/pprof.Profile` on Go 1.27; check that list before relying
+  on it with an older toolchain.
+
+Pick the profile from the symptom before capturing anything:
+
+| Symptom | Profile |
+| --- | --- |
+| high CPU, one slow path | CPU |
+| collector busy, allocation-heavy | heap, `alloc_objects` |
+| memory climbing over hours | heap, `inuse_space` with `-base` |
+| lock contention | mutex |
+| goroutines stuck on channels or locks | block |
+| goroutine count climbing | goroutine, then `goroutineleak` |
+| OS thread count climbing | threadcreate — usually cgo or blocking syscalls |
+| latency high, CPU low | none of these: a trace |
 
 ## Execution traces
 
