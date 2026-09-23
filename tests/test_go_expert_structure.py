@@ -19,12 +19,29 @@ MARKDOWN_LINK = re.compile(r"\]\(([^)\s]+)\)")
 
 
 def _markdown_files():
-    return [SKILL, SKILL_DIR / "CODE-REVIEW.md", *sorted(REFERENCES.glob("*.md"))]
+    return [
+        SKILL,
+        SKILL_DIR / "CODE-REVIEW.md",
+        *sorted(REFERENCES.glob("*.md")),
+    ]
+
+
+def _strip_code_fences(text):
+    """Generic calls like AsType[T](x) read as links to the regex."""
+    out, fenced = [], False
+    for line in text.splitlines():
+        if line.lstrip().startswith("```"):
+            fenced = not fenced
+            continue
+        if not fenced:
+            out.append(line)
+    return "\n".join(out)
 
 
 def _link_targets(path):
     """Relative link targets in a file, with anchors and URLs removed."""
-    for target in MARKDOWN_LINK.findall(path.read_text(encoding="utf-8")):
+    prose = _strip_code_fences(path.read_text(encoding="utf-8"))
+    for target in MARKDOWN_LINK.findall(prose):
         if target.startswith(("http://", "https://", "#")):
             continue
         yield target.split("#", 1)[0]
@@ -100,7 +117,9 @@ class TestGoExpertStructure(unittest.TestCase):
         """The hub routes; depth belongs in references paid only when read."""
         hub = SKILL.stat().st_size
         refs = sum(p.stat().st_size for p in REFERENCES.glob("*.md"))
-        self.assertLess(hub, refs, "the hub has absorbed reference-level depth")
+        self.assertLess(
+            hub, refs, "the hub has absorbed reference-level depth"
+        )
 
 
 if __name__ == "__main__":
