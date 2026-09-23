@@ -65,6 +65,29 @@ This is one of the few cases where extracting a function is not ceremony:
 the helper exists because the `defer` needs a scope, which is real behavior
 rather than a naming exercise.
 
+## `database/sql` has three silent edges
+
+Parameterizing the query is the part everyone remembers. These are the
+parts that pass review and lose data.
+
+- **`rows.Err()` after the loop.** `for rows.Next()` ends both on the last
+  row and on a mid-stream failure, and the two are indistinguishable
+  without checking. A partial result set that looks complete is the worst
+  shape a query can return.
+- **`defer tx.Rollback()` right after `Begin`.** After a successful
+  `Commit` the rollback is a no-op, so the deferred call costs nothing and
+  covers every early return in between — including the panic you did not
+  plan for.
+- **NULL is not the zero value.** Scanning a nullable column into a
+  `string` fails at runtime. Use `sql.NullString` and friends, or a pointer,
+  and decide at the boundary what absence means — the nil-versus-empty
+  question in [values](values.md).
+
+`QueryRow` reports an empty result as `sql.ErrNoRows`, which is a sentinel
+to match with `errors.Is`, not an error to wrap and forget — see
+[errors](errors.md). Prefer the `Context` variants so a query inherits the
+caller's deadline.
+
 ## `os.Exit` does not run deferred functions
 
 `os.Exit` terminates immediately: no `defer`, no flush, no `Close`, no
