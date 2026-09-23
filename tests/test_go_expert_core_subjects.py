@@ -44,6 +44,12 @@ class TestGoExpertCoreSubjects(unittest.TestCase):
         """The depth comparison must enrich, never displace."""
         self._covers("naming.md", ("IThing", "BaseThing", "premature"))
 
+    def test_errors_covers_the_wrapping_decisions(self):
+        self._covers(
+            "errors.md",
+            ("errors.Join", "errcheck", "%v", "errors.AsType"),
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
