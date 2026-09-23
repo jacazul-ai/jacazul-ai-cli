@@ -136,6 +136,23 @@ class TestGoExpertCoreSubjects(unittest.TestCase):
             ),
         )
 
+    def test_security_covers_the_language_references_in_depth(self):
+        """Second pass over the five upstream security references."""
+        self._covers(
+            "security.md",
+            (
+                "ORDER BY",
+                "Dialer",
+                "hmac.Equal",
+                "crypto/pbkdf2",
+                "ReadHeaderTimeout",
+                "MaxBytesReader",
+                "CreateTemp",
+                "encoding/gob",
+                "archive",
+            ),
+        )
+
     def test_packages_covers_the_module_mechanics(self):
         self._covers(
             "packages.md",
