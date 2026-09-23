@@ -24,6 +24,74 @@ check before implementing when practical.
   `testing` tools first; add assertion libraries only when they improve
   clarity and are already accepted by the project.
 
+## Independence is the property that makes the rest work
+
+A test must pass when run alone, in any order, and beside its siblings.
+Order dependence is not a style problem: it makes a failure unreproducible,
+which is the one thing a test exists to prevent.
+
+The failure mode worth naming, because it is easy to write by accident: a
+test that reads or writes the developer's real environment — a live
+database, a credential store, a config file in `$HOME` — is not isolated
+even when it passes. It passes because of state nobody declared, and it
+will fail on a machine that has different state, or hang on one where that
+resource asks a question nobody can answer.
+
+`t.Parallel()` marks a test as safe to run beside others, and marking one
+that is not is how a suite becomes intermittently red. Note that
+`t.Setenv` and `t.Parallel` are mutually exclusive by design: the runtime
+panics, because process environment is global and a parallel test cannot
+own it. When a test must vary the environment, use the helper-process
+pattern below.
+
+The standard library carries the cleanup for the common cases, and each of
+these unwinds itself at the end of the test: `t.TempDir()`, `t.Chdir()`,
+`t.Setenv()`, and `t.Context()` for a context cancelled when the test ends.
+
+## Separating the slow tests
+
+Integration tests that need a database, a network, or a container belong
+behind a build tag, so the default run stays fast enough to be run on every
+save:
+
+```go
+//go:build integration
+```
+
+They then run only with `go test -tags integration ./...`. The alternative,
+a suite where everything runs every time, ends with people not running it.
+
+## Deterministic concurrency
+
+`testing/synctest` runs a function in a bubble with a fake clock: time
+advances only when every goroutine in the bubble is blocked. A test for a
+timeout, a ticker, or a retry backoff becomes exact instead of sleeping and
+hoping, and stops being the flaky one in CI.
+
+Confirm the `go` directive supports it before reaching for it — see
+[runtime](runtime.md).
+
+## Fuzzing and examples
+
+A `FuzzXxx` function takes a seed corpus and lets the toolchain generate
+input around it. It earns its place on parsers, decoders and anything that
+accepts bytes from outside — see [security](security.md) for what counts as
+outside.
+
+```go
+func FuzzParse(f *testing.F) {
+	f.Add("a=1")
+	f.Fuzz(func(t *testing.T, s string) {
+		_, _ = Parse(s) // must not panic
+	})
+}
+```
+
+An `ExampleXxx` function is documentation that the compiler checks and the
+test runner executes. With an `// Output:` comment it becomes an assertion,
+so a sample that drifts from the API fails the build rather than misleading
+a reader — the rendering side belongs to [documentation](documentation.md).
+
 ## Seams and mocks
 
 - Prefer designing testable code over adding mocks: small interfaces,

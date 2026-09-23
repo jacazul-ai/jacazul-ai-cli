@@ -75,6 +75,19 @@ class TestGoExpertCoreSubjects(unittest.TestCase):
             ),
         )
 
+    def test_testing_covers_isolation_and_the_stdlib_helpers(self):
+        self._covers(
+            "testing.md",
+            (
+                "t.Parallel",
+                "t.Setenv",
+                "testing/synctest",
+                "go:build",
+                "Example",
+                "Fuzz",
+            ),
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
