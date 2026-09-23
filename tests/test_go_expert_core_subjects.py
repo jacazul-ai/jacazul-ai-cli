@@ -94,6 +94,18 @@ class TestGoExpertCoreSubjects(unittest.TestCase):
             ("Deprecated:", "doc link", "go:generate", "why"),
         )
 
+    def test_security_covers_the_go_specific_surface(self):
+        self._covers(
+            "security.md",
+            (
+                "os.Root",
+                "ConstantTimeCompare",
+                "html/template",
+                "InsecureSkipVerify",
+                "security-expert",
+            ),
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

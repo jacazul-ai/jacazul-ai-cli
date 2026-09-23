@@ -447,6 +447,7 @@ found the gaps started from upstream's enumeration of the subject.
 | `golang-benchmark` | `references/benchmarks.md`, `references/profiling.md` | Split by question rather than by upstream file. Benchmarks own producing a number to compare; profiling owns finding where it is spent. |
 | `golang-performance` | `references/performance.md`, `runtime.md` | Patterns enter conditioned on a measurement, never as defaults. Collector and toolchain knobs went to runtime, which already owned that subject. |
 | `golang-troubleshooting` | dissolved into six references | Its `common-go-bugs.md` is a catalogue defined by a property, and roughly sixty percent was already owned after the previous slice. The residue went to its owners: shadowing and the `break`/`fallthrough` traps to code-style, `os.Exit` and JSON decoding to resources, closed-channel semantics and `recover`'s scope to concurrency, bytes versus runes to data-structures, `time.Time` comparison to values, and the `iota` zero value to structs-interfaces. |
+| `golang-security` | `references/security.md` | Only the language surface. Of twelve upstream references, seven — threat modelling, checklist, secrets, third-party, architecture, cookies, logging — are repository concerns owned by `security-expert`. The five that are Go got imported as a risk-to-stdlib-answer table plus the path, injection, crypto and transport specifics. |
 | `golang-naming` | `references/naming.md` | The local file was 1.4 KB of Java-shaped anti-patterns and carried none of the conventions a reviewer cites. Two upstream rules were softened as non-canonical: boolean fields need no `is`/`has` prefix, and sentinel error strings need no package prefix. |
 | `golang-error-handling` | `references/errors.md` | Three unwritten decisions: the unexplained `_`, `%w` as an API commitment versus `%v` at a boundary, and `errors.Join` for failures that are parallel rather than chained. |
 | `golang-context` | `references/context.md` | The three mistakes that reach production: a `Background` created mid-chain, a string value key, and work that must outlive the request. |
@@ -473,7 +474,7 @@ found the gaps started from upstream's enumeration of the subject.
 
 | Upstream skill | Status |
 | --- | --- |
-| `golang-security`, `golang-lint`, `golang-modernize`, `golang-refactoring`, `golang-gopls`, `golang-how-to`, `golang-cli`, `golang-database`, `golang-continuous-integration`, `golang-dependency-management`, `golang-project-layout`, `golang-pkg-go-dev`, `golang-stay-updated` | Unscheduled. A local reference may already own the topic; absence from the Adapted table means the depth comparison has not been run, not that parity was confirmed. |
+| `golang-lint`, `golang-modernize`, `golang-refactoring`, `golang-gopls`, `golang-how-to`, `golang-cli`, `golang-database`, `golang-continuous-integration`, `golang-dependency-management`, `golang-project-layout`, `golang-pkg-go-dev`, `golang-stay-updated` | Unscheduled. A local reference may already own the topic; absence from the Adapted table means the depth comparison has not been run, not that parity was confirmed. |
 
 ### Out of scope by boundary
 
