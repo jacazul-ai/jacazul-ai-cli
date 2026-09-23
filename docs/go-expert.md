@@ -458,6 +458,7 @@ found the gaps started from upstream's enumeration of the subject.
 | "Functions should be short and focused — one function, one job" | Contradicts the local principle that function scope is contract, not size. Extracting until nothing is left to extract is a gradient with no floor, and in Go it costs Line of Sight. |
 | "Slices and maps MUST be initialized explicitly, never nil" | True for maps, wrong for slices, and the two are bundled under one rule. A nil slice appends correctly and is the idiomatic accumulator. The real concern is the `null` versus `[]` wire contract, which belongs at the serialization boundary, not the declaration site. The canonical Go guidance prefers the nil slice and treats JSON as a limited exception. |
 | The debugging methodology golden rules: read the error, reproduce before fixing, one hypothesis at a time, root cause over workaround | Generic engineering discipline, not Go expertise, and already mandated by the Test-First section of `AGENTS.md`. Restating it in a language skill buys tokens on every load and changes nothing. |
+| `golang-dependency-injection` as a category | Three of its four references are library-specific (`google-wire`, `uber-dig`/`uber-fx`, `samber/do`) and fall under the library boundary below. The residue, manual constructor injection, is not a Go technique — it is passing arguments to a constructor, and explicit dependencies are already owned by [packages](../skills/go-expert/references/packages.md) and [testing](../skills/go-expert/references/testing.md). A container is an abstraction that has not earned its existence. |
 | SIMD and CPU-specific instruction-set dispatch | Architecture and assembly territory rather than Go. |
 | A third-party collection dependency for filter and group-by | The skill is standard-library-oriented; a library choice belongs to the project that makes it. |
 | Sub-agent fan-out for style review | Cascading activation is forbidden by the Horizontal Skill Architecture mandate in `AGENTS.md`. |
@@ -466,6 +467,7 @@ found the gaps started from upstream's enumeration of the subject.
 
 | Upstream skill | Status |
 | --- | --- |
+| `golang-documentation`, `golang-testing`, `golang-naming`, `golang-concurrency`, `golang-error-handling`, `golang-context` | Unscheduled, and the highest-value group. A local reference already owns each of these subjects, so the work is a depth comparison rather than an import — about 188 KB against references written before the comparison began. |
 | `golang-security`, `golang-lint`, `golang-modernize`, `golang-refactoring`, `golang-gopls`, `golang-how-to`, `golang-cli`, `golang-database`, `golang-continuous-integration`, `golang-dependency-management`, `golang-project-layout`, `golang-pkg-go-dev`, `golang-stay-updated` | Unscheduled. A local reference may already own the topic; absence from the Adapted table means the depth comparison has not been run, not that parity was confirmed. |
 
 ### Out of scope by boundary
@@ -479,12 +481,21 @@ house logger and that the repository's existing choice wins, so importing
 advocacy for one would contradict standing policy. A test asserts the
 vendor names stay absent from the skill.
 
-This skill is the Go language engine. Library and framework catalogues stay
-out regardless of their quality: the `samber/*` family, `spf13/cobra` and
-`spf13/viper`, `stretchr/testify`, the dependency-injection containers
-(`google-wire`, `uber-dig`, `uber-fx`), and the protocol skills (`grpc`,
-`graphql`, `swagger`). A project that adopts one of those documents it in
-its own repository, not in the language expert.
+This skill is the Go language engine. Library and framework catalogues
+stay out regardless of their quality. A project that adopts one of these
+documents it in its own repository, not in the language expert.
+
+| Group | Upstream skills |
+| --- | --- |
+| The `samber` family | `golang-samber-lo`, `golang-samber-mo`, `golang-samber-ro`, `golang-samber-do`, `golang-samber-hot`, `golang-samber-oops`, `golang-samber-slog` |
+| CLI and configuration | `golang-spf13-cobra`, `golang-spf13-viper` |
+| Assertions | `golang-stretchr-testify` |
+| DI containers | `golang-google-wire`, `golang-uber-dig`, `golang-uber-fx` |
+| Protocols and schemas | `golang-grpc`, `golang-graphql`, `golang-swagger` |
+| Surveys | `golang-popular-libraries` |
+
+They are named rather than described as a family, so the boundary can be
+checked by a test instead of read and trusted.
 
 [upstream]: https://github.com/samber/cc-skills-golang
 
