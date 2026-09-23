@@ -50,6 +50,18 @@ class TestGoExpertCoreSubjects(unittest.TestCase):
             ("errors.Join", "errcheck", "%v", "errors.AsType"),
         )
 
+    def test_context_covers_origin_values_and_detachment(self):
+        self._covers(
+            "context.md",
+            (
+                "context.Background",
+                "context.TODO",
+                "WithoutCancel",
+                "unexported",
+                "context.Cause",
+            ),
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
