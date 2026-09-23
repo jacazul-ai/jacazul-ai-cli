@@ -106,6 +106,12 @@ class TestGoExpertCoreSubjects(unittest.TestCase):
             ),
         )
 
+    def test_packages_covers_the_module_mechanics(self):
+        self._covers(
+            "packages.md",
+            ("internal/", "go.work", "go.sum", "gopls"),
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

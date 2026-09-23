@@ -71,10 +71,46 @@ from being restated at every level — see [errors](errors.md), and
 Do not split code into layers to look architectural. A package earns its
 boundary by owning behavior, not by occupying a position in a diagram.
 
+## `internal/` is enforced, not agreed
+
+A package under `internal/` can be imported only from the tree rooted at
+`internal/`'s parent. That is the compiler refusing, not a convention
+people honour — which makes it the one boundary that actually holds.
+
+Use it for everything that is not part of the module's contract. Code you
+have not committed to can then be changed without a major version, and the
+`pkg/` directory that exists to signal "public" stops being necessary: what
+is not in `internal/` is already public.
+
+A multi-module checkout uses a `go.work` file (Go 1.18+) so the modules
+resolve against each other locally instead of through published versions.
+It belongs to the developer's checkout, not to the module's contract.
+
+## The module files
+
+`go.mod` records the module path, the language version through the `go`
+directive, and the *minimum* version of each dependency. Go resolves a
+build with Minimal Version Selection: it takes the highest minimum any
+module in the graph asks for, and no more. That is why a build does not
+drift when an upstream dependency publishes a release, and why upgrading
+is an explicit act rather than a side effect of time passing.
+
+`go.sum` records the expected hash of every module in the graph. It is a
+tamper check, not a lockfile — MVS already makes the version selection
+deterministic — and it belongs in the repository.
+
+Read the `go` directive before judging anything version-sensitive; the rule
+is in [runtime](runtime.md).
+
 ## Exports and imports
 
 Unexport by default. Exporting later is additive; unexporting later breaks
 every consumer, so the asymmetry should decide the default.
+
+When an identifier does have to change, rename it with `gopls` rather than
+with grep or sed: it updates every call site in the module atomically, and
+it refuses the change when lowercasing a method would break an interface
+the type satisfies — a breakage a textual replace ships silently.
 
 A blank import (`_ "pkg"`) runs a package's `init` for its side effect.
 Confined to `main` and test packages, that side effect is visible at the
