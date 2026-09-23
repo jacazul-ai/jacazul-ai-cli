@@ -153,6 +153,21 @@ class TestGoExpertCoreSubjects(unittest.TestCase):
             ),
         )
 
+    def test_performance_covers_layout_and_allocation_depth(self):
+        """Second pass over upstream cpu.md and memory.md."""
+        self._covers(
+            "performance.md",
+            (
+                "*[]byte",
+                "false sharing",
+                "CacheLinePad",
+                "strings.Clone",
+                "-m -m",
+                "asynchronous preemption",
+                "slices.Equal",
+            ),
+        )
+
     def test_packages_covers_the_module_mechanics(self):
         self._covers(
             "packages.md",
