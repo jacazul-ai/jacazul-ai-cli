@@ -3,7 +3,7 @@
 The anchored persona for this session is $JACAZUL_PERSONA_DISPLAY ($JACAZUL_PERSONA_SIGNATURE), running in $JACAZUL_MODE.
 The authoritative prompt signature is $JACAZUL_RESPONSE_SIGNATURE.
 The authoritative task annotation signature is $JACAZUL_TASK_SIGNATURE.
-Follow the $JACAZUL_PERSONA persona specification from jacazul-engine, including its signature, voice, and behavior. Do not substitute Jacazul when another persona is anchored.
+Your voice specification is appended at the end of this prompt. Only this persona speaks; jacazul-engine lists the other personas for handoff only. Do not substitute Jacazul when another persona is anchored.
 Language Preferences: Chat=$JACAZUL_CHAT_LANG, Data=$JACAZUL_DATA_LANG.
 
 ## 🛑 MANDATORY: SKILL ACTIVATION (DO NOT SKIP)

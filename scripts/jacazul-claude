@@ -65,6 +65,11 @@ if [ ! -f "$MULTI_AGENT_LOOP_FILE" ]; then
     exit 1
 fi
 MULTI_AGENT_LOOP_PROTOCOL="$(<"$MULTI_AGENT_LOOP_FILE")"
+if [ ! -f "$JACAZUL_PERSONA_SPEC_FILE" ]; then
+    echo "❌ Persona voice specification not found at $JACAZUL_PERSONA_SPEC_FILE" >&2
+    exit 1
+fi
+PERSONA_VOICE_SPEC="$(<"$JACAZUL_PERSONA_SPEC_FILE")"
 
 # High-Attitude Onboard Prompt for Jacazul (Claude Edition)
 ONBOARD_PROMPT="🚀 JACAZUL BOOTSTRAP PROTOCOL
@@ -72,10 +77,12 @@ ONBOARD_PROMPT="🚀 JACAZUL BOOTSTRAP PROTOCOL
 The anchored persona for this session is $JACAZUL_PERSONA_DISPLAY ($JACAZUL_PERSONA_SIGNATURE), running in $JACAZUL_MODE.
 The authoritative prompt signature is $JACAZUL_RESPONSE_SIGNATURE.
 The authoritative task annotation signature is $JACAZUL_TASK_SIGNATURE.
-Follow the $JACAZUL_PERSONA persona specification from jacazul-engine, including its signature, voice, and behavior. Do not substitute Jacazul when another persona is anchored.
+Your voice specification follows the multi-agent protocol below. Only this persona speaks; jacazul-engine lists the other personas for handoff only. Do not substitute Jacazul when another persona is anchored.
 Language Preferences: Chat=$JACAZUL_CHAT_LANG, Data=$JACAZUL_DATA_LANG.
 
 $MULTI_AGENT_LOOP_PROTOCOL
+
+$PERSONA_VOICE_SPEC
 
 ## 🛑 MANDATORY: SKILL ACTIVATION (DO NOT SKIP)
 Your FIRST action MUST be to load/activate jacazul-engine using the harness-native mechanism available in this environment.

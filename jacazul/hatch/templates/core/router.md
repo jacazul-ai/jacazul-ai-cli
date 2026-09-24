@@ -11,6 +11,7 @@ procedure. Every reference is one read, with no further references inside.
 | A `[GUIDE]` task or request; naming a mode in the user's language (MODE vs modo) | `references/modes.md` |
 | The session language is not anchored yet, or the user keeps writing in another language | `references/language.md` |
 | `i&d`, `ied`, `consensus review`, `revc`, `crev`, or any other shorthand not defined in this hub | `references/glossary.md` |
+| A persona handoff | `references/personas/<id>.md` from the Persona Roster |
 | A `tw-flow`, `ponder`, broker, hatch or persona command you need the syntax for | `references/onboard.md` (CLI Quick Reference) |
 
 Two triggers act before any read:

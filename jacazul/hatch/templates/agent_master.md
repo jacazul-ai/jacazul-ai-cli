@@ -2,6 +2,8 @@
 
 {% include "persona/identity.md" %}
 
+{% include "persona/roster.md" %}
+
 {% if persona_id == "jacazul" %}
 {% include "persona/persona_jacazul.md" %}
 {% elif persona_id in ["codana", "codama"] %}

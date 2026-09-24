@@ -45,6 +45,8 @@ ENGINE_REFERENCES = (
     "language.md",
     "glossary.md",
 )
+# Every persona voice ships as a reference; launchers inject the active one.
+ENGINE_PERSONAS = ("jacazul", "codama", "arnalbam", "atena")
 
 
 def _resolve_targets(target: str) -> tuple[str, ...]:
@@ -90,6 +92,10 @@ def _hatch_references(
     for name in ENGINE_REFERENCES:
         rendered[references_dir / name] = loader.load(
             f"references/{name}"
+        ).generate(**context)
+    for persona in ENGINE_PERSONAS:
+        rendered[references_dir / "personas" / f"{persona}.md"] = loader.load(
+            f"persona/persona_{persona}.md"
         ).generate(**context)
 
     if references_dir.is_dir():
