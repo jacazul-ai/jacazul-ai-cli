@@ -119,6 +119,9 @@ sandbox/copilot/.task/
 skills/jacazul-*
 !skills/jacazul-ui/
 !skills/jacazul-ui/SKILL.md
+!skills/jacazul-engine/
+skills/jacazul-engine/*
+!skills/jacazul-engine/evals/
 .gemini/
 
 # Skill eval run output (claude plugin eval)
