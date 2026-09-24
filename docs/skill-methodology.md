@@ -191,8 +191,9 @@ claude plugin eval skills/<name> --runs 1 --no-publish --max-cost-usd 3
   as `tw-flow` do not run there. Grade what the agent attempts, not whether
   the command succeeded.
 - Do not regex the trace for command names: a loaded skill quotes them, so
-  the match proves nothing. Use an `llm` grader scoped to the commands the
-  agent ran, and keep `regex` for the final message.
+  the match proves nothing. Check commands with `tool_used` and an
+  `input_match` regex, which sees only the tool's input, and point `llm`
+  graders at the final message: a judge fed a whole trace fails silently.
 
 ## What we do not adopt
 
