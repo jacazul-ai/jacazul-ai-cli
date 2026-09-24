@@ -59,9 +59,11 @@ usability and focus.
 - **Targets:** `pi`, `openai`, and `all` are supported alongside the native
   launcher targets. `all` generates the shared engine once and then renders
   only eligible adapters.
-- **Generated Locations:** `skills/jacazul-engine/SKILL.md` (from
-  `gemini_full.md`), `agents/{persona}-{client}.md` (from `agent_master.md`)
-  for Copilot and Opencode only.
+- **Generated Locations:** `skills/jacazul-engine/SKILL.md` (the hub, from
+  `gemini_full.md`), `skills/jacazul-engine/references/` (from
+  `templates/references/` and one voice per persona), and
+  `agents/{persona}-{client}.md` (from `agent_master.md`) for Copilot and
+  Opencode only. `skills/jacazul-engine/evals/` is hand-written and tracked.
 - **Ownership:** `scripts/bootstrap/hatch` selects the runtime target;
   client bootstraps remain responsible for linking and runtime configuration.
 

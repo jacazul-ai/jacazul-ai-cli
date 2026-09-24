@@ -34,7 +34,18 @@ The following commands are automatically installed into the environment:
 Prompt generation has one neutral core and target-specific adapters:
 
 - `jacazul/hatch/templates/gemini_full.md` is the canonical shared engine
-  template.
+  template. It renders a hub of always-on rules only; the triggered
+  protocols (onboard and status, session handoff, GUIDE detail, language
+  detection, glossary) render from `templates/references/` into
+  `skills/jacazul-engine/references/`, and the hub's reference router names
+  the trigger for each. The hatch deletes any reference the templates no
+  longer produce.
+- Persona context has three layers. The hub carries a persona-neutral
+  protocol and a roster (name, signature, handoff triggers, voice
+  reference). The launcher injects only the active voice, read from
+  `JACAZUL_PERSONA_SPEC_FILE` as resolved by `scripts/bootstrap/persona`.
+  The other voices stay in `references/personas/<id>.md` until a handoff
+  reads one. Loading every voice at once made weaker models blend them.
 - `jacazul/hatch/templates/agent_master.md` is rendered only for targets with
   a native agent format, currently Copilot and Opencode.
 - `jacazul-hatch --target pi` and `--target openai` generate the shared engine
