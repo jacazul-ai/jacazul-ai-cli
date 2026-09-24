@@ -14,9 +14,15 @@
 
 {% include "core/logic.md" %}
 
+{% include "core/session_resume.md" %}
+
+{% include "core/cli_reference.md" %}
+
 {% include "core/multi_agent_loop.md" %}
 
 {% include "protocols/language_protocol.md" %}
+
+{% include "protocols/language_detection.md" %}
 
 {% include "core/glossary.md" %}
 

@@ -169,18 +169,22 @@ class TestHatchEngine(unittest.TestCase):
     def test_hatch_includes_handoff_visibility_contract(self):
         hatch_prompt("gemini", persona_override="arnalbam")
 
-        skill_path = os.path.join(
-            self.script_dir,
-            "skills",
-            "jacazul-engine",
-            "SKILL.md",
-        )
-        with open(skill_path, encoding="utf-8") as skill_file:
+        engine_dir = os.path.join(self.script_dir, "skills", "jacazul-engine")
+        with open(
+            os.path.join(engine_dir, "SKILL.md"), encoding="utf-8"
+        ) as skill_file:
             rendered_skill = skill_file.read()
+        with open(
+            os.path.join(engine_dir, "references", "session.md"),
+            encoding="utf-8",
+        ) as session_file:
+            rendered_session = session_file.read()
 
-        self.assertIn("## HANDOFF VISIBILITY CONTRACT", rendered_skill)
-        self.assertIn("focused plan and task", rendered_skill)
-        self.assertIn("Never say only `context loaded`", rendered_skill)
+        # The hub routes to the contract; the reference carries it.
+        self.assertIn("`references/session.md`", rendered_skill)
+        self.assertIn("## HANDOFF VISIBILITY CONTRACT", rendered_session)
+        self.assertIn("focused plan and task", rendered_session)
+        self.assertIn("Never say only `context loaded`", rendered_session)
 
 
 if __name__ == "__main__":

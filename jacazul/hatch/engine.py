@@ -37,6 +37,14 @@ PERSONA_ROLES = {
     "atena": "Wise pedagogical mentor",
 }
 DEFAULT_PERSONA_ROLE = "Project navigator and context assistant"
+# Triggered protocols rendered beside the hub, keyed by published name.
+ENGINE_REFERENCES = (
+    "onboard.md",
+    "session.md",
+    "modes.md",
+    "language.md",
+    "glossary.md",
+)
 
 
 def _resolve_targets(target: str) -> tuple[str, ...]:
@@ -70,6 +78,29 @@ def _context(
     }
 
 
+def _hatch_references(
+    loader: template.Loader,
+    references_dir: Path,
+    context: dict[str, str | None],
+) -> None:
+    """Render the engine references and drop any the templates no longer
+    produce. Only references/ is managed; evals/ beside it is hand-written.
+    """
+    rendered: dict[Path, bytes] = {}
+    for name in ENGINE_REFERENCES:
+        rendered[references_dir / name] = loader.load(
+            f"references/{name}"
+        ).generate(**context)
+
+    if references_dir.is_dir():
+        for stale in references_dir.rglob("*"):
+            if stale.is_file() and stale not in rendered:
+                stale.unlink()
+    for path, content in rendered.items():
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(content)
+
+
 def hatch_prompt(
     client: str,
     persona_override: Optional[str] = None,
@@ -96,6 +127,7 @@ def hatch_prompt(
         )
         skill_path = skill_dir / "SKILL.md"
         skill_path.write_bytes(rendered_skill)
+        _hatch_references(loader, skill_dir / "references", shared_context)
 
         if os.environ.get("DEBUG"):
             print(f"✓ Hatched Engine Skill: {skill_path}")

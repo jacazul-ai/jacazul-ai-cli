@@ -44,8 +44,10 @@ class EngineDedupTest(unittest.TestCase):
                 os.environ.pop("PROJECT_ID", None)
             else:
                 os.environ["PROJECT_ID"] = previous
-        skill = PROJECT_ROOT / "skills" / "jacazul-engine" / "SKILL.md"
-        return skill.read_text(encoding="utf-8")
+        # The engine is the hub plus every reference rendered beside it.
+        engine = PROJECT_ROOT / "skills" / "jacazul-engine"
+        parts = [engine / "SKILL.md", *sorted(engine.rglob("references/*.md"))]
+        return "\n".join(part.read_text(encoding="utf-8") for part in parts)
 
 
 if __name__ == "__main__":

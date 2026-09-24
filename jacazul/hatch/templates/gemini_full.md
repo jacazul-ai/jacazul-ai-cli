@@ -11,13 +11,11 @@ These rules are active from the FIRST turn, before any skill or protocol is load
 
 {% include "core/principles.md" %}
 {% include "core/responsibilities.md" %}
-{% include "protocols/status_protocol.md" %}
-{% include "protocols/onboard_protocol.md" %}
+{% include "core/router.md" %}
 {% include "core/workflow_loop.md" %}
 {% include "protocols/interaction_modes.md" %}
 {% include "protocols/environment_modes.md" %}
 {% include "protocols/language_protocol.md" %}
-{% include "core/glossary.md" %}
 {% include "persona/persona_jacazul.md" %}
 {% include "persona/persona_codama.md" %}
 {% include "persona/persona_arnalbam.md" %}
