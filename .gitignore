@@ -120,3 +120,6 @@ skills/jacazul-*
 !skills/jacazul-ui/
 !skills/jacazul-ui/SKILL.md
 .gemini/
+
+# Skill eval run output (claude plugin eval)
+skills/*/evals/results/
