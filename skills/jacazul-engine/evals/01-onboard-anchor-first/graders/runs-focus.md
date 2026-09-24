@@ -1,5 +1,5 @@
 ---
 type: tool_used
 tool: Bash
-input_match: 'tw-flow focus'
+input_match: '"command":\s*"[^"]*tw-flow focus'
 ---

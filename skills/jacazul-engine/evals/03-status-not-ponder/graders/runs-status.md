@@ -1,5 +1,5 @@
 ---
 type: tool_used
 tool: Bash
-input_match: 'tw-flow status'
+input_match: '"command":\s*"[^"]*tw-flow status'
 ---
