@@ -194,6 +194,9 @@ claude plugin eval skills/<name> --runs 1 --no-publish --max-cost-usd 3
   the match proves nothing. Check commands with `tool_used` and an
   `input_match` regex, which sees only the tool's input, and point `llm`
   graders at the final message: a judge fed a whole trace fails silently.
+- `input_match` tests the whole serialized input, the Bash `description`
+  included. Anchor it to the command field (`"command":\s*"[^"]*ponder`)
+  or a word in the description counts as a call.
 
 ## What we do not adopt
 
