@@ -172,6 +172,28 @@ adds, not what the model already knows.
   a known function.
 - Treat any measured uplift as belonging to the model that produced it.
 
+### When you add or run an eval suite
+
+Cases live in `skills/<name>/evals/<case>/`: a `prompt.md` with
+`max_turns`, `timeout_seconds` and `allowed_tools` frontmatter, plus one file
+per grader in `graders/`. Run output lands in `evals/results/`, which is
+ignored. The generated `jacazul-engine` directory is ignored as a whole
+except its `evals/`, because the cases are authored by hand, not by the hatch.
+
+```bash
+claude plugin eval skills/<name> --runs 1 --no-publish --max-cost-usd 3
+```
+
+- Keep `--no-publish` on every pilot; the default publishes the report.
+- Cap every run with `--max-cost-usd`. `--trust-plugin` and
+  `--allow-tools Bash` are the operator's call, never the agent's.
+- The eval sandbox cannot reach the operator's home, so workflow tools such
+  as `tw-flow` do not run there. Grade what the agent attempts, not whether
+  the command succeeded.
+- Do not regex the trace for command names: a loaded skill quotes them, so
+  the match proves nothing. Use an `llm` grader scoped to the commands the
+  agent ran, and keep `regex` for the final message.
+
 ## What we do not adopt
 
 Upstream practices deliberately left out, so nobody reintroduces them by
