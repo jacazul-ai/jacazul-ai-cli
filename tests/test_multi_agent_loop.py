@@ -11,15 +11,21 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 class MultiAgentLoopContractTest(unittest.TestCase):
     """Verify the additive multi-agent engine protocol."""
 
-    def test_engine_includes_additive_multi_agent_protocol(self):
+    def test_agent_prompt_includes_additive_multi_agent_protocol(self):
         logic = self._read("jacazul/hatch/templates/core/logic.md")
+        agent_master = self._read("jacazul/hatch/templates/agent_master.md")
         protocol = self._read(
             "jacazul/hatch/templates/core/multi_agent_loop.md"
         )
 
-        self.assertIn(
+        # Launchers inject the protocol; only agent prompts carry it.
+        self.assertNotIn(
             '{% include "multi_agent_loop.md" %}',
             logic,
+        )
+        self.assertIn(
+            '{% include "core/multi_agent_loop.md" %}',
+            agent_master,
         )
         self.assertIn("existing solo workflow", protocol)
         self.assertIn("Taskwarrior", protocol)
@@ -37,7 +43,7 @@ class MultiAgentLoopContractTest(unittest.TestCase):
         self.assertIn("When to use consensus review", docs)
         self.assertIn("single-persona review", docs)
 
-    def test_hatch_renders_protocol_into_engine_skill(self):
+    def test_hatch_leaves_protocol_out_of_engine_skill(self):
         previous_project_id = os.environ.get("PROJECT_ID")
         os.environ["PROJECT_ID"] = "multi-agent-loop-test"
         try:
@@ -49,11 +55,8 @@ class MultiAgentLoopContractTest(unittest.TestCase):
             else:
                 os.environ["PROJECT_ID"] = previous_project_id
 
-        self.assertIn("## Multi-Agent Continuity Extension", rendered)
-        self.assertIn(
-            "existing solo workflow remains unchanged", rendered.lower()
-        )
-        self.assertIn("## Consensus Review Protocol", rendered)
+        self.assertNotIn("## Multi-Agent Continuity Extension", rendered)
+        self.assertNotIn("## Consensus Review Protocol", rendered)
 
     def test_hatch_renders_protocol_into_agent_prompt(self):
         for client in ("copilot", "opencode"):

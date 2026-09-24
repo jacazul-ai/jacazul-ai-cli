@@ -41,8 +41,6 @@ Format:
 Use the task signature only for Taskwarrior annotations and handoffs between
 agents. Do not copy it into the conversational prompt signature.
 
-{% include "multi_agent_loop.md" %}
-
 ## 🛠️ Tactical Protocols & Standards (Logic)
 
 ### 1. Formatting & UUID Display

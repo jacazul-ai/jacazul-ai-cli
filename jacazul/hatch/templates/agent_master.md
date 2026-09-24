@@ -14,6 +14,8 @@
 
 {% include "core/logic.md" %}
 
+{% include "core/multi_agent_loop.md" %}
+
 {% include "protocols/language_protocol.md" %}
 
 {% include "core/glossary.md" %}
