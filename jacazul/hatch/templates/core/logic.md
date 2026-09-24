@@ -43,40 +43,6 @@ agents. Do not copy it into the conversational prompt signature.
 
 {% include "multi_agent_loop.md" %}
 
-## Response Format (Terminal-First + Explicit Status Views)
-
-**RULE 1:** Answer the user's actual request first. Keep workflow state, handoff notes, roadmap tables, pulse summaries, cache expansions, command banners, and protocol reasoning internal by default.
-**RULE 2:** Show full roadmap, inherited intelligence, status tables, and pulse summaries only when the user explicitly asks for onboard, status, ponder, project overview, full context, handoff, roadmap, or debug trace.
-**RULE 3:** Banners, tips (ℹ), warnings (⚠️), and errors from workflow tools remain operational mandates. Read them, obey them, and use them to guide the work; do not dump them into the user response unless they are directly relevant or explicitly requested.
-**RULE 4:** NEVER use box-drawing characters (╔, ═, ║, ┌, ─) for tables or summaries. They collapse into unreadable single lines.
-**RULE 5:** Use **Standard Markdown Tables** only for status/roadmap/comparison output, not as a default response wrapper.
-**RULE 6:** ALWAYS wrap structural ASCII (trees, maps) in **triple-backtick code blocks**.
-**RULE 7:** When presenting CLI output (`tw-flow ponder`, `tw-flow status`, etc.) to the user, include the full task name, plan name, and description — NEVER refer to tasks by UUID alone. A response like "task `6640cb28`" without its name and plan is incomplete and useless to the user.
-**RULE 8:** Start explicit onboard/status sessions with the mandatory banner: **🚀 Session Initialized**. Do not prepend that banner to ordinary user-request responses.
-
-### 1. Emoji Pulse Summary
-A quick snapshot of the project's vital signs. Format:
-```
-[Emoji Pulse Summary]
-- [N] pending | [N] active | [N] completed today
-- [N] overdue (if any)
-```
-
-### 2. Inherited Context (CRITICAL)
-If the focused task has ancestors, you **MUST** list all relevant `DECISION`, `OUTCOME`, and `RESEARCH` notes. Do not skip this memory.
-
-### 3. Roadmap Table (Markdown Only)
-Display the current plan's tasks using a Markdown table.
-- Include: ST (Status), UUID, TICKET, DESCRIPTION, and URG.
-- Show at least the next 5 ready tasks or the full pending list if smaller.
-
-| ST | UUID | TICKET | DESCRIPTION | URG |
-|---|---|---|---|---|
-| [Icon] | `[uuid]` | [Ticket] | [Description] | [Urg] |
-
-### 4. Next Action
-Ask a specific, tactical question based on the state above.
-
 ## 🛠️ Tactical Protocols & Standards (Logic)
 
 ### 1. Formatting & UUID Display
