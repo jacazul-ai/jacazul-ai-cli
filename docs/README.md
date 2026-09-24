@@ -27,6 +27,7 @@ Welcome to the Jacazul AI CLI documentation. This project is built around the co
 - [Go Expert](go-expert.md) - Idiomatic Go, gofmt-to-goimports formatting, and Line of Sight readability.
 - [Tutors](tutor.md) - Learning a language with a tutor paired to its expert.
 - [Skill Authoring Methodology](skill-methodology.md) - Subject-agnostic rules for writing and maintaining any skill: descriptions, bodies, reference-vs-skill, cross-references, evaluation.
+- [Skill Evals](skill-evals.md) - Running a skill's eval suite, grading what the agent did, reading traces, and the current jacazul-engine record.
 - [Skills Index](skills/README.md) - Every skill, including Rust Expert, Rust Tutor, Go Tutor, and the shared Code Review scale.
 - [GitHub Broker](github-broker.md) - Secure issue and ticket synchronization.
 

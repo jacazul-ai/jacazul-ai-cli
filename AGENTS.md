@@ -226,6 +226,7 @@ reference branch and fast-forwarded, so history stays linear.
 | `docs/github-broker.md` | Users | Ticket sync triggers and credential-less flow. |
 | `docs/tw-flow-cache.md` | Users | Cache behavior, signals, and bypass triggers. |
 | `docs/skill-methodology.md` | Contributors / AI Agents | Subject-agnostic rules for creating and maintaining any skill: descriptions, bodies, reference-vs-skill, cross-references, evaluation. |
+| `docs/skill-evals.md` | Contributors / AI Agents | Running a skill's eval suite, writing graders that measure what the agent did, reading traces, comparing before and after a change. |
 | `docs/ARCHITECTURE.md` | Contributors | Internal design decisions. Not trigger-based — explains *why*, not *how to use*. |
 | `AGENTS.md` | AI Agents | Engineering standards and operational mandates. |
 
