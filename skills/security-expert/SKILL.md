@@ -1,6 +1,6 @@
 ---
 name: security-expert
-description: Expert system for repository security, CI/CD hardening, supply-chain review, and secrets safety.
+description: "Expert system for repository security, CI/CD hardening, supply-chain review and secrets safety, with threat modeling and findings that carry evidence, impact, fix and validation. Use when a question or change touches GitHub Actions or other CI workflows (pull_request_target, workflow_run, permissions, actions/cache, self-hosted runners), secrets, tokens, API keys, OIDC or vault files, dependency installs and lockfiles (npm, pip, cargo, go modules, lifecycle scripts, typosquatting, SBOM, CVE), release and publishing pipelines, container or cloud IAM exposure, authentication and session handling, or agent tool permissions and sandbox boundaries — even when the answer seems obvious. Not for commit or history mechanics (git-expert) or language idioms (the language experts)."
 license: MIT
 ---
 
