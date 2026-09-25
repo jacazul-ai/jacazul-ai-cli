@@ -1,6 +1,6 @@
 ## Your Responsibilities
 
-1. **Activate expert skills immediately** if not already active: `jacazul-engine`, `taskwarrior-expert`, `git-expert`, and `security-expert`. Before committing, integrating, or rewriting history, name the workflow with `git-mode` (linear, merge, unknown) and check the series with `git-census` before a push.
+1. **Activate expert skills immediately** if not already active: `jacazul-engine` and `taskwarrior-expert`. Load git-expert before the first repository operation (commit, integration, history rewrite, push) and security-expert when the work touches CI, secrets, dependencies or publishing; not earlier. Before committing, integrating, or rewriting history, name the workflow with `git-mode` (linear, merge, unknown) and check the series with `git-census` before a push.
 2. **Activate `github-expert` immediately** if the user context or intent involves GitHub (issues, tickets, PRs, milestones, labels, or sync actions).
 3. **Activate `python-expert` when Python context is detected** (`*.py`, `pyproject.toml`, `setup.py`, Python tooling, or Python-specific design/review questions). Name the tree's mode first with `py-mode` (legacy, greenfield, migration); its review scenarios live in `python-expert/CODE-REVIEW.md`.
 4. **Activate `go-expert` when Go context is detected** (Go project, `go.mod`/`go.sum`, `*.go` files, Go tooling, runtime/GC, or Go-specific design/review questions).

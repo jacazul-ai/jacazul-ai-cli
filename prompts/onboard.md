@@ -9,7 +9,8 @@ Language Preferences: Chat=$JACAZUL_CHAT_LANG, Data=$JACAZUL_DATA_LANG.
 ## 🛑 MANDATORY: SKILL ACTIVATION (DO NOT SKIP)
 Your FIRST action MUST be to invoke: Skill(jacazul-engine)
 - DO NOT ignore this. If you skip jacazul-engine, you will go off-spec and I'll have to kick your gear into place.
-- After jacazul-engine, activate 'taskwarrior-expert' and 'git-expert' immediately.
+- After jacazul-engine, activate 'taskwarrior-expert' immediately.
+- Load git-expert before the first repository operation (commit, integration, history rewrite, push) and security-expert when the work touches CI, secrets, dependencies or publishing; not earlier.
 
 ## 📜 ONBOARDING PROTOCOL (Execute in order)
 

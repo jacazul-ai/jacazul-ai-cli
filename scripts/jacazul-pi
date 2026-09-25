@@ -107,9 +107,9 @@ $PERSONA_VOICE_SPEC
 Your FIRST action MUST be to load/activate the following skills using the harness-native mechanism available in this environment, BEFORE running tw-flow focus:
 - jacazul-engine
 - taskwarrior-expert
-- git-expert
-- security-expert
 - jacazul-ui
+
+Load git-expert before the first repository operation (commit, integration, history rewrite, push) and security-expert when the work touches CI, secrets, dependencies or publishing; not earlier.
 
 If GitHub context is detected (remote, issue, PR, or ticket mentioned):
 - github-expert

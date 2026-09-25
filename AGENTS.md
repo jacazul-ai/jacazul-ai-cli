@@ -103,7 +103,8 @@ context-aware across different platforms and tool availability states.
 
 ### 3. Horizontal Skill Architecture
 - **Mandate:** Agents MUST activate required expert skills (`jacazul-engine`,
-  `taskwarrior-expert`, `git-expert`) directly and simultaneously.
+  `taskwarrior-expert`) directly and simultaneously, and every other expert
+  directly when its work starts.
 - **Goal:** Avoid cascading dependencies where one skill activates another.
   Independence ensures that a failure in one subsystem does not blind the
   entire agent.
@@ -112,9 +113,14 @@ context-aware across different platforms and tool availability states.
 - **Philosophy:** Skills are not "optional tools"—they are the foundation that
   resolves instruction ambiguity. Activating a skill is equivalent to loading
   the project's Distribution (Distro).
-- **Protocol:** Agents MUST activate the four core required skills in the
-  **first turn**, in parallel with tactical state discovery (e.g., `tw-flow
-  focus`).
+- **Protocol:** Agents MUST activate `jacazul-engine` and
+  `taskwarrior-expert` in the **first turn**, in parallel with tactical state
+  discovery (e.g., `tw-flow focus`). `git-expert` and `security-expert` load
+  on demand: git-expert before the first repository operation, security-expert
+  when the work touches CI, secrets, dependencies or publishing. Their
+  descriptions trigger them; Claude Code evals showed git-expert loading before any git
+  command in 3 of 3 runs, and security-expert in 3 of 3 once its description
+  named concrete triggers.
 - **Resolution:** Mandates defined within a loaded skill ALWAYS take precedence
   over generic system prompts when resolving operational conflicts. This
   ensures that the agent adopts the Jacazul identity and technical standards
@@ -146,8 +152,9 @@ context-aware across different platforms and tool availability states.
     Prompt** logic. The `jacazul-engine` skill provides the protocols in this
     environment.
   - **Claude Code:** Operates via the **Skill** pattern using the `Skill()`
-    tool. Skills (`jacazul-engine`, `taskwarrior-expert`, `git-expert`) MUST be
-    activated in the first turn, in parallel with `tw-flow focus`.
+    tool. Skills (`jacazul-engine`, `taskwarrior-expert`) MUST be activated
+    in the first turn, in parallel with `tw-flow focus`; the other experts
+    load when their work starts.
 - **Prompt Marketing & Workflow Awareness:**
   - **Concept:** Low-friction, high-value alerts within scripts (`tw-flow
     focus`, `onboard`) that notify the user of specific task attributes (e.g.,

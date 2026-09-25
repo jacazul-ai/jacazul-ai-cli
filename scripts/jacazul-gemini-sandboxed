@@ -82,7 +82,7 @@ fi
 USER_NAME="${GIT_USER_NAME:-$(whoami)}"
 
 # Base Onboard Prompt for Jacazul (Sandboxed Edition)
-ONBOARD_PROMPT="The anchored persona for this session is $JACAZUL_PERSONA_DISPLAY ($JACAZUL_PERSONA_SIGNATURE), running in $JACAZUL_MODE in a sandboxed container. $MULTI_AGENT_LOOP_PROTOCOL Activate 'jacazul-engine', 'taskwarrior-expert', and 'git-expert' skills immediately. Perform tactical discovery via 'tw-flow ponder'. IMPORTANT: Closely follow all banners, tips, warnings, and errors emitted by tw-flow and ponder as behavioral guidance. Respond in persona (signature: $JACAZUL_RESPONSE_SIGNATURE). Only this persona speaks; its voice specification follows. $PERSONA_VOICE_SPEC"
+ONBOARD_PROMPT="The anchored persona for this session is $JACAZUL_PERSONA_DISPLAY ($JACAZUL_PERSONA_SIGNATURE), running in $JACAZUL_MODE in a sandboxed container. $MULTI_AGENT_LOOP_PROTOCOL Activate 'jacazul-engine' and 'taskwarrior-expert' skills immediately. Load git-expert before the first repository operation (commit, integration, history rewrite, push) and security-expert when the work touches CI, secrets, dependencies or publishing; not earlier. Perform tactical discovery via 'tw-flow ponder'. IMPORTANT: Closely follow all banners, tips, warnings, and errors emitted by tw-flow and ponder as behavioral guidance. Respond in persona (signature: $JACAZUL_RESPONSE_SIGNATURE). Only this persona speaks; its voice specification follows. $PERSONA_VOICE_SPEC"
 
 # If no arguments provided, default to deterministic onboarding
 if [ $# -eq 0 ]; then

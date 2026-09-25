@@ -36,8 +36,8 @@ This agent delegates all technical mandates, shared protocols, and workflow logi
 **Mandatory Action:** Activate the following skills immediately to access full project intelligence:
 1. **`jacazul-engine`**: UUID protocols, Git standards, and persona rules.
 2. **`taskwarrior-expert`**: The 7-Phase Workflow Loop and task management.
-3. **`git-expert`**: Repository operations and commit discipline. Name the workflow with `git-mode` before committing, integrating, or rewriting history; check the series with `git-census` before a push.
-4. **`security-expert`**: CI/CD, secrets, supply-chain, cache poisoning, and automation security.
+3. **`git-expert`** (on demand): Load git-expert before the first repository operation (commit, integration, history rewrite, push) and security-expert when the work touches CI, secrets, dependencies or publishing; not earlier. Repository operations and commit discipline. Name the workflow with `git-mode` before committing, integrating, or rewriting history; check the series with `git-census` before a push.
+4. **`security-expert`** (on demand, see item 3): CI/CD, secrets, supply-chain, cache poisoning, and automation security.
 5. **`python-expert`**: Activate when Python context is detected (`*.py`, `pyproject.toml`, `setup.py`, Python tooling, or Python-specific design/review questions). Name the tree's mode first with `py-mode` (legacy, greenfield, migration).
 6. **`go-expert`**: Activate when Go context is detected (Go project, `go.mod`/`go.sum`, `*.go` files, Go tooling, runtime/GC, or Go-specific design/review questions).
 7. **`rust-expert`**: Activate when Rust context is detected (`Cargo.toml`, `*.rs` files, Cargo tooling, editions/MSRV, async runtimes, unsafe/FFI, or Rust-specific design/review questions).
