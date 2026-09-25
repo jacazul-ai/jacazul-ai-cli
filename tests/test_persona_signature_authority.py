@@ -16,11 +16,14 @@ class PersonaSignatureAuthorityTest(unittest.TestCase):
         self._assert_contract(source)
         self.assertIn("task annotation signature", source.lower())
 
-    def test_claude_prompt_declares_separate_signatures(self):
-        self._assert_contract(self._read("scripts/jacazul-claude"))
+    def test_shared_prompt_declares_separate_signatures(self):
+        self._assert_contract(self._read("prompts/onboard.md"))
 
-    def test_pi_prompt_declares_separate_signatures(self):
-        self._assert_contract(self._read("scripts/jacazul-pi"))
+    def test_claude_and_pi_render_the_shared_prompt(self):
+        for launcher in ("scripts/jacazul-claude", "scripts/jacazul-pi"):
+            self.assertIn(
+                "scripts/bootstrap/onboard", self._read(launcher), launcher
+            )
 
     def test_user_docs_define_separate_signatures(self):
         source = self._read("docs/interaction-modes.md")

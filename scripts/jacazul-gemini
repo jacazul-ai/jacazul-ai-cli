@@ -56,17 +56,7 @@ GEMINI_VERSION=$(gemini --version 2>/dev/null || echo "unknown")
 DUMPS_DIR="$PROJECT_ROOT/.gemini/system_dumps"
 VERSION_DUMP="$DUMPS_DIR/system_$GEMINI_VERSION.md"
 ACTIVE_PROMPT="$PROJECT_ROOT/.gemini/active-system.md"
-ONBOARD_TEMPLATE="$PROJECT_ROOT/prompts/onboard.md"
 CAPABILITIES_TEMPLATE="$PROJECT_ROOT/prompts/gemini_capabilities.md"
-MULTI_AGENT_LOOP_FILE="$PROJECT_ROOT/jacazul/hatch/templates/core/multi_agent_loop.md"
-if [ ! -f "$MULTI_AGENT_LOOP_FILE" ]; then
-    echo "❌ Multi-agent engine protocol not found at $MULTI_AGENT_LOOP_FILE" >&2
-    exit 1
-fi
-if [ ! -f "$JACAZUL_PERSONA_SPEC_FILE" ]; then
-    echo "❌ Persona voice specification not found at $JACAZUL_PERSONA_SPEC_FILE" >&2
-    exit 1
-fi
 
 # Auto-dump if the version-specific prompt is missing
 if [ ! -f "$VERSION_DUMP" ]; then
@@ -81,26 +71,10 @@ if [ ! -f "$VERSION_DUMP" ]; then
     fi
 fi
 
-# Load and Process Onboard Prompt
+# Render the shared session prompt: prompts/onboard.md plus the active voice.
+source "$PROJECT_ROOT/scripts/bootstrap/onboard" || exit 1
 PROCESSED_ONBOARD=$(mktemp)
-if [ -f "$ONBOARD_TEMPLATE" ]; then
-    (
-        export JACAZUL_MODE="${JACAZUL_MODE:-COUNSELOR}"
-        export JACAZUL_CHAT_LANG="${JACAZUL_CHAT_LANG:-pt-br}"
-        export JACAZUL_DATA_LANG="${JACAZUL_DATA_LANG:-en}"
-        
-        eval "cat <<EOF
-$(cat "$ONBOARD_TEMPLATE")
-EOF" > "$PROCESSED_ONBOARD"
-    )
-else
-    echo "⚠️  Onboard template missing at $ONBOARD_TEMPLATE" >&2
-    echo "🚀 JACAZUL BOOTSTRAP PROTOCOL" > "$PROCESSED_ONBOARD"
-fi
-printf '\n\n' >> "$PROCESSED_ONBOARD"
-cat "$MULTI_AGENT_LOOP_FILE" >> "$PROCESSED_ONBOARD"
-printf '\n\n' >> "$PROCESSED_ONBOARD"
-cat "$JACAZUL_PERSONA_SPEC_FILE" >> "$PROCESSED_ONBOARD"
+printf '%s\n' "$ONBOARD_PROMPT" > "$PROCESSED_ONBOARD"
 
 # -----------------------------------------------------------------------------
 # Prompt Injection Strategy

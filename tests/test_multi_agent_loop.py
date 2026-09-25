@@ -57,6 +57,12 @@ class MultiAgentLoopContractTest(unittest.TestCase):
 
         self.assertNotIn("## Multi-Agent Continuity Extension", rendered)
         self.assertNotIn("## Consensus Review Protocol", rendered)
+        self.assertIn("`references/collaboration.md`", rendered)
+        reference = self._read(
+            "skills/jacazul-engine/references/collaboration.md"
+        )
+        self.assertIn("## Multi-Agent Continuity Extension", reference)
+        self.assertIn("## Consensus Review Protocol", reference)
 
     def test_hatch_renders_protocol_into_agent_prompt(self):
         for client in ("copilot", "opencode"):
@@ -75,7 +81,10 @@ class MultiAgentLoopContractTest(unittest.TestCase):
             )
             self.assertIn("## Consensus Review Protocol", rendered)
 
-    def test_direct_harness_prompts_load_protocol(self):
+    def test_direct_harness_prompts_point_at_the_protocol(self):
+        # Launchers name the engine reference instead of injecting the text.
+        template = self._read("prompts/onboard.md")
+        self.assertIn("references/collaboration.md", template)
         for launcher in (
             "scripts/jacazul-pi",
             "scripts/jacazul-claude",
@@ -83,7 +92,7 @@ class MultiAgentLoopContractTest(unittest.TestCase):
             "scripts/jacazul-gemini-sandboxed",
         ):
             source = self._read(launcher)
-            self.assertIn("multi_agent_loop.md", source)
+            self.assertNotIn("multi_agent_loop.md", source, launcher)
 
     @staticmethod
     def _read(relative_path: str) -> str:

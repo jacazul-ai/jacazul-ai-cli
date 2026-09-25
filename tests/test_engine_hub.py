@@ -100,10 +100,18 @@ class EngineHubTest(unittest.TestCase):
         bootstrap = (PROJECT_ROOT / "scripts/bootstrap/persona").read_text(
             encoding="utf-8"
         )
+        renderer = (PROJECT_ROOT / "scripts/bootstrap/onboard").read_text(
+            encoding="utf-8"
+        )
         self.assertIn("JACAZUL_PERSONA_SPEC_FILE", bootstrap)
+        self.assertIn("JACAZUL_PERSONA_SPEC_FILE", renderer)
         for launcher in LAUNCHERS:
             source = (PROJECT_ROOT / launcher).read_text(encoding="utf-8")
-            self.assertIn("JACAZUL_PERSONA_SPEC_FILE", source, launcher)
+            self.assertTrue(
+                "scripts/bootstrap/onboard" in source
+                or "JACAZUL_PERSONA_SPEC_FILE" in source,
+                launcher,
+            )
 
 
 if __name__ == "__main__":

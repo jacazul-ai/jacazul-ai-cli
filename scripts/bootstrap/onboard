@@ -1,0 +1,27 @@
+#!/bin/bash
+# 🐊 Jacazul - Render the session prompt shared by every launcher.
+# Sourced after scripts/bootstrap/persona. Sets ONBOARD_PROMPT to
+# prompts/onboard.md with its variables expanded, followed by the active
+# persona's voice specification. Prints nothing on success.
+
+ONBOARD_TEMPLATE="${PROJECT_ROOT:-.}/prompts/onboard.md"
+if [ ! -f "$ONBOARD_TEMPLATE" ]; then
+    echo "❌ Onboard prompt template not found at $ONBOARD_TEMPLATE" >&2
+    return 1 2>/dev/null || exit 1
+fi
+if [ ! -f "${JACAZUL_PERSONA_SPEC_FILE:-}" ]; then
+    echo "❌ Persona voice specification not found at ${JACAZUL_PERSONA_SPEC_FILE:-<unset>}; source scripts/bootstrap/persona first" >&2
+    return 1 2>/dev/null || exit 1
+fi
+
+JACAZUL_MODE="${JACAZUL_MODE:-COUNSELOR}"
+JACAZUL_CHAT_LANG="${JACAZUL_CHAT_LANG:-pt-br}"
+JACAZUL_DATA_LANG="${JACAZUL_DATA_LANG:-en}"
+
+# The template holds only $VARIABLE references (no backticks, no $(...)),
+# so a heredoc expands it without running anything.
+ONBOARD_PROMPT="$(eval "cat <<JACAZUL_ONBOARD_EOF
+$(<"$ONBOARD_TEMPLATE")
+JACAZUL_ONBOARD_EOF")
+
+$(<"$JACAZUL_PERSONA_SPEC_FILE")"

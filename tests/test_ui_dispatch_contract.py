@@ -25,11 +25,9 @@ class TestUiDispatchContract(unittest.TestCase):
 
     def test_pi_loads_ui_skill_only_with_a_host_ui(self):
         content = (PROJECT_ROOT / "scripts" / "jacazul-pi").read_text()
-        block = content.split("## 🛑 MANDATORY: SKILL ACTIVATION", 1)[1]
-        first_list = block.split("\n\n", 1)[0]
 
         # Terminal sessions have no host UI, so the skill is conditional.
-        self.assertNotIn("- jacazul-ui", first_list)
+        self.assertNotIn("- jacazul-ui", content)
         self.assertIn('export JACAZUL_UI="1"', content)
         self.assertIn("jacazul.nvim", content)
         self.assertIn("Load jacazul-ui in the first turn", content)

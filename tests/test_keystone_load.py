@@ -6,8 +6,6 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 # Every surface that lists first-turn skills for a session or agent prompt.
 SURFACES = (
-    "scripts/jacazul-claude",
-    "scripts/jacazul-pi",
     "scripts/jacazul-copilot",
     "scripts/jacazul-gemini-sandboxed",
     "prompts/onboard.md",
@@ -32,17 +30,18 @@ class KeystoneLoadTest(unittest.TestCase):
             self.assertIn(ON_DEMAND, text, surface)
             self.assertIsNone(EAGER.search(text), surface)
 
-    def test_pi_first_action_list_is_engine_and_workflow_only(self):
-        text = (PROJECT_ROOT / "scripts/jacazul-pi").read_text(
+    def test_first_action_is_engine_and_workflow_only(self):
+        text = (PROJECT_ROOT / "prompts/onboard.md").read_text(
             encoding="utf-8"
         )
-        block = text.split("## 🛑 MANDATORY: SKILL ACTIVATION", 1)[1]
-        first_list = block.split("\n\n", 1)[0]
+        first_action = next(
+            line for line in text.splitlines() if "FIRST action" in line
+        )
 
-        self.assertIn("- jacazul-engine", first_list)
-        self.assertIn("- taskwarrior-expert", first_list)
-        self.assertNotIn("- git-expert", first_list)
-        self.assertNotIn("- security-expert", first_list)
+        self.assertIn("jacazul-engine", first_action)
+        self.assertIn("taskwarrior-expert", first_action)
+        self.assertNotIn("git-expert", first_action)
+        self.assertNotIn("security-expert", first_action)
 
     def test_agents_keystone_names_the_on_demand_experts(self):
         raw = (PROJECT_ROOT / "AGENTS.md").read_text(encoding="utf-8")

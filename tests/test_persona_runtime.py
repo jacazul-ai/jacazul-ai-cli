@@ -131,6 +131,9 @@ class TestPersonaRuntime(unittest.TestCase):
         self.assertEqual(result.returncode, 0, msg=result.stderr)
         self.assertIn("Arnalbam ({💪} Arnalbam)", captured)
         self.assertNotIn("Jacazul (Jacaré Azul)", captured)
+        # Only the active voice is injected, and no other signature leaks.
+        self.assertIn("## {💪} Arnalbam Persona Specifications", captured)
+        self.assertNotIn("🐊 Jacazul", captured)
 
     def test_pi_injects_project_anchored_persona(self):
         result, captured = self._run_launcher(PI_LAUNCHER, dry=False)
@@ -138,6 +141,9 @@ class TestPersonaRuntime(unittest.TestCase):
         self.assertEqual(result.returncode, 0, msg=result.stderr)
         self.assertIn("Arnalbam ({💪} Arnalbam)", captured)
         self.assertNotIn("Jacazul (Jacaré Azul)", captured)
+        # Only the active voice is injected, and no other signature leaks.
+        self.assertIn("## {💪} Arnalbam Persona Specifications", captured)
+        self.assertNotIn("🐊 Jacazul", captured)
 
     def test_opencode_uses_project_anchored_agent(self):
         result, captured = self._run_launcher(OPENCODE_LAUNCHER, dry=False)

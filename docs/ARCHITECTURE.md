@@ -52,6 +52,14 @@ Prompt generation has one neutral core and target-specific adapters:
   `JACAZUL_PERSONA_SPEC_FILE` as resolved by `scripts/bootstrap/persona`.
   The other voices stay in `references/personas/<id>.md` until a handoff
   reads one. Loading every voice at once made weaker models blend them.
+- The session prompt comes from one template, `prompts/onboard.md`, rendered
+  by `scripts/bootstrap/onboard` for the Claude, pi and Gemini launchers and
+  followed by the active voice. It is an index, not a copy: it states the
+  persona, signatures and first-turn skills, then names the hub section or
+  reference that owns each rule (answer-first, principles, COUNSELOR gates,
+  orientation, handoff, collaboration). The multi-agent and consensus
+  protocol lives in `references/collaboration.md`. Keep the template free of
+  backticks and `$(`: the renderer expands it through a shell heredoc.
 - `jacazul/hatch/templates/agent_master.md` is rendered only for targets with
   a native agent format, currently Copilot and Opencode.
 - `jacazul-hatch --target pi` and `--target openai` generate the shared engine
