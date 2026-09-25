@@ -93,6 +93,35 @@ anyone opening a trace.
 Do not run `git` inside a kept directory; the harness seals what the plugin
 wrote there.
 
+### When you test whether a skill loads on demand
+
+A case can only load plugins inside the directory under test, so a suite
+aimed at one skill cannot see its siblings, and `claude plugin eval skills`
+resolves back to the enclosing skill. Build a throwaway plugin that holds
+the skills a real session would have, and run the case against it:
+
+```bash
+P=$(mktemp -d)/fixture
+mkdir -p "$P/.claude-plugin" "$P/skills" "$P/evals"
+printf '{"name": "fixture"}\n' > "$P/.claude-plugin/plugin.json"
+for s in jacazul-engine taskwarrior-expert git-expert security-expert; do
+  rsync -aL --exclude evals skills/$s "$P/skills/"
+done
+cp -r skills/jacazul-engine/evals/06-commit-loads-git-expert "$P/evals/"
+claude plugin eval "$P" --case 06-commit-loads-git-expert --runs 3 \
+  --ablation none --no-scaffold --no-publish --max-cost-usd 2 \
+  --trust-plugin --allow-tools Bash </dev/null
+```
+
+Grade the load with `tool_used` `Skill` `input_match: <skill>` and
+`arm: both`, and pair it with a `max: 0` check on a sibling that must stay
+unloaded. Use `--runs 3`: a single run cannot tell a flaky trigger from a
+missing one. The sandbox also swaps `git` for a null device, so grade that
+the skill loaded before the first git command, not that the commit landed.
+
+A skill that never loads almost always has a vague description. Name the
+concrete nouns a user would type, as the methodology asks, and re-measure.
+
 ### When you compare before and after a change
 
 1. Freeze the graders and record the baseline: cases, flags, model, scores.
@@ -116,6 +145,15 @@ haiku judge, graders as of the command-anchored revision.
 Scores are `with / without`. Per-run cost of the `with` arm dropped about 20
 percent after the split. Without a launcher, every `with` run also read
 `references/personas/jacazul.md`, the documented fallback voice.
+
+On-demand loading, measured on a four-skill fixture with `--runs 3`:
+
+| Case | Skill expected | Before | After |
+|---|---|---|---|
+| 06 a commit request | `git-expert` loads before any git command | 3/3 | 3/3 |
+| 07 a CI secrets question | `security-expert` loads | 0/3 | 3/3 after its description named concrete triggers |
+
+In both cases the other expert stayed unloaded in every run.
 
 Not covered yet:
 
