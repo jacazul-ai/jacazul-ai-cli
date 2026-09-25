@@ -37,31 +37,14 @@ Main tools automatically detect and use the correct project database:
 
 All tools set `TASKDATA=~/.jacazul-ai/.task/$PROJECT_ID` automatically.
 
-## 🔑 UUID Display Protocol
+## 🔑 UUID and Language
 
-**CRITICAL: ALWAYS use short UUIDs (8 chars) when referring to tasks to users.**
-- **NEVER** show numeric task IDs to users.
-- **ALWAYS** display short UUIDs (first 8 characters).
-- Display format: `fa145ef2 - Task description [urgency]`
-
-## 🌐 Language Protocol (Data Consistency)
-
-**Response Language:** Match user's language.
-**Data Language:** ALL data stored in English (Task descriptions, Annotations, Tags, Commits).
-
-## 🚦 Interaction Modes
-
-Modes define the **Agent's Behavior** for a given task. Prefix tasks with the mode to enforce behavior.
-
-| Mode | Behavior | Autonomy | Output |
-| :--- | :--- | :--- | :--- |
-| **`[DESIGN]`** | Requirements analysis & breakdown. | Low | A structured plan. |
-| **`[INVESTIGATE]`** | Codebase diving & de-risking. | High (Read-only) | Findings & Context. |
-| **`[GUIDE]`** | Navigator. Instructions & diffs only. | **Zero** | Step-by-step guide. |
-| **`[EXECUTE]`** | Builder. Implementing changes. | High | Modified files. |
-| **`[TEST]`** | Verification & QA. | High | Test results. |
-| **`[DEBUG]`** | Root cause analysis. | High (Read-only) | Diagnosis & fix proposal. |
-| **`[REVIEW]`** | Code audit & feedback. | Read-only | Suggestions/Critique. |
+- Refer to tasks by short UUIDs (8 chars), never numeric IDs:
+  `fa145ef2 - Task description [urgency]`.
+- Store every task description, annotation and tag in English; answer in the
+  session language.
+- Interaction modes (`[DESIGN]`, `[GUIDE]`, `[EXECUTE]`…) and what each one
+  authorizes: jacazul-engine hub, "Interaction Modes".
 
 ## ⚖️ Urgency Calibration Protocol (Cool Down)
 
@@ -86,26 +69,12 @@ To maintain a high-fidelity tactical radar, agents MUST follow the **Cool Down**
    - *Note: The standalone "ponder" command is deprecated and will be removed in a future release.*
 - **`tw-flow`**: Standardized task management with context propagation.
 - **`taskp`**: **CRITICAL** Project-Aware Taskwarrior Wrapper. Always use `taskp` instead of raw `task`.
+- **Output cache:** `tw-flow status` and `tw-flow ponder` print
+  `🐊 [cached]` when nothing changed; trust the last full output and bypass
+  only with `tw-flow status --force` or `tw-flow ponder --force`. Cache rules
+  and TTLs: jacazul-engine `references/onboard.md`.
 
-## 📦 Output Cache Protocol
-
-`tw-flow status` and `tw-flow ponder` use a built-in TTL + hash-based cache. When output is unchanged, a short inline signal is printed instead of full output:
-
-```
-🐊 [cached] Status unchanged since 12s ago. Use --force to refresh.
-```
-
-**Rules:**
-- Cached signal = last full output in context is still valid. No need to re-run.
-- Use `--force` to bypass: `tw-flow status --force` / `tw-flow ponder --force`.
-- TTLs: `status` = 30s, `ponder` = 5min.
-- Cache is session-scoped: `~/.jacazul-ai/cache/tw-flow/{PROJECT_ID}/{SESSION_ID}/`. Sessions never share cache.
-- `JACAZUL_SESSION_ID` unset → `global/` directory used as fallback.
-- Bootstrap automatically purges directories from expired sessions.
-
-## 🔄 Session Handoff (Prepare for Restart)
-
-When ending a session with incomplete work or detecting context degradation, prepare a handoff note for the next agent:
+## 🔄 Session Handoff
 
 ```bash
 tw-flow session resume        # Print previous session note (silent if none) — run on onboard
@@ -113,19 +82,9 @@ tw-flow session dump          # Create handoff note for the next session
 tw-flow session dump --force  # Overwrite existing note
 ```
 
-**On onboard (when anchored):** Run `tw-flow session resume` first. If it prints, read it before anything else — it is the narrative lens for the current state.
-
-**File behavior for dump (Error as Prompt):**
-- **First call:** Creates `session-note-{SESSION_ID}.md` with a single `<!-- FILL IN -->` section. Fill it in now.
-- **File exists + `<!-- FILL IN -->` present:** You already ran dump — fill it in, do not regenerate.
-- **File exists + no `<!-- FILL IN -->`:** A previous agent filled this in. READ IT FIRST — it has the context you need.
-
-After filling in the note, inform the user:
-```
-Dump gerado. Resume com: jacazul-<agent> --jacazul-session {SESSION_ID}
-```
-
-On the next session startup, the bootstrap injects the note once and archives it.
+The next session's bootstrap injects the note once and archives it. When
+and how to fill the note, and what to show the user: jacazul-engine
+`references/session.md`.
 
 ---
 
