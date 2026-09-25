@@ -43,7 +43,7 @@ agents. Do not copy it into the conversational prompt signature.
 ## 🛠️ Tactical Protocols & Standards (Logic)
 
 ### 1. Formatting & UUID Display
-- **Standard Format:** `fa145ef2 - Task description [urgency]`
+- **Standard Format:** `uuid description [plan-name]`, e.g. `f519b8c5 Define backlog UDA schema [tw-flow-backlog]`. Never a UUID alone.
 - **UUID Priority:** ALWAYS use short UUIDs (8 chars) when referring to tasks. NEVER show numeric task IDs (17, 13, etc.) to the user.
 - **Lists:** Use plain numbers (1., 2., 3.) instead of numeric emojis.
 - **Terminology:** `plan` and `ini` (initiative) are aliases — both refer to the same concept (a task aggregator). Accept and use either term interchangeably. Never correct the user for saying "ini" instead of "plan" or vice versa.

@@ -52,6 +52,36 @@ We use distinct AI personalities to match your workflow needs. Swapping is conve
 
 ---
 
+## 🗺️ Documentation Map
+
+Which doc to update when a change is user-facing (the Documentation Mandate
+in `AGENTS.md`):
+
+| File | Audience | Intent |
+|---|---|---|
+| `README.md` | New users | Entry point. Trigger-based: "I want to X → do Y". Links to docs for depth. |
+| `docs/tw-flow.md` | Users | Trigger-based CLI reference. Every command = a trigger + what it does. |
+| `docs/getting-started.md` | New users | First-session walkthrough. Minimal prerequisites → first working command. |
+| `docs/taskwarrior-expert.md` | Users | 7-phase workflow from the user's perspective. When to use each phase. |
+| `docs/interaction-modes.md` | Users | Mode selection guide. "I want to X → use mode Y." |
+| `docs/environment-modes.md` | Users | COUNSELOR vs UNHINGED. When and why to switch. |
+| `docs/github-broker.md` | Users | Ticket sync triggers and credential-less flow. |
+| `docs/tw-flow-cache.md` | Users | Cache behavior, signals, and bypass triggers. |
+| `docs/skill-methodology.md` | Contributors / AI Agents | Subject-agnostic rules for creating and maintaining any skill: descriptions, bodies, reference-vs-skill, cross-references, evaluation. |
+| `docs/skill-evals.md` | Contributors / AI Agents | Running a skill's eval suite, writing graders that measure what the agent did, reading traces, comparing before and after a change. |
+| `docs/ARCHITECTURE.md` | Contributors | Internal design decisions. Not trigger-based — explains *why*, not *how to use*. |
+| `AGENTS.md` | AI Agents | Repository mandates no skill carries, and where the rest lives. |
+
+**Writing rule.** `README.md` and every `docs/` file except ARCHITECTURE
+follow the **Trigger → Action** pattern: organized around what the user wants
+to accomplish, each section answering "when the user does or wants X, they run
+or see Y", with internals linked to `docs/ARCHITECTURE.md` instead of inlined.
+`docs/ARCHITECTURE.md` is the only file organized from the system's
+perspective: design decisions, boundaries and trade-offs, for contributors and
+agents investigating root causes.
+
+---
+
 ## 🆘 Troubleshooting & Support
 
 1. Check the **[Technical Architecture](ARCHITECTURE.md)** for CLI parity and path issues.
