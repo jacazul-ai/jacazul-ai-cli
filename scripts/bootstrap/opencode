@@ -70,6 +70,14 @@ for skill_dir in "$PROJECT_ROOT/skills"/*; do
     name=$(basename "$skill_dir")
     
     target="$OPENCODE_GLOBAL_DIR/skills/$name"
+    # A skill with a HOSTS file serves only the harnesses it lists.
+    if [ -f "$skill_dir/HOSTS" ] && ! grep -qx 'opencode' "$skill_dir/HOSTS"; then
+        if [ -L "$target" ]; then
+            rm -f -- "$target"
+            echo "🐊 Unlinking skill not hosted by opencode: $name"
+        fi
+        continue
+    fi
     if [ -n "$DEBUG" ]; then
         echo "🐊 Linking global skill: $name -> $skill_dir"
     fi

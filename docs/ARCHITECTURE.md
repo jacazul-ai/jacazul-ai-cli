@@ -40,6 +40,12 @@ Prompt generation has one neutral core and target-specific adapters:
   `skills/jacazul-engine/references/`, and the hub's reference router names
   the trigger for each. The hatch deletes any reference the templates no
   longer produce.
+- Client bootstraps link every `skills/<name>/` into the harness, except a
+  skill whose `HOSTS` file does not list that harness; the bootstrap also
+  removes a link it left earlier. `jacazul-ui` lists only `pi`, because
+  `jacazul_alert` exists only in the pi extension, and the pi launcher loads it
+  and enables the extension (`JACAZUL_UI=1`) only in RPC mode or inside
+  jacazul.nvim.
 - Persona context has three layers. The hub carries a persona-neutral
   protocol and a roster (name, signature, handoff triggers, voice
   reference). The launcher injects only the active voice, read from

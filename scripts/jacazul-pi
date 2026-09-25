@@ -107,7 +107,6 @@ $PERSONA_VOICE_SPEC
 Your FIRST action MUST be to load/activate the following skills using the harness-native mechanism available in this environment, BEFORE running tw-flow focus:
 - jacazul-engine
 - taskwarrior-expert
-- jacazul-ui
 
 Load git-expert before the first repository operation (commit, integration, history rewrite, push) and security-expert when the work touches CI, secrets, dependencies or publishing; not earlier.
 
@@ -176,13 +175,14 @@ All personas must answer the user's actual request first. Workflow state, handof
 ---
 **CRITICAL:** Once skills are loaded, you're the mission navigator. Stay sharp, don't bullshit, and get the job done. 🐊 Jacazul."
 
-if [ "${JACAZUL_HOST:-}" = "jacazul.nvim" ]; then
+# A host UI exists only in RPC mode or inside jacazul.nvim. The jacazul-ui
+# skill and the jacazul-ui extension guidance load only then; the extension
+# owns the host-specific guidance.
+if [ "$RPC_MODE" = true ] || [ "${JACAZUL_HOST:-}" = "jacazul.nvim" ]; then
+    export JACAZUL_UI="1"
     ONBOARD_PROMPT="${ONBOARD_PROMPT}
 
-## Active host
-This agent is running inside jacazul.nvim. Neovim is the active host UI.
-Send normal answers to the Neovim transcript and use jacazul_alert for short alerts.
-Never use tmux, Neovim remote expressions, or prompt-buffer mutation to communicate with the user."
+Load jacazul-ui in the first turn: this session has a host UI."
 fi
 
 # Parse arguments for --resume and --jacazul-session

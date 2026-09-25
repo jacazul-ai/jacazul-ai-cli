@@ -85,7 +85,14 @@ skills/<name>/
   SKILL.md          hub: philosophy, policy boundary, routing table, mandate
   references/       one file per owned topic, one level deep
   CODE-REVIEW.md    only for skills that review code, on the shared scale
+  HOSTS             only for skills that need one harness's tools
 ```
+
+A `HOSTS` file lists, one per line, the harnesses whose bootstrap may link
+the skill (`pi`, `claude`, `gemini`, `copilot`, `opencode`). Without it every
+harness links the skill. Add one when the skill depends on a tool only some
+harnesses register: a skill in a catalog without its tool costs metadata in
+every session and can fire on a request it cannot serve.
 
 `PLAYBOOK.md` is the legacy shape. Several skills still carry one, and that is
 fine until each is next restructured. Do not recreate a playbook in a skill

@@ -1,6 +1,6 @@
 ---
 name: jacazul-ui
-description: Natural-language routing between assistant conversation and Jacazul host UI events.
+description: "Routes natural-language requests between the assistant transcript and short host UI alerts sent with the jacazul_alert tool, in pi sessions that run in RPC mode or inside jacazul.nvim. Use when such a session gets requests like \"me avisa quando terminar\", \"manda um alerta\" or \"coloca isso no alert\", or when a worker milestone, completion or blocker deserves a short notification. Not for terminal sessions or harnesses without jacazul_alert."
 license: MIT
 ---
 

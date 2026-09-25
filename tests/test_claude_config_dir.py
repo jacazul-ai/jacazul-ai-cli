@@ -85,6 +85,8 @@ class TestClaudeConfigDir(unittest.TestCase):
         # jacazul-engine is a generated artifact and is not in the repo, so
         # anchor on a committed skill instead.
         self.assertIn("git-expert", linked)
+        # jacazul-ui declares pi as its only host.
+        self.assertNotIn("jacazul-ui", linked)
         for name in linked:
             entry = os.path.join(skills_dir, name)
             self.assertTrue(os.path.islink(entry), msg=f"{name} is not a link")

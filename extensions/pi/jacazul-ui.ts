@@ -16,6 +16,11 @@ const JACAZUL_UI_GUIDANCE = [
 	"Never use tmux, Neovim remote expressions, or prompt-buffer mutation to deliver an alert.",
 ].join("\n");
 
+// jacazul-pi exports JACAZUL_UI=1 in RPC mode and inside jacazul.nvim. A
+// terminal session has no host UI, so it gets neither guidance nor the tool.
+const HAS_HOST_UI =
+	process.env.JACAZUL_UI === "1" || process.env.JACAZUL_HOST === "jacazul.nvim";
+
 const parameters = Type.Object({
 	message: Type.String({ description: "Short message to show in the host UI" }),
 	notifyType: Type.Optional(
@@ -26,6 +31,10 @@ const parameters = Type.Object({
 });
 
 export default function (pi: ExtensionAPI) {
+	if (!HAS_HOST_UI) {
+		return;
+	}
+
 	pi.on("before_agent_start", async (event) => {
 		const hostGuidance =
 			process.env.JACAZUL_HOST === "jacazul.nvim"

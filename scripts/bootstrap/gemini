@@ -65,6 +65,14 @@ for skill_dir in "$PROJECT_ROOT/skills"/*; do
     name=$(basename "$skill_dir")
 
     target="$SKILLS_DIR/$name"
+    # A skill with a HOSTS file serves only the harnesses it lists.
+    if [ -f "$skill_dir/HOSTS" ] && ! grep -qx 'gemini' "$skill_dir/HOSTS"; then
+        if [ -L "$target" ]; then
+            rm -f -- "$target"
+            echo "🐊 Unlinking skill not hosted by gemini: $name"
+        fi
+        continue
+    fi
     # Always ensure the link points to the CURRENT PROJECT_ROOT
     if [ -L "$target" ]; then
         current_target=$(readlink -f "$target")
