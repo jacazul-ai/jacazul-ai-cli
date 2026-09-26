@@ -125,6 +125,10 @@ is defined:
    tip shows only the intended changes; when only messages or order
    changed, `git diff <backup> HEAD` is empty.
 5. The project's test suite passes on the tip before a push.
+6. After the push is verified, ask the operator to delete the backup ref
+   the rewrite created. `git-mode` lists every `backup/*` ref whose patches
+   already exist on the published reference; offer to remove those when the
+   task closes, and delete only on an explicit yes.
 
 `git-mode` and `git-census` never write. Treat failures as tactical
 prompts: read the error, explain the actionable meaning, then fix or ask
@@ -280,8 +284,10 @@ git log -1 --format=%b | cat -A
    files relevant to the current task, and hunks through
    `git apply --cached` (interactive `-p` is unavailable to agents).
 5. **Build messages from a file** and verify them with `cat -A`.
-6. **Back up before rewriting, prove after:** backup ref, `range-diff`,
-   lease on push.
+6. **Back up before rewriting, prove after, then clean up:** backup ref,
+   `range-diff`, lease on push, and a question to delete the backup once
+   the push is verified. A backup nobody removes turns into noise that
+   hides the one that matters.
 7. **Confirm destructive commands** with the operator: `reset --hard`,
    `clean -fd`, `branch -D`, `stash drop`, `push --force-with-lease`,
    `filter-repo`, `worktree remove --force`.

@@ -240,7 +240,9 @@ and no comparison afterwards.
 unnoticed until the reflog has expired.
 
 **Safer shape:** Backup ref first; `git range-diff` and `git diff <backup>`
-after; delete the backup only after the push is verified.
+after; once the push is verified, ask to delete the backup. A pile of
+stale `backup/*` refs is the same finding in reverse: nobody can tell
+which one still protects unpublished work.
 
 ### 15. Series that breaks between commits
 

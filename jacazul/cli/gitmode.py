@@ -74,6 +74,12 @@ def main(argv: list[str] | None = None) -> int:
     )
     print(f"  signing: {report.signing}")
     print(f"  hooks: {report.hooks}")
+    if report.backups:
+        target = report.backups_target or "no reference"
+        print(
+            f"  backups: {len(report.backups)} "
+            f"({len(report.landed_backups)} landed on {target})"
+        )
     for item in report.evidence:
         print(f"  - {item}")
     return 0

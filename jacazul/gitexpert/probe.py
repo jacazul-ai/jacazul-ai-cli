@@ -91,6 +91,9 @@ class Report:
     signing: str
     hooks: str
     evidence: list[str] = field(default_factory=list)
+    backups: list[str] = field(default_factory=list)
+    landed_backups: list[str] = field(default_factory=list)
+    backups_target: str | None = None
 
 
 @dataclass
@@ -210,6 +213,42 @@ def _scan(root: Path, reference: str | None, evidence: list[str]) -> str:
     return "unknown"
 
 
+def _backups(
+    root: Path, reference: str | None
+) -> tuple[list[str], list[str], str | None]:
+    """List backup/* refs and those whose patches all exist on the reference.
+
+    The published reference wins over the local branch, so a backup counts
+    as landed only once its rewrite is pushed. Patch-id matching (git cherry)
+    survives rewords and redates; a squash or fixup changes the patch, so its
+    backup stays unlanded.
+    """
+    names = _out(
+        root, "for-each-ref", "--format=%(refname:short)", "refs/heads/backup/"
+    )
+    backups = (names or "").splitlines()
+    if not backups or not reference:
+        return backups, [], None
+    target = None
+    for ref, rev in (
+        (f"refs/remotes/origin/{reference}", f"origin/{reference}"),
+        (f"refs/heads/{reference}", reference),
+    ):
+        if _out(root, "rev-parse", "--verify", "--quiet", ref) is not None:
+            target = rev
+            break
+    if target is None:
+        return backups, [], None
+    landed = []
+    for name in backups:
+        cherry = _out(root, "cherry", target, name)
+        if cherry is not None and not any(
+            line.startswith("+") for line in cherry.splitlines()
+        ):
+            landed.append(name)
+    return backups, landed, target
+
+
 def _worktree_count(root: Path) -> int:
     listing = _out(root, "worktree", "list", "--porcelain") or ""
     blocks = [block for block in listing.split("\n\n") if block.strip()]
@@ -295,6 +334,14 @@ def detect(path: str | os.PathLike[str]) -> Report | None:
     if mode is None:
         mode, source = _scan(root, reference, evidence), "scan"
 
+    backups, landed, backups_target = _backups(root, reference)
+    if landed:
+        evidence.append(
+            f"backup refs already landed on {backups_target}: "
+            f"{', '.join(landed)}; ask the operator before deleting them "
+            "with git branch -D"
+        )
+
     branch = _out(root, "symbolic-ref", "--quiet", "--short", "HEAD")
     upstream = ahead = behind = None
     if branch:
@@ -333,6 +380,9 @@ def detect(path: str | os.PathLike[str]) -> Report | None:
         signing=f"on ({signing_format})" if gpgsign else "off",
         hooks=_hooks(root, common),
         evidence=evidence,
+        backups=backups,
+        landed_backups=landed,
+        backups_target=backups_target,
     )
 
 

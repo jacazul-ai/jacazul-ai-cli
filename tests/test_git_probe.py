@@ -234,6 +234,59 @@ class TestGitMode(GitProbeCase):
 
         self.assertIsNone(detect(empty))
 
+    def test_backup_of_a_landed_rewrite_is_reported_for_cleanup(self):
+        repo = make_repo(self.root)
+        linear_history(repo, count=3)
+        git(repo, "branch", "backup/reword-1")
+        git(repo, "commit", "-q", "--amend", "-m", "feat: step 2 reworded")
+        git(repo, "switch", "-q", "-c", "side", "HEAD~1")
+        commit(repo, "feat: never landed", filename="side.txt")
+        git(repo, "branch", "backup/squash-1")
+        git(repo, "switch", "-q", "main")
+
+        report = detect(repo)
+
+        self.assertEqual(
+            report.backups, ["backup/reword-1", "backup/squash-1"]
+        )
+        self.assertEqual(report.landed_backups, ["backup/reword-1"])
+        self.assertEqual(report.backups_target, "main")
+        self.assertTrue(
+            any(
+                "backup/reword-1" in e and "ask the operator" in e
+                for e in report.evidence
+            )
+        )
+
+    def test_backup_check_prefers_the_published_reference(self):
+        origin = make_repo(self.root, "origin")
+        linear_history(origin, count=2)
+        subprocess.run(
+            ["git", "clone", "-q", str(origin), "clone"],
+            cwd=self.root,
+            check=True,
+            env=_env(),
+        )
+        clone = self.root / "clone"
+        _identity(clone)
+        git(clone, "branch", "backup/unpushed")
+        commit(clone, "feat: local only")
+        git(clone, "branch", "-f", "backup/unpushed")
+
+        report = detect(clone)
+
+        self.assertEqual(report.backups_target, "origin/main")
+        self.assertEqual(report.landed_backups, [])
+
+    def test_no_backup_refs_adds_no_evidence(self):
+        repo = make_repo(self.root)
+        linear_history(repo, count=3)
+
+        report = detect(repo)
+
+        self.assertEqual(report.backups, [])
+        self.assertFalse(any("backup" in e for e in report.evidence))
+
 
 class TestGitCensus(GitProbeCase):
     def setUp(self):
@@ -338,6 +391,16 @@ class TestGitCli(GitProbeCase):
         self.assertEqual(result.returncode, 0, msg=result.stderr)
         self.assertIn("GIT_MODE: linear", result.stdout)
         self.assertIn("layout: plain", result.stdout)
+
+    def test_git_mode_prints_backup_count_and_landed(self):
+        repo = make_repo(self.root)
+        linear_history(repo, count=3)
+        git(repo, "branch", "backup/pre-redate-1")
+
+        result = self._run("jacazul.cli.gitmode", str(repo))
+
+        self.assertEqual(result.returncode, 0, msg=result.stderr)
+        self.assertIn("backups: 1 (1 landed on main)", result.stdout)
 
     def test_git_mode_outside_repository_exits_with_action(self):
         empty = self.root / "empty"

@@ -21,8 +21,10 @@ answer came from, and the posture the layout demands:
   convention: 50/50 recent titles are Conventional Commits
   signing: off
   hooks: none
+  backups: 2 (2 landed on origin/master)
   - stash stack is shared by 6 worktrees: prefer WIP commits, apply stash entries by hash
   - pinned by the Git Workflow section of AGENTS.md
+  - backup refs already landed on origin/master: backup/pre-reword-20260920, backup/pre-redate-20260924; ask the operator before deleting them with git branch -D
 ```
 
 | Mode | Meaning | What the expert does |
@@ -35,6 +37,11 @@ The layout decides posture: in a `plain` checkout switching branches
 changes the files under your editor; with `worktrees` or `bare` the agent
 never switches branches inside a worktree, adds a new one instead, and
 treats the stash as shared.
+
+The `backups` line appears only when `backup/*` refs exist. A backup
+counts as landed when every patch it holds already sits on the published
+reference, so rewords and redates count and a squash does not. The agent
+asks before deleting landed backups; it never deletes one on its own.
 
 ### When you want the agent to stop guessing your workflow
 
@@ -141,10 +148,11 @@ unmarked breaking changes.
 1. Run `git-mode` before the first commit, rebase or merge in a session.
 2. Pin the workflow once so no agent has to infer it again.
 3. One logical change per commit; the message says what and why.
-4. Back up before rewriting, prove with `range-diff` after.
+4. Back up before rewriting, prove with `range-diff` after, and delete
+   the backup once the push is verified.
 5. `git-census` on the range before every push.
 
 ---
 
-**Version:** 1.0.0
-**Last Updated:** 2026-09-14
+**Version:** 1.1.0
+**Last Updated:** 2026-09-26

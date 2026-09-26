@@ -21,7 +21,11 @@ project integrates work.
    the upstream does not have; `git branch -r --contains <commit>` is
    non-empty when a commit already lives on a remote branch.
 4. Create a backup ref before any rewrite:
-   `git branch backup/<topic>-$(date +%Y%m%d%H%M%S)`.
+   `git branch backup/<topic>-$(date +%Y%m%d%H%M%S)`. It lives until the
+   rewrite is pushed and verified; then ask the operator to delete it.
+   `git-mode` reports the `backup/*` refs already landed on the published
+   reference (patch-equivalent through `git cherry`, so rewords and
+   redates count; a squash or fixup does not).
 5. Never use the stash as a parking lot in a worktree layout: the stack is
    shared. Prefer a temporary WIP commit; if a stash is unavoidable, push
    it with a unique message, apply it by hash, and drop only that entry.
@@ -146,7 +150,9 @@ git range-diff "$(git merge-base "$backup" <reference>)..$backup" \
 ```
 
 Stacked topic branches follow the rebase with `--update-refs`
-(Git 2.38+). Delete the backup ref only after the push is verified.
+(Git 2.38+). Once the push is verified, ask the operator to delete the
+backup ref (`git branch -D <backup>`); never delete it unasked and never
+before the push.
 
 ## Pushing rewritten history
 
