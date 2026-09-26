@@ -9,7 +9,12 @@ running, grading and reading.
 The runner is Claude Code's `claude plugin eval`: every run is a Claude Code
 session, and the traces, tools and sandbox below are Claude Code's. A result
 therefore holds for Claude Code and the model it ran; Gemini, pi, Copilot and
-Opencode load skills their own way and are not measured by it.
+Opencode load skills their own way and are not measured by it. Launching
+`claude plugin eval` from pi or another harness does not change that: it is
+still a Claude Code measurement. It remains a good bench for the skill text
+itself, which every harness loads unchanged, but it does not certify a skill
+for pi or Opencode. A runner for another harness keeps its own baseline and
+gets its own section once it exists.
 
 ## Trigger → Action
 
@@ -33,6 +38,18 @@ claude plugin eval skills/<name> --case <case-name> --runs 1 \
 | `--max-cost-usd` | Runaway guard. The reported USD is an equivalent figure; on a subscription it is plan usage, not a charge. |
 | `--keep-temp` | Keeps each run's `trace.jsonl` so you can see what the agent actually did. |
 | `</dev/null` | A backgrounded run otherwise inherits a stdin that never closes, and any prompt inside it hangs forever. |
+
+Run it from the repository root, or pass the skill directory as an absolute
+path: the path is resolved against the current directory. Keep the command
+on one line when you paste it; a line break ends the command and the flags
+after it never reach the eval.
+
+The eval starts its own Claude sessions with `--trust-plugin` and
+`--allow-tools Bash`, so an agent's permission guard may refuse to start it.
+The command itself runs from any harness through its shell.
+When the agent is blocked, the operator runs the same one-line command from
+the repository root (in Claude Code, with a `!` prefix so the output lands in
+the conversation) and hands the output back.
 
 `--trust-plugin` and `--allow-tools Bash` are the operator's call. Cases that
 check shell commands need `--allow-tools Bash`, or the agent cannot even try
@@ -133,17 +150,28 @@ concrete nouns a user would type, as the methodology asks, and re-measure.
 
 ## Current record: jacazul-engine
 
-Cases in `skills/jacazul-engine/evals/`, runs=1, `claude-opus-5-5` agent,
-haiku judge, graders as of the command-anchored revision.
+Cases in `skills/jacazul-engine/evals/`, `claude-opus-5-5` agent, haiku
+judge, graders as of the command-anchored revision. Every column ran with
+`--runs 1 --ablation with-without --no-scaffold --no-publish`.
 
-| Case | Baseline (monolith, 66 KB) | After hub split (33 KB) | Reference read after the split |
+| Column | Engine at | Claude Code | Ran on |
 |---|---|---|---|
-| 01 onboard anchors first | 1.00 / 0.00 | 1.00 / 0.33 | `onboard.md`, then `tw-flow focus` |
-| 03 status stays on status | 0.75 / 0.25 | 0.75 / 0.50 | `onboard.md` |
-| 04 close waits for outcome | 1.00 / 0.67 | 1.00 / 0.67 | none (no trigger) |
+| Baseline | `4740c75` | 2.1.281 | 2026-09-23 |
+| After hub split | `c8cc55f` | 2.1.281 | 2026-09-23 |
+| After on-demand experts | `8dab60c` | 2.1.282 | 2026-09-26 |
+
+| Case | Baseline (monolith, 66 KB) | After hub split (33 KB) | After on-demand experts and indexed prompts | Reference read (hub split run) |
+|---|---|---|---|---|
+| 01 onboard anchors first | 1.00 / 0.00 | 1.00 / 0.33 | 1.00 / 0.00 | `onboard.md`, then `tw-flow focus` |
+| 03 status stays on status | 0.75 / 0.25 | 0.75 / 0.50 | 0.75 / 0.25 | `onboard.md` |
+| 04 close waits for outcome | 1.00 / 0.67 | 1.00 / 0.67 | 1.00 / 0.67 | none (no trigger) |
 
 Scores are `with / without`. Per-run cost of the `with` arm dropped about 20
-percent after the split. Without a launcher, every `with` run also read
+percent after the split. "After on-demand experts" is the final re-run after
+git-expert and security-expert left the first turn and taskwarrior-expert
+was slimmed: the `with` arm held, while first-turn skill bytes fell from
+about 95 KB to about 44 KB. The `without` arm moves between runs; with
+`--runs 1` treat it as noise. Without a launcher, every `with` run also read
 `references/personas/jacazul.md`, the documented fallback voice.
 
 On-demand loading, measured on a four-skill fixture with `--runs 3`:
