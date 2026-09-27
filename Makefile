@@ -2,7 +2,9 @@
 
 .DEFAULT_GOAL := help
 
-.PHONY: help configure sandbox language github test
+.PHONY: help configure sandbox language github test build clean fmt go-test tidy vet
+
+BINARY := bin/jacazul
 
 define PIRAZ_AI_BANNER
 	@echo "TODO"
@@ -50,3 +52,26 @@ sandbox: ## Build the Jacazul AI Sandbox container image
 # default of test*.py silently skips the second group.
 test: ## Run the full test suite
 	@python3 -m unittest discover -s tests -t . -p '*test*.py'
+
+# Go launcher (cmd/jacazul). Until the Python cutoff the Go suite has its
+# own entry point; `test` above stays the Python suite.
+build: ## Build the jacazul launcher into bin/
+	CGO_ENABLED=0 go build -o $(BINARY) ./cmd/jacazul
+
+clean: ## Remove the launcher build and the Go test cache
+	go clean -testcache
+	rm -rf bin/
+
+fmt: ## Format Go code with gofmt, then organize imports with goimports
+	gofmt -w cmd internal
+	@command -v goimports >/dev/null 2>&1 && goimports -w cmd internal \
+		|| echo "goimports unavailable: import organization skipped"
+
+go-test: ## Run the Go test suite with race detection and no cache
+	go clean -testcache && go test -race -v ./...
+
+tidy: ## Add missing and remove unused Go modules
+	go mod tidy
+
+vet: ## Report suspicious Go constructs
+	go vet ./...

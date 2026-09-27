@@ -126,3 +126,6 @@ skills/jacazul-engine/*
 
 # Skill eval run output (claude plugin eval)
 skills/*/evals/results/
+
+# Go launcher build output
+/bin/

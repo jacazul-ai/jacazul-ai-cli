@@ -89,7 +89,9 @@ runs the whole bootstrap without starting the CLI binary.
 - **Running the Suite:** the only invocation is `make test`; do not improvise
   `python -m unittest discover`. Its `-t .` keeps the relative imports in
   `tests/` working and its explicit `-p '*test*.py'` collects `*_test.py`
-  files. `tests/test_suite_contract.py` pins it.
+  files. `tests/test_suite_contract.py` pins it. The Go launcher
+  (`cmd/jacazul`) runs with `make go-test` until the Python cutoff, when
+  `make test` becomes the Go suite.
 
 ## Git Workflow
 
