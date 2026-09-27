@@ -15,12 +15,12 @@ harness becomes a subcommand:
 |---|---|
 | `jacazul-claude` | `jacazul claude` |
 | `jacazul-pi` | `jacazul pi` |
-| `jacazul-gemini`, `jacazul-gemini-sandboxed` | `jacazul gemini` |
+| `jacazul-gemini` | `jacazul gemini` |
 | `jacazul-copilot` | `jacazul copilot` |
 | `jacazul-opencode` | `jacazul opencode` |
 
 The old names keep working during the transition as entry points to the
-same binary.
+same binary. `jacazul-gemini-sandboxed` is not ported (see Out of scope).
 
 ## Command shape
 
@@ -188,6 +188,13 @@ harness. The Go launcher is held to it:
 2. The legacy `jacazul-<harness>` names route to the Go binary.
 3. At the cutoff the Bash launchers, `testdata/parity`, `internal/parity`
    and the `parity` target are removed, and `make test` runs the Go suite.
+
+## Out of scope until Jacazul is consolidated in Go
+
+- **Sandboxes.** `JACAZUL_HOME/sandboxes` and the sandboxed launcher
+  (`scripts/jacazul-gemini-sandboxed`) are not valid today. The Go launcher
+  neither ports nor reproduces them, and the parity matrix has no sandboxed
+  scenario. They are revisited only after the whole of Jacazul runs in Go.
 
 ## Open decisions
 
