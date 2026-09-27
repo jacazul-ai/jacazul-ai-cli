@@ -2,7 +2,7 @@
 
 .DEFAULT_GOAL := help
 
-.PHONY: help configure sandbox language github test build clean fmt go-test tidy vet
+.PHONY: help configure sandbox language github test build clean fmt go-test tidy vet parity
 
 BINARY := bin/jacazul
 
@@ -75,3 +75,6 @@ tidy: ## Add missing and remove unused Go modules
 
 vet: ## Report suspicious Go constructs
 	go vet ./...
+
+parity: ## Recapture Bash launcher parity references (HARNESS=claude)
+	./testdata/parity/capture $(or $(HARNESS),claude)

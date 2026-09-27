@@ -1,0 +1,123 @@
+# claude session | env: - | args: --jacazul-session abcd1234
+
+## exit
+0
+
+## stdout
+🌐 Jacazul Language: Chat=pt-br | Data=en
+🐊 Syncing Python dependencies via 'uv'...
+🐊 Installing Jacazul package in editable mode...
+✅ Jacazul: Python environment ready (<HOME>/.jacazul-ai/.venv).
+✓ Hatched Engine Skill: <ROOT>/skills/jacazul-engine/SKILL.md
+🐊 Task Data: <HOME>/.jacazul-ai/.task/jacazul-ai_jacazul-ai-cli
+🐊 Session ID: abcd1234
+🐊 Jacazul Runtime Initialized | Mode: COUNSELOR | Binary: /usr/bin/task
+🐊 Creating Claude directory at <HOME>/.jacazul-ai/agents/claude...
+🐊 Initializing Claude settings.json from template...
+✅ Jacazul: Claude settings.json verified (SessionStart hook active).
+🐊 Creating Claude skills directory at <HOME>/.jacazul-ai/agents/claude/skills...
+🐊 Linking global Claude skill: bash-expert
+🐊 Linking global Claude skill: bash-tutor
+🐊 Linking global Claude skill: code-review
+🐊 Linking global Claude skill: git-expert
+🐊 Linking global Claude skill: github-expert
+🐊 Linking global Claude skill: go-expert
+🐊 Linking global Claude skill: go-tutor
+🐊 Linking global Claude skill: jacazul-engine
+🐊 Linking global Claude skill: js-ts-expert
+🐊 Linking global Claude skill: js-ts-tutor
+🐊 Linking global Claude skill: php-expert
+🐊 Linking global Claude skill: php-tutor
+🐊 Linking global Claude skill: python-expert
+🐊 Linking global Claude skill: python-tutor
+🐊 Linking global Claude skill: rust-expert
+🐊 Linking global Claude skill: rust-tutor
+🐊 Linking global Claude skill: security-expert
+🐊 Linking global Claude skill: taskwarrior-expert
+🐊 Linking global Claude skill: tutor
+🐊 Linking global Claude skill: zig-expert
+🐊 Linking global Claude skill: zig-tutor
+🐊 Creating Claude extensions directory at <HOME>/.jacazul-ai/agents/claude/extensions...
+🐊 Linking Claude extension: jacazul-line.sh
+✅ Jacazul: Claude configuration verified.
+🐊 jacazul-claude: Starting for project [jacazul-ai_jacazul-ai-cli]
+✅ Dry run complete. Claude bootstrap verified for project [jacazul-ai_jacazul-ai-cli].
+🐊 Arguments for claude: --append-system-prompt "[ONBOARD_PROMPT]" 
+
+## stderr
+
+## home
+d .
+d ./.jacazul-ai
+d ./.jacazul-ai/.task
+d ./.jacazul-ai/.task/jacazul-ai_jacazul-ai-cli
+d ./.jacazul-ai/agents
+d ./.jacazul-ai/agents/claude
+d ./.jacazul-ai/agents/claude/extensions
+d ./.jacazul-ai/agents/claude/skills
+f ./.jacazul-ai/agents/claude/settings.json
+l ./.jacazul-ai/agents/claude/extensions/jacazul-line.sh <ROOT>/extensions/claude/jacazul-line.sh
+l ./.jacazul-ai/agents/claude/skills/bash-expert <ROOT>/skills/bash-expert
+l ./.jacazul-ai/agents/claude/skills/bash-tutor <ROOT>/skills/bash-tutor
+l ./.jacazul-ai/agents/claude/skills/code-review <ROOT>/skills/code-review
+l ./.jacazul-ai/agents/claude/skills/git-expert <ROOT>/skills/git-expert
+l ./.jacazul-ai/agents/claude/skills/github-expert <ROOT>/skills/github-expert
+l ./.jacazul-ai/agents/claude/skills/go-expert <ROOT>/skills/go-expert
+l ./.jacazul-ai/agents/claude/skills/go-tutor <ROOT>/skills/go-tutor
+l ./.jacazul-ai/agents/claude/skills/jacazul-engine <ROOT>/skills/jacazul-engine
+l ./.jacazul-ai/agents/claude/skills/js-ts-expert <ROOT>/skills/js-ts-expert
+l ./.jacazul-ai/agents/claude/skills/js-ts-tutor <ROOT>/skills/js-ts-tutor
+l ./.jacazul-ai/agents/claude/skills/php-expert <ROOT>/skills/php-expert
+l ./.jacazul-ai/agents/claude/skills/php-tutor <ROOT>/skills/php-tutor
+l ./.jacazul-ai/agents/claude/skills/python-expert <ROOT>/skills/python-expert
+l ./.jacazul-ai/agents/claude/skills/python-tutor <ROOT>/skills/python-tutor
+l ./.jacazul-ai/agents/claude/skills/rust-expert <ROOT>/skills/rust-expert
+l ./.jacazul-ai/agents/claude/skills/rust-tutor <ROOT>/skills/rust-tutor
+l ./.jacazul-ai/agents/claude/skills/security-expert <ROOT>/skills/security-expert
+l ./.jacazul-ai/agents/claude/skills/taskwarrior-expert <ROOT>/skills/taskwarrior-expert
+l ./.jacazul-ai/agents/claude/skills/tutor <ROOT>/skills/tutor
+l ./.jacazul-ai/agents/claude/skills/zig-expert <ROOT>/skills/zig-expert
+l ./.jacazul-ai/agents/claude/skills/zig-tutor <ROOT>/skills/zig-tutor
+
+## .jacazul-ai/agents/claude/settings.json
+{
+  "permissions": {
+    "allow": [
+      "Bash(jacazul-broker:*)",
+      "Bash(jacazul-hatch:*)",
+      "Bash(jacazul-persona:*)",
+      "Bash(py-check:*)",
+      "Bash(scripts/run_smoke.py:*)",
+      "Bash(taskp:*)",
+      "Bash(tw-flow:*)",
+      "Skill(git-expert)",
+      "Skill(github-expert)",
+      "Skill(jacazul-engine)",
+      "Skill(python-expert)",
+      "Skill(security-expert)",
+      "Skill(taskwarrior-expert)"
+    ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo 'onboard'",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  },
+  "attribution": {
+    "commit": "",
+    "pr": ""
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "<HOME>/.jacazul-ai/agents/claude/extensions/jacazul-line.sh"
+  }
+}

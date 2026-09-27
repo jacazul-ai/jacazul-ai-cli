@@ -1,0 +1,151 @@
+#!/usr/bin/env bash
+# capture: record what a Bash launcher does under DRY=true DEBUG=true, so
+# the Go launcher can be held to the same output and side effects.
+#
+# Each scenario runs the launcher with a clean environment and a throwaway
+# HOME that gets its own venv, built from the local uv cache before the
+# launcher runs. Never link the real venv into it: the bootstrap reinstalls
+# the package, and uv rewrites every console-script shebang to the venv
+# path it was given, which points at the throwaway HOME. The reference holds the exit code, stdout, stderr without
+# uv's volatile lines, the HOME tree and the settings files the bootstrap
+# wrote, with the temp HOME, the repository root and generated session IDs
+# replaced by placeholders.
+set -euo pipefail
+
+ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../.." && pwd -P)"
+SCENARIOS="$ROOT/testdata/parity/scenarios.tsv"
+
+usage() {
+    cat >&2 <<'EOF'
+usage: testdata/parity/capture <harness> [--scenario NAME]... [--home DIR]
+         [--uv-cache DIR] [--out DIR] [--keep]
+
+  <harness>        claude, pi, gemini, copilot or opencode
+  --scenario NAME  capture only this scenario (repeatable); default: all
+  --home DIR       parent of the throwaway HOMEs; default: mktemp -d
+  --uv-cache DIR   UV_CACHE_DIR for the run; default: ~/.cache/uv
+  --out DIR        where references go; default: testdata/parity/<harness>
+  --keep           keep the throwaway HOMEs and print where they are
+EOF
+    exit 2
+}
+
+normalize() {
+    local home="$1" session="$2"
+    sed -e "s|$home|<HOME>|g" -e "s|$ROOT|<ROOT>|g" \
+        -e "s|Session ID: $session|Session ID: <SESSION>|"
+}
+
+# uv reports timings, versions and reinstalls on stderr; none of it is
+# launcher behavior.
+drop_uv_noise() {
+    grep -v -E '^ *(Using Python|Checked|Resolved|Prepared|Uninstalled|Installed|Audited|Building|Built)|^ [~+-] ' || true
+}
+
+capture_one() {
+    local harness="$1" scenario="$2" env_spec="$3" arg_spec="$4"
+    local home="$PARENT/$harness-$scenario"
+    local launcher="$ROOT/scripts/jacazul-$harness"
+    local -a extra_env=() args=()
+
+    [ -x "$launcher" ] || { printf '❌ no launcher at %s\n' "$launcher" >&2; return 1; }
+    [ "$env_spec" = "-" ] || read -r -a extra_env <<<"$env_spec"
+    [ "$arg_spec" = "-" ] || read -r -a args <<<"$arg_spec"
+
+    mkdir -p -- "$home/.jacazul-ai"
+    # A healthy, isolated venv so the bootstrap takes its quiet path. Offline
+    # first; the first capture on a machine may fill the uv cache once.
+    local venv="$home/.jacazul-ai/.venv"
+    UV_CACHE_DIR="$UV_CACHE" UV_LINK_MODE=copy uv venv -q -- "$venv"
+    if ! UV_CACHE_DIR="$UV_CACHE" UV_LINK_MODE=copy UV_OFFLINE=1 VIRTUAL_ENV="$venv" \
+        uv pip install -q -e "$ROOT" 2>/dev/null; then
+        printf '🐊 uv cache incomplete: downloading dependencies once\n' >&2
+        UV_CACHE_DIR="$UV_CACHE" UV_LINK_MODE=copy VIRTUAL_ENV="$venv" uv pip install -q -e "$ROOT" || {
+            printf '❌ could not build a venv for %s/%s\n   ACTION: check network access to the package index, then rerun.\n' "$harness" "$scenario" >&2
+            return 1
+        }
+    fi
+
+    local out err code=0
+    out="$(mktemp)" err="$(mktemp)"
+    (cd -- "$ROOT" && env -i HOME="$home" USER="${USER:-}" LANG=C.UTF-8 \
+        TERM=dumb PATH="/usr/local/bin:/usr/bin:/bin:$HOME/.local/bin" \
+        UV_CACHE_DIR="$UV_CACHE" UV_LINK_MODE=copy DRY=true DEBUG=true ${extra_env[@]+"${extra_env[@]}"} \
+        "$launcher" ${args[@]+"${args[@]}"} </dev/null >"$out" 2>"$err") || code=$?
+
+    local session
+    session="$(sed -n 's/.*Session ID: \([0-9a-f]\{8\}\).*/\1/p' "$out" | head -n 1)"
+    if [[ " ${args[*]:-} " == *" --jacazul-session "* ]]; then
+        session="__requested__"
+    fi
+
+    mkdir -p -- "$OUT"
+    {
+        printf '# %s %s | env: %s | args: %s\n' "$harness" "$scenario" "$env_spec" "$arg_spec"
+        printf '\n## exit\n%s\n' "$code"
+        printf '\n## stdout\n'
+        cat -- "$out"
+        printf '\n## stderr\n'
+        drop_uv_noise <"$err"
+        printf '\n## home\n'
+        (cd -- "$home" && find . -path ./.jacazul-ai/.venv -prune -o -printf '%y %p %l\n' \
+            | sed 's/ $//' | LC_ALL=C sort)
+        local settings
+        while IFS= read -r settings; do
+            printf '\n## %s\n' "${settings#"$home"/}"
+            cat -- "$settings"
+        done < <(find "$home" -path "$home/.jacazul-ai/.venv" -prune -o \
+            -name '*.json' -type f -print | LC_ALL=C sort)
+    } | normalize "$home" "$session" >"$OUT/$scenario.txt"
+
+    rm -f -- "$out" "$err"
+    printf '✓ %s/%s.txt (exit %s)\n' "${OUT#"$ROOT"/}" "$scenario" "$code"
+}
+
+main() {
+    [ $# -ge 1 ] || usage
+    local harness="$1"
+    shift
+    local -a wanted=()
+    PARENT="" UV_CACHE="$HOME/.cache/uv"
+    OUT="$ROOT/testdata/parity/$harness"
+    local keep=false
+
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            --scenario) wanted+=("${2:?--scenario needs a name}"); shift 2 ;;
+            --home) PARENT="${2:?--home needs a directory}"; shift 2 ;;
+            --uv-cache) UV_CACHE="${2:?--uv-cache needs a directory}"; shift 2 ;;
+            --out) OUT="${2:?--out needs a directory}"; shift 2 ;;
+            --keep) keep=true; shift ;;
+            *) usage ;;
+        esac
+    done
+
+    command -v uv >/dev/null 2>&1 || { printf '❌ uv not found\n   ACTION: install uv; the capture builds one venv per scenario with it.\n' >&2; exit 1; }
+    if [ -z "$PARENT" ]; then
+        PARENT="$(mktemp -d)"
+        if [ "$keep" = false ]; then
+            trap 'rm -rf -- "${PARENT:?}"' EXIT
+        fi
+    fi
+
+    local found=0 h s e a
+    while IFS=$'\t' read -r h s e a; do
+        [[ -z "$h" || "$h" == \#* ]] && continue
+        [ "$h" = "$harness" ] || continue
+        if [ ${#wanted[@]} -gt 0 ] && [[ " ${wanted[*]:-} " != *" $s "* ]]; then
+            continue
+        fi
+        capture_one "$h" "$s" "$e" "$a"
+        found=$((found + 1))
+    done <"$SCENARIOS"
+
+    if [ "$found" -eq 0 ]; then
+        printf '❌ no scenario for %s in %s\n' "$harness" "${SCENARIOS#"$ROOT"/}" >&2
+        exit 1
+    fi
+    [ "$keep" = false ] || printf 'HOMEs kept under %s\n' "$PARENT"
+}
+
+main "$@"

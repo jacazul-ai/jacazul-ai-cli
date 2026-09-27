@@ -1,0 +1,7 @@
+# Launcher parity scenarios, shared by testdata/parity/capture (Bash
+# launchers) and the Go launcher tests. One scenario per line, tab
+# separated: harness, scenario, extra environment (space separated
+# KEY=value, or -), launcher arguments (space separated, or -).
+claude	default	-	-
+claude	resume	-	--resume
+claude	session	-	--jacazul-session abcd1234
