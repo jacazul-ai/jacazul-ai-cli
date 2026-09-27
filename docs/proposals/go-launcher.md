@@ -105,7 +105,7 @@ is ported:
 | Taskwarrior data and UDAs | `bootstrap/taskwarrior` | ported one to one, known issues included; transitional until the flow cutoff |
 | Python venv | `uv venv` + `uv pip install -e` on every launch | off the launch path |
 | Claude settings, skill and extension links | `bootstrap/claude` | merged and linked in Go, honoring `HOSTS` |
-| Onboard prompt | `bootstrap/onboard` | rendered from `prompts/onboard.md` plus the active voice |
+| Session prompt | `bootstrap/onboard` | rendered from the embedded `prompts/onboard.md` plus the active voice, without `eval` |
 | Hatch | `jacazul-hatch` (Python) on every launch | the Go hatch, only when content changed (below) |
 
 A Bash `DRY` launch takes about 1.1 s; `uv pip install -e` alone is about
@@ -153,6 +153,20 @@ Still to settle: `include` with `../` paths and loading from an
 `embed.FS` in pongo2, access to modules without a published tag or in
 private repositories (`GOPRIVATE`), and the provider contract, which goes
 into [`skill-methodology.md`](../skill-methodology.md).
+
+## Two things called onboard
+
+- **The session prompt** (`scripts/bootstrap/onboard`, `prompts/onboard.md`)
+  is text the launcher hands to the harness before it starts: the
+  bootstrap protocol with persona, mode, signatures and languages filled
+  in, followed by the active voice. It belongs to the launcher, and
+  `internal/bootstrap/onboard` renders it byte for byte like the Bash
+  bootstrap, substituting only its variables where the Bash version
+  evaluated the whole template.
+- **The orientation protocol** (focus, session resume, context, status or
+  ponder) is what the agent does when someone types `onboard`. It belongs
+  to the workflow engine and becomes one deterministic command of the flow
+  engine, instead of a sequence the agent performs step by step.
 
 ## Workflow engine
 
