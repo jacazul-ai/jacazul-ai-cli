@@ -104,7 +104,7 @@ is ported:
 | Mode | `JACAZUL_MODE`, default `COUNSELOR` | unchanged: a variable of the running session |
 | Taskwarrior data and UDAs | `bootstrap/taskwarrior` | ported one to one, known issues included; transitional until the flow cutoff |
 | Python venv | `uv venv` + `uv pip install -e` on every launch | off the launch path |
-| Claude settings, skill and extension links | `bootstrap/claude` | merged and linked in Go, honoring `HOSTS` |
+| Claude settings, skill and extension links | `bootstrap/claude` | merged and linked in Go, honoring `HOSTS`; links point into the checkout until the hatch embeds them (below) |
 | Session prompt | `bootstrap/onboard` | rendered from the embedded `prompts/onboard.md` plus the active voice, without `eval` |
 | Hatch | `jacazul-hatch` (Python) on every launch | the Go hatch, only when content changed (below) |
 
@@ -208,10 +208,34 @@ own database. Until then the launcher keeps today's Taskwarrior behavior:
 `internal/bootstrap/taskwarrior` ports the Bash bootstrap one to one,
 known issues included, with the `.taskrc` templates embedded from
 `templates/taskwarrior`. Porting it rather than calling the script keeps
-the launcher free of Bash and of any need to find a checkout. The flow
+the launcher free of Bash. The flow
 cutoff removes the package and migrates the Taskwarrior data into the flow
 database; it is a separate step from the Bash launcher cutoff unless the
 two coincide.
+
+### Temporary: the launcher finds its checkout
+
+Until the Go hatch embeds them, the skills and
+`extensions/claude/jacazul-line.sh` are linked from a checkout of this
+repository, as the Bash launchers do from `SCRIPT_DIR/../..`. The launcher
+takes that checkout from its own path: `os.Executable()`, resolved through
+symlinks, is `<checkout>/bin/jacazul`, and its parent is the checkout.
+
+- It works for `make build` and for the `~/bin` link, from any project
+  directory: the project comes from the working directory, the skills from
+  the checkout the binary was built in.
+- A binary outside a checkout (`go install`, a release download) has no
+  `skills/` next to it and stops with an instruction.
+- The lookup leaves the launcher when the hatch embeds both the skills and
+  the extension; from then on the binary needs no checkout.
+
+`internal/bootstrap/claude` differs from the Bash bootstrap on purpose in
+four places: the permission merge always runs (Bash skipped it without
+`jq`); a real directory where a link belongs is left alone with a warning
+(Bash's `ln -sfn` dropped a stray link inside it); an invalid
+`settings.json` stops the launch with an instruction instead of a `jq`
+error; and `settings.json` is rewritten only when it changes, atomically,
+keeping its mode.
 
 ## Out of scope until Jacazul is consolidated in Go
 
