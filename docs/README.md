@@ -35,6 +35,7 @@ Welcome to the Jacazul AI CLI documentation. This project is built around the co
 - [Environment Modes](environment-modes.md) - COUNSELOR (Safety) vs UNHINGED (Autonomy).
 - [Output Caching](tw-flow-cache.md) - Session-scoped context protection.
 - [Production Readiness Proposal](proposals/production-readiness.md) - Future risk-based release review across security, correctness, operations, and UX.
+- [Go Launcher Proposal](proposals/go-launcher.md) - One `jacazul` binary with a subcommand per harness, replacing the Bash launchers.
 - [NO BULLSHIT Policy](agents/no-bullshit-policy.md) - Our feedback standard.
 
 ---
