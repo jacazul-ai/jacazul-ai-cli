@@ -37,6 +37,7 @@ Welcome to the Jacazul AI CLI documentation. This project is built around the co
 - [Production Readiness Proposal](proposals/production-readiness.md) - Future risk-based release review across security, correctness, operations, and UX.
 - [Go Launcher Proposal](proposals/go-launcher.md) - One `jacazul` binary with a subcommand per harness, replacing the Bash launchers.
 - [Personas Proposal](proposals/personas.md) - A persona changes the voice, never the content; on-demand and user-defined personas.
+- [EXECUTOR Mode Proposal](proposals/executor-mode.md) - A spawned agent that works a task unattended, replacing UNHINGED.
 - [NO BULLSHIT Policy](agents/no-bullshit-policy.md) - Our feedback standard.
 
 ---
