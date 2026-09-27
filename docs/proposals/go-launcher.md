@@ -1,7 +1,8 @@
 # Proposal: The Go Launcher
 
-**Status:** In progress. The scaffold and the claude parity references are
-committed; the harness subcommands are not implemented yet.
+**Status:** In progress. `jacazul claude` is implemented and held to the
+claude parity references; the other harness subcommands are not
+implemented yet.
 **Audience:** Contributors and agents working on the launcher.
 **Related:** #113, plan `jacazul-launcher`, `go-expert`, `bash-expert`,
 [`tw-flow-session.md`](../tw-flow-session.md).
@@ -46,8 +47,10 @@ jacazul [--dry] [--debug] [--jacazul-session <id>] <harness> [harness args...]
 Since the Bash launchers were introduced, `jacazul-<harness> --resume`
 skips the onboard prompt and drops `--resume` before calling the harness,
 so the conversation is never resumed. With the pass-through above,
-`--resume` reaches the harness. Whether a resumed conversation still skips
-the onboard prompt is an open decision.
+`--resume` reaches the harness. Until the open decision below settles
+whether a resumed conversation skips the onboard prompt, `jacazul claude`
+passes it on every launch: `--append-system-prompt` is not stored with the
+conversation, so a resume without it runs without the persona.
 
 ## Layout
 
@@ -194,6 +197,13 @@ harness. The Go launcher is held to it:
 - `internal/parity` checks the references and compares them with
   `jacazul --dry --debug <harness>`.
 - Both are temporary and leave at the cutoff.
+
+The claude comparison accepts four differences, each on purpose: the
+venv sync and hatch lines are absent because neither runs on the launch
+path; the Taskwarrior bootstrap announces the task data directory it
+creates, which the Python hatch used to create silently; `--resume` keeps
+the session prompt and reaches claude; and the task binary path is not
+compared, since it differs per machine.
 
 ## Transition and cutoff
 
