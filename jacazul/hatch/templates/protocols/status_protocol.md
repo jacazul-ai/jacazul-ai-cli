@@ -7,7 +7,7 @@
 - **Trigger phrases:** "onboard", "full status", "project overview"
 - **Output:** Full `tw-flow ponder` dashboard showing ALL plans, ALL pending/active/completed counts
 - **Use case:** Understanding the entire project landscape, initial session setup
-- **Command:** `tw-flow ponder {{ project_id }}`
+- **Command:** `tw-flow ponder`
 
 ### TW-Flow Status (Plan View)
 - **When:** User requests current plan status during work

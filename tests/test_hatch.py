@@ -88,6 +88,25 @@ class TestHatchEngine(unittest.TestCase):
             )
             self.assertFalse(os.path.exists(agent_path))
 
+    def test_hatch_output_does_not_depend_on_the_project(self):
+        # One hatched copy is linked into every project, so a project ID
+        # baked into it points agents of other projects at the wrong silo.
+        os.environ["PROJECT_ID"] = "other-org_other-project"
+        hatch_prompt(
+            "all",
+            persona_override="arnalbam",
+            output_root=self.test_root,
+        )
+
+        leaks = []
+        for directory, _, files in os.walk(self.test_root):
+            for name in files:
+                path = os.path.join(directory, name)
+                with open(path, encoding="utf-8") as rendered:
+                    if "other-org_other-project" in rendered.read():
+                        leaks.append(os.path.relpath(path, self.test_root))
+        self.assertEqual(leaks, [])
+
     def test_hatch_renders_broker_safety_contract(self):
         hatch_prompt(
             "pi",

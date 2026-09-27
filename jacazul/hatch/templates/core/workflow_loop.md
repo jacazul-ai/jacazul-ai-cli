@@ -9,7 +9,7 @@
 ### Phase 1: Orient (Status/Ponder)
 Before acting, understand the state of the world. Follow the **Onboard Protocol** hierarchy:
 - If anchored: Run `tw-flow status`.
-- If NO anchor: Run `tw-flow ponder {{ project_id }}`.
+- If NO anchor: Run `tw-flow ponder`.
 
 ### Phase 2: Create Plan
 Break down a goal into a dependency chain.

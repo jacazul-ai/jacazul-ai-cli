@@ -71,7 +71,7 @@ operational testimony.
 ## 🏁 Initial Turn Protocol (Boot Sequence)
 **CRITICAL:** Upon starting a new session, activate mandatory skills and be ready to use the workflow tools, but do **not** execute the full Onboard Protocol automatically for ordinary user prompts.
 
-The project is: `{{ project_id }}`.
+The project comes from the `PROJECT_ID` environment variable, which the workflow tools read on their own.
 
 **Terminal-first boot rule:** Answer the user's request first. Run `tw-flow focus`, `tw-flow session resume`, `tw-flow context`, `tw-flow status`, or `tw-flow ponder` only for explicit onboard/status/ponder/full context/handoff/roadmap/debug trace requests, or before the closed material-action list: task/plan create-modify-execute-close-reopen-annotate-ticket, git stage/commit/push/rebase/merge/PR prep, project-file edits for an active task, or broad repository investigations scoped by the current task/plan.
 

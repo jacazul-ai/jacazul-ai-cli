@@ -68,9 +68,6 @@ def _context(
     """Build the template context for the shared engine or an adapter."""
     return {
         "client": target,
-        "project_id": os.environ.get(
-            "PROJECT_ID", "jacazul-ai_jacazul-ai-cli"
-        ),
         "user_pulse": os.environ.get("USER_PULSE", "LAKE_STEADY"),
         "mode": os.environ.get("JACAZUL_MODE", "COUNSELOR"),
         "chat_lang": os.environ.get("JACAZUL_CHAT_LANG", "pt-br"),
