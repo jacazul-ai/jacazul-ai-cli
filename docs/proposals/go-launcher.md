@@ -102,7 +102,7 @@ is ported:
 | Session ID | `python3 -c uuid` | generated in Go, or `--jacazul-session` |
 | Persona, language | `persona.json`, `language.json`, `jq`/`grep` | read from `project.json` (below) |
 | Mode | `JACAZUL_MODE`, default `COUNSELOR` | unchanged: a variable of the running session |
-| Taskwarrior data and UDAs | `bootstrap/taskwarrior` | `TASKDATA`/`TASKRC` computed, UDAs injected in Go |
+| Taskwarrior data and UDAs | `bootstrap/taskwarrior` | ported one to one, known issues included; transitional until the flow cutoff |
 | Python venv | `uv venv` + `uv pip install -e` on every launch | off the launch path |
 | Claude settings, skill and extension links | `bootstrap/claude` | merged and linked in Go, honoring `HOSTS` |
 | Onboard prompt | `bootstrap/onboard` | rendered from `prompts/onboard.md` plus the active voice |
@@ -188,6 +188,16 @@ harness. The Go launcher is held to it:
 2. The legacy `jacazul-<harness>` names route to the Go binary.
 3. At the cutoff the Bash launchers, `testdata/parity`, `internal/parity`
    and the `parity` target are removed, and `make test` runs the Go suite.
+
+Taskwarrior and `tw-flow` are replaced by the flow engine, which has its
+own database. Until then the launcher keeps today's Taskwarrior behavior:
+`internal/bootstrap/taskwarrior` ports the Bash bootstrap one to one,
+known issues included, with the `.taskrc` templates embedded from
+`templates/taskwarrior`. Porting it rather than calling the script keeps
+the launcher free of Bash and of any need to find a checkout. The flow
+cutoff removes the package and migrates the Taskwarrior data into the flow
+database; it is a separate step from the Bash launcher cutoff unless the
+two coincide.
 
 ## Out of scope until Jacazul is consolidated in Go
 

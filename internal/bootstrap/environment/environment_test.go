@@ -1,11 +1,22 @@
 package environment
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
 	"testing"
 )
+
+// TestMain lets the test binary stand in for the task executable: with
+// FAKE_TASK_VERSION set it prints that version and exits.
+func TestMain(m *testing.M) {
+	if v := os.Getenv("FAKE_TASK_VERSION"); v != "" {
+		fmt.Println(v)
+		os.Exit(0)
+	}
+	os.Exit(m.Run())
+}
 
 func lookup(vars map[string]string) func(string) string {
 	return func(key string) string { return vars[key] }
@@ -69,15 +80,18 @@ func TestModeDefaultsToCounselor(t *testing.T) {
 	}
 }
 
-// writeTask creates an executable fake task that reports version.
-func writeTask(t *testing.T, dir, version string) string {
+// writeTask links a "task" in dir to the test binary.
+func writeTask(t *testing.T, dir string) string {
 	t.Helper()
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		t.Fatal(err)
 	}
+	self, err := os.Executable()
+	if err != nil {
+		t.Fatal(err)
+	}
 	path := filepath.Join(dir, "task")
-	script := "#!/bin/sh\necho " + version + "\n"
-	if err := os.WriteFile(path, []byte(script), 0o755); err != nil {
+	if err := os.Symlink(self, path); err != nil {
 		t.Fatal(err)
 	}
 	return path
@@ -86,8 +100,9 @@ func writeTask(t *testing.T, dir, version string) string {
 func TestRealTaskSkipsTheWrapperDirectory(t *testing.T) {
 	root := t.TempDir()
 	wrapper := filepath.Join(root, "repo", "scripts")
-	writeTask(t, wrapper, "0.0.0")
-	real := writeTask(t, filepath.Join(root, "bin"), "3.4.1")
+	writeTask(t, wrapper)
+	real := writeTask(t, filepath.Join(root, "bin"))
+	t.Setenv("FAKE_TASK_VERSION", "3.4.1")
 
 	env := Resolve(Input{
 		Getenv:   lookup(map[string]string{"PATH": wrapper + string(os.PathListSeparator) + filepath.Dir(real)}),
