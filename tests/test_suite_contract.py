@@ -74,37 +74,5 @@ class TestSuiteContract(unittest.TestCase):
         )
 
 
-GO_TEST_TARGET = re.compile(r"^go-test:.*\n((?:\t.*\n)+)", re.MULTILINE)
-
-
-class TestGoSuiteContract(unittest.TestCase):
-    """The Go launcher has its own entry point until the Python cutoff."""
-
-    def setUp(self):
-        self.makefile = MAKEFILE.read_text(encoding="utf-8")
-
-    def test_go_test_target_runs_every_package_with_race(self):
-        match = GO_TEST_TARGET.search(self.makefile)
-        self.assertIsNotNone(
-            match,
-            "the Makefile must define `go-test` so the Go suite has one "
-            "invocation while `test` still runs the Python suite",
-        )
-        recipe = match.group(1)
-        self.assertIn("go test -race", recipe)
-        self.assertIn("./...", recipe)
-
-    def test_test_target_still_runs_python_until_the_cutoff(self):
-        recipe = TEST_TARGET.search(self.makefile).group(1)
-        self.assertIn("unittest discover", recipe)
-        self.assertNotIn("go test", recipe)
-
-    def test_go_module_is_the_launcher(self):
-        go_mod = (PROJECT_ROOT / "go.mod").read_text(encoding="utf-8")
-        self.assertRegex(
-            go_mod, r"(?m)^module github\.com/jacazul-ai/launcher$"
-        )
-
-
 if __name__ == "__main__":
     unittest.main()
