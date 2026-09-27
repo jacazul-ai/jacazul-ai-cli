@@ -231,6 +231,10 @@ repository, as the Bash launchers do from `SCRIPT_DIR/../..`. The launcher
 takes that checkout from its own path: `os.Executable()`, resolved through
 symlinks, is `<checkout>/bin/jacazul`, and its parent is the checkout.
 
+- `make install` builds `bin/jacazul` and links it as `~/bin/jacazul`
+  (`BINDIR=` changes the directory). It is a link, not a copy, so the
+  path still resolves into the checkout; running it from another worktree
+  repoints the link there.
 - It works for `make build` and for the `~/bin` link, from any project
   directory: the project comes from the working directory, the skills from
   the checkout the binary was built in.

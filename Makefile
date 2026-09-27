@@ -2,9 +2,10 @@
 
 .DEFAULT_GOAL := help
 
-.PHONY: help configure sandbox language github test build clean fmt go-test tidy vet parity
+.PHONY: help configure sandbox language github test build clean fmt go-test tidy vet parity install
 
 BINARY := bin/jacazul
+BINDIR ?= $(HOME)/bin
 
 define PIRAZ_AI_BANNER
 	@echo "TODO"
@@ -57,6 +58,16 @@ test: ## Run the full test suite
 # own entry point; `test` above stays the Python suite.
 build: ## Build the jacazul launcher into bin/
 	CGO_ENABLED=0 go build -o $(BINARY) ./cmd/jacazul
+
+# A link, not a copy: until skills are embedded the launcher finds its
+# checkout by resolving its own path, so the binary must stay in bin/.
+install: build ## Build the launcher and link it into BINDIR (default ~/bin)
+	@mkdir -p $(BINDIR)
+	@target="$(CURDIR)/$(BINARY)"; link="$(BINDIR)/jacazul"; \
+	if [ "$$(readlink -f "$$link")" != "$$target" ]; then \
+		echo "🐊 Linking $$link -> $$target"; \
+		ln -sfn "$$target" "$$link"; \
+	fi
 
 clean: ## Remove the launcher build and the Go test cache
 	go clean -testcache
