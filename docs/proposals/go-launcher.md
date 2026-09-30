@@ -187,10 +187,15 @@ into [`skill-methodology.md`](../skill-methodology.md).
 - Until the engine is embedded, `jacazul flow <args...>` passes through to
   the current `tw-flow` with the same arguments, streams and exit code,
   marked for replacement by `flow.Run`.
-- `jacazul flow session list` is implemented in Go now. It reads the
-  session files directly (focus lane, age, status, handoff note present),
-  as `tw-flow session list` does. Sessions stay owned by the workflow
-  engine; the launcher only creates or accepts the session ID.
+- `jacazul flow session list` is implemented in Go. It reads the
+  `focus-<id>.json` lanes under `TASKDATA` directly and prints what
+  `tw-flow session list` prints (session, plan, task, age, status, `*` on
+  the current session), plus a NOTE column: `note` for a handoff note not
+  read yet, `read` for one acknowledged with `tw-flow session ack`. It only
+  reads, so it does not refresh the lane's age the way every `tw-flow`
+  command does. Sessions stay owned by the workflow engine; the launcher
+  only creates or accepts the session ID. Other `jacazul flow` commands
+  point to `tw-flow` until the pass-through lands.
 
 ## Parity with the Bash launchers
 

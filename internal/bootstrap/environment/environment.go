@@ -37,16 +37,21 @@ type Env struct {
 	TaskVersion string // JACAZUL_TASK_VERSION, the major version
 }
 
+// Home is JACAZUL_HOME: a preset value wins over ~/.jacazul-ai.
+func Home(getenv func(string) string) string {
+	if home := getenv("JACAZUL_HOME"); home != "" {
+		return home
+	}
+	return filepath.Join(getenv("HOME"), ".jacazul-ai")
+}
+
 // Resolve computes the shared runtime values. A preset JACAZUL_HOME wins
 // over the default under HOME.
 func Resolve(in Input) Env {
 	env := Env{
-		Home:      in.Getenv("JACAZUL_HOME"),
+		Home:      Home(in.Getenv),
 		SessionID: in.SessionFlag,
 		Mode:      in.Getenv("JACAZUL_MODE"),
-	}
-	if env.Home == "" {
-		env.Home = filepath.Join(in.Getenv("HOME"), ".jacazul-ai")
 	}
 	if in.ProjectID != "" {
 		env.TaskData = filepath.Join(env.Home, ".task", in.ProjectID)
