@@ -16,7 +16,10 @@ type Options struct {
 	Version bool   `short:"v" long:"version" description:"Print the launcher version and exit"`
 	Dry     bool   `long:"dry" description:"Run every bootstrap step but do not start the harness (also DRY)"`
 	Debug   bool   `long:"debug" description:"Print what each bootstrap step verifies (also DEBUG)"`
-	Session string `long:"jacazul-session" value-name:"ID" description:"Continue the Jacazul session ID instead of starting one"`
+	Session string `long:"session" value-name:"ID" description:"Continue the Jacazul session ID instead of starting one"`
+	// LegacySession is the Bash launchers' name for --session, kept until
+	// the cutoff.
+	LegacySession string `long:"jacazul-session" value-name:"ID" hidden:"true"`
 }
 
 // Run executes the launcher with args (without the program name) and

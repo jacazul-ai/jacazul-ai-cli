@@ -52,7 +52,7 @@ func runClaude(opts Options, args []string, stdout, stderr io.Writer) int {
 	env := environment.Resolve(environment.Input{
 		Getenv:      os.Getenv,
 		ProjectID:   id.ID,
-		SessionFlag: opts.Session,
+		SessionFlag: cmp.Or(opts.Session, opts.LegacySession),
 		SkipDirs:    []string{filepath.Join(root, "scripts")},
 	})
 	cfg, err := project.LoadConfig(env.Home, id.ID)
@@ -204,7 +204,7 @@ func runClaude(opts Options, args []string, stdout, stderr io.Writer) int {
 	if isFile(filepath.Join(tw.TaskData, "focus-"+env.SessionID+".json")) {
 		fmt.Fprintln(stdout)
 		fmt.Fprintln(stdout, "╭─ 🐊 Jacazul Session ───────────────────────────────────────╮")
-		fmt.Fprintf(stdout, "│  To resume: jacazul --jacazul-session %s claude\n", env.SessionID)
+		fmt.Fprintf(stdout, "│  To resume: jacazul --session %s claude\n", env.SessionID)
 		fmt.Fprintln(stdout, "╰────────────────────────────────────────────────────────────╯")
 	}
 	return code

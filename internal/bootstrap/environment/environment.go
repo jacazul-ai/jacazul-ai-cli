@@ -20,7 +20,7 @@ type Input struct {
 	Getenv func(string) string
 	// ProjectID scopes the task data.
 	ProjectID string
-	// SessionFlag is --jacazul-session; it wins over JACAZUL_SESSION_ID.
+	// SessionFlag is --session; it wins over JACAZUL_SESSION_ID.
 	SessionFlag string
 	// SkipDirs are PATH entries holding the Jacazul task wrapper, which
 	// must not be taken for the real task binary.

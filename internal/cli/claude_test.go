@@ -100,7 +100,7 @@ func (l launch) recorded(t *testing.T) fakeClaude {
 
 func TestClaudeRunsWithThePromptAndUntouchedArgs(t *testing.T) {
 	l := setup(t)
-	code, _, stderr := run(t, "--jacazul-session", "abcd1234", "claude", "--resume", "--jacazul-session", "other", "-p", "hi")
+	code, _, stderr := run(t, "--session", "abcd1234", "claude", "--resume", "--session", "other", "-p", "hi")
 	if code != 0 {
 		t.Fatalf("exit %d, stderr %q", code, stderr)
 	}
@@ -111,7 +111,7 @@ func TestClaudeRunsWithThePromptAndUntouchedArgs(t *testing.T) {
 	if !strings.Contains(rec.Args[1], "The anchored persona for this session is Jacazul") {
 		t.Errorf("prompt is not the rendered onboard prompt:\n%s", rec.Args[1])
 	}
-	if want := []string{"--resume", "--jacazul-session", "other", "-p", "hi"}; !slices.Equal(rec.Args[2:], want) {
+	if want := []string{"--resume", "--session", "other", "-p", "hi"}; !slices.Equal(rec.Args[2:], want) {
 		t.Errorf("harness args %q, want %q", rec.Args[2:], want)
 	}
 
@@ -157,7 +157,7 @@ func TestClaudeReturnsTheHarnessExitCode(t *testing.T) {
 
 func TestClaudeExitBannerNeedsAnIndependentSession(t *testing.T) {
 	l := setup(t)
-	_, stdout, _ := run(t, "--jacazul-session", "abcd1234", "claude")
+	_, stdout, _ := run(t, "--session", "abcd1234", "claude")
 	if strings.Contains(stdout, "To resume") {
 		t.Fatalf("banner without a session file:\n%s", stdout)
 	}
@@ -167,8 +167,8 @@ func TestClaudeExitBannerNeedsAnIndependentSession(t *testing.T) {
 	if err := os.WriteFile(focus, []byte("{}"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	_, stdout, _ = run(t, "--jacazul-session", "abcd1234", "claude")
-	if !strings.Contains(stdout, "To resume: jacazul --jacazul-session abcd1234 claude") {
+	_, stdout, _ = run(t, "--session", "abcd1234", "claude")
+	if !strings.Contains(stdout, "To resume: jacazul --session abcd1234 claude") {
 		t.Fatalf("no resume banner:\n%s", stdout)
 	}
 }
@@ -228,5 +228,18 @@ func TestClaudeNotInstalledFails(t *testing.T) {
 	code, _, stderr := run(t, "claude")
 	if code != 1 || !strings.Contains(stderr, "claude command not found") {
 		t.Fatalf("exit %d, stderr %q", code, stderr)
+	}
+}
+
+func TestClaudeKeepsTheLegacySessionFlag(t *testing.T) {
+	l := setup(t)
+	if code, _, stderr := run(t, "--jacazul-session", "abcd1234", "claude"); code != 0 {
+		t.Fatalf("exit %d, stderr %q", code, stderr)
+	}
+	if got := l.recorded(t).Env["JACAZUL_SESSION_ID"]; got != "abcd1234" {
+		t.Errorf("JACAZUL_SESSION_ID=%q, want abcd1234", got)
+	}
+	if _, stdout, _ := run(t, "--help"); strings.Contains(stdout, "jacazul-session") {
+		t.Errorf("help lists the legacy flag:\n%s", stdout)
 	}
 }

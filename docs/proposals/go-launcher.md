@@ -26,16 +26,19 @@ same binary. `jacazul-gemini-sandboxed` is not ported (see Out of scope).
 ## Command shape
 
 ```text
-jacazul [--dry] [--debug] [--jacazul-session <id>] <harness> [harness args...]
+jacazul [--dry] [--debug] [--session <id>] <harness> [harness args...]
 ```
 
 - Everything before the harness name belongs to `jacazul`; everything after
   it reaches the harness untouched. The Bash launchers scanned every
   argument for `--jacazul-session` and `--resume`; the Go launcher
   intercepts nothing after the harness.
-- `--jacazul-session` selects the Jacazul session, the focus lane that
-  carries mission continuity. The harness keeps its own session flags for
-  conversation continuity (see [`tw-flow-session.md`](../tw-flow-session.md)).
+- `--session` selects the Jacazul session, the focus lane that carries
+  mission continuity. Its position tells it apart from the harness's own
+  session flags for conversation continuity (see
+  [`tw-flow-session.md`](../tw-flow-session.md)): `jacazul --session X pi
+  --session Y` gives X to Jacazul and Y to pi. `--jacazul-session` is a
+  hidden alias until the cutoff.
 - `--dry` runs every bootstrap step except the harness launch; `--debug`
   prints what each step does. The `DRY` and `DEBUG` environment variables
   stay honored for compatibility; either source turns the mode on.
@@ -49,8 +52,13 @@ skips the onboard prompt and drops `--resume` before calling the harness,
 so the conversation is never resumed. With the pass-through above,
 `--resume` reaches the harness. Until the open decision below settles
 whether a resumed conversation skips the onboard prompt, `jacazul claude`
-passes it on every launch: `--append-system-prompt` is not stored with the
-conversation, so a resume without it runs without the persona.
+passes it on every launch. It changes nothing on a resume: Claude Code
+records the system prompt, `--append-system-prompt` included, on the
+conversation's first request and resends that record on every resume
+(`--system-prompt-snapshot`, on by default), so the resumed conversation
+keeps the persona and the session signature it started with. Resuming with
+another `--session` therefore mixes two Jacazul session IDs; tying the
+harness conversation to the Jacazul session is an open decision.
 
 ## Layout
 
@@ -102,7 +110,7 @@ is ported:
 |---|---|---|
 | Project identity, `PROJECT_ID` | `bootstrap/project-identity` | computed from the path |
 | `JACAZUL_HOME` | forced to `~/.jacazul-ai` in two bootstraps | a preset value wins |
-| Session ID | `python3 -c uuid` | generated in Go, or `--jacazul-session` |
+| Session ID | `python3 -c uuid` | generated in Go, or `--session` |
 | Persona, language | `persona.json`, `language.json`, `jq`/`grep` | read from `project.json` (below) |
 | Mode | `JACAZUL_MODE`, default `COUNSELOR` | unchanged: a variable of the running session |
 | Taskwarrior data and UDAs | `bootstrap/taskwarrior` | ported one to one, known issues included; transitional until the flow cutoff |
@@ -263,5 +271,8 @@ keeping its mode.
 - Root of `projects/`: `~/.jacazul-ai/projects` (inside `JACAZUL_HOME`) or
   another directory.
 - Whether a resumed conversation still skips the onboard prompt.
+- Whether the Jacazul session records the harness conversation it started,
+  so `jacazul --session ID <harness>` resumes that conversation by itself
+  (`-r`, `--session` or `-s`, per harness).
 - Whether the Bash launchers call the Go steps during the transition, so
   each rule has one source, or keep their own copies until the cutoff.

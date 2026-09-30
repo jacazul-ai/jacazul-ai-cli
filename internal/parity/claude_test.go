@@ -134,7 +134,7 @@ func TestParityClaudeMatchesTheBashLauncher(t *testing.T) {
 }
 
 // launcherArgs turns a Bash launcher argument list into the Go command:
-// --jacazul-session belongs to jacazul, everything else to the harness.
+// --jacazul-session becomes jacazul's --session, everything else to the harness.
 func launcherArgs(args string) []string {
 	out := []string{"--dry", "--debug"}
 	var harness []string
@@ -144,7 +144,7 @@ func launcherArgs(args string) []string {
 	}
 	for i := 0; i < len(fields); i++ {
 		if fields[i] == "--jacazul-session" && i+1 < len(fields) {
-			out = append(out, fields[i], fields[i+1])
+			out = append(out, "--session", fields[i+1])
 			i++
 			continue
 		}
