@@ -11,6 +11,8 @@ import (
 	"slices"
 	"strings"
 	"testing"
+
+	"github.com/jacazul-ai/launcher/internal/testutil"
 )
 
 // bashOnly are stdout lines the Go launcher drops on purpose: it neither
@@ -39,21 +41,10 @@ const goResume = `🐊 Arguments for claude: --append-system-prompt "[ONBOARD_PR
 const goTaskData = "🐊 Creating task data directory: <HOME>/.jacazul-ai/.task/jacazul-ai_jacazul-ai-cli"
 
 func TestParityClaudeMatchesTheBashLauncher(t *testing.T) {
-	repo, err := filepath.Abs(filepath.Join("..", ".."))
-	if err != nil {
-		t.Fatal(err)
-	}
+	repo := testutil.RepoRoot(t)
 	// The binary finds its checkout from its own path, so it is built into
 	// a checkout whose skills, extensions and scripts are this one's.
-	root := filepath.Join(t.TempDir(), "checkout")
-	for _, dir := range []string{"skills", "extensions", "scripts"} {
-		if err := os.MkdirAll(root, 0o755); err != nil {
-			t.Fatal(err)
-		}
-		if err := os.Symlink(filepath.Join(repo, dir), filepath.Join(root, dir)); err != nil {
-			t.Fatal(err)
-		}
-	}
+	root := testutil.Checkout(t)
 	bin := filepath.Join(root, "bin", "jacazul")
 	build := exec.Command("go", "build", "-o", bin, "./cmd/jacazul")
 	build.Dir = repo

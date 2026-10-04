@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/jacazul-ai/launcher/internal/testutil"
 	tmpl "github.com/jacazul-ai/launcher/templates/claude"
 )
 
@@ -14,15 +15,12 @@ import (
 // fresh HOME; Bootstrap must print its Claude lines and leave the same
 // settings.json when run against this checkout.
 func TestFreshHomeMatchesTheBashReference(t *testing.T) {
-	root, err := filepath.Abs(filepath.Join("..", "..", ".."))
-	if err != nil {
-		t.Fatal(err)
-	}
-	data, err := os.ReadFile(filepath.Join(root, "testdata", "parity", "claude", "default.txt"))
+	data, err := os.ReadFile(filepath.Join(testutil.RepoRoot(t), "testdata", "parity", "claude", "default.txt"))
 	if err != nil {
 		t.Fatal(err)
 	}
 	ref := string(data)
+	root := testutil.Checkout(t)
 	home := t.TempDir()
 	var out bytes.Buffer
 	err = Bootstrap(Input{

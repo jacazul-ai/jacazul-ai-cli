@@ -8,6 +8,8 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+
+	"github.com/jacazul-ai/launcher/internal/testutil"
 )
 
 // fakeClaude is what the test binary records when it runs as claude.
@@ -56,10 +58,7 @@ func setup(t *testing.T) launch {
 	for _, k := range sessionVars {
 		t.Setenv(k, "")
 	}
-	root, err := filepath.Abs(filepath.Join("..", ".."))
-	if err != nil {
-		t.Fatal(err)
-	}
+	root := testutil.Checkout(t)
 	l := launch{home: t.TempDir(), project: t.TempDir(), root: root}
 	l.marker = filepath.Join(t.TempDir(), "claude.json")
 	t.Setenv("HOME", l.home)
