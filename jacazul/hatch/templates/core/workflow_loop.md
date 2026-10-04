@@ -7,9 +7,9 @@
 3.  **Search Throttling**: Broad searches (recursive greps) are forbidden unless the agent has already read specific files mentioned in history or task context.
 
 ### Phase 1: Orient (Status/Ponder)
-Before acting, understand the state of the world. Follow the **Onboard Protocol** hierarchy:
-- If anchored: Run `tw-flow status`.
-- If NO anchor: Run `tw-flow ponder`.
+Before acting, understand the state of the world with the "Context
+Orientation" sequence below: `tw-flow status` when anchored, `tw-flow ponder`
+when not.
 
 ### Phase 2: Create Plan
 Break down a goal into a dependency chain.
