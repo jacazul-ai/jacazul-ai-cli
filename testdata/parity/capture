@@ -17,10 +17,13 @@ SCENARIOS="$ROOT/testdata/parity/scenarios.tsv"
 
 usage() {
     cat >&2 <<'EOF'
-usage: testdata/parity/capture <harness> [--scenario NAME]... [--home DIR]
-         [--uv-cache DIR] [--out DIR] [--keep]
+usage: testdata/parity/capture <harness> [--exec] [--scenario NAME]...
+         [--home DIR] [--uv-cache DIR] [--out DIR] [--keep]
 
   <harness>        claude, pi, gemini, copilot or opencode
+  --exec           run the harness step too, as testdata/parity/fake-claude,
+                   and record its arguments and environment (<scenario>.exec.txt)
+                   instead of the DRY+DEBUG output
   --scenario NAME  capture only this scenario (repeatable); default: all
   --home DIR       parent of the throwaway HOMEs; default: mktemp -d
   --uv-cache DIR   UV_CACHE_DIR for the run; default: ~/.cache/uv
@@ -66,12 +69,43 @@ capture_one() {
         }
     fi
 
+    # DRY runs every bootstrap step but not the harness; --exec runs it too,
+    # as a fake claude that records its arguments and environment.
+    local -a mode_env=(DRY=true DEBUG=true)
+    local path="/usr/local/bin:/usr/bin:/bin:$HOME/.local/bin"
+    if [ "$EXEC" = true ]; then
+        mkdir -p -- "$home/.local/bin"
+        install -m 755 -- "$ROOT/testdata/parity/fake-claude" "$home/.local/bin/claude"
+        mode_env=(FAKE_CLAUDE_OUT="$home/claude.out")
+        path="/usr/local/bin:/usr/bin:/bin" # the fake claude is in the throwaway HOME
+    fi
+
     local out err code=0
     out="$(mktemp)" err="$(mktemp)"
     (cd -- "$ROOT" && env -i HOME="$home" USER="${USER:-}" LANG=C.UTF-8 \
-        TERM=dumb PATH="/usr/local/bin:/usr/bin:/bin:$HOME/.local/bin" \
-        UV_CACHE_DIR="$UV_CACHE" UV_LINK_MODE=copy DRY=true DEBUG=true ${extra_env[@]+"${extra_env[@]}"} \
+        TERM=dumb PATH="$path" \
+        UV_CACHE_DIR="$UV_CACHE" UV_LINK_MODE=copy "${mode_env[@]}" ${extra_env[@]+"${extra_env[@]}"} \
         "$launcher" ${args[@]+"${args[@]}"} </dev/null >"$out" 2>"$err") || code=$?
+
+    mkdir -p -- "$OUT"
+    if [ "$EXEC" = true ]; then
+        local requested=""
+        [[ " ${args[*]:-} " == *" --jacazul-session "* ]] || \
+            requested="$(sed -n 's/^JACAZUL_SESSION_ID=//p' "$home/claude.out")"
+        {
+            printf '# %s %s exec | env: %s | args: %s\n' "$harness" "$scenario" "$env_spec" "$arg_spec"
+            printf '\n## exit\n%s\n\n' "$code"
+            cat -- "$home/claude.out"
+        } | grep -v -E '^UV_(CACHE_DIR|LINK_MODE)=' | sed -E \
+            -e 's|^(CONTEXT_REAL_PATH)=.*|\1=<PROJECT>|' \
+            -e 's|^(JACAZUL_PROJECT_ANCHOR)=.*|\1=<ANCHOR>|' \
+            -e 's#^(USER|CONTEXT_GIT_USER|CONTEXT_SYSTEM_USER)=.*#\1=<USER>#' \
+            -e "s|$home|<HOME>|g" -e "s|$ROOT|<ROOT>|g" \
+            ${requested:+-e "s|$requested|<SESSION>|g"} >"$OUT/$scenario.exec.txt"
+        rm -f -- "$out" "$err"
+        printf '✓ %s/%s.exec.txt (exit %s)\n' "${OUT#"$ROOT"/}" "$scenario" "$code"
+        return 0
+    fi
 
     local session
     session="$(sed -n 's/.*Session ID: \([0-9a-f]\{8\}\).*/\1/p' "$out" | head -n 1)"
@@ -79,7 +113,6 @@ capture_one() {
         session="__requested__"
     fi
 
-    mkdir -p -- "$OUT"
     {
         printf '# %s %s | env: %s | args: %s\n' "$harness" "$scenario" "$env_spec" "$arg_spec"
         printf '\n## exit\n%s\n' "$code"
@@ -110,9 +143,11 @@ main() {
     PARENT="" UV_CACHE="$HOME/.cache/uv"
     OUT="$ROOT/testdata/parity/$harness"
     local keep=false
+    EXEC=false
 
     while [ $# -gt 0 ]; do
         case "$1" in
+            --exec) EXEC=true; shift ;;
             --scenario) wanted+=("${2:?--scenario needs a name}"); shift 2 ;;
             --home) PARENT="${2:?--home needs a directory}"; shift 2 ;;
             --uv-cache) UV_CACHE="${2:?--uv-cache needs a directory}"; shift 2 ;;

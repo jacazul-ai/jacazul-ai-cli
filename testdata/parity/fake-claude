@@ -1,0 +1,21 @@
+#!/bin/sh
+# fake-claude: stands in for the claude binary in the parity scenarios. It
+# records what the launcher handed it, the arguments (the session prompt
+# replaced by a placeholder, its render is checked against
+# testdata/parity/onboard) and the environment, in $FAKE_CLAUDE_OUT, and
+# exits 0. Shared by testdata/parity/capture (Bash launchers) and the Go
+# parity test, so both sides are held to the same observer.
+out="${FAKE_CLAUDE_OUT:?FAKE_CLAUDE_OUT is not set}"
+{
+    printf '## args\n'
+    prev=
+    for arg in "$@"; do
+        shown=$arg
+        [ "$prev" = --append-system-prompt ] && shown='[ONBOARD_PROMPT]'
+        printf '%s\n' "$shown"
+        prev=$arg
+    done
+    printf '\n## env\n'
+    # A shell sets these itself; they say nothing about the launcher.
+    env | grep -v -E '^(_|SHLVL|PWD|OLDPWD)=' | LC_ALL=C sort
+} >"$out"

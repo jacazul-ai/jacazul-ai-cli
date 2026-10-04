@@ -41,16 +41,7 @@ const goResume = `🐊 Arguments for claude: --append-system-prompt "[ONBOARD_PR
 const goTaskData = "🐊 Creating task data directory: <HOME>/.jacazul-ai/.task/jacazul-ai_jacazul-ai-cli"
 
 func TestParityClaudeMatchesTheBashLauncher(t *testing.T) {
-	repo := testutil.RepoRoot(t)
-	// The binary finds its checkout from its own path, so it is built into
-	// a checkout whose skills, extensions and scripts are this one's.
-	root := testutil.Checkout(t)
-	bin := filepath.Join(root, "bin", "jacazul")
-	build := exec.Command("go", "build", "-o", bin, "./cmd/jacazul")
-	build.Dir = repo
-	if out, err := build.CombinedOutput(); err != nil {
-		t.Fatalf("go build: %v\n%s", err, out)
-	}
+	bin, root := buildLauncher(t)
 
 	for _, s := range parityScenarios(t) {
 		if s.harness != "claude" {
@@ -72,7 +63,7 @@ func TestParityClaudeMatchesTheBashLauncher(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			cmd := exec.Command(bin, launcherArgs(s.args)...)
+			cmd := exec.Command(bin, launcherArgs(s.args, "--dry", "--debug")...)
 			cmd.Dir = project
 			cmd.Env = []string{
 				"HOME=" + home, "USER=" + os.Getenv("USER"), "LANG=C.UTF-8", "TERM=dumb",
@@ -124,10 +115,26 @@ func TestParityClaudeMatchesTheBashLauncher(t *testing.T) {
 	}
 }
 
-// launcherArgs turns a Bash launcher argument list into the Go command:
-// --jacazul-session becomes jacazul's --session, everything else to the harness.
-func launcherArgs(args string) []string {
-	out := []string{"--dry", "--debug"}
+// buildLauncher builds the launcher into a checkout: the binary finds its
+// checkout from its own path, so it sits in one whose skills, extensions and
+// scripts are this repository's.
+func buildLauncher(t *testing.T) (bin, root string) {
+	t.Helper()
+	root = testutil.Checkout(t)
+	bin = filepath.Join(root, "bin", "jacazul")
+	build := exec.Command("go", "build", "-o", bin, "./cmd/jacazul")
+	build.Dir = testutil.RepoRoot(t)
+	if out, err := build.CombinedOutput(); err != nil {
+		t.Fatalf("go build: %v\n%s", err, out)
+	}
+	return bin, root
+}
+
+// launcherArgs turns a Bash launcher argument list into the Go command, with
+// jacazul's own flags first: --jacazul-session becomes jacazul's --session,
+// everything else goes to the harness.
+func launcherArgs(args string, global ...string) []string {
+	out := slices.Clone(global)
 	var harness []string
 	fields := strings.Fields(args)
 	if args == "-" {

@@ -1,0 +1,44 @@
+# claude session exec | env: - | args: --jacazul-session abcd1234
+
+## exit
+0
+
+## args
+--append-system-prompt
+[ONBOARD_PROMPT]
+
+## env
+CLAUDE_CONFIG_DIR=<HOME>/.jacazul-ai/agents/claude
+CONTEXT_GIT_USER=<USER>
+CONTEXT_REAL_PATH=<PROJECT>
+CONTEXT_SYSTEM_USER=<USER>
+CURRENT_DIR=jacazul-ai-cli
+FAKE_CLAUDE_OUT=<HOME>/claude.out
+HOME=<HOME>
+JACAZUL_CHAT_LANG=pt-br
+JACAZUL_DATA_LANG=en
+JACAZUL_ENV_INITIALIZED=true
+JACAZUL_HARNESS=claude
+JACAZUL_HOME=<HOME>/.jacazul-ai
+JACAZUL_MODE=COUNSELOR
+JACAZUL_MODEL=unspecified
+JACAZUL_PERSONA=jacazul
+JACAZUL_PERSONA_DISPLAY=Jacazul (Jacaré Azul)
+JACAZUL_PERSONA_NAME=Jacazul
+JACAZUL_PERSONA_SIGNATURE=🐊 Jacazul
+JACAZUL_PERSONA_SPEC_FILE=<ROOT>/jacazul/hatch/templates/persona/persona_jacazul.md
+JACAZUL_PROJECT_ANCHOR=<ANCHOR>
+JACAZUL_REAL_TASK=/usr/bin/task
+JACAZUL_RESPONSE_SIGNATURE=🐊 Jacazul
+JACAZUL_SESSION_ID=abcd1234
+JACAZUL_SESSION_SHORT=abcd1234
+JACAZUL_TASK_SIGNATURE=— Jacazul (unspecified; harness: claude; session: abcd1234)
+JACAZUL_TASK_VERSION=3
+LANG=C.UTF-8
+PARENT_DIR=jacazul-ai
+PATH=<ROOT>/scripts:<HOME>/.jacazul-ai/.venv/bin:/usr/local/bin:/usr/bin:/bin:<ROOT>/skills/taskwarrior-expert/scripts
+PROJECT_ID=jacazul-ai_jacazul-ai-cli
+TASKDATA=<HOME>/.jacazul-ai/.task/jacazul-ai_jacazul-ai-cli
+TERM=dumb
+USER=<USER>
+VIRTUAL_ENV=<HOME>/.jacazul-ai/.venv
