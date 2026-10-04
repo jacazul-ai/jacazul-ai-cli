@@ -45,21 +45,22 @@ func runClaude(opts Options, args []string, stdout, stderr io.Writer) int {
 	if err != nil {
 		return fail(err)
 	}
-	id, err := project.Resolve(cwd)
+	id, err := resolveProject(opts.Project, cwd)
 	if err != nil {
 		return fail(err)
 	}
 	env := environment.Resolve(environment.Input{
 		Getenv:      os.Getenv,
 		ProjectID:   id.ID,
+		HomeFlag:    opts.Home,
 		SessionFlag: cmp.Or(opts.Session, opts.LegacySession),
 		SkipDirs:    []string{filepath.Join(root, "scripts")},
 	})
-	cfg, err := project.LoadConfig(env.Home, id.ID)
+	anchored, err := project.AnchoredPersona(env.Home, id.ID)
 	if err != nil {
 		return fail(err)
 	}
-	lang := language.Resolve(os.Getenv, language.Pair(cfg.Language), filepath.Join(env.Home, "language.json"))
+	lang := language.Resolve(os.Getenv, language.Pair{}, filepath.Join(env.Home, "language.json"))
 	if debug {
 		fmt.Fprintf(stdout, "🌐 Jacazul Language: Chat=%s | Data=%s\n", lang.Chat, lang.Data)
 	}
@@ -78,7 +79,7 @@ func runClaude(opts Options, args []string, stdout, stderr io.Writer) int {
 		Home:        env.Home,
 		Mode:        env.Mode,
 		TaskRC:      os.Getenv("TASKRC"),
-		SessionID:   env.SessionID,
+		SessionID:   sessionFor(env.SessionID),
 		FocusPlan:   os.Getenv("JACAZUL_FOCUS_PLAN"),
 		FocusTask:   os.Getenv("JACAZUL_FOCUS_TASK"),
 		RealTask:    env.RealTask,
@@ -97,7 +98,7 @@ func runClaude(opts Options, args []string, stdout, stderr io.Writer) int {
 	harness := cmp.Or(os.Getenv("JACAZUL_HARNESS"), "claude")
 	p := persona.Resolve(persona.Input{
 		Getenv:    os.Getenv,
-		Project:   cfg.Persona,
+		Project:   anchored,
 		Harness:   harness,
 		SessionID: env.SessionID,
 	})
@@ -152,10 +153,12 @@ func runClaude(opts Options, args []string, stdout, stderr io.Writer) int {
 	}
 
 	vars := [][2]string{
-		{"PROJECT_ID", id.ID},
+		{"JACAZUL_PROJECT", id.ID},
 		{"JACAZUL_HOME", env.Home},
+		{"JACAZUL_SESSION", env.SessionID},
+		// tw-flow's names until its cutoff.
+		{"PROJECT_ID", id.ID},
 		{"TASKDATA", tw.TaskData},
-		{"JACAZUL_SESSION_ID", env.SessionID},
 		{"JACAZUL_MODE", env.Mode},
 		{"JACAZUL_REAL_TASK", env.RealTask},
 		{"JACAZUL_TASK_VERSION", env.TaskVersion},
@@ -180,6 +183,11 @@ func runClaude(opts Options, args []string, stdout, stderr io.Writer) int {
 		// bootstrap and mint its own session. Transitional: it goes when
 		// f47da6cb routes the legacy names through this binary.
 		{"JACAZUL_ENV_INITIALIZED", "true"},
+	}
+	// tw-flow reads JACAZUL_SESSION_ID as an independent session; the global
+	// session leaves it unset so tw-flow keeps the global focus.json.
+	if sid := sessionFor(env.SessionID); sid != "" {
+		vars = append(vars, [2]string{"JACAZUL_SESSION_ID", sid})
 	}
 	if tw.TaskRC != "" {
 		vars = append(vars, [2]string{"TASKRC", tw.TaskRC})
@@ -206,7 +214,7 @@ func runClaude(opts Options, args []string, stdout, stderr io.Writer) int {
 		code = exit.ExitCode()
 	}
 
-	if isFile(filepath.Join(tw.TaskData, "focus-"+env.SessionID+".json")) {
+	if sid := sessionFor(env.SessionID); sid != "" && isFile(filepath.Join(tw.TaskData, "focus-"+sid+".json")) {
 		fmt.Fprintln(stdout)
 		fmt.Fprintln(stdout, "╭─ 🐊 Jacazul Session ───────────────────────────────────────╮")
 		fmt.Fprintf(stdout, "│  To resume: jacazul --session %s claude\n", env.SessionID)

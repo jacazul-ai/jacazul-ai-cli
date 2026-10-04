@@ -47,6 +47,44 @@ func TestFlowSessionListReadsTheProjectLanes(t *testing.T) {
 	}
 }
 
+// The jacazul options in front of flow pick the project, home and current
+// session, as they do in front of a harness; explicit options beat TASKDATA.
+func TestFlowSessionListFollowsTheJacazulOptions(t *testing.T) {
+	for name, tc := range map[string]struct {
+		args []string
+		vars map[string]string
+	}{
+		"flags": {args: []string{"--project", "sandbox_x", "--session", "dddddddd"}},
+		"environment": {vars: map[string]string{
+			"JACAZUL_PROJECT": "sandbox_x", "JACAZUL_SESSION": "dddddddd",
+		}},
+	} {
+		t.Run(name, func(t *testing.T) {
+			l := setup(t)
+			t.Setenv("TASKDATA", t.TempDir())
+			for k, v := range tc.vars {
+				t.Setenv(k, v)
+			}
+			home := filepath.Join(l.home, "sandbox-home")
+			dir := filepath.Join(home, ".task", "sandbox_x")
+			if err := os.MkdirAll(dir, 0o755); err != nil {
+				t.Fatal(err)
+			}
+			if err := os.WriteFile(filepath.Join(dir, "focus-dddddddd.json"), []byte("{}"), 0o644); err != nil {
+				t.Fatal(err)
+			}
+			args := append([]string{"--home", home}, tc.args...)
+			code, stdout, stderr := run(t, append(args, "flow", "session", "list")...)
+			if code != 0 {
+				t.Fatalf("exit %d, stderr %q", code, stderr)
+			}
+			if !strings.Contains(stdout, "dddddddd *") {
+				t.Errorf("current sandbox lane missing:\n%s", stdout)
+			}
+		})
+	}
+}
+
 func TestFlowSessionListHonorsTaskData(t *testing.T) {
 	setup(t)
 	dir := t.TempDir()

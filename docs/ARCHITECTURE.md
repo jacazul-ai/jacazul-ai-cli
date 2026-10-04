@@ -164,9 +164,23 @@ binary to install, update, version-handshake, or discover on `PATH`: one
 `go.mod`.
 
 **Status:** the names, paths and public boundary below are decided. The engine
-side (module rename, `flow.Run` extraction, schema guard) is not published
-yet, so the `jacazul` side is designed and tested against a fake runner until
-the engine tags a release with package `flow`.
+is the project `jacazul-ai/flow` (local checkout `~/source/jacazul-ai/flow`,
+worktree `master`), module `github.com/jacazul-ai/flow`. On its `master`
+(2026-10-02) the package `flow` exports `Run`, `Env`, `Streams` and
+`EnvFromOS`, but no release is tagged. Until one is, the `jacazul` side is
+designed and tested against a fake runner.
+
+Two engine-side gaps against the runtime defaults go back to the engine as
+requests:
+
+- `EnvFromOS`, used only by standalone binaries, reads `PROJECT_ID` and
+  `JACAZUL_SESSION_ID` rather than `JACAZUL_PROJECT` and `JACAZUL_SESSION`.
+  Without `JACAZUL_HOME`, it falls back to the user home directory instead
+  of `$HOME/.jacazul-ai`.
+- An empty `Env.ProjectID` selects a `global` project. `jacazul` always sets
+  it, so embedding is unaffected.
+
+An empty `Env.SessionID` selects `global`, which matches the default.
 
 ### Names
 
@@ -181,7 +195,11 @@ the engine tags a release with package `flow`.
 
 - Database: `$JACAZUL_HOME/flow/<PROJECT_ID>/flow.sqlite3`.
 - Override: `JACAZUL_FLOW_DATABASE_PATH` (replaces `JAFLOW_DATABASE_PATH`).
-- Context variables stay: `JACAZUL_HOME`, `JACAZUL_SESSION_ID`, `PROJECT_ID`.
+- Context variables: `JACAZUL_PROJECT`, `JACAZUL_HOME` and `JACAZUL_SESSION`,
+  resolved by `jacazul` with the precedence flag > environment > configuration
+  file (deferred) > computed default; the session defaults to `global`. See
+  "Runtime defaults" in [`proposals/go-launcher.md`](proposals/go-launcher.md).
+  `PROJECT_ID` and `JACAZUL_SESSION_ID` stay for `tw-flow` until its cutoff.
 
 ### Public boundary
 
@@ -195,6 +213,7 @@ type Env struct {
 	SessionID    string
 	DatabasePath string
 	Home         string
+	Format       string // text, json, jsonl or xml; a command's --format wins
 }
 
 type Streams struct {
@@ -212,8 +231,11 @@ through its arguments.
 
 ### Rules for the `jacazul` side
 
-1. **Build `flow.Env` explicitly.** Resolve project and session once, through
-   the existing bootstrap and worktree anchor logic, and always set `Home`.
+1. **Build `flow.Env` explicitly.** Resolve project, home and session once,
+   with the runtime defaults (`--project`/`JACAZUL_PROJECT`/canonical
+   resolution, `--home`/`JACAZUL_HOME`/`$HOME/.jacazul-ai`,
+   `--session`/`JACAZUL_SESSION`/`global`), and always set `Home`. The
+   engine never generates a session ID per process.
    The engine falls back to the user home directory when `JACAZUL_HOME` is
    unset, which would put the database under `~/flow/...`.
 2. **Thin adapter.** `jacazul flow <args...>` strips `flow` and passes the

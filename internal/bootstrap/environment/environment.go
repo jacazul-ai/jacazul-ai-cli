@@ -3,13 +3,16 @@
 package environment
 
 import (
-	"crypto/rand"
-	"encoding/hex"
+	"cmp"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 )
+
+// Global is the session used when none is given. The launcher owns the
+// session: no process mints its own.
+const Global = "global"
 
 // fallbackTasks are checked when no task binary is on PATH.
 var fallbackTasks = []string{"/usr/bin/task", "/usr/local/bin/task", "/opt/homebrew/bin/task"}
@@ -20,7 +23,9 @@ type Input struct {
 	Getenv func(string) string
 	// ProjectID scopes the task data.
 	ProjectID string
-	// SessionFlag is --session; it wins over JACAZUL_SESSION_ID.
+	// HomeFlag is --home; it wins over JACAZUL_HOME.
+	HomeFlag string
+	// SessionFlag is --session; it wins over JACAZUL_SESSION.
 	SessionFlag string
 	// SkipDirs are PATH entries holding the Jacazul task wrapper, which
 	// must not be taken for the real task binary.
@@ -31,36 +36,34 @@ type Input struct {
 type Env struct {
 	Home        string // JACAZUL_HOME
 	TaskData    string // TASKDATA
-	SessionID   string // JACAZUL_SESSION_ID
+	SessionID   string // JACAZUL_SESSION
 	Mode        string // JACAZUL_MODE
 	RealTask    string // JACAZUL_REAL_TASK, empty when none is found
 	TaskVersion string // JACAZUL_TASK_VERSION, the major version
 }
 
-// Home is JACAZUL_HOME: a preset value wins over ~/.jacazul-ai.
-func Home(getenv func(string) string) string {
-	if home := getenv("JACAZUL_HOME"); home != "" {
-		return home
-	}
-	return filepath.Join(getenv("HOME"), ".jacazul-ai")
+// Home is JACAZUL_HOME: --home, then the environment, then ~/.jacazul-ai.
+func Home(flag string, getenv func(string) string) string {
+	return cmp.Or(flag, getenv("JACAZUL_HOME"), filepath.Join(getenv("HOME"), ".jacazul-ai"))
 }
 
-// Resolve computes the shared runtime values. A preset JACAZUL_HOME wins
-// over the default under HOME.
+// Session is JACAZUL_SESSION: --session, then the environment, then
+// Global. JACAZUL_SESSION_ID, the name tw-flow reads, is honored after
+// JACAZUL_SESSION until the tw-flow cutoff.
+func Session(flag string, getenv func(string) string) string {
+	return cmp.Or(flag, getenv("JACAZUL_SESSION"), getenv("JACAZUL_SESSION_ID"), Global)
+}
+
+// Resolve computes the shared runtime values: each one from its flag, then
+// its environment variable, then the computed default.
 func Resolve(in Input) Env {
 	env := Env{
-		Home:      Home(in.Getenv),
-		SessionID: in.SessionFlag,
+		Home:      Home(in.HomeFlag, in.Getenv),
+		SessionID: Session(in.SessionFlag, in.Getenv),
 		Mode:      in.Getenv("JACAZUL_MODE"),
 	}
 	if in.ProjectID != "" {
 		env.TaskData = filepath.Join(env.Home, ".task", in.ProjectID)
-	}
-	if env.SessionID == "" {
-		env.SessionID = in.Getenv("JACAZUL_SESSION_ID")
-	}
-	if env.SessionID == "" {
-		env.SessionID = newSessionID()
 	}
 	if env.Mode == "" {
 		env.Mode = "COUNSELOR"
@@ -70,13 +73,6 @@ func Resolve(in Input) Env {
 		env.TaskVersion = taskMajor(env.RealTask)
 	}
 	return env
-}
-
-func newSessionID() string {
-	b := make([]byte, 4)
-	// crypto/rand.Read never returns an error on supported platforms.
-	_, _ = rand.Read(b)
-	return hex.EncodeToString(b)
 }
 
 func realTask(path string, skip []string) string {

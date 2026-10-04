@@ -41,7 +41,8 @@ func TestMain(m *testing.M) {
 // sessionVars are inherited from a Jacazul session running the tests and
 // would leak into the launcher under test.
 var sessionVars = []string{
-	"JACAZUL_HOME", "JACAZUL_SESSION_ID", "JACAZUL_PERSONA", "JACAZUL_MODE",
+	"JACAZUL_HOME", "JACAZUL_SESSION", "JACAZUL_SESSION_ID", "JACAZUL_PROJECT",
+	"JACAZUL_PERSONA", "JACAZUL_MODE",
 	"JACAZUL_CHAT_LANG", "JACAZUL_DATA_LANG", "JACAZUL_HARNESS", "JACAZUL_MODEL",
 	"JACAZUL_FOCUS_PLAN", "JACAZUL_FOCUS_TASK", "CLAUDE_CONFIG_DIR",
 	"TASKRC", "TASKDATA", "DRY", "DEBUG", "CONTEXT_GIT_USER", "JACAZUL_ENV_INITIALIZED",
@@ -118,8 +119,10 @@ func TestClaudeRunsWithThePromptAndUntouchedArgs(t *testing.T) {
 	jhome := filepath.Join(l.home, ".jacazul-ai")
 	for k, want := range map[string]string{
 		"PROJECT_ID":             id,
+		"JACAZUL_PROJECT":        id,
 		"JACAZUL_HOME":           jhome,
 		"TASKDATA":               filepath.Join(jhome, ".task", id),
+		"JACAZUL_SESSION":        "abcd1234",
 		"JACAZUL_SESSION_ID":     "abcd1234",
 		"JACAZUL_MODE":           "COUNSELOR",
 		"JACAZUL_HARNESS":        "claude",
@@ -146,6 +149,74 @@ func TestClaudeRunsWithThePromptAndUntouchedArgs(t *testing.T) {
 	}
 	if _, err := os.Lstat(filepath.Join(jhome, "agents", "claude", "skills", "jacazul-engine")); err != nil {
 		t.Errorf("claude bootstrap did not link skills: %v", err)
+	}
+}
+
+// Strong defaults: with no flag or variable the session is global, and
+// JACAZUL_SESSION_ID stays unset so tw-flow keeps the global focus.json.
+func TestClaudeDefaultsToTheGlobalSession(t *testing.T) {
+	l := setup(t)
+	if code, _, stderr := run(t, "claude"); code != 0 {
+		t.Fatalf("exit %d, stderr %q", code, stderr)
+	}
+	rec := l.recorded(t)
+	if got := rec.Env["JACAZUL_SESSION"]; got != "global" {
+		t.Errorf("JACAZUL_SESSION=%q, want global", got)
+	}
+	if got := rec.Env["JACAZUL_SESSION_ID"]; got != "" {
+		t.Errorf("JACAZUL_SESSION_ID=%q, want it unset for the global session", got)
+	}
+	if got := rec.Env["JACAZUL_TASK_SIGNATURE"]; !strings.HasSuffix(got, "session: global)") {
+		t.Errorf("JACAZUL_TASK_SIGNATURE=%q, want the global session", got)
+	}
+}
+
+// --project and --home pin what tests and sandboxes need; the flag beats
+// the variable, the variable beats the computed default.
+func TestClaudeProjectAndHomePrecedence(t *testing.T) {
+	for _, tc := range []struct {
+		name        string
+		args        []string
+		vars        map[string]string
+		wantProject string
+		wantHome    string
+	}{
+		{"flags", []string{"--project", "sandbox_flag", "--home", "/flag-home"}, nil, "sandbox_flag", "/flag-home"},
+		{"environment", nil, map[string]string{"JACAZUL_PROJECT": "sandbox_env", "JACAZUL_HOME": "/env-home"}, "sandbox_env", "/env-home"},
+		{"flag beats environment", []string{"--project", "sandbox_flag", "--home", "/flag-home"},
+			map[string]string{"JACAZUL_PROJECT": "sandbox_env", "JACAZUL_HOME": "/env-home"}, "sandbox_flag", "/flag-home"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			l := setup(t)
+			// Homes are named relative to the test's HOME.
+			for k, v := range tc.vars {
+				if k == "JACAZUL_HOME" {
+					v = filepath.Join(l.home, v)
+				}
+				t.Setenv(k, v)
+			}
+			args := slices.Clone(tc.args)
+			for i, a := range args {
+				if a == "--home" {
+					args[i+1] = filepath.Join(l.home, args[i+1])
+				}
+			}
+			if code, _, stderr := run(t, append(args, "claude")...); code != 0 {
+				t.Fatalf("exit %d, stderr %q", code, stderr)
+			}
+			rec := l.recorded(t)
+			home := filepath.Join(l.home, tc.wantHome)
+			for k, want := range map[string]string{
+				"PROJECT_ID":      tc.wantProject,
+				"JACAZUL_PROJECT": tc.wantProject,
+				"JACAZUL_HOME":    home,
+				"TASKDATA":        filepath.Join(home, ".task", tc.wantProject),
+			} {
+				if got := rec.Env[k]; got != want {
+					t.Errorf("%s=%q, want %q", k, got, want)
+				}
+			}
+		})
 	}
 }
 

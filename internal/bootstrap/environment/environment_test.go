@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"regexp"
 	"testing"
 )
 
@@ -42,31 +41,46 @@ func TestHomeDefaultsUnderTheUserHome(t *testing.T) {
 	}
 }
 
-func TestSessionFlagBeatsTheEnvironment(t *testing.T) {
+func TestHomeFlagBeatsThePresetValue(t *testing.T) {
 	env := Resolve(Input{
-		Getenv:      lookup(map[string]string{"JACAZUL_SESSION_ID": "fromenv1"}),
-		SessionFlag: "fromflag",
+		Getenv:    lookup(map[string]string{"HOME": "/u", "JACAZUL_HOME": "/custom"}),
+		HomeFlag:  "/flag",
+		ProjectID: "org_app",
 	})
-	if env.SessionID != "fromflag" {
-		t.Fatalf("SessionID = %q, want the flag", env.SessionID)
+	if env.Home != "/flag" || env.TaskData != "/flag/.task/org_app" {
+		t.Fatalf("got Home %q, TaskData %q, want them under the flag", env.Home, env.TaskData)
 	}
 }
 
-func TestSessionFromTheEnvironment(t *testing.T) {
-	env := Resolve(Input{Getenv: lookup(map[string]string{"JACAZUL_SESSION_ID": "fromenv1"})})
-	if env.SessionID != "fromenv1" {
-		t.Fatalf("SessionID = %q, want the inherited one", env.SessionID)
+func TestSessionPrecedence(t *testing.T) {
+	for _, tc := range []struct {
+		name string
+		flag string
+		vars map[string]string
+		want string
+	}{
+		{"flag beats the environment", "fromflag", map[string]string{"JACAZUL_SESSION": "fromenv"}, "fromflag"},
+		{"environment", "", map[string]string{"JACAZUL_SESSION": "fromenv"}, "fromenv"},
+		{"JACAZUL_SESSION beats the legacy name", "", map[string]string{"JACAZUL_SESSION": "fromenv", "JACAZUL_SESSION_ID": "legacy"}, "fromenv"},
+		{"legacy name until the tw-flow cutoff", "", map[string]string{"JACAZUL_SESSION_ID": "legacy"}, "legacy"},
+		{"default is global", "", nil, Global},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			env := Resolve(Input{Getenv: lookup(tc.vars), SessionFlag: tc.flag})
+			if env.SessionID != tc.want {
+				t.Fatalf("SessionID = %q, want %q", env.SessionID, tc.want)
+			}
+		})
 	}
 }
 
-func TestNewSessionIsEightHexCharacters(t *testing.T) {
+// The launcher owns the session: without one given, every process lands
+// on the same global session instead of minting its own.
+func TestNoSessionIsGeneratedPerProcess(t *testing.T) {
 	a := Resolve(Input{Getenv: lookup(nil)}).SessionID
 	b := Resolve(Input{Getenv: lookup(nil)}).SessionID
-	if !regexp.MustCompile(`^[0-9a-f]{8}$`).MatchString(a) {
-		t.Fatalf("SessionID = %q, want 8 hex characters", a)
-	}
-	if a == b {
-		t.Fatalf("two new sessions share the ID %q", a)
+	if a != b {
+		t.Fatalf("two processes got sessions %q and %q", a, b)
 	}
 }
 

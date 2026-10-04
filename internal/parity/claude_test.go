@@ -40,6 +40,12 @@ const goResume = `🐊 Arguments for claude: --append-system-prompt "[ONBOARD_PR
 // the task data directory silently before the Taskwarrior bootstrap ran.
 const goTaskData = "🐊 Creating task data directory: <HOME>/.jacazul-ai/.task/jacazul-ai_jacazul-ai-cli"
 
+// goGlobalSession is the line the Bash launcher prints for the random
+// session it minted on every launch. Without --session the Go launcher
+// runs the global session, which is no independent lane, so the Taskwarrior
+// bootstrap prints no session line (runtime defaults, task 300d84ef).
+const goGlobalSession = "🐊 Session ID: <SESSION>\n"
+
 func TestParityClaudeMatchesTheBashLauncher(t *testing.T) {
 	bin, root := buildLauncher(t)
 
@@ -93,6 +99,9 @@ func TestParityClaudeMatchesTheBashLauncher(t *testing.T) {
 			want = strings.Replace(want, "🐊 Task Data: ", goTaskData+"\n🐊 Task Data: ", 1)
 			if s.name == "resume" {
 				want = strings.Replace(want, "🐊 Arguments for claude: \n", goResume+"\n", 1)
+			}
+			if !strings.Contains(s.args, "--jacazul-session") {
+				want = strings.Replace(want, goGlobalSession, "", 1)
 			}
 			if got := normalize(stdout.String()); got != want {
 				t.Errorf("stdout differs\n--- got ---\n%s\n--- want ---\n%s", got, want)

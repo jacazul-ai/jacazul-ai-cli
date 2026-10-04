@@ -32,7 +32,10 @@ var bashOnlyEnv = map[string]string{
 }
 
 // goOnlyEnv are variables only the Go launcher exports.
-var goOnlyEnv = map[string]string{}
+var goOnlyEnv = map[string]string{
+	"JACAZUL_PROJECT": "runtime defaults: the resolved project, handed downstream (300d84ef)",
+	"JACAZUL_SESSION": "runtime defaults: the resolved session, handed downstream (300d84ef)",
+}
 
 // goResumeArgs is where the Go launcher differs from the Bash one on
 // --resume: the argument reaches claude and the session prompt stays, while
@@ -120,7 +123,16 @@ func TestParityClaudeExecMatchesTheBashLauncher(t *testing.T) {
 			if gotArgs := normalize(got["args"]); gotArgs != wantArgs {
 				t.Errorf("arguments differ\n--- got ---\n%s\n--- want ---\n%s", gotArgs, wantArgs)
 			}
-			for _, d := range envDiff(envMap(ref["env"]), envMap(normalize(got["env"]))) {
+			want := envMap(ref["env"])
+			if !strings.Contains(s.args, "--jacazul-session") {
+				// Bash minted a random session; Go runs the global one, which
+				// is no independent lane, so JACAZUL_SESSION_ID stays unset.
+				delete(want, "JACAZUL_SESSION_ID")
+				for k, v := range want {
+					want[k] = strings.ReplaceAll(v, "<SESSION>", "global")
+				}
+			}
+			for _, d := range envDiff(want, envMap(normalize(got["env"]))) {
 				t.Error(d)
 			}
 		})

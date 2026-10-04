@@ -5,7 +5,8 @@ claude parity references; the other harness subcommands are not
 implemented yet.
 **Audience:** Contributors and agents working on the launcher.
 **Related:** #113, plan `jacazul-launcher`, `go-expert`, `bash-expert`,
-[`tw-flow-session.md`](../tw-flow-session.md).
+[`tw-flow-session.md`](../tw-flow-session.md). Step-by-step state:
+[`go-launcher-migration.md`](go-launcher-migration.md).
 
 ## What changes for the user
 
@@ -26,8 +27,22 @@ same binary. `jacazul-gemini-sandboxed` is not ported (see Out of scope).
 ## Command shape
 
 ```text
-jacazul [--dry] [--debug] [--session <id>] <harness> [harness args...]
+jacazul [--dry] [--debug] [--project <id>] [--home <dir>] [--session <id>]
+        <harness> [harness args...]
 ```
+
+`--project`, `--home` and `--session` follow the runtime defaults below.
+
+Workflow commands never go through a harness. Everything that belongs to
+the workflow lives under `jacazul flow`, with the same `jacazul` options in
+front:
+
+```text
+jacazul [--project <id>] [--home <dir>] [--session <id>] flow <command> [args...]
+```
+
+Listing sessions is `jacazul flow session list`, not `jacazul pi ...`: no
+harness starts for it. A harness subcommand only launches its harness.
 
 - Everything before the harness name belongs to `jacazul`; everything after
   it reaches the harness untouched. The Bash launchers scanned every
@@ -59,6 +74,64 @@ conversation's first request and resends that record on every resume
 keeps the persona and the session signature it started with. Resuming with
 another `--session` therefore mixes two Jacazul session IDs; tying the
 harness conversation to the Jacazul session is an open decision.
+
+## Runtime defaults
+
+The launcher and the workflow engine share one set of defaults. The
+configuration file is deferred.
+
+**Strong defaults.** The computed defaults must be right on their own: a
+plain `jacazul <harness>` run from any project directory, worktree
+included, resolves the correct project, home and session without a flag or
+variable. Flags and variables are overrides for special cases, not part of
+normal use. `--project` (and `JACAZUL_PROJECT`) exists mainly for our
+tests and for defining sandboxes, where the project must be pinned instead
+of resolved from the working directory.
+
+Precedence: explicit CLI parameter > environment variable > configuration
+file > computed default.
+
+| Value | Flag | Environment | Computed default |
+|---|---|---|---|
+| Project | `--project` | `JACAZUL_PROJECT` | canonical project resolution |
+| Home | `--home` | `JACAZUL_HOME` | `$HOME/.jacazul-ai` |
+| Session | `--session` | `JACAZUL_SESSION` | `global` |
+
+Canonical project resolution:
+
+- A directory outside Git: the canonical `pwd` is the anchor.
+- A normal Git repository: `git rev-parse --show-toplevel`.
+- A linked worktree: the parent of `git-common-dir` when it ends in `.git`
+  or `.bare`.
+- Identity: `basename(parent(anchor)) + "_" + basename(anchor)`, so
+  `flow/master` resolves to `jacazul-ai_flow`, never `jacazul-ai_master`.
+
+Downstream, `jacazul` resolves the three values once and hands the same
+values on. It exports them to the harness as `JACAZUL_PROJECT`,
+`JACAZUL_HOME` and `JACAZUL_SESSION`, and passes them to the embedded engine
+as `flow.Env`. The launcher owns the session: it preserves `JACAZUL_SESSION`
+when one is provided, and the engine never generates a session ID per
+process. Until the `tw-flow` cutoff, `PROJECT_ID` and `TASKDATA` stay
+exported for `tw-flow`.
+
+The persisted configuration file is a separate feature and is not
+implemented. The launcher does not depend on, or invent, a
+configuration-file path.
+
+Implemented in `internal/bootstrap/environment` (`Home`, `Session`) and
+`internal/cli` (`resolveProject`), shared by the harness subcommands and
+`jacazul flow`:
+
+- `--project` pins the project ID only. The anchor still comes from the
+  working directory.
+- Until the `tw-flow` cutoff, `JACAZUL_SESSION_ID` is read after
+  `JACAZUL_SESSION`. It is exported only for a session that is not
+  `global`, because `tw-flow` treats any value as an independent lane
+  (`focus-<id>.json`).
+- The global session gives the Taskwarrior bootstrap no session, so it
+  seeds no lane and prints no `Session ID` line.
+- The persona comes from the legacy `.task/<PROJECT_ID>/persona.json` that
+  `jacazul-persona` writes. `project.json` is not read.
 
 ## Layout
 
@@ -109,9 +182,9 @@ is ported:
 | Step | Today | In Go |
 |---|---|---|
 | Project identity, `PROJECT_ID` | `bootstrap/project-identity` | computed from the path |
-| `JACAZUL_HOME` | forced to `~/.jacazul-ai` in two bootstraps | a preset value wins |
-| Session ID | `python3 -c uuid` | generated in Go, or `--session` |
-| Persona, language | `persona.json`, `language.json`, `jq`/`grep` | read from `project.json` (below) |
+| `JACAZUL_HOME` | forced to `~/.jacazul-ai` in two bootstraps | `--home`, then a preset value, then `~/.jacazul-ai` (Runtime defaults) |
+| Session ID | `python3 -c uuid` | `--session`, then `JACAZUL_SESSION`, then `global`; never generated per launch (Runtime defaults) |
+| Persona, language | `persona.json`, `language.json`, `jq`/`grep` | read in Go from the same files; `project.json` is deferred (below) |
 | Mode | `JACAZUL_MODE`, default `COUNSELOR` | unchanged: a variable of the running session |
 | Taskwarrior data and UDAs | `bootstrap/taskwarrior` | ported one to one, known issues included; transitional until the flow cutoff |
 | Python venv | `uv venv` + `uv pip install -e` on every launch | off the launch path |
@@ -123,7 +196,14 @@ A Bash `DRY` launch takes about 1.1 s; `uv pip install -e` alone is about
 590 ms of it, `jacazul-hatch` about 140 ms and `python3` for the session ID
 about 33 ms.
 
-## Per-project configuration
+## Per-project configuration (deferred)
+
+**Deferred.** The persisted configuration file is a separate feature and
+is not implemented. Until it lands, the launcher reads no `project.json`
+(task `300d84ef` takes it off the launch path; `0deb80e0` waits for the
+feature). In the precedence chain, the file sits between the environment
+variable and the computed default. The design below is kept for that
+feature.
 
 Stable project settings move from environment variables to one file:
 
@@ -182,7 +262,9 @@ into [`skill-methodology.md`](../skill-methodology.md).
 ## Workflow engine
 
 `jacazul flow` is the door to the workflow engine
-(`jacazul-ai/flow`):
+(`jacazul-ai/flow`). It receives the project, home and session that
+`jacazul` resolved (Runtime defaults) and never resolves or generates its
+own:
 
 - Until the engine is embedded, `jacazul flow <args...>` passes through to
   the current `tw-flow` with the same arguments, streams and exit code,
@@ -217,6 +299,23 @@ path; the Taskwarrior bootstrap announces the task data directory it
 creates, which the Python hatch used to create silently; `--resume` keeps
 the session prompt and reaches claude; and the task binary path is not
 compared, since it differs per machine.
+
+`testdata/parity/capture --exec` also runs the harness step, as
+`testdata/parity/fake-claude`, and records the arguments and the
+environment the launcher hands to claude (`<scenario>.exec.txt`). The Go
+environment matches the Bash one, with these differences:
+
+- The Go launcher adds `JACAZUL_PROJECT` and `JACAZUL_SESSION` (Runtime
+  defaults).
+- Without `--session` it runs the global session, so `JACAZUL_SESSION_ID`
+  stays unset.
+- It does not export `CURRENT_DIR`, `PARENT_DIR`, `JACAZUL_PROJECT_ANCHOR`
+  or `JACAZUL_PERSONA_SPEC_FILE`, which only the Bash scripts read.
+
+It does export the Bash run-once guard `JACAZUL_ENV_INITIALIZED`. Without
+it, a legacy Bash launcher started inside the harness would rerun its
+whole bootstrap and mint its own session. The export goes when the legacy
+names route through the Go binary.
 
 ## Transition and cutoff
 
@@ -273,8 +372,9 @@ keeping its mode.
 
 ## Open decisions
 
-- Root of `projects/`: `~/.jacazul-ai/projects` (inside `JACAZUL_HOME`) or
-  another directory.
+- `--project` and `JACAZUL_PROJECT` take an identity (`jacazul-ai_flow`),
+  as implemented, rather than a path. This serves tests and sandboxes,
+  their main users; to be confirmed.
 - Whether a resumed conversation still skips the onboard prompt.
 - Whether the Jacazul session records the harness conversation it started,
   so `jacazul --session ID <harness>` resumes that conversation by itself

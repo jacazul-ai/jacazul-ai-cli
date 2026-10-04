@@ -16,49 +16,47 @@ func writeFile(t *testing.T, path, content string) {
 	}
 }
 
-func TestLoadConfigReadsProjectJSON(t *testing.T) {
-	home := t.TempDir()
-	writeFile(t, filepath.Join(home, "projects", "org_app", "project.json"),
-		`{"persona": "atena", "language": {"chat": "en", "data": "en"}}`)
-
-	cfg, err := LoadConfig(home, "org_app")
-	if err != nil {
-		t.Fatal(err)
-	}
-	if cfg.Persona != "atena" || cfg.Language.Chat != "en" || cfg.Language.Data != "en" {
-		t.Fatalf("got %+v", cfg)
-	}
-}
-
-func TestLoadConfigFallsBackToTheLegacyPersonaFile(t *testing.T) {
+func TestAnchoredPersonaReadsTheLegacyPersonaFile(t *testing.T) {
 	home := t.TempDir()
 	writeFile(t, filepath.Join(home, ".task", "org_app", "persona.json"),
 		`{"anchored_persona": "codama"}`)
 
-	cfg, err := LoadConfig(home, "org_app")
+	got, err := AnchoredPersona(home, "org_app")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if cfg.Persona != "codama" {
-		t.Fatalf("Persona = %q, want the legacy anchor codama", cfg.Persona)
+	if got != "codama" {
+		t.Fatalf("AnchoredPersona = %q, want codama", got)
 	}
 }
 
-func TestLoadConfigWithoutFilesIsEmpty(t *testing.T) {
-	cfg, err := LoadConfig(t.TempDir(), "org_app")
-	if err != nil {
-		t.Fatal(err)
-	}
-	if cfg != (Config{}) {
-		t.Fatalf("got %+v, want the zero Config", cfg)
-	}
-}
-
-func TestLoadConfigRejectsBrokenJSON(t *testing.T) {
+// The configuration file is a separate feature, not implemented: the
+// launcher must not read a project.json.
+func TestAnchoredPersonaIgnoresProjectJSON(t *testing.T) {
 	home := t.TempDir()
-	writeFile(t, filepath.Join(home, "projects", "org_app", "project.json"), `{"persona":`)
+	writeFile(t, filepath.Join(home, "projects", "org_app", "project.json"), `{"persona": "atena"}`)
 
-	if _, err := LoadConfig(home, "org_app"); err == nil {
-		t.Fatal("want an error for a broken project.json")
+	got, err := AnchoredPersona(home, "org_app")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got != "" {
+		t.Fatalf("AnchoredPersona = %q from project.json, want nothing", got)
+	}
+}
+
+func TestAnchoredPersonaWithoutAFileIsEmpty(t *testing.T) {
+	got, err := AnchoredPersona(t.TempDir(), "org_app")
+	if err != nil || got != "" {
+		t.Fatalf("got %q, %v, want an empty persona", got, err)
+	}
+}
+
+func TestAnchoredPersonaRejectsBrokenJSON(t *testing.T) {
+	home := t.TempDir()
+	writeFile(t, filepath.Join(home, ".task", "org_app", "persona.json"), `{"anchored_persona":`)
+
+	if _, err := AnchoredPersona(home, "org_app"); err == nil {
+		t.Fatal("want an error for a broken persona.json")
 	}
 }
