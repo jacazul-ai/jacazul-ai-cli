@@ -175,6 +175,11 @@ func runClaude(opts Options, args []string, stdout, stderr io.Writer) int {
 		{"CONTEXT_GIT_USER", cmp.Or(os.Getenv("CONTEXT_GIT_USER"), username())},
 		{"CLAUDE_CONFIG_DIR", configDir},
 		{"PATH", path},
+		// The run-once guard of scripts/bootstrap/environment. A legacy Bash
+		// launcher started inside the harness would otherwise rerun its whole
+		// bootstrap and mint its own session. Transitional: it goes when
+		// f47da6cb routes the legacy names through this binary.
+		{"JACAZUL_ENV_INITIALIZED", "true"},
 	}
 	if tw.TaskRC != "" {
 		vars = append(vars, [2]string{"TASKRC", tw.TaskRC})

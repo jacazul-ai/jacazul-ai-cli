@@ -44,7 +44,7 @@ var sessionVars = []string{
 	"JACAZUL_HOME", "JACAZUL_SESSION_ID", "JACAZUL_PERSONA", "JACAZUL_MODE",
 	"JACAZUL_CHAT_LANG", "JACAZUL_DATA_LANG", "JACAZUL_HARNESS", "JACAZUL_MODEL",
 	"JACAZUL_FOCUS_PLAN", "JACAZUL_FOCUS_TASK", "CLAUDE_CONFIG_DIR",
-	"TASKRC", "TASKDATA", "DRY", "DEBUG", "CONTEXT_GIT_USER",
+	"TASKRC", "TASKDATA", "DRY", "DEBUG", "CONTEXT_GIT_USER", "JACAZUL_ENV_INITIALIZED",
 }
 
 type launch struct {
@@ -129,6 +129,9 @@ func TestClaudeRunsWithThePromptAndUntouchedArgs(t *testing.T) {
 		"JACAZUL_TASK_SIGNATURE": "— Jacazul (unspecified; harness: claude; session: abcd1234)",
 		"CLAUDE_CONFIG_DIR":      filepath.Join(jhome, "agents", "claude"),
 		"CONTEXT_REAL_PATH":      l.project,
+		// Keeps a nested legacy Bash launcher from rerunning its bootstrap
+		// and minting a session, until f47da6cb routes those names here.
+		"JACAZUL_ENV_INITIALIZED": "true",
 	} {
 		if got := rec.Env[k]; got != want {
 			t.Errorf("%s=%q, want %q", k, got, want)
