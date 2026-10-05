@@ -236,7 +236,7 @@ func checkout() (string, error) {
 	}
 	root := filepath.Dir(filepath.Dir(exe))
 	if !isDir(filepath.Join(root, "skills")) {
-		return "", fmt.Errorf("no jacazul-ai-cli checkout around %s (%s has no skills/); "+
+		return "", fmt.Errorf("no launcher checkout around %s (%s has no skills/); "+
 			"until skills are embedded in the binary, run 'make build' in a checkout "+
 			"and launch its bin/jacazul or a link to it", exe, root)
 	}
