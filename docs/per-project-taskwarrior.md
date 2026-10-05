@@ -10,7 +10,7 @@ This architecture enables isolated Taskwarrior databases per project, providing 
 
 ```
 ~/.task/
-  ├── jacazul-ai_jacazul-ai-cli/      # Project-specific database
+  ├── jacazul-ai_launcher/          # Project-specific database
   │   ├── pending.data
   │   ├── completed.data
   │   ├── backlog.data
@@ -69,9 +69,9 @@ Automatically uses project-specific database when `PROJECT_ID` is set.
 
 **Usage:**
 ```bash
-./tw-flow ponder jacazul-ai_jacazul-ai-cli           # Show project overview
+./tw-flow ponder jacazul-ai_launcher           # Show project overview
 > **Note:** The standalone `ponder` command is deprecated and will be removed in the future. Prefer using `tw-flow ponder` for full workflow integration.
-./tw-flow ponder jacazul-ai_jacazul-ai-cli:feature   # Show specific plan
+./tw-flow ponder jacazul-ai_launcher:feature   # Show specific plan
 > **Note:** The standalone `ponder` command is deprecated and will be removed in the future. Prefer using `tw-flow ponder` for full workflow integration.
 ```
 
@@ -156,8 +156,8 @@ has no metadata left to repair; recreate it with `git worktree add`.
 
 ```bash
 # Automatic detection via PROJECT_ID
-cd /path/to/jacazul-ai_jacazul-ai-cli/
-taskp list                    # Uses jacazul-ai_jacazul-ai-cli DB
+cd /path/to/jacazul-ai_launcher/
+taskp list                    # Uses jacazul-ai_launcher DB
 taskp add "New feature"       # Adds to project DB
 ```
 

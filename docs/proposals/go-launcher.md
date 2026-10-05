@@ -164,8 +164,8 @@ side by side, as they do in `scripts/bootstrap/`:
 
 Shared steps are ported once and reused by every harness command.
 
-- Module `github.com/jacazul-ai/launcher`, ahead of the planned rename of
-  the repository to `jacazul-ai/launcher`.
+- Module `github.com/jacazul-ai/launcher`, the repository's name since the
+  rename from `jacazul-ai/jacazul-ai-cli` (#133).
 - `go 1.25`, `jessevdk/go-flags`.
 - Make targets: `build` (to `bin/jacazul`), `clean`, `fmt`, `go-test`,
   `tidy`, `vet`, `parity`. Until the Python cutoff `make test` stays the

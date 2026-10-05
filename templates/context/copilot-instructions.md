@@ -90,7 +90,7 @@ Each project has its own Taskwarrior database:
 
 ```
 ~/.task/
-  ├── jacazul-ai_jacazul-ai-cli/    # Project-specific database
+  ├── jacazul-ai_launcher/        # Project-specific database
   │   ├── pending.data
   │   ├── completed.data
   │   └── backlog.data
@@ -114,7 +114,7 @@ Each project has its own isolated Taskwarrior database:
 
 ```
 ~/.task/
-  ├── jacazul-ai_jacazul-ai-cli/     # Database for jacazul-ai_jacazul-ai-cli project
+  ├── jacazul-ai_launcher/     # Database for jacazul-ai_launcher project
   │   ├── pending.data
   │   ├── completed.data
 

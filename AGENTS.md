@@ -118,7 +118,7 @@ reference branch and fast-forwarded, so history stays linear.
   `vault.json`. Sync issues with `jacazul-broker sync #ID`.
 - **Platform testing:** experimental, POC or non-production broker operations
   target `jacazul-ai/jacazul-ai-sandbox`; never create test issues, labels or
-  milestones in `jacazul-ai-cli`.
+  milestones in `launcher`.
 
 ---
 **Last Updated:** 2026-09-24

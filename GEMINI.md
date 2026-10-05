@@ -88,7 +88,7 @@ Validation is the only path to finality. No logic change should occur without a 
 ## 🧪 Platform Testing (GitHub Broker)
 
 - **Test Mandate:** All experimental, POC, or non-production GitHub Broker operations MUST target the dedicated sandbox repository: `jacazul-ai/jacazul-ai-sandbox`.
-- **Integrity:** Never create test issues, labels, or milestones in the main `jacazul-ai-cli` repository.
+- **Integrity:** Never create test issues, labels, or milestones in the main `launcher` repository.
 
 ## 🐊 GitHub Broker Protocol (The Protocol)
 

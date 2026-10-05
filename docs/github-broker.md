@@ -29,7 +29,7 @@ jacazul-github list
 jacazul-github auth --org jacazul-ai
 
 # Setup a token for a specific project
-jacazul-github auth --org jacazul-ai --project jacazul-ai-cli
+jacazul-github auth --org jacazul-ai --project launcher
 
 # Setup a fallback classic token
 jacazul-github auth --classic

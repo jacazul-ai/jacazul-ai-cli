@@ -78,9 +78,9 @@ without spending space on the workflow row.
 The MVP style is dashboard-first:
 
 ```text
-🐊 COUNSELOR | jacazul-ai_jacazul-ai-cli
+🐊 COUNSELOR | jacazul-ai_launcher
 🎯 focus (independent) | pi-lualine-footer-extension | aeab3350 [DESIGN] Design Pi lualine-style custom footer extension
- worktree | ~/.bare/jacazul-ai-cli | tw-flow-to-go(branch)
+ worktree | ~/.bare/launcher | tw-flow-to-go(branch)
 🤖 | gpt-5.5 · medium · ctx 23.3%/272k | ↑65k ↓2.1k R170k $0.471
 ```
 

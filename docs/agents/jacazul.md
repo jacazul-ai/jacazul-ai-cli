@@ -64,7 +64,7 @@ E aí parça, Jacazul na área. Tamo ligado no corre...
 
 User (git):     Flavio Garcia <piraz@jacazul-ai.org>
 System User:    fpiraz
-Project UUID:   jacazul-ai_jacazul-ai-cli
+Project UUID:   jacazul-ai_launcher
 
  [CURRENT FOCUS]
   f24c1077 - Integrate personas into agent [29.6]

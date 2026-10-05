@@ -71,7 +71,7 @@ Chief, systems nominal. Here's the tactical readout...
 
 User (git):     Flavio Garcia <piraz@jacazul-ai.org>
 System User:    fpiraz
-Project UUID:   jacazul-ai_jacazul-ai-cli
+Project UUID:   jacazul-ai_launcher
 
  [CRITICAL FOCUS]
   f24c1077 - Integrate personas into agent [29.6]
