@@ -90,6 +90,44 @@ TASKDATA=~/.task/PROJECT_ID task import /tmp/tasks-backup.json rc.hooks=0
 TASKDATA=~/.task/PROJECT_ID task count
 ```
 
+### Renaming or Moving a Project
+
+`PROJECT_ID` comes from the checkout's directory names, so renaming or moving
+the clone gives it a new ID, and the next launch finds an empty silo. When you
+rename or move a project, walk this list before working in it. A launch made
+before the move creates an empty `<NEW_PROJECT_ID>` directory; remove it
+first.
+
+| What | Where | Action |
+|---|---|---|
+| Tasks, focus lanes, session notes | `~/.jacazul-ai/.task/<OLD_PROJECT_ID>` | Move it to `~/.jacazul-ai/.task/<NEW_PROJECT_ID>`. |
+| Output cache | `~/.jacazul-ai/cache/tw-flow/<OLD_PROJECT_ID>`, `~/.jacazul-ai/cache/github/<OLD_PROJECT_ID>` | Disposable: delete it. |
+| Harness memory | `~/.jacazul-ai/agents/claude/projects/<encoded checkout path>` | Keyed by checkout path, one per worktree: move the ones worth keeping. |
+| Editable install | `~/.jacazul-ai/.venv/.../_editable_impl_*.pth` | Must name the new checkout; rerun `scripts/configure` if it does not. |
+| Remote | `.git/config`, or `.bare/config` in a bare layout | `git remote set-url origin <new-url>` when the repository was renamed too. |
+
+**Bare repository with worktrees** (`<project>/.bare` plus one directory per
+worktree). Git links them with absolute paths in both directions:
+
+- `<worktree>/.git` is a file: `gitdir: <project>/.bare/worktrees/<name>`;
+- `<project>/.bare/worktrees/<name>/gitdir` names `<worktree>/.git`.
+
+After a move both still name the old path, and `git worktree list` marks every
+worktree `prunable`. Repair them all in one call from the bare repository:
+
+```bash
+git -C <project>/.bare worktree repair <project>/<worktree-1> <project>/<worktree-2>
+git -C <project>/.bare worktree list   # no worktree marked prunable
+```
+
+Do not run `git worktree prune` before the repair: it deletes the metadata of
+every worktree marked `prunable`. A worktree missing from `.bare/worktrees/`
+has no metadata left to repair; recreate it with `git worktree add`.
+
+> **TODO:** this checklist is manual today. A utility that walks it from the
+> old and new paths (silo, cache, memory, remote, worktree repair, never
+> prune) is planned in task `74c9cb07` (issue #133).
+
 ## Benefits
 
 ### 1. **Isolation**
