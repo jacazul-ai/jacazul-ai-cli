@@ -53,15 +53,17 @@ func sessionList(opts Options, stdout, stderr io.Writer) int {
 	}
 
 	current := environment.Session(cmp.Or(opts.Session, opts.LegacySession), os.Getenv)
-	fmt.Fprintln(stdout, "SESSION ID   PLAN                           TASK       AGE     STATUS  NOTE")
+	// The header and the lanes share one layout, so the columns line up.
+	const layout = "%-12s%-30s %-10s %-7s %-7s %s"
+	fmt.Fprintf(stdout, layout+"\n", "SESSION", "PLAN", "TASK", "AGE", "STATUS", "HANDOFF")
 	fmt.Fprintln(stdout, strings.Repeat("-", 78))
 	for _, s := range sessions {
 		marker := " "
 		if s.ID == current {
 			marker = "*"
 		}
-		line := fmt.Sprintf("%s %s  %-30s %-10s %-7s %-7s %s",
-			s.ID, marker, s.Plan, s.Task, session.FormatAge(s.Age), s.Status, s.Note)
+		line := fmt.Sprintf(layout,
+			s.ID+" "+marker, s.Plan, s.Task, session.FormatAge(s.Age), s.Status, s.Handoff)
 		fmt.Fprintln(stdout, strings.TrimRight(line, " "))
 	}
 	return 0

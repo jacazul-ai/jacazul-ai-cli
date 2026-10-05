@@ -272,8 +272,9 @@ own:
 - `jacazul flow session list` is implemented in Go. It reads the
   `focus-<id>.json` lanes under `TASKDATA` directly and prints what
   `tw-flow session list` prints (session, plan, task, age, status, `*` on
-  the current session), plus a NOTE column: `note` for a handoff note not
-  read yet, `read` for one acknowledged with `tw-flow session ack`. It only
+  the current session), plus a HANDOFF column: `unread` for a handoff note
+  not read yet, `read` for one acknowledged with `tw-flow session ack`. The
+  header shares the lanes' layout, so its columns line up. It only
   reads, so it does not refresh the lane's age the way every `tw-flow`
   command does. Sessions stay owned by the workflow engine; the launcher
   only creates or accepts the session ID. Other `jacazul flow` commands

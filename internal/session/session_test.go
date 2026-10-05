@@ -40,9 +40,9 @@ func TestListReadsLanesNewestFirst(t *testing.T) {
 		t.Fatal(err)
 	}
 	want := []Session{
-		{ID: "bbbbbbbb", Plan: "launcher", Task: "454bc8a1", Age: 30 * time.Second, Status: Active, Note: NoteRead},
+		{ID: "bbbbbbbb", Plan: "launcher", Task: "454bc8a1", Age: 30 * time.Second, Status: Active, Handoff: HandoffRead},
 		{ID: "cccccccc", Plan: "?", Task: "?", Age: 3 * time.Hour, Status: Idle},
-		{ID: "aaaaaaaa", Plan: "old", Task: "-", Age: 9 * time.Hour, Status: Orphan, Note: NotePending},
+		{ID: "aaaaaaaa", Plan: "old", Task: "-", Age: 9 * time.Hour, Status: Orphan, Handoff: HandoffUnread},
 	}
 	if len(got) != len(want) {
 		t.Fatalf("got %d sessions: %+v", len(got), got)

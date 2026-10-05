@@ -32,8 +32,15 @@ func TestFlowSessionListReadsTheProjectLanes(t *testing.T) {
 	if len(lines) != 3 {
 		t.Fatalf("want header, rule and one lane:\n%s", stdout)
 	}
-	if !strings.HasPrefix(lines[0], "SESSION ID   PLAN") || !strings.HasSuffix(lines[0], "NOTE") {
+	if !strings.HasPrefix(lines[0], "SESSION  ") || !strings.HasSuffix(lines[0], "HANDOFF") {
 		t.Errorf("header %q", lines[0])
+	}
+	for _, col := range []struct{ header, value string }{
+		{"PLAN", "jacazul-launcher"}, {"TASK", "454bc8a1"}, {"STATUS", "active"},
+	} {
+		if h, v := strings.Index(lines[0], col.header), strings.Index(lines[2], col.value); h != v {
+			t.Errorf("%s starts at %d in the header and %d in the lane", col.header, h, v)
+		}
 	}
 	fields := strings.Fields(lines[2])
 	want := []string{"bbbbbbbb", "*", "jacazul-launcher", "454bc8a1"}
@@ -42,8 +49,8 @@ func TestFlowSessionListReadsTheProjectLanes(t *testing.T) {
 			t.Fatalf("lane %q, want it to start with %q", lines[2], want)
 		}
 	}
-	if !strings.HasSuffix(lines[2], "active  note") {
-		t.Errorf("lane %q lacks status and note", lines[2])
+	if !strings.HasSuffix(lines[2], "active  unread") {
+		t.Errorf("lane %q lacks status and handoff", lines[2])
 	}
 }
 

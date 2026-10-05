@@ -26,23 +26,23 @@ const (
 	Orphan Status = "orphan" // older, a candidate for tw-flow session purge
 )
 
-// Note is the state of a lane's handoff note.
-type Note string
+// Handoff is the state of a lane's handoff note.
+type Handoff string
 
 const (
-	NoNote      Note = ""
-	NotePending Note = "note" // written by tw-flow session dump, not read yet
-	NoteRead    Note = "read" // acknowledged with tw-flow session ack
+	NoHandoff     Handoff = ""
+	HandoffUnread Handoff = "unread" // written by tw-flow session dump, not read yet
+	HandoffRead   Handoff = "read"   // acknowledged with tw-flow session ack
 )
 
 // Session is one independent lane.
 type Session struct {
-	ID     string
-	Plan   string // "-" when unset, "?" when the file is unreadable
-	Task   string // short UUID, with the same placeholders as Plan
-	Age    time.Duration
-	Status Status
-	Note   Note
+	ID      string
+	Plan    string // "-" when unset, "?" when the file is unreadable
+	Task    string // short UUID, with the same placeholders as Plan
+	Age     time.Duration
+	Status  Status
+	Handoff Handoff
 }
 
 // List returns the lanes in dir, most recently used first. A missing dir
@@ -74,9 +74,9 @@ func List(dir string, now time.Time) ([]Session, error) {
 			s.Task = cmp.Or(shortUUID(lane.Task), "-")
 		}
 		if note, err := os.ReadFile(filepath.Join(dir, "session-note-"+id+".md")); err == nil {
-			s.Note = NotePending
+			s.Handoff = HandoffUnread
 			if strings.Contains(string(note), "acknowledged:") {
-				s.Note = NoteRead
+				s.Handoff = HandoffRead
 			}
 		}
 		sessions = append(sessions, s)
