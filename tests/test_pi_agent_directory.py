@@ -6,6 +6,7 @@ import subprocess
 import tempfile
 import unittest
 
+from .base import checkout_project_id
 
 PROJECT_ROOT = pathlib.Path(__file__).resolve().parents[1]
 BOOTSTRAP_PI = PROJECT_ROOT / "scripts" / "bootstrap" / "pi"
@@ -17,6 +18,7 @@ class TestPiAgentDirectory(unittest.TestCase):
         self.test_dir = tempfile.mkdtemp(prefix="jacazul_pi_agent_dir_")
         self.home = os.path.join(self.test_dir, "home")
         self.jacazul_home = os.path.join(self.home, ".jacazul-ai")
+        self.project_id = checkout_project_id()
         self.bin_dir = os.path.join(self.test_dir, "bin")
         os.makedirs(self.home, exist_ok=True)
         os.makedirs(self.jacazul_home, exist_ok=True)
@@ -45,11 +47,11 @@ class TestPiAgentDirectory(unittest.TestCase):
                 "HOME": self.home,
                 "JACAZUL_HOME": self.jacazul_home,
                 "PATH": f"{self.bin_dir}:{env.get('PATH', '')}",
-                "PROJECT_ID": "jacazul-ai_jacazul-ai-cli",
+                "PROJECT_ID": self.project_id,
                 "TASKDATA": os.path.join(
                     self.jacazul_home,
                     ".task",
-                    "jacazul-ai_jacazul-ai-cli",
+                    self.project_id,
                 ),
             }
         )
@@ -63,6 +65,7 @@ class TestPiAgentDirectory(unittest.TestCase):
             executable="/bin/bash",
             capture_output=True,
             text=True,
+            check=False,
         )
 
     def test_bootstrap_uses_explicit_pi_coding_agent_dir(self):
@@ -163,7 +166,7 @@ class TestPiAgentDirectory(unittest.TestCase):
         focus_dir = os.path.join(
             self.jacazul_home,
             ".task",
-            "jacazul-ai_jacazul-ai-cli",
+            self.project_id,
         )
         os.makedirs(focus_dir, exist_ok=True)
         focus_file = os.path.join(focus_dir, f"focus-{session_id}.json")

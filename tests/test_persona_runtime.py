@@ -7,6 +7,7 @@ import subprocess
 import tempfile
 import unittest
 
+from .base import checkout_project_id
 
 PROJECT_ROOT = pathlib.Path(__file__).resolve().parents[1]
 COPILOT_LAUNCHER = PROJECT_ROOT / "scripts" / "jacazul-copilot"
@@ -20,7 +21,7 @@ class TestPersonaRuntime(unittest.TestCase):
         self.test_dir = tempfile.mkdtemp(prefix="jacazul_persona_runtime_")
         self.home = pathlib.Path(self.test_dir) / "home"
         self.bin_dir = pathlib.Path(self.test_dir) / "bin"
-        self.project_id = "jacazul-ai_jacazul-ai-cli"
+        self.project_id = checkout_project_id()
         self.task_dir = self.home / ".jacazul-ai" / ".task" / self.project_id
         self.home.mkdir(parents=True)
         self.bin_dir.mkdir(parents=True)

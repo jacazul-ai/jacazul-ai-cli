@@ -1,10 +1,38 @@
 #!/home/fpiraz/.jacazul-ai/.venv/bin/python
 import os
 import shutil
-import tempfile
 import subprocess
+import tempfile
 import unittest
-from typing import Tuple
+
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+
+
+def checkout_project_id() -> str:
+    """Return the PROJECT_ID the launchers resolve for this checkout.
+
+    Launcher tests run from the real checkout, and the bootstrap derives
+    PROJECT_ID from its directory names, so a fixed name breaks when the
+    clone is renamed or moved.
+    """
+    helper = os.path.join(
+        PROJECT_ROOT, "scripts", "bootstrap", "project-identity"
+    )
+    res = subprocess.run(
+        [
+            "bash",
+            "-c",
+            'source "$1" && jacazul_export_project_identity '
+            '&& printf "%s" "$PROJECT_ID"',
+            "bash",
+            helper,
+        ],
+        cwd=PROJECT_ROOT,
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    return res.stdout
 
 
 class JacazulTest(unittest.TestCase):
@@ -58,7 +86,7 @@ class JacazulTest(unittest.TestCase):
 
     def run_cmd(
         self, cmd: str, env: dict = None, check: bool = False
-    ) -> Tuple[str, str, int]:
+    ) -> tuple[str, str, int]:
         """Run a command within the isolated test environment."""
         run_env = self.env.copy()
         if env:
