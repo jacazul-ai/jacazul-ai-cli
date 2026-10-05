@@ -52,6 +52,23 @@ Phrases that mean "trace how we got here and diagnose why the current behavior h
 
 ---
 
+## E2E Development
+
+The trigger is a meaning, not a phrase: the operator asks, in any language, to develop, implement, finish or take care of something end to end. A development verb plus "end to end" is what fires it. The phrases below are examples:
+
+| Example | Language | Vibe |
+|---|---|---|
+| `desenvolve isso e2e`, `implementa e2e` | PT | fecha o contrato e implementa a ini inteira |
+| `termina isso e2e`, `cuida disso e2e` | PT | vai até o fim: tasks, commits, foco |
+| `develop this e2e`, `implement this e2e` | EN | same meaning |
+| `finish this e2e`, `take care of this e2e` | EN | same meaning |
+
+**Not a trigger:** `e2e` alone, or anything about end-to-end tests (`teste e2e`, `run the e2e tests`, "the e2e broke"). Those are about testing.
+
+**Action:** Follow the E2E Development procedure the hub routes this trigger to. It opens with the contract: nothing is implemented before the operator's explicit approval, and it ends with the operator choosing to keep the commit trail and push or to edit it first.
+
+---
+
 ## Consensus Review / Review de Consenso
 
 Phrases that mean "run a multi-persona convergent review — cross-check findings across personas before locking a decision":

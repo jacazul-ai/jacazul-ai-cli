@@ -45,6 +45,7 @@ ENGINE_REFERENCES = (
     "language.md",
     "glossary.md",
     "collaboration.md",
+    "e2e-development.md",
 )
 # Every persona voice ships as a reference; launchers inject the active one.
 ENGINE_PERSONAS = ("jacazul", "codama", "arnalbam", "atena")

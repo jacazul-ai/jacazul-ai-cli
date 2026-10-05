@@ -205,6 +205,35 @@ class TestHatchEngine(unittest.TestCase):
         self.assertIn("focused plan and task", rendered_session)
         self.assertIn("Never say only `context loaded`", rendered_session)
 
+    def test_hatch_routes_e2e_development_to_its_reference(self):
+        hatch_prompt("gemini", persona_override="arnalbam")
+
+        engine_dir = os.path.join(self.script_dir, "skills", "jacazul-engine")
+        references_dir = os.path.join(engine_dir, "references")
+        with open(
+            os.path.join(engine_dir, "SKILL.md"), encoding="utf-8"
+        ) as skill_file:
+            rendered_skill = skill_file.read()
+        with open(
+            os.path.join(references_dir, "glossary.md"), encoding="utf-8"
+        ) as glossary_file:
+            rendered_glossary = glossary_file.read()
+        with open(
+            os.path.join(references_dir, "e2e-development.md"),
+            encoding="utf-8",
+        ) as e2e_file:
+            rendered_e2e = e2e_file.read()
+
+        # Like i&d: the hub alone routes the trigger to the reference; the
+        # glossary names the trigger and its non-triggers without a path,
+        # since references never point at other references.
+        self.assertIn("`references/e2e-development.md`", rendered_skill)
+        self.assertIn("not `e2e` alone or end-to-end tests", rendered_skill)
+        self.assertIn("## E2E Development", rendered_glossary)
+        self.assertIn("**Not a trigger:**", rendered_glossary)
+        self.assertNotIn("references/e2e", rendered_glossary)
+        self.assertIn("pode implementar E2E", rendered_e2e)
+        self.assertIn("## 7. Review the Trail", rendered_e2e)
 
 if __name__ == "__main__":
     unittest.main()
