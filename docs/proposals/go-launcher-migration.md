@@ -2,7 +2,7 @@
 
 **Audience:** Contributors and agents working on the launcher.
 **Design:** [`go-launcher.md`](go-launcher.md). **Plan:** `jacazul-launcher`
-(#113). **Last updated:** 2026-10-03.
+(#113). **Last updated:** 2026-10-04.
 
 This page tracks where the move from the Bash launchers to the Go
 `jacazul` binary stands. The design lives in the proposal; this page holds
@@ -25,17 +25,17 @@ there.
 | Parity matrix of the Bash launchers (DRY+DEBUG references) | done | `078476b0` |
 | Bootstraps in Go: project, environment, language, persona, taskwarrior, claude, onboard | done | `454bc8a1` |
 | `jacazul claude`, DRY parity with `scripts/jacazul-claude` | done | `454bc8a1` |
-| `jacazul claude`, environment handed to claude compared with Bash (non-DRY) | done, not pushed | `454bc8a1` |
-| Go tests independent of generated skills (CI red since `b9bff96`) | done, not pushed; CI not run yet | `454bc8a1` |
-| Runtime defaults: `--project`, `--home`, `--session`, `JACAZUL_SESSION`, session `global` | done, not pushed | `300d84ef` |
+| `jacazul claude`, environment handed to claude compared with Bash (non-DRY) | done (`f263d47`) | `454bc8a1` |
+| Go tests independent of generated skills (CI red since `b9bff96`) | done (`3fd3b25`); CI result not checked | `454bc8a1` |
+| Runtime defaults: `--project`, `--home`, `--session`, `JACAZUL_SESSION`, session `global` | done (`7552256`), task open | `300d84ef` |
 | `jacazul pi`, `gemini`, `copilot`, `opencode` | pending | `d6467d3e` |
 | Legacy `jacazul-<harness>` names route to the Go binary | pending | `f47da6cb` |
 | `docs/cli.md` and the Bash deprecation path | pending | `c9a8af02` |
 | Environment, process and security validation | pending | `3dcc38d7` |
-| `jacazul flow`: native `session list` | done (`fe5417a`) | `c0e949ff` |
+| `jacazul flow`: native `session list`, HANDOFF column | done (`fe5417a`, `98061b1`) | `c0e949ff` |
 | `jacazul flow`: pass-through to `tw-flow` | pending | `c0e949ff` |
 | Skills without `project_id` baked in | done (`7edb0ca`), task open | `37345109` |
-| Orientation: the engine hub is the single source | uncommitted template edits | `8e5d2af9` |
+| Orientation: the engine hub is the single source | done (`baf37e7`), task open | `8e5d2af9` |
 
 ## Deferred
 
@@ -50,3 +50,4 @@ there.
 | Hatch in Go, embedded skills | `f8bb971b` |
 | On-demand and user-defined personas | `2175b6f2` |
 | Embedded workflow engine (`flow.Run`), Taskwarrior data migration | plan `jacazul-flow-embedding` |
+| Repair a moved or renamed project (silo, cache, memory, remote, worktree links); manual checklist in [`per-project-taskwarrior.md`](../per-project-taskwarrior.md#renaming-or-moving-a-project) | `74c9cb07` |
