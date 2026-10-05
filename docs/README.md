@@ -1,6 +1,6 @@
 # Documentation Central 📚
 
-Welcome to the Jacazul AI CLI documentation. This project is built around the concept of **Persistent Tactical Memory** and **Multi-Persona Navigation**.
+Welcome to the Jacazul Launcher documentation. This project is built around the concept of **Persistent Tactical Memory** and **Multi-Persona Navigation**.
 
 ## 📖 Table of Contents
 

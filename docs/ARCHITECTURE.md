@@ -1,10 +1,10 @@
-# Jacazul AI CLI — Technical Architecture
+# Jacazul Launcher — Technical Architecture
 
-This document provides a deep dive into the internal structure, file layouts, and CLI entry points of the Jacazul AI CLI ecosystem.
+This document provides a deep dive into the internal structure, file layouts, and CLI entry points of the Jacazul Launcher ecosystem.
 
 ## 🏗️ Project Architecture (Python Standard Package)
 
-Jacazul AI CLI is structured as a standard Python package for maximum robustness and professional distribution.
+Jacazul Launcher is structured as a standard Python package for maximum robustness and professional distribution.
 
 ### Core Structure
 - **`jacazul/`**: Root Python package (Flat Layout).

@@ -1,6 +1,6 @@
-# Jacazul AI CLI Manifesto
+# Jacazul Launcher Manifesto
 
-Repository mandates for agents working on the Jacazul AI CLI. Workflow,
+Repository mandates for agents working on the Jacazul Launcher. Workflow,
 persona and response rules live in the `jacazul-engine` skill; this file keeps
 what no skill carries and names where the rest lives.
 
@@ -121,4 +121,4 @@ reference branch and fast-forwarded, so history stays linear.
   milestones in `launcher`.
 
 ---
-**Last Updated:** 2026-09-24
+**Last Updated:** 2026-10-05

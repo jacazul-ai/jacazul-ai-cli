@@ -1,6 +1,6 @@
 # JIT Forge Lifecycle & Onboarding
 
-This document details the dynamic initialization process of the Jacazul AI CLI ecosystem, known as the **JIT Prompt Forge**. It explains how instructions are generated, loaded, and executed to maintain a productive flow state.
+This document details the dynamic initialization process of the Jacazul Launcher ecosystem, known as the **JIT Prompt Forge**. It explains how instructions are generated, loaded, and executed to maintain a productive flow state.
 
 ## 🏗️ 1. The Forge (Hatch Phase)
 

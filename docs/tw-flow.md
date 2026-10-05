@@ -1,6 +1,6 @@
 # tw-flow CLI Reference
 
-The main workflow tool for the Jacazul AI CLI. Manages tasks, initiatives (plans/inis), session focus, and project state.
+The main workflow tool for the Jacazul Launcher. Manages tasks, initiatives (plans/inis), session focus, and project state.
 
 > For agent behavior and the 7-phase workflow, see [taskwarrior-expert.md](taskwarrior-expert.md).
 > For output caching, see [tw-flow-cache.md](tw-flow-cache.md).

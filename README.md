@@ -1,8 +1,8 @@
-# Jacazul AI CLI (Monstro do Lago) 🐊
+# Jacazul Launcher (Monstro do Lago) 🐊
 
 **Stop AI Amnesia. Master Your Workflow.**
 
-Jacazul AI CLI is a high-performance, dual-mode environment designed to run AI-powered command line tools (Gemini, Opencode, Copilot, Claude) with persistent memory, structured task management, and distinct personalities.
+Jacazul Launcher is a high-performance, dual-mode environment designed to run AI-powered command line tools (Gemini, Opencode, Copilot, Claude) with persistent memory, structured task management, and distinct personalities.
 
 ## 🌟 Why Jacazul?
 

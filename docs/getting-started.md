@@ -1,10 +1,10 @@
 # Getting Started
 
-Quick start guide for the Jacazul AI CLI environment.
+Quick start guide for the Jacazul Launcher environment.
 
 ## 🎯 Overview
 
-Jacazul AI CLI is a powerful workflow automation system that runs directly on your machine or inside a container. It provides:
+Jacazul Launcher is a powerful workflow automation system that runs directly on your machine or inside a container. It provides:
 - **Direct Native Setup:** Run directly in your shell for maximum speed.
 - **Isolated Containers:** Sandboxed environment for safe experimentation.
 - **Expert Skills:** Taskwarrior-based workflow management, Python expert system, and more.

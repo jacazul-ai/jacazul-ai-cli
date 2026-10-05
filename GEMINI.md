@@ -1,4 +1,4 @@
-# Jacazul AI CLI — Gemini Bootstrap
+# Jacazul Launcher — Gemini Bootstrap
 
 ## 🛠 Core Skills (Persistent Activation)
 @skills/jacazul-engine/SKILL.md
