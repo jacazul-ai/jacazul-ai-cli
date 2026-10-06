@@ -183,6 +183,22 @@ On-demand loading, measured on a four-skill fixture with `--runs 3`:
 
 In both cases the other expert stayed unloaded in every run.
 
+E2E Development trigger, engine at `f92bc86`, Claude Code 2.1.290,
+`claude-opus-5-5` agent, run on 2026-10-06 with `--allow-tools
+Bash,Edit,Write` so the no-edit graders can fail:
+
+| Case | Runs | With / without | What the `with` arm did |
+|---|---|---|---|
+| 08 develop end to end, in Spanish | 2 | 1.00 / 0.75 | read `e2e-development.md`, asked for the contract, no Edit or Write |
+| 09 run the e2e tests | 1 | 1.00 / 1.00 | never read `e2e-development.md`: tests are not a trigger |
+| 10 `cuida disso e2e` | 1 | 1.00 / 0.33 | development, not an onboard; read the reference, no Edit |
+
+Case 08 names the Jacazul workflow like cases 01 to 07: unanchored, the
+skill loaded in one of two runs, which measures the description's
+auto-triggering rather than the hub routing. The `without` arm also asks
+for a contract on its own; the delta is reading and following the
+reference.
+
 Not covered yet:
 
 - `session.md`, `modes.md`, `language.md` and `glossary.md` triggers;
