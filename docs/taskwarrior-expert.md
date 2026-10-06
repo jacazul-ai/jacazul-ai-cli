@@ -92,6 +92,29 @@ Checks for newly unblocked tasks and updates initiative progress.
 
 ---
 
+## 🔁 E2E Development
+
+When you want a whole initiative developed end to end, ask for it in any
+language: "desenvolve isso e2e", "termina isso e2e", "take care of this
+e2e". The agent then follows one procedure, carried by the
+`jacazul-engine` skill:
+
+1. Opens the initiative (DESIGN, EXECUTE, TEST, REFINE) with a ticket and
+   focus on the first task.
+2. Closes the contract with you: behavior, scope, risks, exclusions and
+   acceptance criteria, recorded in the DESIGN task.
+3. Waits for your explicit approval. Nothing is implemented before it.
+4. Implements one task at a time, test first, with the gates of whatever
+   is being implemented, atomic commits and an `OUTCOME` on every task.
+5. Validates, then shows you files, behavior, tests, commits, ticket and
+   focus.
+6. Lists the commits and asks: keep the trail and push, or edit it first
+   (fixup, squash, drop, reword). Nothing is pushed without your OK.
+
+`e2e` alone, or anything about end-to-end tests, does not start it.
+
+---
+
 ## 🚦 Interaction Modes
 
 | Mode | Behavior | Edit Authority | Use When |
